@@ -485,7 +485,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                           />
                           <Area type="monotone" dataKey="vendas" fillOpacity={1} fill="url(#colorVendas)" stroke="none" />
                           <Line type="monotone" dataKey="vendas" stroke="#4A9EE0" strokeWidth={3} dot={{ r: 3, fill: '#4A9EE0', strokeWidth: 0 }} activeDot={{ r: 5 }} />
-                          <Line type="monotone" dataKey="mediaMovel" stroke="#D63FA3" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                          <Line type="monotone" dataKey="mediaMovel" stroke="#7C5DFA" strokeWidth={2} dot={false} strokeDasharray="5 5" />
                       </ComposedChart>
                   </ResponsiveContainer>
               </div>
@@ -547,7 +547,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                       </div>
                       {activeSubTab === 'geral' && (
                           <div className="flex gap-2 w-full justify-end">
-                              <button onClick={() => setIsConfigModalOpen(true)} className="px-4 py-2 rounded-xl glass-button text-pink-400 flex items-center justify-center gap-2 text-xs font-bold transition-all w-full md:w-auto" title="Definir Metas do Mês"><Settings className="w-4 h-4" /> Definir Meta</button>
+                              <button onClick={() => setIsConfigModalOpen(true)} className="px-4 py-2 rounded-xl btn btn-primary flex items-center justify-center gap-2 text-xs font-bold transition-all w-full md:w-auto" title="Definir Metas do Mês"><Settings className="w-4 h-4" /> Definir Meta</button>
                           </div>
                       )}
                    </div>
@@ -612,7 +612,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                     type="number" 
                     value={currentGoals.revenue} 
                     onChange={e => updateGoalConfig('revenue', Number(e.target.value))} 
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-[#D63FA3] transition-colors" 
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-purple-500 transition-colors" 
                   />
                 </div>
                 <div>
@@ -621,7 +621,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                     type="number" 
                     value={currentGoals.businessDays} 
                     onChange={e => updateGoalConfig('businessDays', Number(e.target.value))} 
-                    className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-[#D63FA3] transition-colors" 
+                    className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-purple-500 transition-colors" 
                   />
                 </div>
                 

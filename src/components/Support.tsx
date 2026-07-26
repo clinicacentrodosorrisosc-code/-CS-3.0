@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { SupportTicket } from '../types';
 import { supabase } from '../supabaseClient';
@@ -73,7 +72,7 @@ export const Support: React.FC<SupportProps> = () => {
             priority: formData.priority,
             status: 'Aberto',
             created_at: new Date().toISOString(),
-            created_by: 'Usuário' // In real app, fetch from auth context
+            created_by: 'Usuário'
         };
 
         const { error } = await supabase.from('support_tickets').insert(newTicket);
@@ -97,7 +96,6 @@ export const Support: React.FC<SupportProps> = () => {
     };
 
     const deleteTicket = async (e: React.MouseEvent, id: string) => {
-        // Prevent event bubbling to parent containers
         e.preventDefault();
         e.stopPropagation(); 
         
@@ -110,12 +108,10 @@ export const Support: React.FC<SupportProps> = () => {
                 throw error;
             }
 
-            // Update local state immediately
             setTickets(prev => prev.filter(t => t.id !== id));
         } catch (err: any) {
             console.error("Erro detalhado ao excluir:", err);
-            // Provide explicit error message to user (likely RLS policy)
-            alert(`Não foi possível excluir o ticket.\nErro: ${err.message || 'Desconhecido'}\n\nDica: Verifique se o RLS (Row Level Security) está desabilitado ou configurado na tabela 'support_tickets' no Supabase.`);
+            alert(`Não foi possível excluir o ticket.\nErro: ${err.message || 'Desconhecido'}`);
         }
     };
 
@@ -140,37 +136,33 @@ export const Support: React.FC<SupportProps> = () => {
 
   return (
     <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(249,115,22,0.05),transparent_40%)] pointer-events-none fixed"></div>
-
-        {/* View Content */}
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
                
                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                    <div>
-                       <h1 className="text-4xl md:text-5xl font-bold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-tight mb-2">
+                       <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
                           Chamados & Suporte
                        </h1>
                        <p className="text-slate-400 text-sm">Relate problemas no sistema, operacionais ou de manutenção.</p>
                    </div>
 
-                   <div className="flex gap-4">
-                       <div className="bg-panel border border-border rounded-xl p-3 flex items-center gap-3">
+                   <div className="flex gap-4 items-center">
+                       <div className="card p-3 flex items-center gap-3">
                            <div className="flex flex-col">
-                               <span className="text-[10px] text-slate-500 uppercase font-bold">Pendentes</span>
+                               <span className="text-[10px] text-slate-400 uppercase font-bold">Pendentes</span>
                                <span className="text-xl font-bold text-text">{stats.open}</span>
                            </div>
-                           <div className="w-px h-8 bg-panel/80"></div>
+                           <div className="w-px h-8 bg-slate-800"></div>
                            <div className="flex flex-col">
-                               <span className="text-[10px] text-slate-500 uppercase font-bold">Críticos</span>
+                               <span className="text-[10px] text-slate-400 uppercase font-bold">Críticos</span>
                                <span className="text-xl font-bold text-red-400">{stats.critical}</span>
                            </div>
                        </div>
                        <button 
                            onClick={() => setIsModalOpen(true)}
-                           className="px-6 py-3 glass-button bg-orange-600/20 border-orange-500/30 text-text rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 h-fit self-center"
+                           className="btn btn-primary h-fit self-center py-3"
                        >
                            <Plus className="w-5 h-5" /> Novo Chamado
                        </button>
@@ -188,7 +180,7 @@ export const Support: React.FC<SupportProps> = () => {
                                 <p className="text-slate-300 text-sm leading-relaxed">{errorMessage}</p>
                                 <button 
                                     onClick={() => loadData()}
-                                    className="mt-4 px-4 py-2 glass-button text-text text-xs font-bold rounded-lg transition-all"
+                                    className="mt-4 btn btn-ghost text-xs"
                                 >
                                     Tentar Novamente
                                 </button>
@@ -202,10 +194,10 @@ export const Support: React.FC<SupportProps> = () => {
                     <button
                         key={status}
                         onClick={() => setFilterStatus(status as any)}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                             filterStatus === status 
-                            ? 'bg-white text-black' 
-                            : 'bg-panel text-slate-400 hover:text-text'
+                            ? 'bg-purple-600 text-white shadow-md' 
+                            : 'btn-ghost'
                         }`}
                     >
                         {status === 'Aberto' ? 'Em Aberto' : status}
@@ -214,28 +206,28 @@ export const Support: React.FC<SupportProps> = () => {
             </div>
 
             {/* Tickets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 pb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 pb-10 mt-6">
                 {loading ? (
                     <>
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="glass-panel p-5 rounded-2xl border border-border flex flex-col animate-pulse">
+                            <div key={i} className="card p-5 flex flex-col animate-pulse">
                                 <div className="flex justify-between items-start mb-3">
-                                    <div className="w-12 h-4 bg-panel rounded"></div>
-                                    <div className="w-16 h-3 bg-panel rounded"></div>
+                                    <div className="w-12 h-4 bg-slate-800 rounded"></div>
+                                    <div className="w-16 h-3 bg-slate-800 rounded"></div>
                                 </div>
-                                <div className="w-3/4 h-6 bg-panel rounded mb-2"></div>
-                                <div className="w-1/2 h-3 bg-panel rounded mb-3"></div>
-                                <div className="flex-1 w-full h-12 bg-panel rounded mb-4"></div>
+                                <div className="w-3/4 h-6 bg-slate-800 rounded mb-2"></div>
+                                <div className="w-1/2 h-3 bg-slate-800 rounded mb-3"></div>
+                                <div className="flex-1 w-full h-12 bg-slate-800 rounded mb-4"></div>
                                 <div className="flex justify-between items-end mt-auto pt-4 border-t border-border">
-                                    <div className="w-20 h-3 bg-panel rounded"></div>
-                                    <div className="w-20 h-8 bg-panel rounded"></div>
+                                    <div className="w-20 h-3 bg-slate-800 rounded"></div>
+                                    <div className="w-20 h-8 bg-slate-800 rounded"></div>
                                 </div>
                             </div>
                         ))}
                     </>
                 ) : filteredTickets.length === 0 ? (
                     <div className="col-span-full p-12 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-slate-500">
-                        <ClipboardCheck className="w-10 h-10 mb-2" />
+                        <ClipboardCheck className="w-10 h-10 mb-2 text-purple-400" />
                         <p>Nenhum chamado encontrado nesta categoria.</p>
                     </div>
                 ) : (
@@ -247,9 +239,9 @@ export const Support: React.FC<SupportProps> = () => {
                     if (ticket.priority === 'Baixa') priorityColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
 
                     return (
-                        <div key={ticket.id} className={`glass-panel p-5 rounded-2xl border flex flex-col transition-all hover:-translate-y-1 ${isResolved ? 'border-border opacity-70 hover:opacity-100' : 'border-border hover:border-orange-500/30'}`}>
+                        <div key={ticket.id} className={`card p-5 flex flex-col transition-all hover:-translate-y-1 ${isResolved ? 'opacity-70 hover:opacity-100' : ''}`}>
                             <div className="flex justify-between items-start mb-3">
-                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${priorityColor}`}>
+                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${priorityColor}`}>
                                     {ticket.priority}
                                 </span>
                                 <div className="flex items-center gap-2">
@@ -257,7 +249,7 @@ export const Support: React.FC<SupportProps> = () => {
                                     <button 
                                         type="button"
                                         onClick={(e) => deleteTicket(e, ticket.id)} 
-                                        className="size-6 flex items-center justify-center text-slate-600 hover:text-red-400 hover:bg-panel/80 rounded transition-colors z-20 cursor-pointer"
+                                        className="size-6 flex items-center justify-center text-slate-500 hover:text-red-400 rounded transition-colors z-20 cursor-pointer"
                                         title="Excluir Chamado"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -266,8 +258,8 @@ export const Support: React.FC<SupportProps> = () => {
                             </div>
                             
                             <h3 className="text-lg font-bold text-text mb-1 line-clamp-1">{ticket.title}</h3>
-                            <div className="text-xs text-orange-400 mb-3 flex items-center gap-1">
-                                <Tag className="w-4 h-4" /> {ticket.category}
+                            <div className="text-xs text-purple-400 mb-3 flex items-center gap-1 font-semibold">
+                                <Tag className="w-3.5 h-3.5" /> {ticket.category}
                             </div>
                             
                             <p className="text-sm text-slate-300 leading-relaxed line-clamp-3 mb-6 flex-1">
@@ -275,7 +267,7 @@ export const Support: React.FC<SupportProps> = () => {
                             </p>
 
                             <div className="mt-auto pt-4 border-t border-border flex justify-between items-center">
-                                <span className={`text-xs font-bold flex items-center gap-1 ${isResolved ? 'text-emerald-500' : ticket.status === 'Em Andamento' ? 'text-blue-400' : 'text-slate-400'}`}>
+                                <span className={`text-xs font-bold flex items-center gap-1 ${isResolved ? 'text-emerald-400' : ticket.status === 'Em Andamento' ? 'text-blue-400' : 'text-slate-400'}`}>
                                     {isResolved ? <CheckCircle className="w-4 h-4" /> : ticket.status === 'Em Andamento' ? <Clock className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                                     {ticket.status}
                                 </span>
@@ -284,17 +276,17 @@ export const Support: React.FC<SupportProps> = () => {
                                     {!isResolved && (
                                         <>
                                             {ticket.status === 'Aberto' && (
-                                                <button onClick={() => updateStatus(ticket.id, 'Em Andamento')} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-text text-xs font-bold rounded-lg transition-all">
+                                                <button onClick={() => updateStatus(ticket.id, 'Em Andamento')} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-bold rounded-xl transition-all">
                                                     Iniciar
                                                 </button>
                                             )}
-                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-text text-xs font-bold rounded-lg transition-all">
+                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-bold rounded-xl transition-all">
                                                 Resolver
                                             </button>
                                         </>
                                     )}
                                     {isResolved && (
-                                        <button onClick={() => updateStatus(ticket.id, 'Aberto')} className="px-3 py-1.5 bg-panel hover:bg-panel/80 text-slate-400 text-xs font-bold rounded-lg transition-all">
+                                        <button onClick={() => updateStatus(ticket.id, 'Aberto')} className="px-3 py-1.5 btn-ghost text-xs font-bold rounded-xl transition-all">
                                             Reabrir
                                         </button>
                                     )}
@@ -310,29 +302,29 @@ export const Support: React.FC<SupportProps> = () => {
 
             {/* New Ticket Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                        <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
-                            <h3 className="text-xl font-bold text-text font-display">Abrir Novo Chamado</h3>
+                <div className="modal-overlay">
+                    <div className="modal-panel flex flex-col">
+                        <div className="p-4 border-b border-border flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-text">Abrir Novo Chamado</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text"><X className="w-6 h-6" /></button>
                         </div>
-                        <div className="p-6 flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
+                        <div className="p-4 flex flex-col gap-4">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase">Assunto</label>
                                 <input 
                                     value={formData.title}
                                     onChange={e => setFormData({...formData, title: e.target.value})}
                                     placeholder="Ex: Impressora travada / Falta de Luvas"
-                                    className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-orange-500 outline-none"
+                                    className="input"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase">Categoria</label>
                                     <select 
                                         value={formData.category}
                                         onChange={e => setFormData({...formData, category: e.target.value})}
-                                        className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-orange-500 outline-none"
+                                        className="input"
                                     >
                                         <option value="Sistema">Sistema / TI</option>
                                         <option value="Operacional">Operacional</option>
@@ -340,12 +332,12 @@ export const Support: React.FC<SupportProps> = () => {
                                         <option value="Outros">Outros</option>
                                     </select>
                                 </div>
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase">Prioridade</label>
                                     <select 
                                         value={formData.priority}
                                         onChange={e => setFormData({...formData, priority: e.target.value})}
-                                        className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-orange-500 outline-none"
+                                        className="input"
                                     >
                                         <option value="Baixa">Baixa</option>
                                         <option value="Media">Média</option>
@@ -354,19 +346,19 @@ export const Support: React.FC<SupportProps> = () => {
                                     </select>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase">Descrição Detalhada</label>
                                 <textarea 
                                     value={formData.description}
                                     onChange={e => setFormData({...formData, description: e.target.value})}
                                     placeholder="Descreva o problema ou solicitação..."
-                                    className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-orange-500 outline-none min-h-[120px] resize-none"
+                                    className="input min-h-[120px] resize-none"
                                 />
                             </div>
                         </div>
-                        <div className="p-6 border-t border-border bg-surface flex justify-end gap-3">
-                            <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button>
-                            <button onClick={handleCreateTicket} className="px-6 py-2 rounded-lg bg-orange-600 text-text font-bold text-sm hover:bg-orange-500 shadow-lg">Criar Ticket</button>
+                        <div className="p-4 border-t border-border flex justify-end gap-3">
+                            <button onClick={() => setIsModalOpen(false)} className="btn btn-ghost">Cancelar</button>
+                            <button onClick={handleCreateTicket} className="btn btn-primary">Criar Ticket</button>
                         </div>
                     </div>
                 </div>
