@@ -1,0 +1,8 @@
+{
+  "name": "Centro do Sorriso",
+  "description": "A comprehensive dental practice management suite featuring financial tracking, orthodontic scheduling, lab work monitoring, and performance goals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

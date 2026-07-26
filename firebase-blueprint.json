@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "ClinicIdea": {
+      "title": "Clinic Idea",
+      "description": "A collaborative idea for the clinic",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the idea" },
+        "description": { "type": "string", "description": "Detailed description" },
+        "category": { "type": "string", "description": "Category of the idea" },
+        "status": { "type": "string", "enum": ["Idea", "Planning", "Implementing", "Done", "Archived"] },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "creator_id": { "type": "string" },
+        "creator_email": { "type": "string" }
+      },
+      "required": ["title", "status", "priority", "created_at", "creator_id"]
+    },
+    "IdeaComment": {
+      "title": "Idea Comment",
+      "description": "A comment on a clinic idea",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "user_id": { "type": "string" },
+        "user_email": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "user_id", "created_at"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Internal chat message",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "senderId", "senderName", "timestamp"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product used in services",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "cost": { "type": "number" }
+      },
+      "required": ["name", "cost"]
+    }
+  },
+  "firestore": {
+    "/clinic_ideas/{ideaId}": {
+      "schema": "ClinicIdea",
+      "description": "Collection of clinic ideas"
+    },
+    "/clinic_ideas/{ideaId}/comments/{commentId}": {
+      "schema": "IdeaComment",
+      "description": "Subcollection of comments for a specific idea"
+    },
+    "/chat_messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Collection of internal chat messages"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of products with costs"
+    }
+  }
+}

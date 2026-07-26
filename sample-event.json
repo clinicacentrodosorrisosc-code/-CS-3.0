@@ -1,0 +1,36 @@
+{
+  "id": "01knm52hyq2bap4bd2cwpb3yvm",
+  "type": "custom_field_334682_value_changed",
+  "entity_id": 37053353,
+  "entity_type": "lead",
+  "created_by": 15035304,
+  "created_at": 1775571650,
+  "value_after": [
+    {
+      "custom_field_value": {
+        "field_id": 334682,
+        "field_type": 19,
+        "enum_id": null,
+        "text": "2026-04-07 13:00:00",
+        "is_masked": false
+      }
+    }
+  ],
+  "value_before": [],
+  "account_id": 34790255,
+  "_links": {
+    "self": {
+      "href": "https://centrodosorriso.kommo.com/api/v4/events/01knm52hyq2bap4bd2cwpb3yvm"
+    }
+  },
+  "_embedded": {
+    "entity": {
+      "id": 37053353,
+      "_links": {
+        "self": {
+          "href": "https://centrodosorriso.kommo.com/api/v4/leads/37053353"
+        }
+      }
+    }
+  }
+}

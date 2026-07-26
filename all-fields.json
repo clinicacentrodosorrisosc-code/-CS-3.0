@@ -1,0 +1,1210 @@
+[
+  {
+    "id": 334274,
+    "name": "utm_content",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_CONTENT",
+    "sort": 527,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334274?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334276,
+    "name": "utm_medium",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_MEDIUM",
+    "sort": 528,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334276?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334278,
+    "name": "utm_campaign",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_CAMPAIGN",
+    "sort": 529,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334278?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334280,
+    "name": "utm_source",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_SOURCE",
+    "sort": 530,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334280?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334282,
+    "name": "utm_term",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_TERM",
+    "sort": 531,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334282?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334284,
+    "name": "utm_referrer",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "UTM_REFERRER",
+    "sort": 532,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334284?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334286,
+    "name": "referrer",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "REFERRER",
+    "sort": 533,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334286?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334288,
+    "name": "gclientid",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "GCLIENTID",
+    "sort": 534,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334288?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334290,
+    "name": "gclid",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "GCLID",
+    "sort": 535,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334290?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334292,
+    "name": "fbclid",
+    "type": "tracking_data",
+    "account_id": 34790255,
+    "code": "FBCLID",
+    "sort": 536,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": "statistic",
+    "required_statuses": [],
+    "is_deletable": false,
+    "is_predefined": true,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334292?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334672,
+    "name": "FUP - SDR",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 502,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334672?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334674,
+    "name": "FUP - AG",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 503,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334674?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334676,
+    "name": "FUP - N.S",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 504,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334676?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334678,
+    "name": "FUP - NEG",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 505,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334678?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334680,
+    "name": "FUP - AC",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 507,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334680?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 334682,
+    "name": "AGENDAMENTO",
+    "type": "date_time",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 510,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [
+      {
+        "pipeline_id": 11438779,
+        "status_id": 87824455
+      }
+    ],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [
+      32141392,
+      32141396,
+      32217312,
+      32217384,
+      32261190,
+      32261192,
+      34760473,
+      34760475,
+      34760479
+    ],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/334682?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 829162,
+    "name": "PÓS TRATAMENTO",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 516,
+    "is_api_only": true,
+    "enums": [
+      {
+        "id": 706152,
+        "value": "Sim",
+        "sort": 500
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/829162?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 923768,
+    "name": "PROCEDIMENTOS",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 509,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 784404,
+        "value": "Prótese",
+        "sort": 500
+      },
+      {
+        "id": 784406,
+        "value": "Aparelho Ortodôntico",
+        "sort": 2
+      },
+      {
+        "id": 784408,
+        "value": "Implante",
+        "sort": 3
+      },
+      {
+        "id": 784410,
+        "value": "Endo",
+        "sort": 5
+      },
+      {
+        "id": 784412,
+        "value": "Cirurgia",
+        "sort": 4
+      },
+      {
+        "id": 784414,
+        "value": "Limpeza",
+        "sort": 6
+      },
+      {
+        "id": 784416,
+        "value": "Clareamento Caseiro",
+        "sort": 7
+      },
+      {
+        "id": 784418,
+        "value": "Clareamento Consultório",
+        "sort": 8
+      },
+      {
+        "id": 1197504,
+        "value": "Clínico",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [
+      {
+        "pipeline_id": 11438779,
+        "status_id": 87824455
+      }
+    ],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/923768?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 923770,
+    "name": "FONTE",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 508,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 784420,
+        "value": "Meta ADS",
+        "sort": 500
+      },
+      {
+        "id": 784422,
+        "value": "Google ADS",
+        "sort": 1
+      },
+      {
+        "id": 784424,
+        "value": "Link da Bio Instagram",
+        "sort": 2
+      },
+      {
+        "id": 784426,
+        "value": "Indicação",
+        "sort": 3
+      },
+      {
+        "id": 784428,
+        "value": "Outros",
+        "sort": 4
+      },
+      {
+        "id": 1226914,
+        "value": "Presencial",
+        "sort": 5
+      },
+      {
+        "id": 1274163,
+        "value": "Messenger",
+        "sort": 6
+      },
+      {
+        "id": 1274165,
+        "value": "Comentário Facebook",
+        "sort": 7
+      },
+      {
+        "id": 1274167,
+        "value": "DM Instagram",
+        "sort": 8
+      },
+      {
+        "id": 1274169,
+        "value": "Comentário Instagram",
+        "sort": 9
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [
+      {
+        "pipeline_id": 11438779,
+        "status_id": 87823847
+      }
+    ],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/923770?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 923772,
+    "name": "MOTIVO DE PERCA",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 518,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 784430,
+        "value": "Falta de orçamento",
+        "sort": 500
+      },
+      {
+        "id": 784432,
+        "value": "Produto muito caro",
+        "sort": 1
+      },
+      {
+        "id": 784434,
+        "value": "Mora longe da clinica",
+        "sort": 2
+      },
+      {
+        "id": 784436,
+        "value": "Fechou com concorrente",
+        "sort": 3
+      },
+      {
+        "id": 784438,
+        "value": "Não responde",
+        "sort": 4
+      },
+      {
+        "id": 784440,
+        "value": "Nome com restrição",
+        "sort": 5
+      },
+      {
+        "id": 1194564,
+        "value": "Clicou errado",
+        "sort": 6
+      },
+      {
+        "id": 1199310,
+        "value": "Plano de saúde",
+        "sort": 7
+      },
+      {
+        "id": 1222937,
+        "value": "Já fez 3 agendamentos sem comparecer",
+        "sort": 8
+      },
+      {
+        "id": 1226653,
+        "value": "Manutenção avulsa",
+        "sort": 9
+      },
+      {
+        "id": 1226655,
+        "value": "Horário de trabalho não coincide com o da clinica",
+        "sort": 10
+      },
+      {
+        "id": 1231219,
+        "value": "Instalação no dia",
+        "sort": 11
+      },
+      {
+        "id": 1231221,
+        "value": "Viagem sem data de retorno",
+        "sort": 12
+      },
+      {
+        "id": 1251397,
+        "value": "Sem previsão de inicio",
+        "sort": 13
+      },
+      {
+        "id": 1252451,
+        "value": "Atendimento Odontopediatra",
+        "sort": 14
+      },
+      {
+        "id": 1253580,
+        "value": "Vai fazer no SUS",
+        "sort": 15
+      },
+      {
+        "id": 1256058,
+        "value": "Queria apenas valor",
+        "sort": 16
+      },
+      {
+        "id": 1275103,
+        "value": "VAGA DE EMPREGO",
+        "sort": 17
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/923772?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 923824,
+    "name": "EM TRATAMENTO?",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 517,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 784476,
+        "value": "Sim",
+        "sort": 500
+      },
+      {
+        "id": 784478,
+        "value": "Finalizado",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [
+      {
+        "pipeline_id": 11500247,
+        "status_id": 142
+      },
+      {
+        "pipeline_id": 11438779,
+        "status_id": 142
+      }
+    ],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/923824?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1028696,
+    "name": "PACIENTE?",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 519,
+    "is_api_only": true,
+    "enums": [
+      {
+        "id": 869510,
+        "value": "Sim",
+        "sort": 500
+      },
+      {
+        "id": 869512,
+        "value": "Não",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1028696?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1033178,
+    "name": "FUP - R.T",
+    "type": "checkbox",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 506,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1033178?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1407520,
+    "name": "STATUS DE DISPARO",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 523,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1193254,
+        "value": "Disparado",
+        "sort": 500
+      }
+    ],
+    "group_id": "leads_63101752958814",
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1407520?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1407522,
+    "name": "VISUALIZOU",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 524,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1193256,
+        "value": "Sim",
+        "sort": 500
+      }
+    ],
+    "group_id": "leads_63101752958814",
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1407522?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1407524,
+    "name": "RESPONDEU",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 525,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1193258,
+        "value": "Sim",
+        "sort": 500
+      }
+    ],
+    "group_id": "leads_63101752958814",
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1407524?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1488465,
+    "name": "Próxima consulta",
+    "type": "date_time",
+    "account_id": 34790255,
+    "code": "CF_SCHEDULER_UPCOMING_APPOINTMENT",
+    "sort": 501,
+    "is_api_only": true,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1488465?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1488761,
+    "name": "Vendedor",
+    "type": "select",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 520,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1274849,
+        "value": "Ana",
+        "sort": 500
+      },
+      {
+        "id": 1274851,
+        "value": "James",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [
+      {
+        "pipeline_id": 11438779,
+        "status_id": 87823847
+      }
+    ],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1488761?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1493951,
+    "name": "Notas Importantes",
+    "type": "textarea",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 521,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1493951?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1494995,
+    "name": "AGENDAMENTO 2",
+    "type": "date_time",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 511,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [
+      35548263,
+      35548271,
+      35548291
+    ],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1494995?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1494997,
+    "name": "AGENDAMENTO 3",
+    "type": "date_time",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 512,
+    "is_api_only": false,
+    "enums": null,
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [
+      35548265,
+      35548267
+    ],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1494997?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1495001,
+    "name": "Compareceu",
+    "type": "multiselect",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 513,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1288425,
+        "value": "Sim",
+        "sort": 500
+      },
+      {
+        "id": 1288427,
+        "value": "Não",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1495001?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1495003,
+    "name": "Compareceu 2",
+    "type": "multiselect",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 514,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1288429,
+        "value": "Sim",
+        "sort": 500
+      },
+      {
+        "id": 1288431,
+        "value": "Não",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1495003?page=1&limit=250"
+      }
+    }
+  },
+  {
+    "id": 1495005,
+    "name": "Compareceu 3",
+    "type": "multiselect",
+    "account_id": 34790255,
+    "code": null,
+    "sort": 515,
+    "is_api_only": false,
+    "enums": [
+      {
+        "id": 1288433,
+        "value": "Sim",
+        "sort": 500
+      },
+      {
+        "id": 1288435,
+        "value": "Não",
+        "sort": 1
+      }
+    ],
+    "group_id": null,
+    "required_statuses": [],
+    "is_deletable": true,
+    "is_predefined": false,
+    "entity_type": "leads",
+    "tracking_callback": null,
+    "remind": null,
+    "triggers": [],
+    "currency": null,
+    "hidden_statuses": [],
+    "chained_lists": null,
+    "_links": {
+      "self": {
+        "href": "https://centrodosorriso.kommo.com/api/v4/leads/custom_fields/1495005?page=1&limit=250"
+      }
+    }
+  }
+]
