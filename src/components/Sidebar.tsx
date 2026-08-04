@@ -83,9 +83,20 @@ const MENU_STRUCTURE = [
     ]
   },
   {
+    id: Tab.TIME_TRACKING,
+    label: 'Registro de Ponto',
+    icon: 'fas fa-fingerprint',
+    color: 'text-amber-500',
+    subItems: [
+        { id: 'clock', label: 'Bater Ponto' },
+        { id: 'records', label: 'Espelho de Ponto' },
+        { id: 'summary', label: 'Resumo e Banco de Horas' }
+    ]
+  },
+  {
     id: Tab.MEETINGS,
     label: 'Gestão & Comercial',
-    icon: 'fas fa-users',
+    icon: 'fas fa-briefcase',
     color: 'text-indigo-500',
     subItems: [
         { id: 'campaign_calendar', label: 'Calendário de Campanha' },
@@ -93,6 +104,7 @@ const MENU_STRUCTURE = [
         { id: 'clinic_ideas', label: 'Ideias para a Clínica' }
     ]
   },
+
   {
     id: Tab.SUPPORT,
     label: 'Chamados',

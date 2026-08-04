@@ -23,6 +23,7 @@ import {
     Image
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { toast } from 'sonner';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
 
 interface ReceptionReportAnswers {
@@ -125,19 +126,21 @@ export const ReceptionDailyReport: React.FC = () => {
     }, []);
 
     
+
+
     const handleShareWhatsApp = () => {
-        let text = "*Relatório Recepção - " + reportDate.split('-').reverse().join('/') + "*\n\n";
-        text += "*Agendamentos p/ hoje (final do dia):* " + answers.q1_agendamentos_final_dia + "\n";
-        text += "*Atendimentos Finalizados (Compareceram):* " + answers.q2_atendimentos_finalizados + "\n";
-        text += "*Atendimentos Remarcados:* " + answers.q3_atendimentos_remarcados + "\n";
-        text += "*Atendimentos Cancelados:* " + answers.q4_atendimentos_cancelados + "\n";
-        text += "*Faltas (Não Compareceram):* " + answers.q5_nao_compareceram + "\n";
-        if (answers.total_received_value) text += "*Valor Total Recebido:* " + answers.total_received_value + "\n";
-        if (answers.recurrent_objections) text += "*Objeções Recorrentes:* " + answers.recurrent_objections + "\n";
-        if (answers.structure_to_be_resolved) text += "*Estrutura a ser Resolvida:* " + answers.structure_to_be_resolved + "\n";
-        
-        const url = "https://wa.me/?text=" + encodeURIComponent(text);
-        window.open(url, '_blank');
+        const text = `📊 *Relatório Diário de Recepção - ${reportDate}*\n\n` +
+            `• Agendamentos (Total do Dia): ${answers.q1_agendamentos_final_dia || 0}\n` +
+            `• Compareceram e Concluíram: ${answers.q2_atendimentos_finalizados || 0}\n` +
+            `• Atendimentos Remarcados: ${answers.q3_atendimentos_remarcados || 0}\n` +
+            `• Atendimentos Cancelados: ${answers.q4_atendimentos_cancelados || 0}\n` +
+            `• Não Compareceram (Faltas): ${answers.q5_nao_compareceram || 0}\n` +
+            `• Valor Total Recebido: R$ ${(answers.total_received_value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+            (answers.recurrent_objections ? `• Observações / Pendências: ${answers.recurrent_objections}\n` : '');
+
+        navigator.clipboard.writeText(text);
+        toast.success('Relatório copiado e WhatsApp Web aberto!');
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     const handleSave = async () => {
@@ -170,9 +173,25 @@ export const ReceptionDailyReport: React.FC = () => {
                 updated_at: new Date().toISOString()
             };
 
-            const { error } = await supabase
+            const { data: existingRecord } = await supabase
                 .from('commercial_reports')
-                .upsert(fullPayload, { onConflict: 'report_date' });
+                .select('id')
+                .eq('report_date', reportDate)
+                .maybeSingle();
+
+            let error = null;
+            if (existingRecord) {
+                const { error: updateError } = await supabase
+                    .from('commercial_reports')
+                    .update(fullPayload)
+                    .eq('report_date', reportDate);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('commercial_reports')
+                    .insert([fullPayload]);
+                error = insertError;
+            }
 
             if (error) throw error;
 

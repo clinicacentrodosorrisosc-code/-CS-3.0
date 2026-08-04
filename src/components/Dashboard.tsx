@@ -5,6 +5,7 @@ import {
   XAxis, YAxis, CartesianGrid, Line, ComposedChart, Area
 } from 'recharts';
 import { supabase } from '../supabaseClient';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 import { Calendar, ChevronLeft, ChevronRight, Settings, X } from 'lucide-react';
 import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
@@ -87,6 +88,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [trendViewMode, setTrendViewMode] = useState<'diaria' | 'mensal' | 'personalizado'>('diaria');
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  });
 
   const defaultGoals = useMemo<MonthlyGoals>(() => ({ revenue: 120000, businessDays: 22, anaEvalGoal: 30, comercialEvalGoal: 30 }), []);
   const defaultFunnel = useMemo<MonthlyFunnelInput>(() => ({ 
@@ -162,12 +172,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           let allTxs: any[] = [];
           let offset = 0;
           let hasMore = true;
+          const yearStartDate = `${currentYear}-01-01`;
+          const yearEndDate = `${currentYear}-12-31`;
           while (hasMore) {
               const { data: pageTxs, error: pageError } = await supabase.from('transactions')
                   .select('date, amount, category, description, procedure, sales_team, status')
                   .eq('type', 'income')
-                  .gte('date', startDate)
-                  .lte('date', endDate)
+                  .gte('date', yearStartDate)
+                  .lte('date', yearEndDate)
                   .order('date', { ascending: false })
                   .range(offset, offset + 999);
                   
@@ -235,6 +247,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
   useEffect(() => { loadDashboardData(); }, [currentDate, loadDashboardData]);
 
+  useRealtimeSubscription(['dashboard_configs', 'daily_evaluations', 'transactions', 'commercial_daily_reports', 'commercial_reports'], () => {
+      loadDashboardData();
+  });
+
   const saveDashboardConfig = async (monthKey: string, goals: MonthlyGoals, funnel: MonthlyFunnelInput) => {
       const payload = {
           month_key: monthKey,
@@ -247,6 +263,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       };
       const { error } = await supabase.from('dashboard_configs').upsert(payload, { onConflict: 'month_key' });
       if (error) console.error("Error saving dashboard data:", error.message);
+      else notifyDataChange('dashboard_configs');
   };
 
   const updateGoalConfig = (field: keyof MonthlyGoals, value: number) => {
@@ -369,11 +386,55 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         const movingAvg = sum / count;
 
         return {
-            day: String(day).padStart(2, '0'),
+            label: String(day).padStart(2, '0'),
             vendas: revenue,
             mediaMovel: parseFloat(movingAvg.toFixed(2))
         };
     });
+
+    const monthlyTrendData = MONTHS.map((monthName, idx) => {
+        const mNum = idx + 1;
+        const mPrefix = `${currentYear}-${String(mNum).padStart(2, '0')}`;
+        let rev = 0;
+        Object.entries(monthRevenueData).forEach(([dateStr, data]) => {
+            if (dateStr.startsWith(mPrefix)) {
+                rev += data.revenue || 0;
+            }
+        });
+        return {
+            label: monthName.slice(0, 3),
+            vendas: rev,
+            mediaMovel: 0
+        };
+    });
+
+    const customTrendData = (() => {
+        if (!customStartDate || !customEndDate) return [];
+        const start = new Date(customStartDate);
+        const end = new Date(customEndDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return [];
+
+        const data = [];
+        const curr = new Date(start);
+        while (curr <= end) {
+            const dateStr = curr.toISOString().slice(0, 10);
+            const revenue = monthRevenueData[dateStr]?.revenue || 0;
+            const label = `${String(curr.getDate()).padStart(2, '0')}/${String(curr.getMonth() + 1).padStart(2, '0')}`;
+            data.push({
+                label,
+                vendas: revenue,
+                mediaMovel: 0
+            });
+            curr.setDate(curr.getDate() + 1);
+        }
+        return data;
+    })();
+
+    const activeTrendData = trendViewMode === 'diaria' 
+        ? trendData 
+        : trendViewMode === 'mensal' 
+        ? monthlyTrendData 
+        : customTrendData;
 
     const renderFinancialCalendarCell = (day: number) => {
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -450,25 +511,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           </section>
 
           <section className="glass-panel p-6 rounded-2xl border border-border bg-panel/40 min-h-[400px]">
-              <div className="flex justify-between items-center mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                   <div>
-                      <h3 className="text-lg font-bold text-text">Tendência de Vendas Diárias</h3>
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Gráfico de desempenho com média móvel (9p)</p>
+                      <h3 className="text-lg font-bold text-text">Tendência de Vendas</h3>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+                          Desempenho ({trendViewMode === 'diaria' ? 'Visão Diária' : trendViewMode === 'mensal' ? 'Visão Mensal (Anual)' : 'Período Personalizado'})
+                      </p>
                   </div>
-                  <div className="flex gap-4">
-                      <div className="flex items-center gap-2">
-                          <div className="size-3 rounded-sm bg-primary"></div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Vendas Dia</span>
+                  <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex bg-surface p-1 rounded-xl border border-border">
+                          <button
+                              type="button"
+                              onClick={() => setTrendViewMode('diaria')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                          >
+                              Diária
+                          </button>
+                          <button
+                              type="button"
+                              onClick={() => setTrendViewMode('mensal')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                          >
+                              Mensal
+                          </button>
+                          <button
+                              type="button"
+                              onClick={() => setTrendViewMode('personalizado')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                          >
+                              Personalizado
+                          </button>
                       </div>
-                      <div className="flex items-center gap-2">
-                          <div className="size-3 rounded-sm bg-surface"></div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Média Móvel (9p)</span>
+
+                      {trendViewMode === 'personalizado' && (
+                          <div className="flex items-center gap-2 bg-surface p-1.5 rounded-xl border border-border text-xs">
+                              <input
+                                  type="date"
+                                  value={customStartDate}
+                                  onChange={e => setCustomStartDate(e.target.value)}
+                                  className="bg-panel border border-border rounded-lg px-2 py-1 text-text text-xs focus:outline-none focus:border-primary"
+                              />
+                              <span className="text-slate-400">até</span>
+                              <input
+                                  type="date"
+                                  value={customEndDate}
+                                  onChange={e => setCustomEndDate(e.target.value)}
+                                  className="bg-panel border border-border rounded-lg px-2 py-1 text-text text-xs focus:outline-none focus:border-primary"
+                              />
+                          </div>
+                      )}
+
+                      <div className="flex gap-4">
+                          <div className="flex items-center gap-2">
+                              <div className="size-3 rounded-sm bg-primary"></div>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Vendas</span>
+                          </div>
+                          {trendViewMode === 'diaria' && (
+                              <div className="flex items-center gap-2">
+                                  <div className="size-3 rounded-sm bg-surface"></div>
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase">Média Móvel (9p)</span>
+                              </div>
+                          )}
                       </div>
                   </div>
               </div>
               <div className="h-[280px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={trendData} margin={{ top: 10, right: 10, left: 20, bottom: 20 }}>
+                      <ComposedChart data={activeTrendData} margin={{ top: 10, right: 10, left: 20, bottom: 20 }}>
                           <defs>
                               <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#4A9EE0" stopOpacity={0.3}/>
@@ -476,16 +585,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                               </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={(val) => `R$${val/1000}k`} />
+                          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} tickFormatter={(val) => `R$${val >= 1000 ? (val/1000).toFixed(0) + 'k' : val}`} />
                           <RechartsTooltip 
                               contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text)' }}
                               itemStyle={{ color: 'var(--text)' }}
-                              formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR')}`}
+                              formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                           />
                           <Area type="monotone" dataKey="vendas" fillOpacity={1} fill="url(#colorVendas)" stroke="none" />
                           <Line type="monotone" dataKey="vendas" stroke="#4A9EE0" strokeWidth={3} dot={{ r: 3, fill: '#4A9EE0', strokeWidth: 0 }} activeDot={{ r: 5 }} />
-                          <Line type="monotone" dataKey="mediaMovel" stroke="#7C5DFA" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                          {trendViewMode === 'diaria' && (
+                              <Line type="monotone" dataKey="mediaMovel" stroke="#7C5DFA" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+                          )}
                       </ComposedChart>
                   </ResponsiveContainer>
               </div>

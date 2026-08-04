@@ -65,7 +65,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   // Static Target per Business Day
   const staticDailyTarget = useMemo(() => {
     const totalGoal = Number(currentGoals.revenue) || 0;
-    const days = Number(currentGoals.businessDays) || totalBusinessDays || 22;
+    const days = totalBusinessDays > 0 ? totalBusinessDays : (Number(currentGoals.businessDays) || 22);
     return totalGoal / Math.max(1, days);
   }, [currentGoals, totalBusinessDays]);
 
@@ -104,7 +104,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         target: !isWeekend ? staticDailyTarget : 0,
         dynamicTarget: !isWeekend ? dynamicDailyTarget : 0,
         cumulativeActual,
-        cumulativeTarget,
+        cumulativeTarget: parseFloat(cumulativeTarget.toFixed(2)),
         difference: actualRevenue - (!isWeekend ? staticDailyTarget : 0),
         pacingDiff: cumulativeActual - cumulativeTarget
       };

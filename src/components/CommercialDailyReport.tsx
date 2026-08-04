@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
+import { toast } from 'sonner';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 import { 
     Calendar, 
     Save, 
@@ -467,6 +469,12 @@ export const CommercialDailyReport: React.FC = () => {
         loadHistory();
     }, [reportDate]);
 
+    useRealtimeSubscription(['commercial_daily_reports', 'daily_evaluations', 'monthly_goals', 'commercial_settings'], () => {
+        loadReportForDate(reportDate);
+        loadGoals();
+        loadHistory();
+    });
+
     // Automatically synchronize total contacts count and responses count based on questions 5, 6 and new leads
     useEffect(() => {
         setAnswers(prev => {
@@ -571,66 +579,27 @@ export const CommercialDailyReport: React.FC = () => {
         });
     }, [history]);
 
-    const handleShareWhatsApp = () => {
-        let text = "🚀 *Relatório Comercial - " + reportDate.split('-').reverse().join('/') + "*\n\n";
-        text += "--- 🏢 *Resumo do Dia* ---\n";
-        text += "👤 *Como chegou:* " + (answers.q1_arrival || 'N/A') + "\n";
-        text += "📞 *Novos Leads:* " + ((answers.m_new_leads_count || 0) + (answers.t_new_leads_count || 0)) + "\n";
-        text += "📅 *Agendamentos Futuros:* " + (answers.q5_appointments_count || 0) + "\n";
-        
-        text += "\n--- 📅 *Agenda* ---\n";
-        const totalScheduled = answers.q5_scheduled_for_today_count || 0;
-        text += "📋 *Total Agendados:* " + totalScheduled + "\n";
-        
-        if (totalScheduled > 0) {
-            const attended = answers.q5_attended_count || 0;
-            const noShow = answers.q5_no_show_count || 0;
-            const cancelled = answers.q5_cancelled_count || 0;
-            const rescheduled = answers.q5_rescheduled_count || 0;
 
-            text += "- ✅ Compareceram: " + attended + " (" + ((attended / totalScheduled) * 100).toFixed(1) + "%)\n";
-            text += "- ❌ Faltas: " + noShow + " (" + ((noShow / totalScheduled) * 100).toFixed(1) + "%)\n";
-            text += "- 🚫 Cancelamentos: " + cancelled + " (" + ((cancelled / totalScheduled) * 100).toFixed(1) + "%)\n";
-            text += "- 🗓️ Remarcações: " + rescheduled + " (" + ((rescheduled / totalScheduled) * 100).toFixed(1) + "%)\n";
-        } else {
-            text += "- ✅ Compareceram: " + (answers.q5_attended_count || 0) + "\n";
-            text += "- ❌ Faltas: " + (answers.q5_no_show_count || 0) + "\n";
-            text += "- 🚫 Cancelamentos: " + (answers.q5_cancelled_count || 0) + "\n";
-            text += "- 🗓️ Remarcações: " + (answers.q5_rescheduled_count || 0) + "\n";
-        }
-        
-        text += "\n--- 📊 *Desempenho por turno* ---\n";
-        
-        text += "*Turno Manhã:*\n";
-        text += "- Mensagens enviadas: " + (answers.m_contacts_count || 0) + "\n";
-        text += "- Respostas: " + (Number(answers.m_new_leads_responses_count || 0) + Number(answers.m_recurrent_responses_count || 0)) + "\n";
-        
-        text += "\n*Turno Tarde:*\n";
-        text += "- Mensagens enviadas: " + (answers.t_contacts_count || 0) + "\n";
-        text += "- Respostas: " + (Number(answers.t_new_leads_responses_count || 0) + Number(answers.t_recurrent_responses_count || 0)) + "\n";
-        
-        const manhaScore = (answers.m_contacts_count || 0) + (Number(answers.m_new_leads_responses_count || 0) + Number(answers.m_recurrent_responses_count || 0));
-        const tardeScore = (answers.t_contacts_count || 0) + (Number(answers.t_new_leads_responses_count || 0) + Number(answers.t_recurrent_responses_count || 0));
-        text += "\n🏆 *Melhor turno:* " + (manhaScore >= tardeScore ? "Manhã" : "Tarde") + "\n";
-        
-        text += "\n--- 💰 *Totais do Dia* ---\n";
-        text += "💰 *Valor Vendido:* R$ " + (answers.q7_value_sold || 0) + "\n";
-        text += "💸 *Valor Recebido:* R$ " + (answers.q7_value_received || 0) + "\n";
-        text += "🦷 *Orto Iniciados:* " + (answers.ortho_starts || 0) + "\n";
-        
-        text += "\n--- ⭐ *Avaliação* ---\n";
-        text += "Nota: " + (answers.q10_day_rating || 'N/A') + "\n";
-        if (answers.q10_explanation) text += "Motivo: " + answers.q10_explanation + "\n";
-        
-        if (answers.objections && answers.objections.length > 0) {
-            text += "\n--- ⚠️ *Objeções* ---\n";
-            answers.objections.forEach((o, i) => {
-                text += "- " + o.type + " (" + o.reason + ")\n";
-            });
-        }
-        
-        const url = "https://wa.me/?text=" + encodeURIComponent(text);
-        window.open(url, '_blank');
+
+    const handleShareWhatsApp = () => {
+        const totalContacts = Number(answers.m_contacts_count || 0) + Number(answers.t_contacts_count || 0);
+        const totalResponses = Number(answers.m_new_leads_responses_count || 0) + Number(answers.m_recurrent_responses_count || 0) + Number(answers.t_new_leads_responses_count || 0) + Number(answers.t_recurrent_responses_count || 0);
+        const totalFutureAppointments = Number(answers.m_future_appointments_count || 0) + Number(answers.t_future_appointments_count || 0);
+
+        const text = `📊 *Relatório Diário Comercial - ${reportDate}*\n\n` +
+            `• Contatos / Prospecções: ${totalContacts || answers.q2_contacts_count || 0}\n` +
+            `• Respostas Positivas: ${totalResponses || answers.q3_positive_count || 0}\n` +
+            `• Novos Agendamentos: ${totalFutureAppointments || answers.q5_appointments_count || 0}\n` +
+            `• Comparecimentos (Hoje): ${answers.q5_attended_count || 0}\n` +
+            `• Faltas / Ausências: ${answers.q5_no_show_count || 0}\n` +
+            `• Inícios Ortodontia: ${answers.ortho_starts || 0}\n` +
+            `• Valor Vendido: R$ ${(answers.q7_value_sold || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+            `• Valor Recebido: R$ ${(answers.q7_value_received || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+            (answers.q10_day_rating ? `• Avaliação do Dia: ${answers.q10_day_rating.toUpperCase()}\n` : '');
+
+        navigator.clipboard.writeText(text);
+        toast.success('Relatório comercial copiado e WhatsApp Web aberto!');
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     const handleSave = async () => {
@@ -668,15 +637,32 @@ export const CommercialDailyReport: React.FC = () => {
                 updated_at: new Date().toISOString()
             };
 
-            // Save to commercial_reports (unified table)
-            const { error } = await supabase
+            // Save to commercial_reports (unified table) using robust check-and-update/insert
+            const { data: existingRecord } = await supabase
                 .from('commercial_reports')
-                .upsert(fullPayload, { onConflict: 'report_date' });
+                .select('id')
+                .eq('report_date', reportDate)
+                .maybeSingle();
+
+            let error = null;
+            if (existingRecord) {
+                const { error: updateError } = await supabase
+                    .from('commercial_reports')
+                    .update(fullPayload)
+                    .eq('report_date', reportDate);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('commercial_reports')
+                    .insert([fullPayload]);
+                error = insertError;
+            }
 
             if (error) throw error;
 
             setMessage({ type: 'success', text: 'Relatório diário comercial registrado com sucesso!' });
             loadHistory();
+            notifyDataChange(['commercial_daily_reports', 'daily_evaluations']);
         } catch (err: any) {
             console.error('Error saving report:', err);
             const errorMsg = err?.message || err?.details || 'Erro desconhecido';
@@ -700,6 +686,7 @@ export const CommercialDailyReport: React.FC = () => {
             if (error) throw error;
 
             setMessage({ type: 'success', text: 'Relatório diário comercial excluído com sucesso!' });
+            notifyDataChange(['commercial_daily_reports', 'daily_evaluations']);
             
             // Reset form
             setAnswers({
@@ -1869,15 +1856,17 @@ export const CommercialDailyReport: React.FC = () => {
                                           )}
                                      </button>
                                      <button 
+                                          type="button"
                                           onClick={handleShareWhatsApp}
                                           disabled={saving || loading}
-                                          className="flex-1 py-4.5 bg-green-600 hover:bg-green-500 active:scale-[0.98] text-text rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-green-600/15 disabled:opacity-50 hover:shadow-green-600/25 text-sm"
+                                          className="flex-1 py-4.5 bg-green-600/20 hover:bg-green-600/30 active:scale-[0.98] text-green-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-green-500/30 transition-all text-sm shadow-lg shadow-green-600/10"
                                      >
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                                        </svg>
-                                        Compartilhar
+                                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                                          </svg>
+                                          Compartilhar WhatsApp
                                      </button>
+
 
                                      {history.some(r => r.report_date && r.report_date.substring(0, 10) === reportDate.substring(0, 10)) && (
                                          <button 

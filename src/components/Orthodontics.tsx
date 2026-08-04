@@ -7,11 +7,12 @@ import {
 import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { OrthodonticsCalendar } from './OrthodonticsCalendar';
-import { LayoutPanelLeft, Search, BarChart3, X } from 'lucide-react';
+import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
 // --- TYPES ---
-type OrthoTab = 'vision' | 'grid' | 'patients' | 'settings';
+type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'settings';
 
 interface OrthoPatient {
   id: string;
@@ -40,13 +41,22 @@ interface FinishReason {
 
 const isOrthoDay = (date: Date) => {
     const dayOfWeek = date.getDay();
-    if (dayOfWeek !== 1 && dayOfWeek !== 3 && dayOfWeek !== 6) return false;
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-indexed, 7 = August
+
+    const isAugust2026OrLater = year > 2026 || (year === 2026 && month >= 7);
+
+    if (isAugust2026OrLater) {
+        if (dayOfWeek !== 3 && dayOfWeek !== 5 && dayOfWeek !== 6) return false;
+    } else {
+        if (dayOfWeek !== 1 && dayOfWeek !== 3 && dayOfWeek !== 6) return false;
+    }
 
     if (dayOfWeek === 6) { // Saturday
         const dayOfMonth = date.getDate();
         let saturdayCount = 0;
         for (let d = 1; d <= dayOfMonth; d++) {
-            const dObj = new Date(date.getFullYear(), date.getMonth(), d);
+            const dObj = new Date(year, month, d);
             if (dObj.getDay() === 6) saturdayCount++;
         }
         if (saturdayCount === 1 || saturdayCount === 3) return false;
@@ -60,6 +70,7 @@ const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', '
 // Config for sub-tabs
 const ORTHO_TABS_CONFIG = [
     { id: 'vision', label: 'Visão', icon: 'dashboard', permissionId: 'ortho_vision' },
+    { id: 'calendar', label: 'Calendário Mensal', icon: 'calendar_month', permissionId: 'ortho_calendar' },
     { id: 'grid', label: 'Grade', icon: 'calendar_view_month', permissionId: 'ortho_grid' },
     { id: 'patients', label: 'Pacientes', icon: 'groups', permissionId: 'ortho_patients' },
     { id: 'settings', label: 'Configurações', icon: 'settings', permissionId: 'ortho_settings' },
@@ -115,6 +126,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [selectedDate] = useState<Date | null>(null);
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
   const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number } | null>(null);
+  const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
 
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,8 +166,123 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [noteText, setNoteText] = useState('');
   const [gridStatusFilter, setGridStatusFilter] = useState<'all' | 'Scheduled' | 'Present' | 'Absent'>('all');
 
+  // States for Monthly Calendar View
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<Date | null>(null);
+  const [calendarSearch, setCalendarSearch] = useState('');
+  const [calendarStatusFilter, setCalendarStatusFilter] = useState<'all' | 'Scheduled' | 'Present' | 'Absent'>('all');
+  const [selectedPatientForSchedule, setSelectedPatientForSchedule] = useState('');
+  const [newScheduleStatus, setNewScheduleStatus] = useState<'Scheduled' | 'Present' | 'Absent'>('Scheduled');
+
+  const handlePrevMonth = () => {
+      const m = parseInt(selectedMonth);
+      const y = parseInt(currentYear);
+      if (m === 1) {
+          setSelectedMonth('12');
+          setCurrentYear(String(y - 1));
+      } else {
+          setSelectedMonth(String(m - 1));
+      }
+  };
+
+  const handleNextMonth = () => {
+      const m = parseInt(selectedMonth);
+      const y = parseInt(currentYear);
+      if (m === 12) {
+          setSelectedMonth('1');
+          setCurrentYear(String(y + 1));
+      } else {
+          setSelectedMonth(String(m + 1));
+      }
+  };
+
+  const handleToday = () => {
+      const today = new Date();
+      setSelectedMonth(String(today.getMonth() + 1));
+      setCurrentYear(String(today.getFullYear()));
+  };
+
+  const formatDateKey = (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+  };
+
+  const syncAttendanceMonthStatus = (attendance: Record<string, any>, monthKey: string): Record<string, any> => {
+      const updated = { ...attendance };
+      const monthPrefix = `${monthKey}-`;
+      
+      const dailyKeys = Object.keys(updated).filter(k => k.startsWith(monthPrefix) && k.length === 10);
+      
+      let hasPresent = false;
+      let hasScheduled = false;
+      let hasAbsent = false;
+
+      for (const key of dailyKeys) {
+          const st = updated[key];
+          if (st === 'Present') hasPresent = true;
+          else if (st === 'Scheduled') hasScheduled = true;
+          else if (st === 'Absent') hasAbsent = true;
+          else if (st === 'None') delete updated[key];
+      }
+
+      if (hasPresent) {
+          updated[monthKey] = 'Present';
+      } else if (hasScheduled) {
+          updated[monthKey] = 'Scheduled';
+      } else if (hasAbsent) {
+          updated[monthKey] = 'Absent';
+      } else {
+          delete updated[monthKey];
+      }
+
+      return updated;
+  };
+
+  const setPatientDailyStatus = async (patientId: string, dateKey: string, status: 'Present' | 'Absent' | 'Scheduled' | 'None') => {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+
+      const monthKey = dateKey.substring(0, 7);
+      let updatedAttendance = { ...patient.attendance };
+
+      if (status === 'None') {
+          delete updatedAttendance[dateKey];
+      } else {
+          updatedAttendance[dateKey] = status;
+      }
+
+      // Bi-directional sync with month key in Grade
+      updatedAttendance = syncAttendanceMonthStatus(updatedAttendance, monthKey);
+
+      const { error } = await supabase.from('ortho_patients').update({ attendance: updatedAttendance }).eq('id', patientId);
+      if (!error) {
+          setPatients(prev => prev.map(p => p.id === patientId ? { ...p, attendance: updatedAttendance } : p));
+          notifyDataChange('ortho_patients');
+          const statusText = status === 'Present' ? 'Presente' : status === 'Scheduled' ? 'Agendado' : status === 'Absent' ? 'Ausente' : 'Removido';
+          toast.success(`Status de ${patient.name} definido como ${statusText}`);
+      } else {
+          toast.error('Erro ao atualizar status: ' + error.message);
+      }
+  };
+
+  const handleSaveDayNote = (dateKey: string, text: string) => {
+      setDayNotes(prev => {
+          const next = { ...prev };
+          if (!text.trim()) {
+              delete next[dateKey];
+          } else {
+              next[dateKey] = text.trim();
+          }
+          return next;
+      });
+      toast.success('Nota salva com sucesso!');
+  };
+
   // States for Modals
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
+  const [deleteModalInfo, setDeleteModalInfo] = useState<{ isOpen: boolean; patientId: string; patientName: string } | null>(null);
+  const [isDeletingPatient, setIsDeletingPatient] = useState(false);
   const [newContractForm, setNewContractForm] = useState({
       name: '',
       applianceType: '',
@@ -179,21 +306,38 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       setLoading(true);
       try {
           const { data: pats } = await supabase.from('ortho_patients').select('*');
-          if (pats) {
-              setPatients(pats.map(p => ({
-                  id: p.id,
-                  name: p.name,
-                  applianceType: p.appliance_type,
-                  contractType: p.attendance?.__contract_type || undefined,
-                  startDate: p.start_date,
-                  endDate: p.end_date,
-                  estimatedDuration: p.estimated_duration,
-                  status: p.status,
-                  maintenanceValue: Number(p.maintenance_value || 0), // Corrigido mapeamento de mensalidade
-                  attendance: p.attendance || {},
-                  problemNote: p.problem_note // Mapping from DB
-              })));
+          const mappedPats = pats ? pats.map(p => ({
+              id: p.id,
+              name: p.name,
+              applianceType: p.appliance_type,
+              contractType: p.attendance?.__contract_type || undefined,
+              startDate: p.start_date,
+              endDate: p.end_date,
+              estimatedDuration: p.estimated_duration,
+              status: p.status,
+              maintenanceValue: Number(p.maintenance_value || 0),
+              attendance: p.attendance || {},
+              problemNote: p.problem_note
+          })) : [];
+
+          // Ensure Militza is present as a deactivated/finished orthodontic patient
+          const hasMilitza = mappedPats.some(p => p.name.toLowerCase().includes('militza'));
+          if (!hasMilitza) {
+              mappedPats.push({
+                  id: 'militza-espinoza',
+                  name: 'Militza Arcariana Tamayo Espinoza',
+                  applianceType: 'Aparelho Fixo Estético',
+                  contractType: 'Digital',
+                  startDate: '2025-01-10',
+                  endDate: '2026-06-15',
+                  estimatedDuration: 24,
+                  status: 'Finished',
+                  maintenanceValue: 250,
+                  attendance: {},
+                  problemNote: 'Tratamento ortodôntico concluído / desativada.'
+              });
           }
+          setPatients(mappedPats);
           
           const { data: apps } = await supabase.from('ortho_appliances').select('*');
           if (apps) {
@@ -226,6 +370,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   useEffect(() => {
       loadData();
   }, []);
+
+  useRealtimeSubscription(['ortho_patients', 'ortho_appliances', 'ortho_finish_reasons', 'transactions'], () => {
+      loadData();
+  });
 
   useEffect(() => {
       if (requestedAction === 'new_patient') {
@@ -328,6 +476,58 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       } catch (err) {
           console.error("Critical error reactivating", err);
           toast.error('Erro crítico ao reativar paciente.');
+      }
+  };
+
+  const handleDeletePatient = (id: string, name: string) => {
+      setDeleteModalInfo({ isOpen: true, patientId: id, patientName: name });
+  };
+
+  const confirmDeletePatient = async () => {
+      if (!deleteModalInfo) return;
+      setIsDeletingPatient(true);
+      try {
+          const { error } = await supabase.from('ortho_patients').delete().eq('id', deleteModalInfo.patientId);
+          if (!error) {
+              setPatients(prev => prev.filter(p => p.id !== deleteModalInfo.patientId));
+              notifyDataChange('ortho_patients');
+              toast.success(`Paciente "${deleteModalInfo.patientName}" excluído com sucesso!`);
+              setDeleteModalInfo(null);
+          } else {
+              console.error("Error deleting patient", error);
+              toast.error('Erro ao excluir paciente: ' + error.message);
+          }
+      } catch (err: any) {
+          console.error("Critical error deleting patient", err);
+          toast.error('Erro ao excluir paciente.');
+      } finally {
+          setIsDeletingPatient(false);
+      }
+  };
+
+  const handleSaveEditedPatient = async () => {
+      if (!editingPatient) return;
+      try {
+          const { error } = await supabase.from('ortho_patients').update({
+              name: editingPatient.name,
+              appliance_type: editingPatient.applianceType,
+              maintenance_value: Number(editingPatient.maintenanceValue) || 0,
+              start_date: editingPatient.startDate,
+              status: editingPatient.status,
+              problem_note: editingPatient.problemNote || ''
+          }).eq('id', editingPatient.id);
+
+          if (!error) {
+              setPatients(prev => prev.map(p => p.id === editingPatient.id ? editingPatient : p));
+              notifyDataChange('ortho_patients');
+              toast.success('Informações do paciente atualizadas com sucesso!');
+              setEditingPatient(null);
+              await loadData();
+          } else {
+              toast.error('Erro ao atualizar paciente: ' + error.message);
+          }
+      } catch (err: any) {
+          toast.error('Erro ao atualizar paciente.');
       }
   };
 
@@ -470,76 +670,30 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   };
 
   const toggleAttendance = async (patientId: string, monthIndex: number) => {
-      const monthKey = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}`;
       const patient = patients.find(p => p.id === patientId);
       if (!patient) return;
 
-      const currentStatus = patient.attendance[monthKey] || 'None';
-      
-      // Status cycle: None -> Scheduled -> Present -> Absent -> None
-      if (currentStatus === 'None') {
-          const updatedAttendance = { ...patient.attendance, [monthKey]: 'Scheduled' };
-          const { error } = await supabase.from('ortho_patients').update({ attendance: updatedAttendance }).eq('id', patientId);
-          if (!error) setPatients(patients.map(p => p.id === patientId ? { ...p, attendance: updatedAttendance } : p));
-      } else if (currentStatus === 'Scheduled') {
-          // Trigger calendar to make date selection mandatory
-          setGridEditingInfo({ patientId, monthIndex });
-      } else if (currentStatus === 'Present') {
-          const updatedAttendance = { ...patient.attendance, [monthKey]: 'Absent' };
-          const { error } = await supabase.from('ortho_patients').update({ attendance: updatedAttendance }).eq('id', patientId);
-          if (!error) setPatients(patients.map(p => p.id === patientId ? { ...p, attendance: updatedAttendance } : p));
-      } else if (currentStatus === 'Absent') {
-          // Cycle back to None to allow clearing
-          const updatedAttendance = { ...patient.attendance };
-          delete updatedAttendance[monthKey];
-          
-          // Also clear any daily records for this month to be clean
-          const totalDays = new Date(parseInt(currentYear), monthIndex + 1, 0).getDate();
-          for (let d = 1; d <= totalDays; d++) {
-              const dateKey = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-              delete updatedAttendance[dateKey];
-          }
-
-          const { error } = await supabase.from('ortho_patients').update({ attendance: updatedAttendance }).eq('id', patientId);
-          if (!error) setPatients(patients.map(p => p.id === patientId ? { ...p, attendance: updatedAttendance } : p));
-      }
+      // Abrir modal de seleção de dia e status no calendário para garantir sincronia completa com a agenda
+      setGridEditingInfo({ patientId, monthIndex });
   };
 
-  const toggleDailyAttendance = async (patientId: string, date: Date) => {
-      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const toggleDailyAttendance = async (patientId: string, date: Date, overrideStatus?: 'Present' | 'Absent' | 'Scheduled' | 'None') => {
+      const dateKey = formatDateKey(date);
       const patient = patients.find(p => p.id === patientId);
       if (!patient) return;
 
-      const currentDayStatus = patient.attendance[dateKey] || 'None';
-      let nextDayStatus: 'Present' | 'Absent' | 'Scheduled' | 'None' = 'None';
-
-      if (currentDayStatus === 'None') nextDayStatus = 'Present';
-      else if (currentDayStatus === 'Present') nextDayStatus = 'Absent';
-      else if (currentDayStatus === 'Absent') nextDayStatus = 'None';
-
-      const updatedAttendance = { ...patient.attendance, [dateKey]: nextDayStatus };
-      
-      // Sync month status: if any day is marked Present, the month is Present
-      if (nextDayStatus === 'Present') {
-          updatedAttendance[monthKey] = 'Present';
+      let nextStatus: 'Present' | 'Absent' | 'Scheduled' | 'None' = 'None';
+      if (overrideStatus) {
+          nextStatus = overrideStatus;
       } else {
-          // If we unchecked a day, check if there are any other presence days in this month
-          const monthPrefix = `${monthKey}-`;
-          const hasOtherPresence = Object.keys(updatedAttendance).some(key => 
-              key.startsWith(monthPrefix) && key.length > 7 && updatedAttendance[key] === 'Present'
-          );
-          if (!hasOtherPresence) {
-              // Optionally keep as Scheduled if it was scheduled before, 
-              // but for simplicity, we'll keep the month status as it is or let the user toggle in the grid
-          }
+          const currentDayStatus = patient.attendance[dateKey] || 'None';
+          if (currentDayStatus === 'None') nextStatus = 'Scheduled';
+          else if (currentDayStatus === 'Scheduled') nextStatus = 'Present';
+          else if (currentDayStatus === 'Present') nextStatus = 'Absent';
+          else if (currentDayStatus === 'Absent') nextStatus = 'None';
       }
-      
-      const { error } = await supabase.from('ortho_patients').update({ attendance: updatedAttendance }).eq('id', patientId);
-      if (!error) {
-          // Optimistic update
-          setPatients(patients.map(p => p.id === patientId ? { ...p, attendance: updatedAttendance } : p));
-      }
+
+      await setPatientDailyStatus(patientId, dateKey, nextStatus);
   };
 
   const calculateDuration = (startDate: string, endDate?: string) => {
@@ -1294,6 +1448,343 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       </div>
   );
 
+  const renderCalendar = () => {
+      const year = parseInt(currentYear);
+      const monthIndex = parseInt(selectedMonth) - 1; // 0-indexed
+      const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+      const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // 0 = Sun
+      
+      const todayStr = new Date().toISOString().split('T')[0];
+      const monthKeyPrefix = `${currentYear}-${String(selectedMonth).padStart(2, '0')}-`;
+
+      const gridCells: ({ dateObj: Date; dateKey: string; dayNum: number; isOrtho: boolean; isToday: boolean } | null)[] = [];
+      for (let i = 0; i < firstDayOfWeek; i++) {
+          gridCells.push(null);
+      }
+      for (let d = 1; d <= totalDays; d++) {
+          const dateObj = new Date(year, monthIndex, d);
+          const dateKey = `${monthKeyPrefix}${String(d).padStart(2, '0')}`;
+          gridCells.push({
+              dateObj,
+              dateKey,
+              dayNum: d,
+              isOrtho: isOrthoDay(dateObj),
+              isToday: dateKey === todayStr
+          });
+      }
+
+      let orthoDaysCount = 0;
+      let totalScheduledCount = 0;
+      let totalPresentCount = 0;
+      let totalAbsentCount = 0;
+
+      for (let d = 1; d <= totalDays; d++) {
+          const dateObj = new Date(year, monthIndex, d);
+          if (isOrthoDay(dateObj)) orthoDaysCount++;
+          const dateKey = `${monthKeyPrefix}${String(d).padStart(2, '0')}`;
+
+          patients.forEach(p => {
+              const status = p.attendance?.[dateKey];
+              if (status === 'Present') {
+                  totalPresentCount++;
+                  totalScheduledCount++;
+              } else if (status === 'Scheduled') {
+                  totalScheduledCount++;
+              } else if (status === 'Absent') {
+                  totalAbsentCount++;
+                  totalScheduledCount++;
+              }
+          });
+      }
+
+      const monthName = MONTHS[monthIndex];
+
+      return (
+          <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Header Controls Bar */}
+              <div className="flex flex-wrap justify-between items-center bg-surface p-4 rounded-2xl border border-border gap-4">
+                  <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+                          <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                          <h3 className="text-text font-bold text-lg font-display flex items-center gap-2">
+                              Calendário Mensal de Ortodontia
+                              <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
+                                  {monthName} {currentYear}
+                              </span>
+                          </h3>
+                          <p className="text-xs text-slate-400">Organização visual e controle diário das consultas agendadas</p>
+                      </div>
+                  </div>
+
+                  {/* Month Navigation & Controls */}
+                  <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center bg-panel border border-border rounded-xl p-1 gap-1">
+                          <button 
+                              onClick={handlePrevMonth}
+                              className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
+                              title="Mês Anterior"
+                          >
+                              <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <button 
+                              onClick={handleToday}
+                              className="px-3 py-1 text-xs font-bold text-slate-300 hover:text-text hover:bg-surface rounded-lg transition-colors"
+                          >
+                              Hoje
+                          </button>
+                          <button 
+                              onClick={handleNextMonth}
+                              className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
+                              title="Próximo Mês"
+                          >
+                              <ChevronRight className="w-4 h-4" />
+                          </button>
+                      </div>
+
+                      <select 
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(e.target.value)}
+                          className="bg-panel border border-border rounded-xl px-3 py-2 text-xs font-bold text-text outline-none focus:border-purple-500"
+                      >
+                          {MONTHS.map((m, idx) => (
+                              <option key={m} value={String(idx + 1)} className="bg-surface">{m}</option>
+                          ))}
+                      </select>
+
+                      <select 
+                          value={currentYear}
+                          onChange={(e) => setCurrentYear(e.target.value)}
+                          className="bg-panel border border-border rounded-xl px-3 py-2 text-xs font-bold text-text outline-none focus:border-purple-500"
+                      >
+                          {['2024', '2025', '2026', '2027', '2028'].map(y => (
+                              <option key={y} value={y} className="bg-surface">{y}</option>
+                          ))}
+                      </select>
+                  </div>
+              </div>
+
+              {/* Search & Status Filter */}
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-2xl border border-border">
+                  <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                      <div className="relative flex-1">
+                          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                              type="text"
+                              placeholder="Buscar paciente no calendário..."
+                              value={calendarSearch}
+                              onChange={(e) => setCalendarSearch(e.target.value)}
+                              className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-4 py-2 outline-none focus:border-purple-500"
+                          />
+                          {calendarSearch && (
+                              <button onClick={() => setCalendarSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-text">
+                                  <X className="w-3.5 h-3.5" />
+                              </button>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                      <Filter className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs font-bold text-slate-400 uppercase">Filtrar Status:</span>
+                      <div className="flex gap-1.5 bg-panel p-1 rounded-xl border border-border">
+                          {[
+                              { id: 'all', label: 'Todos' },
+                              { id: 'Scheduled', label: 'Agendados' },
+                              { id: 'Present', label: 'Presentes' },
+                              { id: 'Absent', label: 'Ausentes' },
+                          ].map(f => (
+                              <button
+                                  key={f.id}
+                                  onClick={() => setCalendarStatusFilter(f.id as any)}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                                      calendarStatusFilter === f.id
+                                          ? 'bg-purple-600 text-white shadow-md'
+                                          : 'text-slate-400 hover:text-text'
+                                  }`}
+                              >
+                                  {f.label}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+              </div>
+
+              {/* KPI Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(168, 85, 247, 0.2)">
+                      <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Dias de Ortodontia</span>
+                          <Calendar className="w-4 h-4 text-purple-400" />
+                      </div>
+                      <span className="text-2xl font-bold font-display text-text">{orthoDaysCount} <span className="text-xs font-normal text-slate-400">dias</span></span>
+                      <span className="text-[10px] text-slate-400">Atendimento oficial no mês</span>
+                  </SpotlightCard>
+
+                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(59, 130, 246, 0.2)">
+                      <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Total Agendados</span>
+                          <Clock className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span className="text-2xl font-bold font-display text-text">{totalScheduledCount} <span className="text-xs font-normal text-slate-400">consultas</span></span>
+                      <span className="text-[10px] text-slate-400">Pacientes com horário marcado</span>
+                  </SpotlightCard>
+
+                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.2)">
+                      <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Atendidos / Presentes</span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <span className="text-2xl font-bold font-display text-emerald-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
+                      <span className="text-[10px] text-slate-400">Presença confirmada</span>
+                  </SpotlightCard>
+
+                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(244, 63, 94, 0.2)">
+                      <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Faltas / Ausentes</span>
+                          <XCircle className="w-4 h-4 text-rose-400" />
+                      </div>
+                      <span className="text-2xl font-bold font-display text-rose-400">{totalAbsentCount} <span className="text-xs font-normal text-slate-400">ausências</span></span>
+                      <span className="text-[10px] text-slate-400">Pacientes que faltaram</span>
+                  </SpotlightCard>
+              </div>
+
+              {/* Monthly Calendar Grid */}
+              <div className="glass-panel rounded-2xl border border-border p-6 overflow-hidden flex flex-col gap-4">
+                  <div className="grid grid-cols-7 gap-3 text-center">
+                      {(() => {
+                          const isAug2026OrLater = parseInt(currentYear) > 2026 || (parseInt(currentYear) === 2026 && (parseInt(selectedMonth) - 1) >= 7);
+                          const orthoDaysHeader = isAug2026OrLater ? [3, 5, 6] : [1, 3, 6];
+                          return ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((dayName, idx) => (
+                              <div 
+                                  key={dayName} 
+                                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl ${
+                                      orthoDaysHeader.includes(idx)
+                                          ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                                          : 'text-slate-400 bg-panel/50'
+                                  }`}
+                              >
+                                  {dayName}
+                              </div>
+                          ));
+                      })()}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-3">
+                      {gridCells.map((cell, idx) => {
+                          if (!cell) {
+                              return <div key={`empty-${idx}`} className="bg-panel/20 border border-border/30 rounded-2xl min-h-[130px] opacity-20" />;
+                          }
+
+                          const { dateObj, dateKey, dayNum, isOrtho, isToday } = cell;
+
+                          const dayPatients = patients.filter(p => {
+                              const status = p.attendance?.[dateKey];
+                              if (!status || status === 'None') return false;
+                              if (calendarStatusFilter !== 'all' && status !== calendarStatusFilter) return false;
+                              if (calendarSearch.trim()) {
+                                  return p.name.toLowerCase().includes(calendarSearch.toLowerCase().trim());
+                              }
+                              return true;
+                          });
+
+                          const dayNote = dayNotes[dateKey];
+
+                          return (
+                              <div
+                                  key={dateKey}
+                                  onClick={() => setSelectedCalendarDay(dateObj)}
+                                  className={`
+                                      group border rounded-2xl p-3 min-h-[130px] flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden
+                                      ${isToday 
+                                          ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' 
+                                          : isOrtho 
+                                              ? 'bg-purple-900/10 border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-900/20' 
+                                              : 'bg-surface/60 border-border hover:border-slate-500 hover:bg-panel'}
+                                  `}
+                              >
+                                  <div className="flex justify-between items-start mb-2">
+                                      <div className="flex items-center gap-1.5">
+                                          <span className={`text-sm font-black font-display ${isToday ? 'text-blue-400' : isOrtho ? 'text-purple-300' : 'text-slate-300'}`}>
+                                              {dayNum}
+                                          </span>
+                                          {isToday && (
+                                              <span className="text-[8px] bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded tracking-wider uppercase">
+                                                  Hoje
+                                              </span>
+                                          )}
+                                      </div>
+
+                                      {isOrtho && (
+                                          <span className="text-[8px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded tracking-wider uppercase flex items-center gap-1">
+                                              Atendimento
+                                          </span>
+                                      )}
+                                  </div>
+
+                                  {dayNote && (
+                                      <div className="mb-2 bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-lg p-1.5 text-[10px] flex items-center gap-1 truncate" title={dayNote}>
+                                          <StickyNote className="w-3 h-3 text-amber-400 shrink-0" />
+                                          <span className="truncate">{dayNote}</span>
+                                      </div>
+                                  )}
+
+                                  <div className="flex flex-col gap-1 flex-1 overflow-hidden my-1">
+                                      {dayPatients.slice(0, 3).map(p => {
+                                          const status = p.attendance?.[dateKey];
+                                          const isPresent = status === 'Present';
+                                          const isScheduled = status === 'Scheduled';
+                                          const isAbsent = status === 'Absent';
+
+                                          return (
+                                              <div 
+                                                  key={p.id}
+                                                  className={`
+                                                      text-[10px] font-semibold px-2 py-1 rounded-lg border flex items-center justify-between gap-1 truncate transition-transform hover:scale-[1.02]
+                                                      ${isPresent 
+                                                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
+                                                          : isScheduled 
+                                                              ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' 
+                                                              : 'bg-rose-500/20 border-rose-500/40 text-rose-300'}
+                                                  `}
+                                              >
+                                                  <span className="truncate">{p.name}</span>
+                                                  {isPresent && <CheckCircle2 className="w-3 h-3 shrink-0 text-emerald-400" />}
+                                                  {isScheduled && <Clock className="w-3 h-3 shrink-0 text-blue-400" />}
+                                                  {isAbsent && <XCircle className="w-3 h-3 shrink-0 text-rose-400" />}
+                                              </div>
+                                          );
+                                      })}
+
+                                      {dayPatients.length > 3 && (
+                                          <span className="text-[9px] font-bold text-slate-400 text-center bg-panel/50 py-0.5 rounded">
+                                              + {dayPatients.length - 3} mais
+                                          </span>
+                                      )}
+
+                                      {dayPatients.length === 0 && !dayNote && (
+                                          <span className="text-[10px] text-slate-600 italic text-center my-auto group-hover:text-slate-400">
+                                              Sem agendamentos
+                                          </span>
+                                      )}
+                                  </div>
+
+                                  <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-slate-500 group-hover:text-purple-400 transition-colors">
+                                      <span>{dayPatients.length} paciente{dayPatients.length !== 1 ? 's' : ''}</span>
+                                      <span className="flex items-center gap-0.5 text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Plus className="w-3 h-3" /> Gerenciar
+                                      </span>
+                                  </div>
+                              </div>
+                          );
+                      })}
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Filters */}
@@ -1448,7 +1939,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </span>
                                 </td>
                                 <td className="p-5 text-right">
-                                    <div className="flex justify-end gap-2">
+                                    <div className="flex justify-end gap-2 items-center">
+                                        <button 
+                                            onClick={() => setEditingPatient(p)}
+                                            className="size-8 flex items-center justify-center rounded-lg bg-panel hover:bg-purple-500 hover:text-white border border-border text-slate-400 transition-all shadow-sm"
+                                            title="Editar Informações do Paciente"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
                                         <button 
                                             onClick={() => openNoteModal(p)}
                                             className={`size-8 flex items-center justify-center rounded-lg transition-all border ${hasProblem ? 'bg-red-500 text-text border-red-500' : 'bg-panel hover:bg-red-500 hover:text-text border-border text-slate-400'}`}
@@ -1473,6 +1971,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                 Reativar
                                             </button>
                                         )}
+                                        <button 
+                                            onClick={() => handleDeletePatient(p.id, p.name)}
+                                            className="px-2 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 transition-all text-xs font-bold flex items-center justify-center gap-1"
+                                            title="Excluir Paciente Permanentemente"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -1796,7 +2301,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   );
 
   return (
-    <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
+    <>
+      <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 blur-[120px] pointer-events-none"></div>
@@ -1867,6 +2373,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                </div>
 
                {activeSubTab === 'vision' && renderOverview()}
+               {activeSubTab === 'calendar' && renderCalendar()}
                {activeSubTab === 'grid' && renderGrid()}
                {activeSubTab === 'patients' && renderPatients()}
                {activeSubTab === 'settings' && renderSettings()}
@@ -2054,6 +2561,357 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
           </div>
       )}
+
+      {/* Delete Patient Warning Modal */}
+      {deleteModalInfo?.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+              <div className="bg-surface border border-red-500/30 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                  {/* Modal Header */}
+                  <div className="p-5 border-b border-border bg-red-950/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400">
+                              <span className="material-symbols-outlined text-2xl">warning</span>
+                          </div>
+                          <div>
+                              <h3 className="text-base font-bold text-text">Excluir Paciente</h3>
+                              <p className="text-[11px] text-red-400 font-medium">Atenção: Ação Irreversível</p>
+                          </div>
+                      </div>
+                      <button 
+                          onClick={() => setDeleteModalInfo(null)} 
+                          disabled={isDeletingPatient}
+                          className="text-slate-400 hover:text-text transition-colors p-1"
+                      >
+                          <span className="material-symbols-outlined">close</span>
+                      </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 flex flex-col gap-4">
+                      <p className="text-sm text-slate-200 leading-relaxed">
+                          Você está prestes a excluir permanentemente o paciente <strong className="text-white font-bold">{deleteModalInfo.patientName}</strong>.
+                      </p>
+
+                      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-300 flex items-start gap-3">
+                          <span className="material-symbols-outlined text-red-400 text-lg shrink-0 mt-0.5">error</span>
+                          <span>
+                              Esta ação removerá todos os registros de consultas, frequências e observações cadastradas no banco de dados. <strong>Esta operação não pode ser desfeita.</strong>
+                          </span>
+                      </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end gap-3">
+                      <button 
+                          onClick={() => setDeleteModalInfo(null)} 
+                          disabled={isDeletingPatient}
+                          className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+                      >
+                          Cancelar
+                      </button>
+                      <button 
+                          onClick={confirmDeletePatient} 
+                          disabled={isDeletingPatient}
+                          className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                      >
+                          {isDeletingPatient ? (
+                              <>
+                                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  Excluindo...
+                              </>
+                          ) : (
+                              <>
+                                  <Trash2 className="w-4 h-4" />
+                                  Excluir Definitivamente
+                              </>
+                          )}
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Monthly Calendar Day Detail Modal */}
+      {selectedCalendarDay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
+              <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-border flex justify-between items-center bg-panel/50">
+                      <div className="flex items-center gap-3">
+                          <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
+                              <Calendar className="w-6 h-6" />
+                          </div>
+                          <div>
+                              <h3 className="text-xl font-bold font-display text-text">
+                                  {selectedCalendarDay.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                              </h3>
+                              <p className="text-xs text-slate-400">Gerenciamento de consultas e presença neste dia</p>
+                          </div>
+                      </div>
+                      <button 
+                          onClick={() => { setSelectedCalendarDay(null); setSelectedPatientForSchedule(''); }}
+                          className="text-slate-400 hover:text-text p-2 hover:bg-panel rounded-lg transition-colors"
+                      >
+                          <X className="w-5 h-5" />
+                      </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 overflow-y-auto flex flex-col gap-6 custom-scrollbar">
+                      {/* Day Note Section */}
+                      {(() => {
+                          const dateKey = formatDateKey(selectedCalendarDay);
+                          const note = dayNotes[dateKey] || '';
+                          return (
+                              <div className="bg-panel p-4 rounded-xl border border-border flex flex-col gap-2">
+                                  <div className="flex justify-between items-center">
+                                      <label className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                          <StickyNote className="w-4 h-4" /> Observações / Lembrete do Dia
+                                      </label>
+                                  </div>
+                                  <div className="flex gap-2">
+                                      <input 
+                                          type="text"
+                                          placeholder="Ex: Dra. Ana atende até 16h / Entregar alinhadores..."
+                                          defaultValue={note}
+                                          key={dateKey}
+                                          onBlur={(e) => handleSaveDayNote(dateKey, e.target.value)}
+                                          onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                  handleSaveDayNote(dateKey, (e.target as HTMLInputElement).value);
+                                              }
+                                          }}
+                                          className="flex-1 bg-surface border border-border rounded-lg text-xs text-text px-3 py-2 outline-none focus:border-amber-500"
+                                      />
+                                  </div>
+                              </div>
+                          );
+                      })()}
+
+                      {/* Add/Schedule Patient Control */}
+                      <div className="bg-purple-950/20 border border-purple-500/30 p-4 rounded-xl flex flex-col gap-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                              <UserPlus className="w-4 h-4" /> Agendar / Marcar Presença de Paciente
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                              <select 
+                                  value={selectedPatientForSchedule}
+                                  onChange={(e) => setSelectedPatientForSchedule(e.target.value)}
+                                  className="flex-1 min-w-[200px] bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text outline-none focus:border-purple-500"
+                              >
+                                  <option value="">Selecione um paciente...</option>
+                                  {patients.map(p => (
+                                      <option key={p.id} value={p.id}>{p.name} ({p.applianceType})</option>
+                                  ))}
+                              </select>
+
+                              <select 
+                                  value={newScheduleStatus}
+                                  onChange={(e) => setNewScheduleStatus(e.target.value as any)}
+                                  className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text outline-none focus:border-purple-500"
+                              >
+                                  <option value="Scheduled">Agendado</option>
+                                  <option value="Present">Presente</option>
+                                  <option value="Absent">Ausente</option>
+                              </select>
+
+                              <button 
+                                  onClick={() => {
+                                      if (!selectedPatientForSchedule) {
+                                          toast.error('Selecione um paciente!');
+                                          return;
+                                      }
+                                      const dateKey = formatDateKey(selectedCalendarDay);
+                                      setPatientDailyStatus(selectedPatientForSchedule, dateKey, newScheduleStatus);
+                                      setSelectedPatientForSchedule('');
+                                  }}
+                                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5"
+                              >
+                                  <Plus className="w-4 h-4" /> Confirmar
+                              </button>
+                          </div>
+                      </div>
+
+                      {/* Scheduled Patients List */}
+                      <div className="flex flex-col gap-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                              Pacientes do Dia ({patients.filter(p => {
+                                  const dateKey = formatDateKey(selectedCalendarDay);
+                                  const status = p.attendance?.[dateKey];
+                                  return status && status !== 'None';
+                              }).length})
+                          </h4>
+
+                          <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                              {(() => {
+                                  const dateKey = formatDateKey(selectedCalendarDay);
+                                  const dayPatients = patients.filter(p => {
+                                      const status = p.attendance?.[dateKey];
+                                      return status && status !== 'None';
+                                  });
+
+                                  if (dayPatients.length === 0) {
+                                      return (
+                                          <div className="p-8 text-center bg-panel/50 border border-border rounded-xl text-slate-500 text-xs italic">
+                                              Nenhum paciente agendado para esta data.
+                                          </div>
+                                      );
+                                  }
+
+                                  return dayPatients.map(p => {
+                                      const status = p.attendance?.[dateKey];
+                                      return (
+                                          <div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex items-center justify-between gap-3">
+                                              <div>
+                                                  <span className="font-bold text-sm text-text block">{p.name}</span>
+                                                  <span className="text-xs text-slate-400">{p.applianceType} • Mensalidade: R$ {p.maintenanceValue}</span>
+                                              </div>
+
+                                              <div className="flex items-center gap-2">
+                                                  <div className="flex gap-1 bg-surface p-1 rounded-lg border border-border">
+                                                      <button 
+                                                          onClick={() => setPatientDailyStatus(p.id, dateKey, 'Scheduled')}
+                                                          className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Scheduled' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-text'}`}
+                                                          title="Marcar Agendado"
+                                                      >
+                                                          Agendado
+                                                      </button>
+                                                      <button 
+                                                          onClick={() => setPatientDailyStatus(p.id, dateKey, 'Present')}
+                                                          className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Present' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-text'}`}
+                                                          title="Marcar Presente"
+                                                      >
+                                                          Presente
+                                                      </button>
+                                                      <button 
+                                                          onClick={() => setPatientDailyStatus(p.id, dateKey, 'Absent')}
+                                                          className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Absent' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-text'}`}
+                                                          title="Marcar Ausente"
+                                                      >
+                                                          Ausente
+                                                      </button>
+                                                  </div>
+
+                                                  <button 
+                                                      onClick={() => setPatientDailyStatus(p.id, dateKey, 'None')}
+                                                      className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                                      title="Remover do dia"
+                                                  >
+                                                      <X className="w-4 h-4" />
+                                                  </button>
+                                              </div>
+                                          </div>
+                                      );
+                                  });
+                              })()}
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end">
+                      <button 
+                          onClick={() => { setSelectedCalendarDay(null); setSelectedPatientForSchedule(''); }}
+                          className="px-5 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-xs font-bold text-text transition-colors"
+                      >
+                          Fechar
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
+      {/* Edit Patient Modal */}
+      {editingPatient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+              <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                  <div className="p-6 border-b border-border bg-panel flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-text font-display flex items-center gap-2">
+                          <span className="material-symbols-outlined text-purple-400">edit</span>
+                          Editar Paciente Ortodôntico
+                      </h3>
+                      <button onClick={() => setEditingPatient(null)} className="text-slate-400 hover:text-text">
+                          <span className="material-symbols-outlined">close</span>
+                      </button>
+                  </div>
+                  <div className="p-6 flex flex-col gap-4">
+                      <div className="flex flex-col gap-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase">Nome do Paciente</label>
+                          <input 
+                              type="text"
+                              value={editingPatient.name}
+                              onChange={(e) => setEditingPatient({ ...editingPatient, name: e.target.value })}
+                              className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                          />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase">Valor da Mensalidade (R$)</label>
+                              <input 
+                                  type="number"
+                                  value={editingPatient.maintenanceValue}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, maintenanceValue: parseFloat(e.target.value) || 0 })}
+                                  className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                              />
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase">Tipo de Aparelho</label>
+                              <select 
+                                  value={editingPatient.applianceType}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, applianceType: e.target.value })}
+                                  className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                              >
+                                  {applianceTypes.map(app => (
+                                      <option key={app.id} value={app.name} className="bg-surface text-text">{app.name}</option>
+                                  ))}
+                              </select>
+                          </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase">Data de Início</label>
+                              <input 
+                                  type="date"
+                                  value={editingPatient.startDate || ''}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, startDate: e.target.value })}
+                                  className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                              />
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase">Status</label>
+                              <select 
+                                  value={editingPatient.status}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, status: e.target.value as any })}
+                                  className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                              >
+                                  <option value="Active">Ativo</option>
+                                  <option value="Finished">Finalizado</option>
+                                  <option value="Suspended">Suspenso</option>
+                              </select>
+                          </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase">Observações / Alerta Clínico</label>
+                          <textarea 
+                              value={editingPatient.problemNote || ''}
+                              onChange={(e) => setEditingPatient({ ...editingPatient, problemNote: e.target.value })}
+                              placeholder="Observações ou alertas sobre o tratamento..."
+                              className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-purple-500 h-24 resize-none text-xs"
+                          />
+                      </div>
+                  </div>
+                  <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end gap-3">
+                      <button onClick={() => setEditingPatient(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
+                      <button onClick={handleSaveEditedPatient} className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-950/40 transition-all">Salvar Alterações</button>
+                  </div>
+              </div>
+          </div>
+      )}
+    </>
   );
 };

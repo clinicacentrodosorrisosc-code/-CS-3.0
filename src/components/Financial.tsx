@@ -18,10 +18,12 @@ import { supabase } from '../supabaseClient';
 import { DateRangePicker } from './ui/date-range-picker';
 import { SpotlightCard } from './ui/spotlight-card';
 import { toast } from 'sonner';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
+import { playCashRegisterSound } from '../lib/sound';
 
 // --- TYPES & INTERFACES ---
 
-type SubTab = 'overview' | 'transactions' | 'expenses' | 'dre' | 'accounts' | 'settings' | 'pricing';
+type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing';
 
 interface SubCategory {
     id: string;
@@ -98,9 +100,6 @@ const COLORS = ['#d946ef', '#8b5cf6', '#2dd4bf', '#fb923c', '#ef4444', '#3b82f6'
 const ALL_TABS_CONFIG = [
   { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
   { id: 'transactions', label: 'Receitas', permissionId: 'financial_transactions' },
-  { id: 'expenses', label: 'Despesas', permissionId: 'financial_expenses' },
-  { id: 'dre', label: 'DRE', permissionId: 'financial_dre' },
-  { id: 'accounts', label: 'Contas & Extratos', permissionId: 'financial_accounts' },
   { id: 'pricing', label: 'Precificação', permissionId: 'financial_pricing' },
   { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' }
 ];
@@ -601,6 +600,20 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     fetchAllData(); 
   }, []);
 
+  useRealtimeSubscription([
+    'transactions', 
+    'accounts', 
+    'card_fees', 
+    'income_categories', 
+    'expense_categories', 
+    'professionals', 
+    'suppliers', 
+    'sales_teams', 
+    'payment_methods'
+  ], () => {
+    fetchAllData();
+  });
+
   const handleSaveTransaction = async () => {
       try {
           const amountVal = parseFloat((formData.amount || '0').toString().replace(',', '.'));
@@ -684,7 +697,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
           const { error } = await supabase.from('transactions').upsert(transactionsToInsert);
           if (!error) { 
+              playCashRegisterSound();
               await fetchAllData(); 
+              notifyDataChange(['transactions', 'accounts']);
               setIsModalOpen(false);
               toast.success('Lançamento salvo com sucesso!');
           } else { 
@@ -865,7 +880,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
     const { error } = await supabase.from('transactions').insert(toInsert);
     if (!error) { 
+        playCashRegisterSound();
         await fetchAllData(); 
+        notifyDataChange(['transactions', 'accounts']);
         setIsBulkModalOpen(false); 
         toast.success('Processamento concluído com sucesso!');
     }
@@ -2111,22 +2128,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 </div>
             )}
             {activeSubTab === 'transactions' && renderTransactionsTable()}
-            {activeSubTab === 'expenses' && renderExpensesTable()}
-            {activeSubTab === 'dre' && renderDRE()}
             {activeSubTab === 'pricing' && renderPricing()}
             {activeSubTab === 'settings' && renderSettings()}
-            {activeSubTab === 'accounts' && (
-                <div className="flex flex-col gap-8 animate-in fade-in h-full">
-                    <div className="flex justify-end">
-                        <button onClick={() => setIsAccountModalOpen(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-sm font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg">
-                            <Plus className="w-5 h-5" /> Nova Conta Bancária
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {accountsList.map(acc => { const accTxs = transactions.filter(t => t.accountId === acc.id && t.status === 'Paid'); const balance = (acc.initialBalance || 0) + accTxs.reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0); return (<SpotlightCard key={acc.id} className="glass-panel rounded-2xl border border-border bg-surface p-6 relative overflow-hidden flex flex-col group transition-all hover:border-white/20" spotlightColor="rgba(59, 130, 246, 0.3)"><h4 className="text-text font-bold text-base">{acc.name}</h4><p className="text-[10px] text-slate-500 font-bold uppercase mb-8">{acc.bank}</p><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">SALDO DISPONÍVEL</p><span className={`text-2xl font-bold mb-6 ${balance < 0 ? 'text-red-400' : 'text-text'}`}>R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span><button onClick={() => setSelectedAccountForStatement(acc)} className="w-full py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-border flex items-center justify-center gap-2"><Receipt className="w-4 h-4" />Visualizar Extrato</button></SpotlightCard>); })}
-                    </div>
-                </div>
-            )}
           </div>
         </div>
       </div>

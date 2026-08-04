@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserProfile, Tab } from '../types';
 import { X, ChevronUp, ChevronDown, Trash2, Sliders, Loader2, UserPlus, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PermissionsModalProps {
   isOpen: boolean;
@@ -15,13 +16,12 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string }[]> = {
     [Tab.FINANCIAL]: [
         { id: 'financial_overview', label: 'Visão Geral' },
         { id: 'financial_transactions', label: 'Receitas' },
-        { id: 'financial_expenses', label: 'Despesas' },
-        { id: 'financial_dfc', label: 'DFC & Comercial' },
-        { id: 'financial_accounts', label: 'Contas & Extratos' },
+        { id: 'financial_pricing', label: 'Precificação' },
         { id: 'financial_settings', label: 'Configurações' },
     ],
     [Tab.ORTHODONTICS]: [
         { id: 'ortho_vision', label: 'Visão Geral' },
+        { id: 'ortho_calendar', label: 'Calendário Mensal' },
         { id: 'ortho_grid', label: 'Grade de Presença' },
         { id: 'ortho_patients', label: 'Lista de Pacientes' },
         { id: 'ortho_settings', label: 'Configurações' },
@@ -31,12 +31,18 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string }[]> = {
     ],
     [Tab.LABWORK]: [
         { id: 'lab_kanban', label: 'Quadro Kanban' },
-        { id: 'lab_gantt', label: 'Cronograma (Gantt)' },
     ],
-    [Tab.SUPPORT]: [
-        { id: 'support_view', label: 'Visualizar Chamados' },
-        { id: 'support_manage', label: 'Gerenciar Chamados' }
+    [Tab.TIME_TRACKING]: [
+        { id: 'clock', label: 'Bater Ponto' },
+        { id: 'records', label: 'Espelho de Ponto' },
+        { id: 'summary', label: 'Resumo e Banco de Horas' }
     ],
+    [Tab.MEETINGS]: [
+        { id: 'campaign_calendar', label: 'Calendário de Campanha' },
+        { id: 'meeting_minutes', label: 'Atas de Reuniões' },
+        { id: 'clinic_ideas', label: 'Ideias para a Clínica' }
+    ],
+
     [Tab.TASKS]: [
         { id: 'tasks', label: 'Tarefas' },
         { id: 'reports', label: 'Relatórios' }
@@ -279,11 +285,12 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
     Tab.FINANCIAL, 
     Tab.ORTHODONTICS, 
     Tab.LABWORK, 
-    Tab.MEETINGS, 
+    Tab.MEETINGS,
     Tab.SUPPORT, 
     Tab.PASSWORDS, 
     Tab.RESPONSIBILITIES, 
-    Tab.BIBLIOTECA
+    Tab.BIBLIOTECA,
+    Tab.TASKS
   ];
   
   // Conditionally add Management tab only for master email

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ClinicIdeas } from './ClinicIdeas';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
 // --- TYPES FOR CAMPAIGNS ---
 interface Campaign {
@@ -101,6 +102,10 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
   useEffect(() => {
       loadData();
   }, []);
+
+  useRealtimeSubscription(['meetings', 'campaigns'], () => {
+      loadData();
+  });
 
   useEffect(() => {
       if (requestedSubTab) {
@@ -203,6 +208,7 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
       const { error } = await supabase.from('meetings').insert(newMeeting);
       if (!error) {
           await loadData();
+          notifyDataChange('meetings');
           setIsModalOpen(false);
           setFormData(emptyForm);
           toast.success('Reunião salva com sucesso!');
@@ -216,6 +222,7 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
       const { error } = await supabase.from('meetings').delete().eq('id', id);
       if (!error) {
           await loadData();
+          notifyDataChange('meetings');
           if (viewingMeeting?.id === id) setViewingMeeting(null);
           toast.success('Reunião excluída com sucesso.');
       } else {
@@ -237,6 +244,7 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
           const updatedMeeting = { ...meeting, actionItems: updatedItems };
           setMeetings(meetings.map(m => m.id === meetingId ? updatedMeeting : m));
           if (viewingMeeting?.id === meetingId) setViewingMeeting(updatedMeeting);
+          notifyDataChange('meetings');
       }
   };
 
@@ -269,7 +277,10 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
       };
 
       const { error } = await supabase.from('campaigns').upsert(payload);
-      if (!error) await loadData();
+      if (!error) {
+          await loadData();
+          notifyDataChange('campaigns');
+      }
 
       setIsCampaignModalOpen(false);
   };
@@ -277,7 +288,10 @@ export const Meetings: React.FC<{ requestedSubTab?: string | null }> = ({ reques
   const handleDeleteCampaign = async (campaignId: string) => {
       if (!window.confirm("Deseja excluir esta campanha?")) return;
       const { error } = await supabase.from('campaigns').delete().eq('id', campaignId);
-      if (!error) await loadData();
+      if (!error) {
+          await loadData();
+          notifyDataChange('campaigns');
+      }
       if (isCampaignModalOpen) setIsCampaignModalOpen(false); 
   };
 

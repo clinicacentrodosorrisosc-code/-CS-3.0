@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SupportTicket } from '../types';
 import { supabase } from '../supabaseClient';
 import { Plus, ClipboardCheck, Trash2, Tag, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
 interface SupportProps {
     userRole?: string;
@@ -61,6 +62,10 @@ export const Support: React.FC<SupportProps> = () => {
         loadData();
     }, []);
 
+    useRealtimeSubscription(['support_tickets'], () => {
+        loadData();
+    });
+
     const handleCreateTicket = async () => {
         if (!formData.title || !formData.description) return;
 
@@ -79,6 +84,7 @@ export const Support: React.FC<SupportProps> = () => {
         
         if (!error) {
             await loadData();
+            notifyDataChange('support_tickets');
             setIsModalOpen(false);
             setFormData({ title: '', description: '', category: 'Sistema', priority: 'Media' });
         } else {
@@ -90,6 +96,7 @@ export const Support: React.FC<SupportProps> = () => {
         const { error } = await supabase.from('support_tickets').update({ status: newStatus }).eq('id', id);
         if (!error) {
             setTickets(prev => prev.map(t => t.id === id ? { ...t, status: newStatus as any } : t));
+            notifyDataChange('support_tickets');
         } else {
             alert(`Erro ao atualizar: ${error.message}`);
         }
@@ -109,6 +116,7 @@ export const Support: React.FC<SupportProps> = () => {
             }
 
             setTickets(prev => prev.filter(t => t.id !== id));
+            notifyDataChange('support_tickets');
         } catch (err: any) {
             console.error("Erro detalhado ao excluir:", err);
             alert(`Não foi possível excluir o ticket.\nErro: ${err.message || 'Desconhecido'}`);

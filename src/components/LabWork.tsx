@@ -10,19 +10,19 @@ import {
 import { 
   Briefcase, DollarSign, CheckCircle, TrendingUp, ArrowRight, Edit2, Trash2, 
   Flag, PlusCircle, ChevronLeft, ChevronRight, Plus, X, CreditCard,
-  UserCog, Ruler, Package, ClipboardCheck
+  UserCog, Ruler, Package, ClipboardCheck, Search, Clock
 } from 'lucide-react';
 
-import { DndContext, useDraggable, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { toast } from 'sonner';
+import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
-type ViewMode = 'kanban' | 'settings' | 'dashboard' | 'gantt';
+type ViewMode = 'kanban' | 'settings' | 'dashboard' | 'lab_payments_ctrl';
 
 interface LabWorkProps {
     userRole?: string;
     allowedSubTabs?: string[];
     requestedSubTab?: string | null;
+    userEmail?: string;
 }
 
 interface LabProsthesisType {
@@ -34,7 +34,7 @@ interface LabProsthesisType {
 
 
 
-export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [], requestedSubTab }) => {
+export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [], requestedSubTab, userEmail }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [orders, setOrders] = useState<LabOrder[]>([]);
   const [prosthesisList, setProsthesisList] = useState<LabProsthesisType[]>([]);
@@ -42,9 +42,75 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
   const [isSaving, setIsSaving] = useState(false);
   const [productionPeriod, setProductionPeriod] = useState<'7days' | 'month' | 'custom'>('7days');
   const [kanbanProsthesisFilter, setKanbanProsthesisFilter] = useState<string>('all');
+  const [kanbanPatientFilter, setKanbanPatientFilter] = useState<string>('');
+  const [kanbanPaymentFilter, setKanbanPaymentFilter] = useState<'all' | 'pending' | 'paid'>('all');
   const [customStartDate, setCustomStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
   const [customEndDate, setCustomEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [labRevenueGoal, setLabRevenueGoal] = useState<number>(10000);
+  const [labPaymentsMetaMap, setLabPaymentsMetaMap] = useState<Record<string, { paid: boolean; paymentDate: string; paymentMethod: string; invoiceNumber: string }>>(() => {
+      try {
+          const saved = localStorage.getItem('dental_lab_payments_meta_map');
+          if (saved) return JSON.parse(saved);
+          const oldSaved = localStorage.getItem('dental_lab_cost_paid_map');
+          if (oldSaved) {
+              const oldMap = JSON.parse(oldSaved);
+              const migrated: Record<string, { paid: boolean; paymentDate: string; paymentMethod: string; invoiceNumber: string }> = {};
+              for (const id in oldMap) {
+                  if (oldMap[id]) {
+                      migrated[id] = { paid: true, paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'PIX', invoiceNumber: '' };
+                  }
+              }
+              return migrated;
+          }
+          return {};
+      } catch {
+          return {};
+      }
+  });
+  const [labPaymentsSearch, setLabPaymentsSearch] = useState('');
+  const [labPaymentsStatusFilter, setLabPaymentsStatusFilter] = useState<'all' | 'pending' | 'paid'>('all');
+  const [showPatientPaymentsRegistry, setShowPatientPaymentsRegistry] = useState(false);
+  const [isLabPayModalOpen, setIsLabPayModalOpen] = useState(false);
+  const [selectedOrderForLabPay, setSelectedOrderForLabPay] = useState<LabOrder | null>(null);
+  const [labPayForm, setLabPayForm] = useState({
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMethod: 'PIX',
+      invoiceNumber: ''
+  });
+
+  const handleSaveLabPayment = () => {
+      if (!selectedOrderForLabPay) return;
+      const updated = {
+          ...labPaymentsMetaMap,
+          [selectedOrderForLabPay.id]: {
+              paid: true,
+              paymentDate: labPayForm.paymentDate,
+              paymentMethod: labPayForm.paymentMethod,
+              invoiceNumber: labPayForm.invoiceNumber
+          }
+      };
+      setLabPaymentsMetaMap(updated);
+      try {
+          localStorage.setItem('dental_lab_payments_meta_map', JSON.stringify(updated));
+          toast.success("Pagamento ao laboratório registrado com sucesso!");
+      } catch (e) {
+          console.error(e);
+      }
+      setIsLabPayModalOpen(false);
+      setSelectedOrderForLabPay(null);
+  };
+
+  const handleUndoLabPayment = (orderId: string) => {
+      const updated = { ...labPaymentsMetaMap };
+      delete updated[orderId];
+      setLabPaymentsMetaMap(updated);
+      try {
+          localStorage.setItem('dental_lab_payments_meta_map', JSON.stringify(updated));
+          toast.success("Status de pagamento ao laboratório removido.");
+      } catch (e) {
+          console.error(e);
+      }
+  };
 
   // Permissões: Recepção e Admin têm poder total de gestão no laboratório
   const canManage = useMemo(() => {
@@ -59,6 +125,24 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({});
+  const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
+  const [pendingSearchQuery, setPendingSearchQuery] = useState('');
+
+  // Lista de pagamentos pendentes
+  const pendingPaymentsList = useMemo(() => {
+    return orders
+      .map(o => {
+        const totalPaid = o.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+        const remaining = Math.max(0, o.saleValue - totalPaid);
+        return {
+          order: o,
+          totalPaid,
+          remaining
+        };
+      })
+      .filter(item => item.remaining > 0.01)
+      .sort((a, b) => b.remaining - a.remaining);
+  }, [orders]);
   
   // Forms
   const [newOrderForm, setNewOrderForm] = useState({
@@ -163,6 +247,10 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
   useEffect(() => { loadData(); }, []);
 
+  useRealtimeSubscription(['lab_orders', 'lab_payments', 'lab_prosthesis_types', 'transactions'], () => {
+      loadData();
+  });
+
   // --- DASHBOARD CALCULATIONS ---
   const stats = useMemo(() => {
     const inProgress = orders.filter(o => o.status !== 'Entregue').length;
@@ -177,12 +265,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
         .filter(o => o.startDate.startsWith(currentMonthPrefix))
         .reduce((acc, o) => acc + o.saleValue, 0);
 
-    const totalRevenue = orders.reduce((acc, o) => acc + o.saleValue, 0);
-    const totalPaid = orders.reduce((acc, o) => {
+    const pendingPayments = orders.reduce((acc, o) => {
         const orderPaid = o.payments?.reduce((pSum, p) => pSum + p.amount, 0) || 0;
-        return acc + orderPaid;
+        const remaining = Math.max(0, o.saleValue - orderPaid);
+        return acc + remaining;
     }, 0);
-    const pendingPayments = totalRevenue - totalPaid;
 
     // Chart Data logic based on period
     let chartData: { name: string; value: number }[] = [];
@@ -416,6 +503,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
           setEditingOrderId(null);
           setNewOrderForm({ patient_name: '', protese_id: '', details: '', lab_name: '', sale_value: '', cost: '', start_date: new Date().toISOString().split('T')[0] });
           await loadData();
+          notifyDataChange(['lab_orders', 'lab_payments', 'transactions']);
 
       } catch (err: any) {
           console.error("Falha ao salvar pedido:", err);
@@ -451,6 +539,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
           if (error) throw error;
           
           await loadData();
+          notifyDataChange(['lab_orders', 'lab_payments', 'transactions']);
           setOrderToDelete(null);
       } catch (err: any) {
           console.error("Erro ao excluir pedido:", err);
@@ -592,192 +681,396 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       }
   };
 
-  const updateOrderDueDate = async (id: string, newDate: string) => {
-      try {
-          const { error } = await supabase.from('lab_orders').update({ due_date: newDate }).eq('id', id);
-          if (error) throw error;
-          await loadData();
-          toast.success("Prazo atualizado com sucesso!");
-      } catch (err: any) {
-          toast.error("Erro ao atualizar prazo: " + err.message);
-      }
-  };
+  const renderLabPaymentsControl = () => {
+      const ordersWithCost = orders.filter(o => o.cost > 0);
+      const totalCost = ordersWithCost.reduce((acc, o) => acc + o.cost, 0);
+      const totalPaidToLab = ordersWithCost.reduce((acc, o) => acc + (labPaymentsMetaMap[o.id]?.paid ? o.cost : 0), 0);
+      const totalPendingToLab = totalCost - totalPaidToLab;
 
-  const GanttItem = ({ order, pixelsPerDay, timelineStartDate }: { order: LabOrder, pixelsPerDay: number, timelineStartDate: Date }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: order.id,
-        data: { order }
-    });
+      const filtered = ordersWithCost.filter(o => {
+          const meta = labPaymentsMetaMap[o.id];
+          if (labPaymentsStatusFilter === 'pending' && meta?.paid) return false;
+          if (labPaymentsStatusFilter === 'paid' && !meta?.paid) return false;
+          if (labPaymentsSearch.trim()) {
+              const q = labPaymentsSearch.toLowerCase();
+              const pMatch = o.patientName.toLowerCase().includes(q);
+              const lMatch = o.labName && o.labName.toLowerCase().includes(q);
+              const dMatch = o.details && o.details.toLowerCase().includes(q);
+              if (!pMatch && !lMatch && !dMatch) return false;
+          }
+          return true;
+      });
 
-    const start = order.startDate ? new Date(order.startDate) : new Date();
-    const end = order.dueDate ? new Date(order.dueDate) : new Date();
-    
-    // Normalize to start of day
-    const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    const tStart = new Date(timelineStartDate.getFullYear(), timelineStartDate.getMonth(), timelineStartDate.getDate());
+      const monthlyDataMap: Record<string, { monthKey: string; labCostPaid: number; patientRevenue: number; margin: number }> = {};
 
-    const dayDiffStart = Math.floor((sDate.getTime() - tStart.getTime()) / (1000 * 60 * 60 * 24));
-    const durationDays = Math.ceil((eDate.getTime() - sDate.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+      ordersWithCost.forEach(o => {
+          const defaultDateStr = o.dueDate || o.createdAt || new Date().toISOString();
 
-    const style = {
-        transform: transform ? `translate3d(${transform.x}px, 0, 0)` : undefined,
-        left: `${dayDiffStart * pixelsPerDay}px`,
-        width: `${durationDays * pixelsPerDay}px`,
-        opacity: isDragging ? 0.3 : 1,
-        zIndex: isDragging ? 50 : 1
-    };
+          const meta = labPaymentsMetaMap[o.id];
+          if (meta?.paid) {
+              const labPayDate = meta.paymentDate || defaultDateStr;
+              const labMonthKey = labPayDate.slice(0, 7);
+              if (!monthlyDataMap[labMonthKey]) {
+                  monthlyDataMap[labMonthKey] = { monthKey: labMonthKey, labCostPaid: 0, patientRevenue: 0, margin: 0 };
+              }
+              monthlyDataMap[labMonthKey].labCostPaid += o.cost;
+          }
 
-    return (
-        <div 
-            ref={setNodeRef}
-            style={style}
-            {...listeners}
-            {...attributes}
-            className="absolute top-1/2 -translate-y-1/2 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center px-3 cursor-grab active:cursor-grabbing group shadow-lg shadow-indigo-500/5 hover:border-indigo-400/50 transition-colors"
-        >
-            <div className="flex flex-col min-w-0">
-                <span className="text-[10px] font-bold text-text truncate leading-none mb-0.5">{order.patientName}</span>
-                <span className="text-[8px] font-medium text-indigo-300 uppercase tracking-tighter truncate opacity-70">{order.type}</span>
-            </div>
-            <div className="absolute inset-0 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-    );
-  };
+          if (o.payments && o.payments.length > 0) {
+              o.payments.forEach(pay => {
+                  if (pay.paymentDate) {
+                      const payMonthKey = pay.paymentDate.slice(0, 7);
+                      if (!monthlyDataMap[payMonthKey]) {
+                          monthlyDataMap[payMonthKey] = { monthKey: payMonthKey, labCostPaid: 0, patientRevenue: 0, margin: 0 };
+                      }
+                      monthlyDataMap[payMonthKey].patientRevenue += pay.amount;
+                  }
+              });
+          }
+      });
 
-  const GanttView = () => {
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 5,
-            },
-        })
-    );
+      const chartData = Object.values(monthlyDataMap)
+          .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+          .map(item => {
+              const [year, month] = item.monthKey.split('-');
+              const monthNames = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+              const label = `${monthNames[parseInt(month, 10)] || month}/${year.slice(2)}`;
+              return {
+                  ...item,
+                  label,
+                  margin: item.patientRevenue - item.labCostPaid
+              };
+          });
 
-    if (orders.length === 0) return (
-        <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-3xl text-slate-500">
-            <ClipboardCheck className="w-12 h-12 mb-4 opacity-20" />
-            <p className="font-medium">Nenhum pedido cadastrado para visualizar no cronograma.</p>
-        </div>
-    );
+      return (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                      <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Custos Lab</span>
+                          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                              <DollarSign className="w-5 h-5" />
+                          </div>
+                      </div>
+                      <div className="text-2xl font-black text-text font-mono">
+                          R$ {totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">{ordersWithCost.length} trabalhos com custo de laboratório</p>
+                  </SpotlightCard>
 
-    // Calculate timeline range
-    const allDates = orders.flatMap(o => [new Date(o.startDate), new Date(o.dueDate)]);
-    const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
-    const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
-    
-    // Add 2 days padding
-    const timelineStartDate = new Date(minDate);
-    timelineStartDate.setDate(timelineStartDate.getDate() - 2);
-    const timelineEndDate = new Date(maxDate);
-    timelineEndDate.setDate(timelineEndDate.getDate() + 10);
+                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                      <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pago ao Laboratório</span>
+                          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              <CheckCircle className="w-5 h-5" />
+                          </div>
+                      </div>
+                      <div className="text-2xl font-black text-emerald-400 font-mono">
+                          R$ {totalPaidToLab.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">Valores já quitados com os parceiros</p>
+                  </SpotlightCard>
 
-    const totalDays = Math.ceil((timelineEndDate.getTime() - timelineStartDate.getTime()) / (1000 * 60 * 60 * 24));
-    const pixelsPerDay = 100;
-    const timelineWidth = totalDays * pixelsPerDay;
+                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                      <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pendente com Lab</span>
+                          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                              <Clock className="w-5 h-5" />
+                          </div>
+                      </div>
+                      <div className="text-2xl font-black text-amber-400 font-mono">
+                          R$ {totalPendingToLab.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">Ainda não pago aos laboratórios</p>
+                  </SpotlightCard>
+              </div>
 
-    const days = Array.from({ length: totalDays }).map((_, i) => {
-        const date = new Date(timelineStartDate);
-        date.setDate(date.getDate() + i);
-        return date;
-    });
+              {/* Monthly Comparative Chart */}
+              <div className="glass-panel border border-border rounded-2xl p-6 bg-panel/30 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                          <h3 className="text-sm font-bold text-text uppercase tracking-wider">Análise de Margem & Comparativo Mensal</h3>
+                          <p className="text-xs text-slate-400">Comparativo entre o Total Pago aos Laboratórios e o Recebimento dos Pacientes</p>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs font-bold">
+                          <span className="flex items-center gap-1.5 text-indigo-400">
+                              <span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> Recebido de Pacientes
+                          </span>
+                          <span className="flex items-center gap-1.5 text-emerald-400">
+                              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Pago ao Lab
+                          </span>
+                      </div>
+                  </div>
 
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, delta } = event;
-        const order = active.data.current?.order as LabOrder;
-        if (!order || !delta.x) return;
+                  <div className="h-72 w-full pt-4">
+                      {chartData.length === 0 ? (
+                          <div className="h-full flex items-center justify-center text-slate-500 italic text-xs">
+                              Nenhum dado financeiro disponível para exibição de gráficos.
+                          </div>
+                      ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                                  <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} />
+                                  <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `R$ ${v}`} />
+                                  <RechartsTooltip 
+                                      contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
+                                      formatter={(value: any, name: string) => [
+                                          `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                                          name === 'patientRevenue' ? 'Recebido Pacientes' : 'Pago ao Laboratório'
+                                      ]}
+                                  />
+                                  <Bar dataKey="patientRevenue" fill="#6366f1" radius={[6, 6, 0, 0]} name="patientRevenue" />
+                                  <Bar dataKey="labCostPaid" fill="#10b981" radius={[6, 6, 0, 0]} name="labCostPaid" />
+                              </BarChart>
+                          </ResponsiveContainer>
+                      )}
+                  </div>
+              </div>
 
-        const daysMoved = Math.round(delta.x / pixelsPerDay);
-        if (daysMoved === 0) return;
+              {/* Filters Bar */}
+              <div className="flex flex-wrap items-center gap-4 bg-panel p-4 rounded-2xl border border-border">
+                  <div className="relative flex-1 min-w-[220px] max-w-sm">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                          type="text"
+                          placeholder="Buscar por paciente, laboratório ou detalhe..."
+                          value={labPaymentsSearch}
+                          onChange={(e) => setLabPaymentsSearch(e.target.value)}
+                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-4 py-2.5 outline-none focus:border-indigo-500 transition-colors"
+                      />
+                  </div>
 
-        const currentDueDate = new Date(order.dueDate);
-        const newDueDate = new Date(currentDueDate);
-        newDueDate.setDate(newDueDate.getDate() + daysMoved);
-        
-        updateOrderDueDate(order.id, newDueDate.toISOString().split('T')[0]);
-    };
+                  <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status:</span>
+                      <select
+                          value={labPaymentsStatusFilter}
+                          onChange={(e) => setLabPaymentsStatusFilter(e.target.value as any)}
+                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2.5 outline-none cursor-pointer focus:border-indigo-500"
+                      >
+                          <option value="all">Todos</option>
+                          <option value="pending">Pendentes</option>
+                          <option value="paid">Pagos</option>
+                      </select>
+                  </div>
 
-    return (
-        <div className="glass-panel border border-border rounded-3xl overflow-hidden flex flex-col bg-panel/20 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-            <div className="p-6 border-b border-border bg-panel/40 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-500/10 rounded-lg">
-                        <ClipboardCheck className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-text">Cronograma de Produção</h3>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Arraste os itens para alterar o prazo de entrega</p>
-                    </div>
-                </div>
-                <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <div className="flex items-center gap-2">
-                        <div className="size-2 rounded-full bg-indigo-500/50" />
-                        <span>Em Produção</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="overflow-x-auto custom-scrollbar overflow-y-hidden">
-                <div style={{ width: timelineWidth }} className="relative bg-transparent/30">
-                    {/* Header: Months & Days */}
-                    <div className="sticky top-0 z-20 flex border-b border-border bg-panel/80 backdrop-blur-2xl">
-                        {days.map((date, i) => {
-                            const isNewMonth = i === 0 || date.getDate() === 1;
-                            const isToday = date.toDateString() === new Date().toDateString();
-                            return (
-                                <div 
-                                    key={i} 
-                                    style={{ width: pixelsPerDay }} 
-                                    className={`h-16 flex flex-col items-center justify-center border-r border-border relative ${isToday ? 'bg-indigo-500/5' : ''}`}
-                                >
-                                    {isNewMonth && (
-                                        <span className="absolute top-1 left-2 text-[8px] font-black uppercase text-indigo-400 tracking-tighter">
-                                            {date.toLocaleDateString('pt-BR', { month: 'long' })}
-                                        </span>
-                                    )}
-                                    <span className={`text-[10px] font-black ${isToday ? 'text-indigo-400' : 'text-slate-400'}`}>
-                                        {date.toLocaleDateString('pt-BR', { weekday: 'short' })}
-                                    </span>
-                                    <span className={`text-sm font-bold ${isToday ? 'text-text' : 'text-slate-600'}`}>
-                                        {date.getDate()}
-                                    </span>
-                                    {isToday && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-500" />}
-                                </div>
-                            );
-                        })}
-                    </div>
+                  <button
+                      onClick={() => setShowPatientPaymentsRegistry(!showPatientPaymentsRegistry)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                          showPatientPaymentsRegistry
+                              ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
+                              : 'bg-panel hover:bg-panel/80 text-slate-300 border-border'
+                      }`}
+                  >
+                      {showPatientPaymentsRegistry ? 'Ocultar Extrato de Pagamentos' : 'Extrato de Pagamentos de Pacientes'}
+                  </button>
 
-                    {/* Rows */}
-                    <div className="relative min-h-[400px]">
-                        {/* Grid Lines */}
-                        <div className="absolute inset-0 flex">
-                            {days.map((date, i) => (
-                                <div 
-                                    key={i} 
-                                    style={{ width: pixelsPerDay }} 
-                                    className={`h-full border-r border-white/[0.02] ${date.toDateString() === new Date().toDateString() ? 'bg-indigo-500/[0.02]' : ''}`} 
-                                />
-                            ))}
-                        </div>
+                  <div className="ml-auto text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
+                      {filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}
+                  </div>
+              </div>
 
-                        {/* Items */}
-                        <DndContext sensors={sensors} onDragEnd={handleDragEnd} modifiers={[restrictToHorizontalAxis]}>
-                            <div className="relative z-10">
-                                {orders.map((order, idx) => (
-                                    <div key={order.id} className="h-16 border-b border-white/[0.03] relative group hover:bg-white/[0.02] transition-colors">
-                                        <div className="absolute left-0 bottom-0 px-2 py-1 z-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span className="text-[10px] text-slate-500 font-medium">#{idx + 1}</span>
-                                        </div>
-                                        <GanttItem order={order} pixelsPerDay={pixelsPerDay} timelineStartDate={timelineStartDate} />
-                                    </div>
-                                ))}
-                            </div>
-                        </DndContext>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+              {/* Patient Payments Registry Panel */}
+              {showPatientPaymentsRegistry && (
+                  <div className="glass-panel border border-border rounded-2xl p-6 bg-panel/40 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                      <div className="flex items-center justify-between border-b border-border pb-4">
+                          <div>
+                              <h3 className="text-sm font-bold text-text uppercase tracking-wider">Registro de Recebimentos de Pacientes (Trabalhos de Lab)</h3>
+                              <p className="text-xs text-slate-400">Histórico detalhado por data, valor e forma de pagamento referente aos pedidos com custo de laboratório</p>
+                          </div>
+                          <button
+                              onClick={() => setShowPatientPaymentsRegistry(false)}
+                              className="px-3 py-1.5 rounded-xl bg-panel hover:bg-panel/80 text-slate-400 hover:text-text text-xs border border-border"
+                          >
+                              Fechar ✕
+                          </button>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                              <thead className="bg-panel text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                  <tr>
+                                      <th className="p-3 pl-4">Data do Recebimento</th>
+                                      <th className="p-3">Paciente / Trabalho</th>
+                                      <th className="p-3">Laboratório</th>
+                                      <th className="p-3">Forma de Pagamento</th>
+                                      <th className="p-3 text-right">Valor Recebido</th>
+                                      <th className="p-3 text-right">Valor Venda Total</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs">
+                                  {ordersWithCost.flatMap(o => (o.payments || []).map(p => ({ ...p, order: o }))).length === 0 ? (
+                                      <tr>
+                                          <td colSpan={6} className="text-center py-8 text-slate-500 italic">
+                                              Nenhum pagamento de paciente registrado para trabalhos de laboratório.
+                                          </td>
+                                      </tr>
+                                  ) : (
+                                      ordersWithCost
+                                          .flatMap(o => (o.payments || []).map(p => ({ ...p, order: o })))
+                                          .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+                                          .map((item, idx) => {
+                                              const payDateFormatted = item.paymentDate ? item.paymentDate.split('T')[0].split('-').reverse().join('/') : 'N/A';
+                                              return (
+                                                  <tr key={idx} className="hover:bg-panel/50 transition-colors">
+                                                      <td className="p-3 pl-4 font-mono font-medium text-emerald-400">
+                                                          {payDateFormatted}
+                                                      </td>
+                                                      <td className="p-3">
+                                                          <div className="font-bold text-text">{item.order.patientName}</div>
+                                                          <div className="text-[10px] text-slate-400">{item.order.details || item.order.type}</div>
+                                                      </td>
+                                                      <td className="p-3 text-slate-300 font-medium">
+                                                          {item.order.labName || 'Interno / N/I'}
+                                                      </td>
+                                                      <td className="p-3">
+                                                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-panel border border-border text-slate-300">
+                                                              {item.paymentMethod || 'PIX'}
+                                                          </span>
+                                                      </td>
+                                                      <td className="p-3 text-right font-mono font-bold text-emerald-400">
+                                                          R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                      </td>
+                                                      <td className="p-3 text-right font-mono text-slate-400">
+                                                          R$ {item.order.saleValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                      </td>
+                                                  </tr>
+                                              );
+                                          })
+                                  )}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              )}
+
+              {/* Table */}
+              <div className="glass-panel border border-border rounded-2xl overflow-hidden bg-panel/30 shadow-xl">
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                          <thead className="bg-panel text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                              <tr>
+                                  <th className="p-4 pl-6">Paciente / Trabalho</th>
+                                  <th className="p-4">Laboratório</th>
+                                  <th className="p-4">Vencimento</th>
+                                  <th className="p-4 text-right">Custo Lab</th>
+                                  <th className="p-4 text-center">Situação Pagto. Paciente</th>
+                                  <th className="p-4">Dados Pagto. ao Lab</th>
+                                  <th className="p-4 text-center">Status Lab</th>
+                                  <th className="p-4 text-center">Ação</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 text-xs">
+                              {filtered.length === 0 ? (
+                                  <tr>
+                                      <td colSpan={8} className="text-center py-12 text-slate-500 italic">
+                                          Nenhum registro encontrado para os filtros selecionados.
+                                      </td>
+                                  </tr>
+                              ) : (
+                                  filtered.map(order => {
+                                      const meta = labPaymentsMetaMap[order.id];
+                                      const isPaid = !!meta?.paid;
+                                      const formattedDueDate = order.dueDate ? order.dueDate.split('T')[0].split('-').reverse().join('/') : 'N/A';
+                                      
+                                      const totalPaidByPatient = order.payments?.reduce((s, p) => s + p.amount, 0) || 0;
+                                      const patientFullyPaid = totalPaidByPatient >= order.saleValue - 0.01;
+                                      const patientRemaining = Math.max(0, order.saleValue - totalPaidByPatient);
+
+                                      const formattedPayDate = meta?.paymentDate ? meta.paymentDate.split('-').reverse().join('/') : '';
+
+                                      return (
+                                          <tr key={order.id} className="hover:bg-panel/50 transition-colors">
+                                              <td className="p-4 pl-6">
+                                                  <div className="font-bold text-text">{order.patientName}</div>
+                                                  <div className="text-[10px] text-slate-400">{order.details || order.type} (Venda: R$ {order.saleValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</div>
+                                              </td>
+                                              <td className="p-4 font-medium text-slate-300">
+                                                  {order.labName || 'Interno / N/I'}
+                                              </td>
+                                              <td className="p-4 font-mono text-slate-400">
+                                                  {formattedDueDate}
+                                              </td>
+                                              <td className="p-4 text-right font-mono font-bold text-text">
+                                                  R$ {order.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                              </td>
+                                              <td className="p-4 text-center">
+                                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                                      patientFullyPaid
+                                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                  }`}>
+                                                      {patientFullyPaid ? (
+                                                          <>Quitado ✅</>
+                                                      ) : (
+                                                          <>Falta R$ {patientRemaining.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ⚠️</>
+                                                      )}
+                                                  </span>
+                                              </td>
+                                              <td className="p-4 text-slate-300">
+                                                  {isPaid ? (
+                                                      <div className="space-y-0.5 text-[11px]">
+                                                          <div className="font-medium text-emerald-400">
+                                                              Data: {formattedPayDate}
+                                                          </div>
+                                                          <div className="text-slate-400">
+                                                              Forma: <strong className="text-slate-200">{meta.paymentMethod}</strong>
+                                                          </div>
+                                                          <div className="text-slate-400">
+                                                              Nota: <strong className="text-slate-200">{meta.invoiceNumber || 'N/I'}</strong>
+                                                          </div>
+                                                      </div>
+                                                  ) : (
+                                                      <span className="text-slate-500 italic text-[10px]">Aguardando pagamento</span>
+                                                  )}
+                                              </td>
+                                              <td className="p-4 text-center">
+                                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                                      isPaid 
+                                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                  }`}>
+                                                      {isPaid ? 'Pago ao Lab' : 'Pendente'}
+                                                  </span>
+                                              </td>
+                                              <td className="p-4 text-center">
+                                                  <div className="flex items-center justify-center gap-1.5">
+                                                      <button
+                                                          onClick={() => {
+                                                              setSelectedOrderForLabPay(order);
+                                                              setLabPayForm({
+                                                                  paymentDate: meta?.paymentDate || new Date().toISOString().split('T')[0],
+                                                                  paymentMethod: meta?.paymentMethod || 'PIX',
+                                                                  invoiceNumber: meta?.invoiceNumber || ''
+                                                              });
+                                                              setIsLabPayModalOpen(true);
+                                                          }}
+                                                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border-emerald-500/30"
+                                                      >
+                                                          {isPaid ? 'Editar' : 'Pagar ao Lab'}
+                                                      </button>
+                                                      {isPaid && (
+                                                          <button
+                                                              onClick={() => handleUndoLabPayment(order.id)}
+                                                              className="px-2 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-panel hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border-border"
+                                                              title="Remover pagamento"
+                                                          >
+                                                              Remover
+                                                          </button>
+                                                      )}
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      );
+                                  })
+                              )}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      );
   };
 
   const renderDashboard = () => {
@@ -821,14 +1114,18 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.trabalhosFinalizados}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(245, 158, 11, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition-all" onClick={() => setIsPendingModalOpen(true)} spotlightColor="rgba(245, 158, 11, 0.4)">
                     <div className="flex justify-between items-start">
                         <div className="size-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                             <DollarSign className="w-6 h-6" />
                         </div>
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full hover:bg-amber-400/20 transition-all flex items-center gap-1">
+                            Ver ({pendingPaymentsList.length}) <ArrowRight className="w-3 h-3" />
+                        </span>
                     </div>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Pagamentos Pendentes</p>
                     <h3 className="text-3xl font-bold text-amber-400 mt-1">R$ {stats.pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</h3>
+                    <p className="text-[10px] text-slate-500 mt-1">Clique para ver lista detalhada</p>
                 </SpotlightCard>
 
                 <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(168, 85, 247, 0.4)">
@@ -899,31 +1196,43 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     </div>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border flex flex-col items-center justify-center lg:col-span-1" spotlightColor="rgba(255, 255, 255, 0.1)">
-                    <h3 className="text-sm font-bold text-text mb-2 w-full text-left">Distribuição (Status)</h3>
-                    <div className="h-[230px] w-full flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stats.pieChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={55}
-                                    outerRadius={85}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {stats.pieChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} stroke="rgba(0,0,0,0.3)" strokeWidth={2} />
-                                    ))}
-                                </Pie>
-                                <RechartsTooltip 
-                                    contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                    itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
-                                />
-                                <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} iconType="circle" />
-                            </PieChart>
-                        </ResponsiveContainer>
+                <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border flex flex-col justify-between lg:col-span-1" spotlightColor="rgba(255, 255, 255, 0.1)">
+                    <h3 className="text-sm font-bold text-text mb-2">Distribuição (Status)</h3>
+                    <div className="h-[250px] w-full flex items-center justify-center">
+                        {stats.pieChartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                    <Pie
+                                        data={stats.pieChartData}
+                                        cx="50%"
+                                        cy="40%"
+                                        innerRadius={36}
+                                        outerRadius={56}
+                                        paddingAngle={4}
+                                        dataKey="value"
+                                    >
+                                        {stats.pieChartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="rgba(0,0,0,0.3)" strokeWidth={2} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip 
+                                        contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                        itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
+                                    />
+                                    <Legend 
+                                        verticalAlign="bottom"
+                                        align="center"
+                                        iconType="circle"
+                                        iconSize={8}
+                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }} 
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-slate-500 text-xs italic">
+                                Nenhum trabalho no período
+                            </div>
+                        )}
                     </div>
                 </SpotlightCard>
 
@@ -1135,35 +1444,91 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       const stages = ['Moldagem', 'Provas', 'Concluido', 'Entregue'];
       
       const filteredOrdersList = orders.filter(o => {
-          if (kanbanProsthesisFilter === 'all') return true;
-          return o.proteseId === kanbanProsthesisFilter || o.details === kanbanProsthesisFilter;
+          if (kanbanProsthesisFilter !== 'all') {
+              if (o.proteseId !== kanbanProsthesisFilter && o.details !== kanbanProsthesisFilter) return false;
+          }
+          if (kanbanPatientFilter.trim()) {
+              const query = kanbanPatientFilter.toLowerCase();
+              const patientMatch = o.patientName.toLowerCase().includes(query);
+              const detailsMatch = o.details && o.details.toLowerCase().includes(query);
+              const labMatch = o.labName && o.labName.toLowerCase().includes(query);
+              if (!patientMatch && !detailsMatch && !labMatch) return false;
+          }
+          if (kanbanPaymentFilter !== 'all') {
+              const totalPaid = o.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+              const remaining = o.saleValue - totalPaid;
+              if (kanbanPaymentFilter === 'pending' && remaining <= 0.01) return false;
+              if (kanbanPaymentFilter === 'paid' && remaining > 0.01) return false;
+          }
+          return true;
       });
 
       return (
           <div className="flex flex-col gap-6 h-full">
               {/* Kanban Filters */}
-              <div className="flex items-center gap-4 bg-panel p-4 rounded-2xl border border-border max-w-fit">
+              <div className="flex flex-wrap items-center gap-4 bg-panel p-4 rounded-2xl border border-border">
+                  {/* Patient Search Filter */}
+                  <div className="relative flex-1 min-w-[200px] max-w-xs">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                          type="text"
+                          placeholder="Buscar por paciente..."
+                          value={kanbanPatientFilter}
+                          onChange={(e) => setKanbanPatientFilter(e.target.value)}
+                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-8 py-2 outline-none focus:border-indigo-500 transition-colors"
+                      />
+                      {kanbanPatientFilter && (
+                          <button 
+                              onClick={() => setKanbanPatientFilter('')}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-text"
+                          >
+                              <X className="w-3.5 h-3.5" />
+                          </button>
+                      )}
+                  </div>
+
+                  <div className="h-6 w-px bg-panel/80 hidden sm:block"></div>
+
+                  {/* Prosthesis Type Filter */}
                   <div className="flex items-center gap-3">
                       <div className="size-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                           <Package className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Filtrar por Tipo:</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Tipo:</span>
+                      <select 
+                          value={kanbanProsthesisFilter} 
+                          onChange={(e) => setKanbanProsthesisFilter(e.target.value)}
+                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2 outline-none cursor-pointer focus:border-indigo-500 transition-colors"
+                      >
+                          <option value="all">Todos os Tipos</option>
+                          {prosthesisList.map(type => (
+                              <option key={type.id} value={type.id}>{type.name}</option>
+                          ))}
+                      </select>
                   </div>
-                  <select 
-                      value={kanbanProsthesisFilter} 
-                      onChange={(e) => setKanbanProsthesisFilter(e.target.value)}
-                      className="bg-panel border border-border rounded-lg text-xs font-bold text-slate-300 px-3 py-1.5 outline-none cursor-pointer focus:border-indigo-500 transition-colors"
-                  >
-                      <option value="all">Todos os Tipos</option>
-                      {prosthesisList.map(type => (
-                          <option key={type.id} value={type.id}>{type.name}</option>
-                      ))}
-                      {/* Opcionalmente adicionar tipos que aparecem nos pedidos mas não estão na lista */}
-                  </select>
 
-                  <div className="h-4 w-px bg-panel/80 mx-2"></div>
+                  <div className="h-6 w-px bg-panel/80 hidden sm:block"></div>
+
+                  {/* Payment Status Filter */}
+                  <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                          <DollarSign className="w-4 h-4" />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Pagamento:</span>
+                      <select 
+                          value={kanbanPaymentFilter} 
+                          onChange={(e) => setKanbanPaymentFilter(e.target.value as any)}
+                          className="bg-panel border border-border rounded-xl text-xs font-bold text-amber-400/90 px-3 py-2 outline-none cursor-pointer focus:border-amber-500 transition-colors"
+                      >
+                          <option value="all">Todos os Pagamentos</option>
+                          <option value="pending">Apenas Com Saldo a Pagar</option>
+                          <option value="paid">Apenas Quitados</option>
+                      </select>
+                  </div>
+
+                  <div className="h-6 w-px bg-panel/80 hidden sm:block"></div>
                   
-                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-400/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-400/10 px-2.5 py-1 rounded-full">
                       {filteredOrdersList.length} {filteredOrdersList.length === 1 ? 'Pedido' : 'Pedidos'}
                   </span>
               </div>
@@ -1307,16 +1672,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
                    <div>
                        <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
-                          {viewMode === 'dashboard' ? 'Dashboard' : viewMode === 'kanban' ? 'Quadro Kanban' : viewMode === 'gantt' ? 'Cronograma Lab' : 'Configuração de Lab'}
+                          {viewMode === 'dashboard' ? 'Dashboard' : viewMode === 'kanban' ? 'Quadro Kanban' : 'Configuração de Lab'}
                        </h1>
                        <p className="text-slate-400 text-sm">
                           {viewMode === 'dashboard' 
                              ? 'Controle de produção de próteses e alinhadores.' 
                              : viewMode === 'kanban'
                                ? 'Gerencie o fluxo de trabalho dos pedidos.'
-                               : viewMode === 'gantt'
-                                 ? 'Visualização temporal de prazos de entrega.'
-                                 : 'Configurações de laboratórios e preços.'}
+                               : 'Configurações de laboratórios e preços.'}
                        </p>
                    </div>
 
@@ -1334,9 +1697,12 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     {[
                         { id: 'dashboard', label: 'Dashboard', permission: 'lab_dashboard' },
                         { id: 'kanban', label: 'Kanban', permission: 'lab_kanban' },
-                        { id: 'gantt', label: 'Cronograma', permission: 'lab_gantt' },
-                        { id: 'settings', label: 'Configurações', permission: 'lab_settings' }
-                    ].filter(tab => userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0 || (Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permission))).map(tab => (
+                        { id: 'settings', label: 'Configurações', permission: 'lab_settings' },
+                        ...(userEmail === 'clinica.centrodosorrisosc@gmail.com' ? [{ id: 'lab_payments_ctrl', label: 'Pagamentos ao Lab', permission: 'lab_master' }] : [])
+                    ].filter(tab => {
+                        if (tab.id === 'lab_payments_ctrl') return userEmail === 'clinica.centrodosorrisosc@gmail.com';
+                        return userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0 || (Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permission));
+                    }).map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setViewMode(tab.id as ViewMode)}
@@ -1354,7 +1720,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
                 {viewMode === 'dashboard' && renderDashboard()}
                 {viewMode === 'kanban' && renderKanban()}
-                {viewMode === 'gantt' && <GanttView />}
+                {viewMode === 'lab_payments_ctrl' && renderLabPaymentsControl()}
                 {viewMode === 'settings' && renderSettings()}
             </div>
         </div>
@@ -1468,6 +1834,233 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             <span className="text-xs font-bold text-slate-400 uppercase">Total Pago</span>
                             <span className="text-lg font-bold text-emerald-400">R$ {(selectedOrderForPayment.payments?.reduce((s, p) => s + p.amount, 0) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Modal de Pagamentos Pendentes */}
+        {isPendingModalOpen && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
+                <div className="bg-surface border border-border w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                    {/* Header */}
+                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                <DollarSign className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-text">Pagamentos Pendentes do Laboratório</h3>
+                                <p className="text-xs text-slate-400">
+                                    {pendingPaymentsList.length} {pendingPaymentsList.length === 1 ? 'trabalho com saldo pendente' : 'trabalhos com saldo pendente'} &bull; Total Pendente: <span className="font-bold text-amber-400">R$ {stats.pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsPendingModalOpen(false)} className="p-2 text-slate-400 hover:text-text rounded-lg hover:bg-panel transition-all">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="p-4 border-b border-border bg-panel/30 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por paciente, laboratório ou tipo de prótese..."
+                                value={pendingSearchQuery}
+                                onChange={(e) => setPendingSearchQuery(e.target.value)}
+                                className="w-full bg-panel border border-border rounded-xl pl-9 pr-4 py-2.5 text-xs text-text outline-none focus:border-amber-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Table / List */}
+                    <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                        {(() => {
+                            const filtered = pendingPaymentsList.filter(item => {
+                                if (!pendingSearchQuery.trim()) return true;
+                                const q = pendingSearchQuery.toLowerCase();
+                                const formattedDueDate = item.order.dueDate ? item.order.dueDate.split('T')[0].split('-').reverse().join('/') : '';
+                                return (
+                                    item.order.patientName.toLowerCase().includes(q) ||
+                                    (item.order.labName && item.order.labName.toLowerCase().includes(q)) ||
+                                    (item.order.details && item.order.details.toLowerCase().includes(q)) ||
+                                    (item.order.type && item.order.type.toLowerCase().includes(q)) ||
+                                    formattedDueDate.includes(q)
+                                );
+                            });
+
+                            if (filtered.length === 0) {
+                                return (
+                                    <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                                        <CheckCircle className="w-12 h-12 mb-3 text-emerald-500/40" />
+                                        <p className="text-sm font-bold text-slate-400">Nenhum pagamento pendente encontrado</p>
+                                        <p className="text-xs text-slate-600 mt-1">Todos os pagamentos pesquisados estão quitados ou nenhum item corresponde à busca.</p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="bg-panel text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            <tr>
+                                                <th className="p-3 pl-4">Nome do Paciente</th>
+                                                <th className="p-3">Data do Vencimento</th>
+                                                <th className="p-3 text-right">Valor Original</th>
+                                                <th className="p-3 text-right">Valor Pago</th>
+                                                <th className="p-3 text-right">Saldo Devedor</th>
+                                                <th className="p-3">Laboratório</th>
+                                                <th className="p-3">Status</th>
+                                                <th className="p-3 text-center">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5 text-xs">
+                                            {filtered.map(({ order, totalPaid, remaining }) => {
+                                                const formattedDueDate = order.dueDate ? order.dueDate.split('T')[0].split('-').reverse().join('/') : 'N/A';
+                                                return (
+                                                    <tr key={order.id} className="hover:bg-panel/50 transition-colors">
+                                                        <td className="p-3 pl-4">
+                                                            <div className="font-bold text-text">{order.patientName}</div>
+                                                            <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{order.details || order.type}</div>
+                                                        </td>
+                                                        <td className="p-3 font-mono text-slate-300">
+                                                            {formattedDueDate}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono font-medium text-slate-300">
+                                                            R$ {order.saleValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono font-medium text-emerald-400">
+                                                            R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono font-bold text-amber-400">
+                                                            R$ {remaining.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="p-3 text-slate-400 text-xs">
+                                                            {order.labName || 'Interno / N/I'}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-panel border border-border text-slate-300">
+                                                                {order.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedOrderForPayment(order);
+                                                                    setPaymentForm({ amount: remaining.toString(), date: new Date().toISOString().split('T')[0] });
+                                                                }}
+                                                                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 mx-auto border border-emerald-500/30"
+                                                            >
+                                                                <CreditCard className="w-3 h-3" /> Pagar
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                    
+                    {/* Footer */}
+                    <div className="p-4 border-t border-border bg-panel/30 flex justify-end">
+                        <button
+                            onClick={() => setIsPendingModalOpen(false)}
+                            className="px-6 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-border"
+                        >
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Lab Payment Modal */}
+        {isLabPayModalOpen && selectedOrderForLabPay && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+                <div className="glass-panel w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl bg-panel space-y-6">
+                    <div className="flex items-center justify-between border-b border-border pb-4">
+                        <div>
+                            <h3 className="text-base font-bold text-text">Registrar Pagamento ao Laboratório</h3>
+                            <p className="text-xs text-slate-400 mt-0.5">Paciente: {selectedOrderForLabPay.patientName} | Lab: {selectedOrderForLabPay.labName || 'N/I'}</p>
+                        </div>
+                        <button
+                            onClick={() => setIsLabPayModalOpen(false)}
+                            className="p-2 rounded-xl bg-panel hover:bg-panel/80 text-slate-400 hover:text-text border border-border"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <div className="space-y-4 text-xs">
+                        <div className="bg-panel/50 p-3 rounded-xl border border-border flex items-center justify-between">
+                            <div>
+                                <span className="text-slate-400 block text-[10px] uppercase font-bold">Custo do Laboratório</span>
+                                <span className="text-sm font-black font-mono text-text">R$ {selectedOrderForLabPay.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-slate-400 block text-[10px] uppercase font-bold">Pagamento do Paciente</span>
+                                <span className={`font-bold ${((selectedOrderForLabPay.payments?.reduce((s, p) => s + p.amount, 0) || 0) >= selectedOrderForLabPay.saleValue - 0.01) ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    {((selectedOrderForLabPay.payments?.reduce((s, p) => s + p.amount, 0) || 0) >= selectedOrderForLabPay.saleValue - 0.01) ? 'Quitado ✅' : 'Pendente ⚠️'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Data do Pagamento</label>
+                            <input
+                                type="date"
+                                value={labPayForm.paymentDate}
+                                onChange={(e) => setLabPayForm({ ...labPayForm, paymentDate: e.target.value })}
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500 font-mono"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Forma de Pagamento</label>
+                            <select
+                                value={labPayForm.paymentMethod}
+                                onChange={(e) => setLabPayForm({ ...labPayForm, paymentMethod: e.target.value })}
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500 font-medium"
+                            >
+                                <option value="PIX">PIX</option>
+                                <option value="Boleto">Boleto</option>
+                                <option value="Transferência Bancária">Transferência Bancária</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Nota Fiscal / Referência</label>
+                            <input
+                                type="text"
+                                placeholder="Ex: NF #12345 ou Recibo 098"
+                                value={labPayForm.invoiceNumber}
+                                onChange={(e) => setLabPayForm({ ...labPayForm, invoiceNumber: e.target.value })}
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                        <button
+                            onClick={() => setIsLabPayModalOpen(false)}
+                            className="px-4 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider border border-border transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSaveLabPayment}
+                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/20 transition-all"
+                        >
+                            Salvar Pagamento
+                        </button>
                     </div>
                 </div>
             </div>

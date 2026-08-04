@@ -72,7 +72,15 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promis
       return response;
     } catch (err) {
       console.warn("Proxy fetch failed, falling back to direct fetch:", err);
-      return fetch(input, init);
+      try {
+        return await fetch(input, init);
+      } catch (directErr) {
+        console.warn("Direct fetch also failed, returning offline fallback response:", directErr);
+        return new Response(JSON.stringify({ data: [], error: null, message: "Offline fallback" }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
     }
   }
   

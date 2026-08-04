@@ -6,6 +6,7 @@ import { Financial } from './components/Financial';
 import { Orthodontics } from './components/Orthodontics';
 import { LabWork } from './components/LabWork';
 import { Meetings } from './components/Meetings';
+import { TimeTracking } from './components/TimeTracking';
 import { Support } from './components/Support';
 import { Passwords } from './components/Passwords';
 import { Biblioteca } from './components/Biblioteca';
@@ -15,9 +16,11 @@ import { PermissionsModal } from './components/PermissionsModal';
 import { NotificationCenter } from './components/NotificationCenter';
 import { Tab } from './types';
 import { supabase } from './supabaseClient';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatWidget } from './components/Chat/ChatWidget';
+import { useRealtimeSubscription } from './lib/realtime';
+import { playCashRegisterSound } from './lib/sound';
 
 const TabContainer = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -52,6 +55,17 @@ const App: React.FC = () => {
   useEffect(() => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
+
+  // Real-time listener for remote financial entries across profiles
+  useRealtimeSubscription(['transactions'], (changedTable, isRemote) => {
+    if (isRemote && changedTable === 'transactions') {
+      playCashRegisterSound();
+      toast.success('Novo lançamento financeiro registrado em outro perfil! 💰', {
+        description: 'Os dados e relatórios financeiros foram atualizados automaticamente.',
+        duration: 4000
+      });
+    }
+  });
 
   const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [allowedSubTabs, setAllowedSubTabs] = useState<string[]>([]);
@@ -189,18 +203,24 @@ const App: React.FC = () => {
       if (!Array.isArray(subTabs)) subTabs = [];
 
       if (role === 'admin') {
-          if (permissionsNeverSet) tabs = Object.values(Tab);
+          if (permissionsNeverSet) {
+              tabs = Object.values(Tab);
+          } else {
+              Object.values(Tab).forEach(t => {
+                  if (!tabs.includes(t)) tabs.push(t);
+              });
+          }
       } else if (role === 'reception') {
           if (permissionsNeverSet) {
               tabs = [Tab.DASHBOARD, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
           }
-          const mandatoryReceptionSubs = ['lab_kanban', 'lab_gantt'];
+          const mandatoryReceptionSubs = ['lab_kanban'];
           
           if (subPermissionsNeverSet) {
               subTabs = [
                   ...mandatoryReceptionSubs,
                   'financial_overview', 'financial_transactions',
-                  'ortho_vision', 'ortho_grid', 'ortho_patients',
+                  'ortho_vision', 'ortho_calendar', 'ortho_grid', 'ortho_patients',
                   'dash_financial',
                   'support_view', 'support_manage'
               ];
@@ -423,7 +443,7 @@ const App: React.FC = () => {
 
           {activeTab === Tab.LABWORK && (
             <TabContainer key="labwork">
-              <LabWork userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              <LabWork userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} userEmail={session.user.email} />
             </TabContainer>
           )}
 
@@ -432,6 +452,14 @@ const App: React.FC = () => {
               <Meetings requestedSubTab={requestedSubTab} />
             </TabContainer>
           )}
+
+          {activeTab === Tab.TIME_TRACKING && (
+            <TabContainer key="time_tracking">
+              <TimeTracking requestedSubTab={requestedSubTab} />
+            </TabContainer>
+          )}
+
+
 
           {activeTab === Tab.SUPPORT && (
             <TabContainer key="support">
