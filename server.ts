@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
@@ -43,7 +46,7 @@ async function startServer() {
 
   // Initialize AI
   const ai = new GoogleGenAI({ 
-    apiKey: process.env.GEMINI_API_KEY || "",
+    apiKey: process.env.GEMINI_API_KEY || "AIzaSy_dummy_key_for_local_dev",
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
