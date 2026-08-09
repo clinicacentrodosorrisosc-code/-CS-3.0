@@ -1,5 +1,5 @@
 
-import { supabase } from './supabaseClient';
+import { supabase } from './src/supabaseClient';
 
 async function check() {
   const { data: tokens } = await supabase.from('kommo_tokens').select('*').single();

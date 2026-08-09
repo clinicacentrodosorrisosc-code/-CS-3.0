@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Transaction, Account, Service } from '../types';
+import { Transaction, Account, Service, Product } from '../types';
 import { PricingSystem } from './PricingSystem';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,

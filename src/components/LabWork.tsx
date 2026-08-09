@@ -704,7 +704,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       const monthlyDataMap: Record<string, { monthKey: string; labCostPaid: number; patientRevenue: number; margin: number }> = {};
 
       ordersWithCost.forEach(o => {
-          const defaultDateStr = o.dueDate || o.createdAt || new Date().toISOString();
+          const defaultDateStr = o.dueDate || (o as any).createdAt || new Date().toISOString();
 
           const meta = labPaymentsMetaMap[o.id];
           if (meta?.paid) {
@@ -926,7 +926,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                       </td>
                                                       <td className="p-3">
                                                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-panel border border-border text-slate-300">
-                                                              {item.paymentMethod || 'PIX'}
+                                                              {item.method || 'PIX'}
                                                           </span>
                                                       </td>
                                                       <td className="p-3 text-right font-mono font-bold text-emerald-400">

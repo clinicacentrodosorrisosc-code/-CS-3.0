@@ -69,6 +69,10 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promis
     
     try {
       const response = await fetch(proxyUrl, newInit);
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/html') || response.status === 404) {
+        return await fetch(input, init);
+      }
       return response;
     } catch (err) {
       console.warn("Proxy fetch failed, falling back to direct fetch:", err);

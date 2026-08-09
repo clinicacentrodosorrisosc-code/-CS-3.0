@@ -24,7 +24,7 @@ import {
     Download
 } from 'lucide-react';
 import { PieChart, Pie, Cell } from 'recharts';
-import { Service } from '../types';
+import { Service, ThirdPartyCost } from '../types';
 import { initialRawMaterials, RawMaterial } from '../data/rawMaterials';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -2415,7 +2415,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                                 <div key={idx} className="bg-slate-800/50 border border-border rounded px-2 py-1 flex items-center gap-1.5">
                                                                                     <span className="text-[10px] text-slate-300 font-medium">{label}</span>
                                                                                     <span className="text-[10px] text-indigo-400 font-mono font-bold">
-                                                                                        {item.quantity}{item.unit || (isEmployee ? 'min' : 'un')}
+                                                                                        {item.quantity}{(item as any).unit || (isEmployee ? 'min' : 'un')}
                                                                                     </span>
                                                                                 </div>
                                                                             );

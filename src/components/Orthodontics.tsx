@@ -937,7 +937,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       // Trajectory per ortho day
       const trajectoryIncrement = totalOrthoDaysInMonth > 0 ? activePatientsCount / totalOrthoDaysInMonth : 0;
       
-      const chartData = [];
+      const chartData: Array<{ day: number; meta: number; atual: number | null; presentNames: string[]; absentNames: string[]; scheduledNames: string[]; note: string | null }> = [];
       let cumulativeMeta = 0;
       let cumulativeActual = 0;
       let lastDayWithData = 0;
@@ -1007,7 +1007,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           
           // Update chartData for the reference day onwards to include these undated presences
           for (let i = referenceDay - 1; i < chartData.length; i++) {
-              chartData[i].atual += adjustment;
+              if (chartData[i].atual !== null) {
+                  (chartData[i].atual as number) += adjustment;
+              }
           }
           
           if (lastDayWithData === 0) lastDayWithData = referenceDay;
@@ -1211,7 +1213,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
               {/* Ortho Pacing */}
               {(() => {
-                const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual > 0);
+                const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual !== null && d.atual > 0);
 
                 if (!hasData) {
                     return (

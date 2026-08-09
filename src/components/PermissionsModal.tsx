@@ -249,7 +249,13 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
         })
       });
 
-      const result = await response.json();
+      let result: any = {};
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        result = await response.json().catch(() => ({}));
+      } else if (!response.ok) {
+        throw new Error('Servidor não está respondendo em formato JSON (Backend off ou rota indisponível).');
+      }
       
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao criar usuário.');

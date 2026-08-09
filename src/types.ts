@@ -10,7 +10,8 @@ export enum Tab {
   PASSWORDS = 'Senhas',
   RESPONSIBILITIES = 'Responsabilidades',
   BIBLIOTECA = 'Biblioteca',
-  TASKS = 'Tarefas'
+  TASKS = 'Tarefas',
+  MANAGEMENT = 'Gestão'
 }
 
 export interface UserProfile {

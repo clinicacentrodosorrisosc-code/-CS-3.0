@@ -251,12 +251,19 @@ export const ClinicIdeas: React.FC = () => {
   );
 
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    category: string;
+    status: ClinicIdea['status'];
+    priority: ClinicIdea['priority'];
+    due_date: string;
+  }>({
     title: '',
     description: '',
     category: 'Geral',
-    status: 'Idea' as const,
-    priority: 'Medium' as const,
+    status: 'Idea',
+    priority: 'Medium',
     due_date: ''
   });
 

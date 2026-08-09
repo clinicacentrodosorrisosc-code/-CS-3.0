@@ -455,7 +455,7 @@ const App: React.FC = () => {
 
           {activeTab === Tab.TIME_TRACKING && (
             <TabContainer key="time_tracking">
-              <TimeTracking requestedSubTab={requestedSubTab} />
+              <TimeTracking requestedSubTab={requestedSubTab || undefined} />
             </TabContainer>
           )}
 

@@ -156,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isDesktopExpanded = false; // Always collapsed/narrow on desktop
   const [activeSubmenuTab, setActiveSubmenuTab] = useState<Tab | null>(null);
-  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const hoverTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Dr. Alexander Ross');

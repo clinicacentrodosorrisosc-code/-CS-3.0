@@ -65,7 +65,7 @@ export function useRealtimeSubscription(tables: string[], onDataChange: (table?:
   const key = [...tables].sort().join(',');
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     
     // Debounced callback to avoid rapid duplicate refetches
     const triggerUpdate = (changedTable?: string, isRemote: boolean = false, payload?: any) => {
