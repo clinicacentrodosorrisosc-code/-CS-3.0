@@ -564,32 +564,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <>
             {/* Flyout panel next to sidebar */}
             <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              initial={{ x: -15, opacity: 0, scale: 0.98 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
+              exit={{ x: -15, opacity: 0, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
               onMouseEnter={keepSubmenu}
               onMouseLeave={hideSubmenu}
-              className="fixed left-[80px] top-0 bottom-0 w-64 glass-sidebar border-r border-border/50 shadow-[10px_0_30px_rgba(0,0,0,0.3)] z-[58] hidden lg:block"
+              className="fixed left-[84px] top-4 bottom-4 w-64 glass-card-executive rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[58] hidden lg:block overflow-hidden"
             >
-              <div className="glass-filter"></div>
-              <div className="glass-overlay"></div>
-              <div className="glass-specular"></div>
-              <div className="glass-content w-full h-full flex flex-col p-6 pt-8">
+              <div className="w-full h-full flex flex-col p-5">
               {/* Submenu Title */}
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
                   {(() => {
                     const matched = MENU_STRUCTURE.find(m => m.id === activeSubmenuTab);
                     if (!matched) return null;
                     return (
-                      <div className="glass-icon size-7 rounded-lg flex items-center justify-center relative shrink-0">
-                        <div className="glass-filter"></div>
-                        <div className="glass-overlay"></div>
-                        <div className="glass-specular"></div>
-                        <div className="glass-content flex items-center justify-center">
-                          <i className={`text-[0.9rem] text-center ${matched.icon} ${matched.color}`} />
-                        </div>
+                      <div className="size-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center relative shrink-0">
+                        <i className={`text-[0.9rem] text-center ${matched.icon} ${matched.color}`} />
                       </div>
                     );
                   })()}
@@ -599,14 +591,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <button 
                   onClick={() => setActiveSubmenuTab(null)}
-                  className="p-1.5 glass-button rounded-lg text-slate-500 hover:text-text transition-all"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Submenu Items List */}
-              <div className="flex-1 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
+              <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar">
                 {MENU_STRUCTURE.find(m => m.id === activeSubmenuTab)?.subItems.map((subItem) => {
                   return (
                     <button
@@ -618,10 +610,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         }
                         setActiveSubmenuTab(null);
                       }}
-                      className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-text hover:bg-white/[0.04] transition-all flex items-center justify-between group cursor-pointer"
+                      className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-purple-500/10 border border-transparent hover:border-purple-500/20 transition-all flex items-center justify-between group cursor-pointer"
                     >
                       <span>{subItem.label}</span>
-                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500" />
+                      <ChevronRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-purple-400" />
                     </button>
                   );
                 })}

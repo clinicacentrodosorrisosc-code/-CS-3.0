@@ -395,7 +395,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-transparent overflow-hidden transition-colors duration-300">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#090d16] text-slate-100 overflow-hidden transition-colors duration-300 relative">
+      {/* Background Ambient Glows */}
+      <div className="fixed -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-purple-600/15 blur-[140px] pointer-events-none z-0 animate-pulse-glow" />
+      <div className="fixed -bottom-32 -right-32 w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[140px] pointer-events-none z-0" />
+
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
@@ -411,7 +415,7 @@ const App: React.FC = () => {
         openNotifications={() => setIsNotificationsOpen(true)}
       />
       
-      <main className="flex-1 flex flex-col min-w-0 h-full relative glass-panel overflow-hidden transition-colors duration-300">
+      <main className="flex-1 flex flex-col min-w-0 h-full relative glass-panel overflow-hidden transition-colors duration-300 z-10">
         <NotificationCenter 
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
