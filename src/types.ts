@@ -5,13 +5,11 @@ export enum Tab {
   ORTHODONTICS = 'Ortodontia',
   LABWORK = 'Laboratório',
   MEETINGS = 'Gestão & Comercial',
-  TIME_TRACKING = 'Registro de Ponto',
   SUPPORT = 'Chamados',
   PASSWORDS = 'Senhas',
   RESPONSIBILITIES = 'Responsabilidades',
   BIBLIOTECA = 'Biblioteca',
-  TASKS = 'Tarefas',
-  MANAGEMENT = 'Gestão'
+  TASKS = 'Tarefas'
 }
 
 export interface UserProfile {

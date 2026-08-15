@@ -225,8 +225,6 @@ export const CommercialDailyReport: React.FC = () => {
         const defaultState: CommercialReportAnswers = {
             q1_arrival: '',
             q2_contacts_count: 0,
-            q2_rescue_contacts_count: 0,
-            q2_positive_rescue_count: 0,
             q3_positive_count: 0,
             q4_positive_details: '',
             q5_appointments_count: 0,
@@ -335,25 +333,14 @@ export const CommercialDailyReport: React.FC = () => {
         setLoading(true);
         setMessage(null);
         try {
-            // Load record from daily_performance with fallback to commercial_reports
-            let data = null;
-            let { data: perfData, error: perfError } = await supabase
-                .from('daily_performance')
+            // Load record from commercial_reports (unified table)
+            const { data, error } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .eq('report_date', date)
                 .maybeSingle();
 
-            if (!perfError && perfData) {
-                data = perfData;
-            } else {
-                const { data: commData, error: commError } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .eq('report_date', date)
-                    .maybeSingle();
-                if (commError && !commError.message?.includes('not found')) throw commError;
-                data = commData;
-            }
+            if (error && !error.message?.includes('not found')) throw error;
 
             if (data) {
                 const { answers: parsedAnswers } = deserializePayload(data.main_challenges || '', data.opportunities || '');
@@ -414,8 +401,6 @@ export const CommercialDailyReport: React.FC = () => {
                 setAnswers({
                     q1_arrival: '',
                     q2_contacts_count: 0,
-                    q2_rescue_contacts_count: 0,
-                    q2_positive_rescue_count: 0,
                     q3_positive_count: 0,
                     q4_positive_details: '',
                     q5_appointments_count: 0,
@@ -465,21 +450,12 @@ export const CommercialDailyReport: React.FC = () => {
 
     const loadHistory = async () => {
         try {
-            // Load records from daily_performance with fallback to commercial_reports
-            let { data } = await supabase
-                .from('daily_performance')
+            // Load more records from commercial_reports (unified table)
+            const { data } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .order('report_date', { ascending: false })
                 .limit(90);
-
-            if (!data || data.length === 0) {
-                const { data: commData } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .order('report_date', { ascending: false })
-                    .limit(90);
-                data = commData;
-            }
 
             setHistory(data || []);
         } catch (err) {
@@ -493,7 +469,7 @@ export const CommercialDailyReport: React.FC = () => {
         loadHistory();
     }, [reportDate]);
 
-    useRealtimeSubscription(['daily_performance', 'commercial_reports', 'commercial_daily_reports', 'daily_evaluations', 'monthly_goals', 'commercial_settings'], () => {
+    useRealtimeSubscription(['commercial_daily_reports', 'daily_evaluations', 'monthly_goals', 'commercial_settings'], () => {
         loadReportForDate(reportDate);
         loadGoals();
         loadHistory();
@@ -661,50 +637,32 @@ export const CommercialDailyReport: React.FC = () => {
                 updated_at: new Date().toISOString()
             };
 
-            // Save to daily_performance (primary) and commercial_reports (backward compatibility sync)
-            let primaryError = null;
-
-            const { data: existingPerf } = await supabase
-                .from('daily_performance')
+            // Save to commercial_reports (unified table) using robust check-and-update/insert
+            const { data: existingRecord } = await supabase
+                .from('commercial_reports')
                 .select('id')
                 .eq('report_date', reportDate)
                 .maybeSingle();
 
-            if (existingPerf) {
-                const { error: updateErr } = await supabase
-                    .from('daily_performance')
+            let error = null;
+            if (existingRecord) {
+                const { error: updateError } = await supabase
+                    .from('commercial_reports')
                     .update(fullPayload)
                     .eq('report_date', reportDate);
-                primaryError = updateErr;
+                error = updateError;
             } else {
-                const { error: insertErr } = await supabase
-                    .from('daily_performance')
-                    .insert([fullPayload]);
-                primaryError = insertErr;
-            }
-
-            // Sync with commercial_reports as fallback
-            try {
-                const { data: existingComm } = await supabase
+                const { error: insertError } = await supabase
                     .from('commercial_reports')
-                    .select('id')
-                    .eq('report_date', reportDate)
-                    .maybeSingle();
-
-                if (existingComm) {
-                    await supabase.from('commercial_reports').update(fullPayload).eq('report_date', reportDate);
-                } else {
-                    await supabase.from('commercial_reports').insert([fullPayload]);
-                }
-            } catch (syncErr) {
-                console.warn('Commercial reports sync notice:', syncErr);
+                    .insert([fullPayload]);
+                error = insertError;
             }
 
-            if (primaryError) throw primaryError;
+            if (error) throw error;
 
             setMessage({ type: 'success', text: 'Relatório diário comercial registrado com sucesso!' });
             loadHistory();
-            notifyDataChange(['daily_performance', 'commercial_reports', 'commercial_daily_reports', 'daily_evaluations']);
+            notifyDataChange(['commercial_daily_reports', 'daily_evaluations']);
         } catch (err: any) {
             console.error('Error saving report:', err);
             const errorMsg = err?.message || err?.details || 'Erro desconhecido';
@@ -720,20 +678,15 @@ export const CommercialDailyReport: React.FC = () => {
         setSaving(true);
         setMessage(null);
         try {
-            const { error: perfErr } = await supabase
-                .from('daily_performance')
+            const { error } = await supabase
+                .from('commercial_reports')
                 .delete()
                 .eq('report_date', reportDate);
 
-            // Delete from commercial_reports as well
-            try {
-                await supabase.from('commercial_reports').delete().eq('report_date', reportDate);
-            } catch (e) {}
-
-            if (perfErr && !perfErr.message?.includes('not found')) throw perfErr;
+            if (error) throw error;
 
             setMessage({ type: 'success', text: 'Relatório diário comercial excluído com sucesso!' });
-            notifyDataChange(['daily_performance', 'commercial_reports', 'commercial_daily_reports', 'daily_evaluations']);
+            notifyDataChange(['commercial_daily_reports', 'daily_evaluations']);
             
             // Reset form
             setAnswers({
@@ -756,8 +709,6 @@ export const CommercialDailyReport: React.FC = () => {
                 q9_reactivations_count: 0,
                 q10_day_rating: '',
                 q10_explanation: '',
-                ortho_starts: 0,
-                objections: [],
                 m_contacts_count: 0,
                 m_responses_count: 0,
                 m_future_appointments_count: 0,

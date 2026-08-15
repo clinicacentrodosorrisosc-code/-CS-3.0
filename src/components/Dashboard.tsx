@@ -247,7 +247,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
   useEffect(() => { loadDashboardData(); }, [currentDate, loadDashboardData]);
 
-  useRealtimeSubscription(['dashboard_configs', 'daily_evaluations', 'transactions', 'commercial_daily_reports', 'commercial_reports', 'daily_performance'], () => {
+  useRealtimeSubscription(['dashboard_configs', 'daily_evaluations', 'transactions', 'commercial_daily_reports', 'commercial_reports'], () => {
       loadDashboardData();
   });
 

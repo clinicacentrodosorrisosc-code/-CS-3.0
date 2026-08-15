@@ -132,6 +132,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Finished' | 'Suspended'>('All');
   const [feeFilter, setFeeFilter] = useState<number | 'All'>('All');
+  const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
@@ -397,6 +398,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           result = result.filter(p => p.maintenanceValue === feeFilter);
       }
 
+      if (contractFilter !== 'All') {
+          result = result.filter(p => {
+              const ct = p.attendance?.__contract_type;
+              if (contractFilter === 'Empty') return !ct || ct === '';
+              return ct === contractFilter;
+          });
+      }
+
       if (sortConfig.direction !== 'none') {
           result.sort((a, b) => {
               if (sortConfig.key === 'duration') {
@@ -417,7 +426,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
       
       return result;
-  }, [patients, searchTerm, statusFilter, feeFilter, sortConfig]);
+  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, sortConfig]);
 
   // --- ACTIONS ---
 
@@ -937,7 +946,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       // Trajectory per ortho day
       const trajectoryIncrement = totalOrthoDaysInMonth > 0 ? activePatientsCount / totalOrthoDaysInMonth : 0;
       
-      const chartData: Array<{ day: number; meta: number; atual: number | null; presentNames: string[]; absentNames: string[]; scheduledNames: string[]; note: string | null }> = [];
+      const chartData = [];
       let cumulativeMeta = 0;
       let cumulativeActual = 0;
       let lastDayWithData = 0;
@@ -1007,9 +1016,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           
           // Update chartData for the reference day onwards to include these undated presences
           for (let i = referenceDay - 1; i < chartData.length; i++) {
-              if (chartData[i].atual !== null) {
-                  (chartData[i].atual as number) += adjustment;
-              }
+              chartData[i].atual += adjustment;
           }
           
           if (lastDayWithData === 0) lastDayWithData = referenceDay;
@@ -1213,7 +1220,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
               {/* Ortho Pacing */}
               {(() => {
-                const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual !== null && d.atual > 0);
+                const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual > 0);
 
                 if (!hasData) {
                     return (
@@ -1817,6 +1824,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   {Array.from(new Set(patients.map(p => p.maintenanceValue))).sort((a,b)=>a-b).map(fee => (
                       <option key={fee} value={fee}>R$ {fee.toFixed(2)}</option>
                   ))}
+              </select>
+              <select 
+                value={contractFilter}
+                onChange={(e) => setContractFilter(e.target.value as any)}
+                className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500"
+              >
+                  <option value="All">Todos Contratos</option>
+                  <option value="Digital">Digital</option>
+                  <option value="Papel">Papel</option>
+                  <option value="Empty">Vazio / Sem Contrato</option>
               </select>
           </div>
 

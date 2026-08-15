@@ -80,11 +80,7 @@ export const ProcessAssistant: React.FC = () => {
                 })
             });
 
-            let data: any = {};
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
-              data = await response.json().catch(() => ({}));
-            }
+            const data = await response.json();
             if (data.text) {
                 setMessages(prev => [...prev, { role: 'model', text: data.text }]);
             } else {

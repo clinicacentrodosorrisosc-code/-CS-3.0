@@ -6,7 +6,6 @@ import { Financial } from './components/Financial';
 import { Orthodontics } from './components/Orthodontics';
 import { LabWork } from './components/LabWork';
 import { Meetings } from './components/Meetings';
-import { TimeTracking } from './components/TimeTracking';
 import { Support } from './components/Support';
 import { Passwords } from './components/Passwords';
 import { Biblioteca } from './components/Biblioteca';
@@ -307,9 +306,40 @@ const App: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // Failsafe timer to guarantee loading never hangs indefinitely
+    const globalTimeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 4000);
+
     const initializeAuth = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        // Clear corrupted local storage session tokens if any
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.includes('supabase.auth.token')) {
+              const val = localStorage.getItem(key);
+              if (val) {
+                JSON.parse(val);
+              }
+            }
+          }
+        } catch (storageErr) {
+          console.warn("Corrupted auth token in localStorage detected, clearing...", storageErr);
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.includes('supabase.auth.token')) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.warn("Session retrieval warning:", sessionError);
+        }
         if (!isMounted) return;
         
         setSession(initialSession);
@@ -322,6 +352,8 @@ const App: React.FC = () => {
       } catch (err) {
         console.error("DEBUG: Erro ao obter sessão inicial:", err);
         setLoading(false);
+      } finally {
+        clearTimeout(globalTimeout);
       }
     };
 
@@ -387,7 +419,18 @@ const App: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="h-screen w-screen bg-surface flex items-center justify-center text-text">Carregando...</div>;
+    return (
+      <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center text-white gap-4">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-slate-300">Carregando OdontoManager Pro...</p>
+        <button
+          onClick={() => setLoading(false)}
+          className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-md active:scale-95"
+        >
+          Entrar no Sistema
+        </button>
+      </div>
+    );
   }
 
   if (!session) {
@@ -395,11 +438,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#090d16] text-slate-100 overflow-hidden transition-colors duration-300 relative">
-      {/* Background Ambient Glows */}
-      <div className="fixed -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-purple-600/15 blur-[140px] pointer-events-none z-0 animate-pulse-glow" />
-      <div className="fixed -bottom-32 -right-32 w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[140px] pointer-events-none z-0" />
-
+    <div className="flex flex-col lg:flex-row h-screen bg-transparent overflow-hidden transition-colors duration-300">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
@@ -415,7 +454,7 @@ const App: React.FC = () => {
         openNotifications={() => setIsNotificationsOpen(true)}
       />
       
-      <main className="flex-1 flex flex-col min-w-0 h-full relative glass-panel overflow-hidden transition-colors duration-300 z-10">
+      <main className="flex-1 flex flex-col min-w-0 h-full relative glass-panel overflow-hidden transition-colors duration-300">
         <NotificationCenter 
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
@@ -457,14 +496,6 @@ const App: React.FC = () => {
             </TabContainer>
           )}
 
-          {activeTab === Tab.TIME_TRACKING && (
-            <TabContainer key="time_tracking">
-              <TimeTracking requestedSubTab={requestedSubTab || undefined} />
-            </TabContainer>
-          )}
-
-
-
           {activeTab === Tab.SUPPORT && (
             <TabContainer key="support">
               <Support userRole={userRole} allowedSubTabs={allowedSubTabs} />
@@ -473,7 +504,11 @@ const App: React.FC = () => {
 
           {activeTab === Tab.PASSWORDS && (
             <TabContainer key="passwords">
-              <Passwords />
+              <Passwords 
+                requestedSubTab={requestedSubTab} 
+                userRole={userRole} 
+                userEmail={session?.user?.email} 
+              />
             </TabContainer>
           )}
 

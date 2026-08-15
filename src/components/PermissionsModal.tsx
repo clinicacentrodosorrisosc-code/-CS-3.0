@@ -32,15 +32,13 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string }[]> = {
     [Tab.LABWORK]: [
         { id: 'lab_kanban', label: 'Quadro Kanban' },
     ],
-    [Tab.TIME_TRACKING]: [
-        { id: 'clock', label: 'Bater Ponto' },
-        { id: 'records', label: 'Espelho de Ponto' },
-        { id: 'summary', label: 'Resumo e Banco de Horas' }
-    ],
     [Tab.MEETINGS]: [
-        { id: 'campaign_calendar', label: 'Calendário de Campanha' },
+        { id: 'sales_pipeline', label: 'Funil & Pipeline de Vendas' },
+        { id: 'management_strategy', label: 'Estratégia & Metas OKR' },
+        { id: 'campaign_calendar', label: 'Calendário de Campanhas' },
         { id: 'meeting_minutes', label: 'Atas de Reuniões' },
-        { id: 'clinic_ideas', label: 'Ideias para a Clínica' }
+        { id: 'clinic_ideas', label: 'Ideias & Melhorias' },
+        { id: 'sales_playbook', label: 'Playbook & Scripts' }
     ],
 
     [Tab.TASKS]: [
@@ -249,13 +247,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
         })
       });
 
-      let result: any = {};
-      const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        result = await response.json().catch(() => ({}));
-      } else if (!response.ok) {
-        throw new Error('Servidor não está respondendo em formato JSON (Backend off ou rota indisponível).');
-      }
+      const result = await response.json();
       
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao criar usuário.');

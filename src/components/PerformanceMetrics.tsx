@@ -143,9 +143,16 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
     const currentActiveDay = isThisMonth ? today.getDate() : daysInMonthCount;
     
     const activeDayMetric = dailyMetrics[currentActiveDay - 1];
-    const pacingStatus = activeDayMetric 
-      ? (activeDayMetric.pacingDiff >= 0 ? 'ahead' : 'behind')
-      : 'on-track';
+    let pacingStatus: 'ahead' | 'warning' | 'behind' = 'ahead';
+    if (activeDayMetric) {
+      if (activeDayMetric.pacingDiff >= 0) {
+        pacingStatus = 'ahead';
+      } else if (activeDayMetric.pacingDiff >= -3000) {
+        pacingStatus = 'warning';
+      } else {
+        pacingStatus = 'behind';
+      }
+    }
     const pacingValue = activeDayMetric ? Math.abs(activeDayMetric.pacingDiff) : 0;
 
     return {
@@ -163,6 +170,103 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
 
   const formatBRL = (val: number) => {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
+  // Helper for color classification based on pacing deficit
+  const getPointColor = (diff: number) => {
+    if (diff < -3000) return '#ef4444'; // Vermelho: atraso superior a R$ 3.000
+    if (diff < 0) return '#f59e0b'; // Amarelo: abaixo da meta, atraso até R$ 3.000
+    return '#10b981'; // Verde: em cima ou acima da trajetória
+  };
+
+  // Custom active dot on hover (clean & subtle)
+  const PacingActiveDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    if (cx == null || cy == null || !payload) return null;
+    const diff = payload.pacingDiff ?? (payload.cumulativeActual - payload.cumulativeTarget);
+    const color = getPointColor(diff);
+    return (
+      <g key={`pacing-active-dot-${payload.day}`}>
+        <circle cx={cx} cy={cy} r={8} fill={color} fillOpacity={0.25} />
+        <circle cx={cx} cy={cy} r={4.5} fill={color} stroke="#0f172a" strokeWidth={2} />
+      </g>
+    );
+  };
+
+  // Custom Tooltip for Pacing Chart
+  const PacingCustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const data = payload[0]?.payload;
+    if (!data) return null;
+
+    const cumulativeActual = data.cumulativeActual ?? 0;
+    const cumulativeTarget = data.cumulativeTarget ?? 0;
+    const diff = data.pacingDiff ?? (cumulativeActual - cumulativeTarget);
+
+    let statusBadge = {
+      text: 'No Ritmo / Adiantado',
+      bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+      color: '#10b981',
+      icon: '🟢'
+    };
+
+    if (diff < -3000) {
+      statusBadge = {
+        text: 'Atraso Crítico (> R$ 3.000)',
+        bg: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+        color: '#ef4444',
+        icon: '🔴'
+      };
+    } else if (diff < 0) {
+      statusBadge = {
+        text: 'Abaixo da Meta (Atraso ≤ R$ 3.000)',
+        bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400',
+        color: '#f59e0b',
+        icon: '🟡'
+      };
+    }
+
+    return (
+      <div className="bg-slate-950/95 border border-white/10 p-3.5 rounded-xl shadow-2xl backdrop-blur-md min-w-[240px]">
+        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/10">
+          <span className="text-xs font-bold text-slate-200">Até Dia {label}</span>
+          <span className="text-[10px] font-mono text-slate-400">{data.dateStr}</span>
+        </div>
+
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusBadge.color }} />
+              Acumulado Realizado:
+            </span>
+            <span className="font-bold text-text font-mono">{formatBRL(cumulativeActual)}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400 flex items-center gap-1.5">
+              <span className="w-2 h-0.5 bg-slate-400 border-t border-dashed" />
+              Trajetória Linear:
+            </span>
+            <span className="font-bold text-slate-300 font-mono">{formatBRL(cumulativeTarget)}</span>
+          </div>
+
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+            <span className="text-[11px] text-slate-400">Diferença de Pacing:</span>
+            <span className={`font-mono font-bold text-xs ${
+              diff >= 0 ? 'text-emerald-400' : diff >= -3000 ? 'text-amber-400' : 'text-rose-400'
+            }`}>
+              {diff >= 0 ? '+' : ''}{formatBRL(diff)}
+            </span>
+          </div>
+
+          <div className={`mt-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1.5 ${statusBadge.bg}`}>
+            <span>{statusBadge.icon}</span>
+            <span>{statusBadge.text}</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -211,12 +315,28 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         <div id="kpi-card-pacing" className="bg-panel border border-border p-4 rounded-xl flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
-            <TrendingUp className={`w-4 h-4 ${summary.pacingStatus === 'ahead' ? 'text-emerald-500' : 'text-rose-500'}`} />
+            <TrendingUp className={`w-4 h-4 ${
+              summary.pacingStatus === 'ahead'
+                ? 'text-emerald-500'
+                : summary.pacingStatus === 'warning'
+                ? 'text-amber-500'
+                : 'text-rose-500'
+            }`} />
           </div>
           <div className="my-2">
             <div className="flex justify-between items-baseline mb-1">
-              <h4 className={`text-lg font-black ${summary.pacingStatus === 'ahead' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {summary.pacingStatus === 'ahead' ? 'Adiantado' : 'Atrasado'}
+              <h4 className={`text-base font-black ${
+                summary.pacingStatus === 'ahead'
+                  ? 'text-emerald-400'
+                  : summary.pacingStatus === 'warning'
+                  ? 'text-amber-400'
+                  : 'text-rose-400'
+              }`}>
+                {summary.pacingStatus === 'ahead'
+                  ? 'No Ritmo'
+                  : summary.pacingStatus === 'warning'
+                  ? 'Abaixo da Meta'
+                  : 'Atrasado (> R$3k)'}
               </h4>
               <span className="text-xs font-bold text-text/90">
                 {summary.pacingStatus === 'ahead' ? '+' : '-'}{formatBRL(Math.abs(summary.pacingValue))}
@@ -225,7 +345,13 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             {/* Visual indicator of the pacing status */}
             <div className="w-full bg-panel h-1.5 rounded-full overflow-hidden">
                 <div 
-                  className={`h-full rounded-full ${summary.pacingStatus === 'ahead' ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                  className={`h-full rounded-full ${
+                    summary.pacingStatus === 'ahead'
+                      ? 'bg-emerald-500'
+                      : summary.pacingStatus === 'warning'
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
                   style={{ width: '100%' }} 
                 />
             </div>
@@ -377,18 +503,26 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
                 <h4 className="text-sm font-bold text-text">Faturamento Acumulado vs Curva Ideal (Pacing)</h4>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Acompanhe se a clínica está no compasso para atingir o faturamento mensal total</p>
               </div>
-              <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase font-mono">
-                <div className="flex items-center gap-1.5 text-emerald-400">
-                  <div className="w-3 h-3 bg-emerald-500/20 border border-emerald-400 rounded-sm" />
-                  <span>Acumulado Realizado</span>
+              <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase font-mono">
+                <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                  <div className="w-3 h-1 rounded-full bg-emerald-500" />
+                  <span>≥ Trajetória (No Ritmo)</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-500">
-                  <div className="w-4 h-0.5 border-t border-dashed border-slate-400" />
+                <div className="flex items-center gap-1.5 text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                  <div className="w-3 h-1 rounded-full bg-amber-500" />
+                  <span>Abaixo (Atraso ≤ R$3k)</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">
+                  <div className="w-3 h-1 rounded-full bg-rose-500" />
+                  <span>Atraso Crítico (&gt; R$3k)</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-400 bg-slate-500/10 px-2.5 py-1 rounded-md border border-slate-500/20">
+                  <div className="w-3 h-0.5 border-t-2 border-dashed border-slate-400" />
                   <span>Trajetória Padrão Linear</span>
                 </div>
               </div>
@@ -398,9 +532,23 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={dailyMetrics} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
                   <defs>
-                    <linearGradient id="areaCumulativeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <linearGradient id="pacingStrokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      {dailyMetrics.map((item, idx) => {
+                        const pct = (idx / Math.max(1, dailyMetrics.length - 1)) * 100;
+                        const color = getPointColor(item.pacingDiff);
+                        return (
+                          <stop key={`stroke-stop-${idx}`} offset={`${pct.toFixed(2)}%`} stopColor={color} />
+                        );
+                      })}
+                    </linearGradient>
+                    <linearGradient id="pacingAreaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      {dailyMetrics.map((item, idx) => {
+                        const pct = (idx / Math.max(1, dailyMetrics.length - 1)) * 100;
+                        const color = getPointColor(item.pacingDiff);
+                        return (
+                          <stop key={`area-stop-${idx}`} offset={`${pct.toFixed(2)}%`} stopColor={color} stopOpacity={0.16} />
+                        );
+                      })}
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -416,25 +564,16 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                     tick={{ fill: 'var(--text-muted)', fontSize: 10 }} 
                     tickFormatter={(val) => `R$${(val/1000).toFixed(0)}k`}
                   />
-                  <RechartsTooltip
-                    contentStyle={{ backgroundColor: 'rgba(15,23,42,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#f8fafc' }}
-                    itemStyle={{ color: '#f1f5f9' }}
-                    labelStyle={{ fontWeight: 'bold', color: '#94a3b8', fontSize: '11px', marginBottom: '4px' }}
-                    formatter={(val: number, name: string) => {
-                      if (name === 'Acumulado Realizado') return [formatBRL(val), 'Faturamento Acumulado'];
-                      if (name === 'Meta Acumulada') return [formatBRL(val), 'Meta Projetada Linear'];
-                      return [val, name];
-                    }}
-                    labelFormatter={(label) => `Até Dia ${label}`}
-                  />
+                  <RechartsTooltip content={<PacingCustomTooltip />} />
                   <Area 
                     name="Acumulado Realizado" 
                     type="monotone" 
                     dataKey="cumulativeActual" 
-                    fill="url(#areaCumulativeGrad)" 
-                    stroke="#10b981" 
+                    fill="url(#pacingAreaGrad)" 
+                    stroke="url(#pacingStrokeGrad)" 
                     strokeWidth={2.5}
-                    dot={{ r: 2, fill: '#10b981', strokeWidth: 0 }}
+                    dot={false}
+                    activeDot={<PacingActiveDot />}
                   />
                   <Line 
                     name="Meta Acumulada" 
@@ -455,7 +594,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
       <div id="pacing-helpful-context" className="flex items-start gap-2.5 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-xs text-indigo-300">
         <HelpCircle className="w-4.5 h-4.5 text-indigo-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Como interpretar o Pacing:</strong> O ritmo acumulado analisa se o faturamento diário está alinhado com a média necessária por dia útil para atingir <span className="text-text font-bold">{formatBRL(Number(currentGoals.revenue) || 0)}</span> até o fechamento. Estar <strong>Adiantado</strong> indica progresso acima do planejado no mês corrente, facilitando o atingimento sem desgastes de última hora.
+          <strong>Como interpretar o Pacing:</strong> O ritmo acumulado analisa se o faturamento diário está alinhado com a trajetória linear ideal até a meta de <span className="text-text font-bold">{formatBRL(Number(currentGoals.revenue) || 0)}</span>. Pontos e trechos em <strong className="text-emerald-400">Verde</strong> indicam faturamento igual ou superior à meta projetada; em <strong className="text-amber-400">Amarelo</strong> quando abaixo da curva com atraso de até R$ 3.000; e em <strong className="text-rose-400">Vermelho</strong> quando o atraso acumulado ultrapassar R$ 3.000.
         </p>
       </div>
     </section>

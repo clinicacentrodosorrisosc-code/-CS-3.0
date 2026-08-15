@@ -76,24 +76,13 @@ export const ReceptionDailyReport: React.FC = () => {
         setLoading(true);
         setMessage(null);
         try {
-            let data = null;
-            let { data: perfData, error: perfErr } = await supabase
-                .from('daily_performance')
+            const { data, error } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .eq('report_date', date)
                 .maybeSingle();
 
-            if (!perfErr && perfData) {
-                data = perfData;
-            } else {
-                const { data: commData, error: commErr } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .eq('report_date', date)
-                    .maybeSingle();
-                if (commErr && !commErr.message?.includes('not found')) throw commErr;
-                data = commData;
-            }
+            if (error && !error.message?.includes('not found')) throw error;
 
             if (data && data.raw_answers && data.raw_answers.reception) {
                 setAnswers(data.raw_answers.reception);
@@ -116,20 +105,11 @@ export const ReceptionDailyReport: React.FC = () => {
 
     const loadHistory = async () => {
         try {
-            let { data } = await supabase
-                .from('daily_performance')
+            const { data } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .order('report_date', { ascending: false })
                 .limit(90);
-
-            if (!data || data.length === 0) {
-                const { data: commData } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .order('report_date', { ascending: false })
-                    .limit(90);
-                data = commData;
-            }
 
             setHistory(data || []);
         } catch (err) {
@@ -169,25 +149,13 @@ export const ReceptionDailyReport: React.FC = () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
-            // First, get existing report from daily_performance or fallback
-            let existingData = null;
-            const { data: perfData } = await supabase
-                .from('daily_performance')
+            // First, get existing report to avoid overwriting commercial data
+            const { data: existingData } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .eq('report_date', reportDate)
                 .maybeSingle();
-
-            if (perfData) {
-                existingData = perfData;
-            } else {
-                const { data: commData } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .eq('report_date', reportDate)
-                    .maybeSingle();
-                existingData = commData;
-            }
-
+                
             let existingRawAnswers = {};
             if (existingData && existingData.raw_answers) {
                 existingRawAnswers = existingData.raw_answers;
@@ -205,40 +173,25 @@ export const ReceptionDailyReport: React.FC = () => {
                 updated_at: new Date().toISOString()
             };
 
-            // Save into daily_performance primary table
-            let error = null;
-            const { data: existingPerf } = await supabase
-                .from('daily_performance')
+            const { data: existingRecord } = await supabase
+                .from('commercial_reports')
                 .select('id')
                 .eq('report_date', reportDate)
                 .maybeSingle();
 
-            if (existingPerf) {
+            let error = null;
+            if (existingRecord) {
                 const { error: updateError } = await supabase
-                    .from('daily_performance')
+                    .from('commercial_reports')
                     .update(fullPayload)
                     .eq('report_date', reportDate);
                 error = updateError;
             } else {
                 const { error: insertError } = await supabase
-                    .from('daily_performance')
+                    .from('commercial_reports')
                     .insert([fullPayload]);
                 error = insertError;
             }
-
-            // Sync into commercial_reports
-            try {
-                const { data: existingComm } = await supabase
-                    .from('commercial_reports')
-                    .select('id')
-                    .eq('report_date', reportDate)
-                    .maybeSingle();
-                if (existingComm) {
-                    await supabase.from('commercial_reports').update(fullPayload).eq('report_date', reportDate);
-                } else {
-                    await supabase.from('commercial_reports').insert([fullPayload]);
-                }
-            } catch (e) {}
 
             if (error) throw error;
 
@@ -260,7 +213,7 @@ export const ReceptionDailyReport: React.FC = () => {
     const adjustValue = (key: keyof ReceptionReportAnswers, amount: number) => {
         setAnswers(prev => ({
             ...prev,
-            [key]: Math.max(0, (Number(prev[key]) || 0) + amount)
+            [key]: Math.max(0, (prev[key] || 0) + amount)
         }));
     };
 
@@ -311,23 +264,11 @@ export const ReceptionDailyReport: React.FC = () => {
         setSaving(true);
         setMessage(null);
         try {
-            let existingData = null;
-            const { data: perfData } = await supabase
-                .from('daily_performance')
+            const { data: existingData } = await supabase
+                .from('commercial_reports')
                 .select('*')
                 .eq('report_date', reportDate)
                 .maybeSingle();
-
-            if (perfData) {
-                existingData = perfData;
-            } else {
-                const { data: commData } = await supabase
-                    .from('commercial_reports')
-                    .select('*')
-                    .eq('report_date', reportDate)
-                    .maybeSingle();
-                existingData = commData;
-            }
 
             if (existingData) {
                 const existingRawAnswers = existingData.raw_answers || {};
@@ -336,41 +277,30 @@ export const ReceptionDailyReport: React.FC = () => {
 
                 // Check if there is commercial data to protect it
                 const hasCommercialData = 
-                    (existingData.q2_contacts_count && existingData.q2_contacts_count > 0) || 
-                    (existingData.q5_appointments_count && existingData.q5_appointments_count > 0) || 
-                    (existingData.q7_value_sold && existingData.q7_value_sold > 0) || 
-                    (existingData.q7_value_received && existingData.q7_value_received > 0) ||
+                    existingData.q2_contacts_count > 0 || 
+                    existingData.q5_appointments_count > 0 || 
+                    existingData.q7_value_sold > 0 || 
+                    existingData.q7_value_received > 0 ||
                     existingData.q10_day_rating ||
                     Object.keys(updatedRawAnswers).length > 0;
 
                 if (hasCommercialData) {
-                    await supabase
-                        .from('daily_performance')
+                    const { error } = await supabase
+                        .from('commercial_reports')
                         .update({
                             raw_answers: updatedRawAnswers,
                             updated_at: new Date().toISOString()
                         })
                         .eq('report_date', reportDate);
-                    try {
-                        await supabase
-                            .from('commercial_reports')
-                            .update({
-                                raw_answers: updatedRawAnswers,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('report_date', reportDate);
-                    } catch(e) {}
+
+                    if (error) throw error;
                 } else {
-                    await supabase
-                        .from('daily_performance')
+                    const { error } = await supabase
+                        .from('commercial_reports')
                         .delete()
                         .eq('report_date', reportDate);
-                    try {
-                        await supabase
-                            .from('commercial_reports')
-                            .delete()
-                            .eq('report_date', reportDate);
-                    } catch(e) {}
+
+                    if (error) throw error;
                 }
             }
 

@@ -1,14 +1,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Transaction, Account, Service, Product } from '../types';
+import { Transaction, Account, Service } from '../types';
 import { PricingSystem } from './PricingSystem';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
 } from 'recharts';
 import { 
   Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit, 
-  Wallet, ShieldCheck, TrendingUp, LineChart,
+  Wallet, ShieldCheck, TrendingUp,
   Building2, ChevronDown, ChevronUp, Trash2, Banknote, Users, Factory, CreditCard, 
   Percent, List, Plus, Minus, Receipt, Upload, X, Download, Check
 } from 'lucide-react';
@@ -192,6 +192,55 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [bulkRows, setBulkRows] = useState<any[]>([]);
   const [pastedData, setPastedData] = useState('');
   const [selectedDreMonth, setSelectedDreMonth] = useState(new Date().toISOString().slice(0, 7));
+
+  // Budget Planner States for Next Month
+  const [transactionsViewMode, setTransactionsViewMode] = useState<'realizado' | 'orcamento'>('realizado');
+  const [budgetMonth, setBudgetMonth] = useState(() => {
+      const d = new Date();
+      d.setMonth(d.getMonth() + 1);
+      return d.toISOString().slice(0, 7);
+  });
+
+  interface BudgetItem {
+      id: string;
+      type: 'income' | 'expense';
+      category: string;
+      description: string;
+      projectedAmount: number;
+      notes?: string;
+  }
+
+  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(() => {
+      try {
+          const saved = localStorage.getItem('odontomanager_budget_items');
+          if (saved) return JSON.parse(saved);
+      } catch (e) {
+          // ignore
+      }
+      return [
+          { id: 'b1', type: 'income', category: 'Ortodontia', description: 'Manutenções Ortodônticas Previstas', projectedAmount: 18000 },
+          { id: 'b2', type: 'income', category: 'Clínica Geral', description: 'Consultas e Limpezas', projectedAmount: 9500 },
+          { id: 'b3', type: 'income', category: 'Prótese', description: 'Próteses e Implantes', projectedAmount: 14000 },
+          { id: 'b4', type: 'expense', category: 'Aluguel', description: 'Aluguel da Clínica', projectedAmount: 4800 },
+          { id: 'b5', type: 'expense', category: 'Salários', description: 'Equipe e Auxiliares', projectedAmount: 7500 },
+          { id: 'b6', type: 'expense', category: 'Materiais', description: 'Insumos e Ortodontia', projectedAmount: 4000 },
+          { id: 'b7', type: 'expense', category: 'Impostos', description: 'Simples Nacional / DAS', projectedAmount: 2200 },
+      ];
+  });
+
+  useEffect(() => {
+      try {
+          localStorage.setItem('odontomanager_budget_items', JSON.stringify(budgetItems));
+      } catch (e) {
+          // ignore
+      }
+  }, [budgetItems]);
+
+  const [newBudgetType, setNewBudgetType] = useState<'income' | 'expense'>('income');
+  const [newBudgetCategory, setNewBudgetCategory] = useState('');
+  const [newBudgetDesc, setNewBudgetDesc] = useState('');
+  const [newBudgetAmount, setNewBudgetAmount] = useState('');
+  const [newBudgetNotes, setNewBudgetNotes] = useState('');
 
   // Observation Modal
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
@@ -1043,8 +1092,263 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     document.body.removeChild(link);
   };
 
+  const renderBudgetPlanner = () => {
+      const projectedIncomes = budgetItems.filter(b => b.type === 'income');
+      const projectedExpenses = budgetItems.filter(b => b.type === 'expense');
+      const totalProjectedIncome = projectedIncomes.reduce((acc, curr) => acc + curr.projectedAmount, 0);
+      const totalProjectedExpense = projectedExpenses.reduce((acc, curr) => acc + curr.projectedAmount, 0);
+      const projectedNetProfit = totalProjectedIncome - totalProjectedExpense;
+      const projectedMargin = totalProjectedIncome > 0 ? (projectedNetProfit / totalProjectedIncome) * 100 : 0;
+
+      const handleAddBudgetItem = (e: React.FormEvent) => {
+          e.preventDefault();
+          if (!newBudgetDesc || !newBudgetAmount) return toast.error('Preencha a descrição e o valor previsto.');
+          const amount = parseFloat(newBudgetAmount.replace(',', '.')) || 0;
+          const newItem: BudgetItem = {
+              id: 'bud_' + safeGenerateId(),
+              type: newBudgetType,
+              category: newBudgetCategory || (newBudgetType === 'income' ? 'Receita Geral' : 'Despesa Geral'),
+              description: newBudgetDesc,
+              projectedAmount: amount,
+              notes: newBudgetNotes
+          };
+          setBudgetItems(prev => [...prev, newItem]);
+          setNewBudgetDesc('');
+          setNewBudgetAmount('');
+          setNewBudgetNotes('');
+          toast.success('Item adicionado ao orçamento!');
+      };
+
+      const handleRemoveBudgetItem = (id: string) => {
+          setBudgetItems(prev => prev.filter(item => item.id !== id));
+          toast.success('Item removido do orçamento.');
+      };
+
+      const handleExportBudget = () => {
+          const wsData = [
+              ['Planejamento Orçamentário - Mês: ' + budgetMonth],
+              [],
+              ['Tipo', 'Categoria', 'Descrição', 'Valor Previsto (R$)', 'Observações'],
+              ...budgetItems.map(b => [b.type === 'income' ? 'Receita' : 'Despesa', b.category, b.description, b.projectedAmount, b.notes || '']),
+              [],
+              ['Total Receitas Previstas', '', '', totalProjectedIncome],
+              ['Total Despesas Previstas', '', '', totalProjectedExpense],
+              ['Lucro Operacional Previsto', '', '', projectedNetProfit],
+              ['Margem Operacional', '', '', projectedMargin.toFixed(2) + '%']
+          ];
+          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Orcamento_' + budgetMonth);
+          XLSX.writeFile(wb, `Orcamento_${budgetMonth}.xlsx`);
+          toast.success('Planilha orçamentária exportada com sucesso!');
+      };
+
+      return (
+          <div className="flex flex-col gap-6 animate-in fade-in pb-12">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(16, 185, 129, 0.3)">
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Receita Prevista</span>
+                      <h3 className="text-2xl font-black text-emerald-400">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                  </SpotlightCard>
+                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(239, 68, 68, 0.3)">
+                      <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Despesas Previstas</span>
+                      <h3 className="text-2xl font-black text-red-400">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                  </SpotlightCard>
+                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(59, 130, 246, 0.3)">
+                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Lucro Operacional Líquido</span>
+                      <h3 className={`text-2xl font-black ${projectedNetProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>R$ {projectedNetProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                  </SpotlightCard>
+                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(168, 85, 247, 0.3)">
+                      <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Margem de Lucro</span>
+                      <h3 className="text-2xl font-black text-purple-400">{projectedMargin.toFixed(1)}%</h3>
+                  </SpotlightCard>
+              </div>
+
+              {/* Add Item Form & Actions Bar */}
+              <div className="glass-panel p-5 rounded-2xl border border-border bg-surface flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                      <div>
+                          <h3 className="text-sm font-black text-text uppercase tracking-wider">Adicionar Item ao Orçamento</h3>
+                          <p className="text-xs text-slate-500 font-medium">Insira estimativas de receitas ou custos para planejar o mês seguinte.</p>
+                      </div>
+                      <button
+                          onClick={handleExportBudget}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
+                      >
+                          <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
+                      </button>
+                  </div>
+
+                  <form onSubmit={handleAddBudgetItem} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end pt-2">
+                      <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo</label>
+                          <select
+                              value={newBudgetType}
+                              onChange={e => {
+                                  const t = e.target.value as 'income' | 'expense';
+                                  setNewBudgetType(t);
+                                  setNewBudgetCategory(t === 'income' ? incomeCategories[0]?.name || 'Ortodontia' : expenseCategories[0]?.name || 'Aluguel');
+                              }}
+                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                          >
+                              <option value="income">Receita (Entrada)</option>
+                              <option value="expense">Despesa (Saída)</option>
+                          </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Categoria</label>
+                          <select
+                              value={newBudgetCategory}
+                              onChange={e => setNewBudgetCategory(e.target.value)}
+                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                          >
+                              {(newBudgetType === 'income' ? incomeCategories : expenseCategories).map(c => (
+                                  <option key={c.id} value={c.name}>{c.name}</option>
+                              ))}
+                          </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1 col-span-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Descrição / Item</label>
+                          <input
+                              type="text"
+                              placeholder="Ex: Manutenções / Aluguel..."
+                              value={newBudgetDesc}
+                              onChange={e => setNewBudgetDesc(e.target.value)}
+                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                          />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Valor Previsto (R$)</label>
+                          <input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={newBudgetAmount}
+                              onChange={e => setNewBudgetAmount(e.target.value)}
+                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500 font-mono"
+                          />
+                      </div>
+
+                      <button
+                          type="submit"
+                          className="py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-bold uppercase transition-all shadow-lg flex items-center justify-center gap-1.5"
+                      >
+                          <Plus className="w-4 h-4" /> Adicionar
+                      </button>
+                  </form>
+              </div>
+
+              {/* Detailed Budget Tables Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Projected Incomes Table */}
+                  <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
+                      <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
+                          <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Receitas Orçadas ({projectedIncomes.length})</h4>
+                          <span className="text-xs font-bold text-emerald-300">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                              <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  <tr>
+                                      <th className="p-3">Categoria</th>
+                                      <th className="p-3">Descrição</th>
+                                      <th className="p-3 text-right">Previsto</th>
+                                      <th className="p-3 text-center">Ações</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs">
+                                  {projectedIncomes.length === 0 ? (
+                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma receita orçada cadastrada.</td></tr>
+                                  ) : (
+                                      projectedIncomes.map(item => (
+                                          <tr key={item.id} className="hover:bg-panel transition-colors">
+                                              <td className="p-3 font-medium text-text">{item.category}</td>
+                                              <td className="p-3 text-slate-300">{item.description}</td>
+                                              <td className="p-3 text-right font-bold text-emerald-400 font-mono">
+                                                  <input
+                                                      type="number"
+                                                      step="0.01"
+                                                      value={item.projectedAmount}
+                                                      onChange={e => {
+                                                          const val = parseFloat(e.target.value) || 0;
+                                                          setBudgetItems(prev => prev.map(i => i.id === item.id ? { ...i, projectedAmount: val } : i));
+                                                      }}
+                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-emerald-500 text-right w-24 outline-none font-mono"
+                                                  />
+                                              </td>
+                                              <td className="p-3 text-center">
+                                                  <button onClick={() => handleRemoveBudgetItem(item.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
+                                                      <Trash2 className="w-3.5 h-3.5" />
+                                                  </button>
+                                              </td>
+                                          </tr>
+                                      ))
+                                  )}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+
+                  {/* Projected Expenses Table */}
+                  <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
+                      <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
+                          <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">Despesas Orçadas ({projectedExpenses.length})</h4>
+                          <span className="text-xs font-bold text-red-300">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                              <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  <tr>
+                                      <th className="p-3">Categoria</th>
+                                      <th className="p-3">Descrição</th>
+                                      <th className="p-3 text-right">Previsto</th>
+                                      <th className="p-3 text-center">Ações</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 text-xs">
+                                  {projectedExpenses.length === 0 ? (
+                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma despesa orçada cadastrada.</td></tr>
+                                  ) : (
+                                      projectedExpenses.map(item => (
+                                          <tr key={item.id} className="hover:bg-panel transition-colors">
+                                              <td className="p-3 font-medium text-text">{item.category}</td>
+                                              <td className="p-3 text-slate-300">{item.description}</td>
+                                              <td className="p-3 text-right font-bold text-red-400 font-mono">
+                                                  <input
+                                                      type="number"
+                                                      step="0.01"
+                                                      value={item.projectedAmount}
+                                                      onChange={e => {
+                                                          const val = parseFloat(e.target.value) || 0;
+                                                          setBudgetItems(prev => prev.map(i => i.id === item.id ? { ...i, projectedAmount: val } : i));
+                                                      }}
+                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-red-500 text-right w-24 outline-none font-mono"
+                                                  />
+                                              </td>
+                                              <td className="p-3 text-center">
+                                                  <button onClick={() => handleRemoveBudgetItem(item.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
+                                                      <Trash2 className="w-3.5 h-3.5" />
+                                                  </button>
+                                              </td>
+                                          </tr>
+                                      ))
+                                  )}
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
   const renderTransactionsTable = () => {
     const showFees = userEmail !== 'recepcao.centrodosorriso@gmail.com';
+    const isMyProfile = userEmail === 'clinica.centrodosorrisosc@gmail.com' || userRole === 'admin';
     const filtered = transactions.filter(t => {
         if (t.type !== 'income') return false;
         
@@ -1075,6 +1379,40 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const errorCount = filtered.filter(t => t.reconciliationStatus === 'error').length;
     return (
         <div className="flex flex-col gap-4 animate-in fade-in h-full">
+            {isMyProfile && (
+                <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setTransactionsViewMode('realizado')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'realizado' ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
+                        >
+                            Lançamentos Realizados
+                        </button>
+                        <button
+                            onClick={() => setTransactionsViewMode('orcamento')}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'orcamento' ? 'bg-purple-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
+                        >
+                            Planejamento Orçamentário (Próximo Mês)
+                        </button>
+                    </div>
+                    {transactionsViewMode === 'orcamento' && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Mês de Referência:</span>
+                            <input
+                                type="month"
+                                value={budgetMonth}
+                                onChange={(e) => setBudgetMonth(e.target.value)}
+                                className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {isMyProfile && transactionsViewMode === 'orcamento' ? (
+                renderBudgetPlanner()
+            ) : (
+                <div className="flex flex-col gap-4 flex-1">
             <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
                 <div className="flex justify-between items-center">
                     <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
@@ -1368,6 +1706,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             </div>
             {errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1"><AlertTriangle className="text-red-500 w-3 h-3" /><span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Atenção: {errorCount} lançamentos com erro na auditoria.</span></div>)}
             <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">Líquido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'Clínica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#8b5cf6' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-emerald-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / Divergência"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
+                </div>
+            )}
         </div>
     );
   };
@@ -2054,6 +2394,55 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
+                    <div className="glass-panel rounded-2xl p-6 border border-border flex flex-col gap-6 mt-2">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                            <div>
+                                <h3 className="text-sm font-bold text-text uppercase tracking-widest flex items-center gap-2">
+                                    <TrendingUp className="w-4 h-4 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
+                                </h3>
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Análise de tendência para tomada de decisão estratégica</p>
+                            </div>
+                        </div>
+                        
+                        <div className="h-[320px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 25, right: 30, bottom: 30, left: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#94a3b8" 
+                                        fontSize={10} 
+                                        tickMargin={12} 
+                                    />
+                                    <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={10} 
+                                        tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                                    />
+                                    <RechartsTooltip 
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita Realizada' : 'Meta']}
+                                        labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
+                                    />
+                                    <Legend verticalAlign="top" height={36} formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita Realizada' : 'Meta Mensal'}</span>} />
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="revenue" 
+                                        name="revenue" 
+                                        stroke="#10b981" 
+                                        strokeWidth={3} 
+                                        dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }} 
+                                        activeDot={{ r: 8, strokeWidth: 2, stroke: '#fff' }}
+                                    >
+                                        <LabelList dataKey="revenueLabel" position="top" fill="#10b981" fontSize={11} offset={12} />
+                                    </Line>
+                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
                     {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}

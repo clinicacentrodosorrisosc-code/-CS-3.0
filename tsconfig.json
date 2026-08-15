@@ -33,7 +33,6 @@
     "src/crm/lib/supabase/server.ts",
     "supabase/supabase_webhook_handler.ts",
     "supabase_webhook_handler.ts",
-    "*.ts",
     "test-*.mjs",
     "check-*.mjs",
     "fix_*.mjs"
