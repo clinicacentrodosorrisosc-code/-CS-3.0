@@ -88,8 +88,6 @@ const MENU_STRUCTURE = [
     icon: 'fas fa-briefcase',
     color: 'text-indigo-500',
     subItems: [
-        { id: 'sales_pipeline', label: 'Funil & Pipeline de Vendas' },
-        { id: 'management_strategy', label: 'Estratégia & Metas OKR' },
         { id: 'campaign_calendar', label: 'Calendário de Campanhas' },
         { id: 'meeting_minutes', label: 'Atas de Reuniões' },
         { id: 'clinic_ideas', label: 'Ideias & Melhorias' },

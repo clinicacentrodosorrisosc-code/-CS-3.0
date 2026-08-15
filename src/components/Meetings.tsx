@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  TrendingUp, Target, Megaphone, FileText, 
+  Megaphone, FileText, 
   Lightbulb, BookOpen, Sparkles
 } from 'lucide-react';
-import { CommercialPipeline } from './Management/CommercialPipeline';
-import { ManagementStrategy } from './Management/ManagementStrategy';
 import { CampaignCalendar } from './Management/CampaignCalendar';
 import { MeetingMinutes } from './Management/MeetingMinutes';
 import { ClinicIdeas } from './ClinicIdeas';
@@ -15,18 +13,6 @@ interface MeetingsProps {
 }
 
 const SUB_TABS = [
-  { 
-    id: 'sales_pipeline', 
-    label: 'Funil Comercial & Vendas', 
-    icon: TrendingUp,
-    description: 'Gestão de leads, avaliações, orçamentos, negociações e conversão'
-  },
-  { 
-    id: 'management_strategy', 
-    label: 'Estratégia & Metas OKR', 
-    icon: Target,
-    description: 'Objetivos estratégicos da clínica, metas trimestrais e matriz SWOT'
-  },
   { 
     id: 'campaign_calendar', 
     label: 'Calendário de Campanhas', 
@@ -54,7 +40,7 @@ const SUB_TABS = [
 ] as const;
 
 export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
-  const [selectedSubTab, setSelectedSubTab] = useState<string>('sales_pipeline');
+  const [selectedSubTab, setSelectedSubTab] = useState<string>('campaign_calendar');
 
   // Derive active tab to prevent cascading setState inside useEffect
   const activeSubTab = requestedSubTab || selectedSubTab;
@@ -83,7 +69,7 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
 
           <div className="hidden sm:flex items-center gap-2">
             <span className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold font-mono">
-              6 Módulos Integrados
+              {SUB_TABS.length} Módulos Integrados
             </span>
           </div>
         </div>
@@ -114,8 +100,6 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
 
         {/* Content Container */}
         <div className="relative z-10 pt-2">
-          {activeSubTab === 'sales_pipeline' && <CommercialPipeline />}
-          {activeSubTab === 'management_strategy' && <ManagementStrategy />}
           {activeSubTab === 'campaign_calendar' && <CampaignCalendar />}
           {activeSubTab === 'meeting_minutes' && <MeetingMinutes />}
           {activeSubTab === 'clinic_ideas' && <ClinicIdeas />}
