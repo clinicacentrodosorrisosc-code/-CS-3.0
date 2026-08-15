@@ -42,6 +42,12 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000
   },
   server: {
-    host: true
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
   }
 })

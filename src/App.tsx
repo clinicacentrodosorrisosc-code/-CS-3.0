@@ -259,9 +259,15 @@ const App: React.FC = () => {
                   .single();
 
               if (masterData?.allowed_sub_tabs) {
-                  const subTabsArray = Array.isArray(masterData.allowed_sub_tabs) 
-                      ? masterData.allowed_sub_tabs 
-                      : JSON.parse(masterData.allowed_sub_tabs as string);
+                  let subTabsArray: string[] = [];
+                  try {
+                      subTabsArray = Array.isArray(masterData.allowed_sub_tabs) 
+                          ? masterData.allowed_sub_tabs 
+                          : (typeof masterData.allowed_sub_tabs === 'string' ? JSON.parse(masterData.allowed_sub_tabs) : []);
+                  } catch {
+                      subTabsArray = [];
+                  }
+                  if (!Array.isArray(subTabsArray)) subTabsArray = [];
                   
               const resetEntry = subTabsArray.find((s: string) => s.startsWith('RESET_TS:'));
               if (resetEntry && currentUser?.last_sign_in_at) {

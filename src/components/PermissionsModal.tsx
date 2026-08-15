@@ -247,7 +247,14 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
         })
       });
 
-      const result = await response.json();
+      let result: any = {};
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        result = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text();
+        result = { error: text || `HTTP ${response.status}` };
+      }
       
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao criar usuário.');
