@@ -85,13 +85,13 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
                 key={tab.id}
                 onClick={() => setSelectedSubTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border
+                  flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap border
                   ${isActive 
-                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30' 
-                    : 'bg-panel/60 text-slate-400 border-border hover:text-white hover:border-white/20 hover:bg-panel'}
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-600/30' 
+                    : 'bg-panel/80 text-slate-400 border-border hover:text-white hover:border-white/20 hover:bg-panel'}
                 `}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-indigo-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-400'}`} />
                 <span>{tab.label}</span>
               </button>
             );

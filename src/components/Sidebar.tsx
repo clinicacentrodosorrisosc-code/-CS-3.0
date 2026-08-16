@@ -39,7 +39,6 @@ const MENU_STRUCTURE = [
     id: Tab.DASHBOARD,
     label: 'Dashboard',
     icon: 'fas fa-chart-line',
-    color: 'text-pink-500',
     subItems: [
         { id: 'geral', label: 'Visão Geral' },
         { id: 'commercial', label: 'Comercial' }
@@ -49,7 +48,6 @@ const MENU_STRUCTURE = [
     id: Tab.FINANCIAL,
     label: 'Financeiro',
     icon: 'fas fa-dollar-sign',
-    color: 'text-cyan-500',
     subItems: [
         { id: 'overview', label: 'Visão Geral' },
         { id: 'transactions', label: 'Receitas' },
@@ -63,7 +61,6 @@ const MENU_STRUCTURE = [
     id: Tab.ORTHODONTICS,
     label: 'Ortodontia',
     icon: 'fas fa-calendar-alt',
-    color: 'text-purple-500',
     subItems: [
         { id: 'vision', label: 'Visão Geral' },
         { id: 'grid', label: 'Grade Presença' },
@@ -75,7 +72,6 @@ const MENU_STRUCTURE = [
     id: Tab.LABWORK,
     label: 'Laboratório',
     icon: 'fas fa-flask',
-    color: 'text-emerald-500',
     subItems: [
         { id: 'dashboard', label: 'Dashboard' },
         { id: 'kanban', label: 'Kanban' },
@@ -86,7 +82,6 @@ const MENU_STRUCTURE = [
     id: Tab.MEETINGS,
     label: 'Gestão & Comercial',
     icon: 'fas fa-briefcase',
-    color: 'text-indigo-500',
     subItems: [
         { id: 'campaign_calendar', label: 'Calendário de Campanhas' },
         { id: 'meeting_minutes', label: 'Atas de Reuniões' },
@@ -94,19 +89,16 @@ const MENU_STRUCTURE = [
         { id: 'sales_playbook', label: 'Playbook & Scripts' }
     ]
   },
-
   {
     id: Tab.SUPPORT,
     label: 'Chamados',
     icon: 'fas fa-headset',
-    color: 'text-orange-500',
     subItems: [] // Sem sub-abas
   },
   {
     id: Tab.PASSWORDS,
     label: 'Cofre & Senhas',
     icon: 'fas fa-vault',
-    color: 'text-rose-500',
     subItems: [
         { id: 'docs', label: 'Docs & Diretrizes' },
         { id: 'passwords', label: 'Senhas & Acessos' },
@@ -118,7 +110,6 @@ const MENU_STRUCTURE = [
     id: Tab.RESPONSIBILITIES,
     label: 'Processos',
     icon: 'fas fa-clipboard-check',
-    color: 'text-teal-500',
     subItems: [
         { id: 'processes', label: 'Processos' },
         { id: 'responsibilities', label: 'Responsabilidades' },
@@ -129,7 +120,6 @@ const MENU_STRUCTURE = [
     id: Tab.BIBLIOTECA,
     label: 'Biblioteca',
     icon: 'fas fa-book-open',
-    color: 'text-amber-500',
     subItems: []
   }
 ];
@@ -294,24 +284,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               layout
               className={`flex flex-col items-center leading-[0.7] font-sans`}
             >
-              <span className="text-blue-500 text-[24px] lg:text-[20px] font-extrabold tracking-tight">C</span>
-              <span className="text-purple-500 text-[24px] lg:text-[20px] font-extrabold tracking-tight">S</span>
+              <span className="text-blue-600 dark:text-blue-400 text-[24px] lg:text-[20px] font-black tracking-tight">C</span>
+              <span className="text-blue-500 dark:text-blue-300 text-[24px] lg:text-[20px] font-black tracking-tight">S</span>
               <AnimatePresence mode="wait">
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="hidden lg:block h-px w-4 bg-panel/80 my-1"
+                  className="hidden lg:block h-px w-4 bg-border my-1"
                 />
               </AnimatePresence>
             </motion.div>
             
             {/* Labels shown only on mobile */}
-            <div className="flex flex-col lg:hidden leading-[0.8]">
-              <span className="text-blue-500 text-[24px] font-extrabold tracking-tight">Centro</span>
+            <div className="flex flex-col lg:hidden leading-[0.85]">
+              <span className="text-blue-600 dark:text-blue-400 text-[22px] font-black tracking-tight">Centro</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">do</span>
-                <span className="text-purple-500 text-[24px] font-extrabold tracking-tight">Sorriso</span>
+                <span className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">do</span>
+                <span className="text-blue-500 dark:text-blue-300 text-[22px] font-black tracking-tight">Sorriso</span>
               </div>
             </div>
           </motion.div>
@@ -325,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={`flex-1 flex flex-col lg:overflow-visible overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 lg:opacity-100 lg:max-h-full'}`}>
           <nav className={`flex-1 flex flex-col px-4 ${isDesktopExpanded ? 'lg:px-4' : 'lg:px-0'} gap-1.5 lg:overflow-visible overflow-y-auto mt-2 custom-scrollbar`}>
             
-            <motion.span layout className={`text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 mb-2 mt-2 ${isDesktopExpanded ? 'lg:block' : 'lg:hidden'}`}>Principal</motion.span>
+            <motion.span layout className={`text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2 mt-2 ${isDesktopExpanded ? 'lg:block' : 'lg:hidden'}`}>Principal</motion.span>
 
             {filteredNavItems.map((item) => {
                 const isActive = activeTab === item.id;
@@ -341,22 +331,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <button
                           onClick={() => handleMainTabClick(item.id)}
                           className={`
-                            group/btn relative flex items-center justify-between lg:justify-center px-4 py-3 lg:h-12 lg:p-0 rounded-xl transition-all duration-200 w-full lg:w-12 text-left shrink-0
-                            ${isActive ? 'bg-panel/80 text-text shadow-lg shadow-black/20' : 'text-slate-500 hover:text-text hover:bg-white/[0.05]'}
+                            group/btn relative flex items-center justify-between lg:justify-center px-4 py-3 lg:h-12 lg:p-0 rounded-xl transition-all duration-150 w-full lg:w-12 text-left shrink-0
+                            ${isActive 
+                              ? 'bg-blue-600/10 text-white border border-blue-500/25 shadow-sm' 
+                              : 'text-slate-400 hover:text-text hover:bg-white/[0.04] border border-transparent'}
                           `}
                         >
                           <motion.div layout className="flex items-center gap-3">
-                              <div className={`glass-icon size-9 rounded-xl flex items-center justify-center relative transition-all duration-300 shrink-0 ${isActive ? 'scale-105 border-indigo-500/30' : 'opacity-80 group-hover/btn:opacity-100 group-hover/btn:scale-105'}`}>
-                                <div className="glass-filter"></div>
-                                <div className="glass-overlay"></div>
-                                <div className="glass-specular"></div>
-                                <div className="glass-content flex items-center justify-center">
-                                  <i className={`text-[1.1rem] w-5 h-5 text-center flex items-center justify-center ${item.icon} ${isActive ? item.color : 'text-slate-400 group-hover/btn:text-slate-200'} transition-colors`} />
-                                </div>
+                              <div className={`glass-icon size-9 rounded-xl flex items-center justify-center relative transition-all duration-200 shrink-0 ${isActive ? 'bg-blue-600/15 border-blue-500/30' : 'opacity-75 group-hover/btn:opacity-100 group-hover/btn:scale-105'}`}>
+                                <i className={`text-[1.05rem] w-5 h-5 text-center flex items-center justify-center ${item.icon} ${isActive ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400 group-hover/btn:text-slate-200'} transition-colors`} />
                               </div>
-                              <span className="text-[10px] font-bold tracking-wide lg:hidden">{item.label}</span>
+                              <span className="text-[11px] font-medium tracking-wide lg:hidden">{item.label}</span>
                           </motion.div>
-                          {isActive && <motion.div layoutId="activeTab" className={`absolute lg:left-0 left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full ${item.color.replace('text-', 'bg-')}`}></motion.div>}
+                          {isActive && <motion.div layoutId="activeTab" className="absolute lg:left-0 left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-blue-600"></motion.div>}
                         </button>
 
                         {/* MOBILE SUB-ITEMS ACCORDION */}
@@ -578,13 +565,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     const matched = MENU_STRUCTURE.find(m => m.id === activeSubmenuTab);
                     if (!matched) return null;
                     return (
-                      <div className="glass-icon size-7 rounded-lg flex items-center justify-center relative shrink-0">
-                        <div className="glass-filter"></div>
-                        <div className="glass-overlay"></div>
-                        <div className="glass-specular"></div>
-                        <div className="glass-content flex items-center justify-center">
-                          <i className={`text-[0.9rem] text-center ${matched.icon} ${matched.color}`} />
-                        </div>
+                      <div className="glass-icon size-7 rounded-lg flex items-center justify-center relative shrink-0 bg-blue-600/15 border-blue-500/30">
+                        <i className={`text-[0.9rem] text-center ${matched.icon} text-blue-400`} />
                       </div>
                     );
                   })()}
