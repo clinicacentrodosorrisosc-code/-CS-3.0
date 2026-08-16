@@ -419,8 +419,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
             </button>
 
-            {/* PERMISSIONS TRIGGER FOR MASTER EMAIL ONLY */}
-            {userEmail === MASTER_EMAIL && (
+            {/* PERMISSIONS TRIGGER FOR ADMINISTRATORS */}
+            {(userRole === 'admin' || userEmail === MASTER_EMAIL) && (
               <button 
                 onClick={openPermissions}
                 className={`group relative flex items-center justify-between ${isDesktopExpanded ? 'lg:justify-start px-4' : 'lg:justify-center px-4'} py-3 lg:h-10 lg:p-0 rounded-xl transition-all duration-200 w-full ${isDesktopExpanded ? 'lg:w-full lg:px-4' : 'lg:w-10'} text-left shrink-0 glass-button shadow-sm text-slate-300 hover:text-text cursor-pointer`}
@@ -865,7 +865,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </button>
 
                   {/* Access Controls Option */}
-                  {userEmail === MASTER_EMAIL && (
+                  {(userRole === 'admin' || userEmail === MASTER_EMAIL) && (
                     <button 
                       onClick={() => {
                         setIsProfileCardOpen(false);

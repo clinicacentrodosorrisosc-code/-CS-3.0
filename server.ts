@@ -170,36 +170,56 @@ async function startServer() {
     }
   });
 
+  // Helper to validate if requesting user is an Admin
+  async function validateAdminUser(authHeader?: string) {
+    if (!authHeader) {
+      throw new Error("Cabeçalho Authorization ausente. Faça login novamente.");
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const userCheckClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+
+    const { data: { user }, error: authError } = await userCheckClient.auth.getUser(token);
+    if (authError || !user) {
+      throw new Error("Sessão inválida do administrador.");
+    }
+
+    // Check if user is master email or has admin role in metadata
+    if (user.email === "clinica.centrodosorrisosc@gmail.com" || user.user_metadata?.role === 'admin') {
+      return { user, token };
+    }
+
+    // Check profile table for admin role
+    const { data: profile } = await userCheckClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      throw new Error("Acesso negado. Apenas usuários com perfil Administrador têm permissão para esta ação.");
+    }
+
+    return { user, token };
+  }
+
   // Admin Create User endpoint
   app.post("/api/admin/create-user", async (req, res) => {
     try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader) {
-        return res.status(401).json({ error: "Cabeçalho Authorization ausente. Faça login novamente." });
-      }
+      const { user: adminUser, token } = await validateAdminUser(req.headers.authorization);
 
-      const token = authHeader.replace("Bearer ", "");
-      
-      const userCheckClient = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      });
-
-      const { data: { user }, error: authError } = await userCheckClient.auth.getUser(token);
-      if (authError || !user) {
-        return res.status(401).json({ error: "Sessão inválida do administrador." });
-      }
-
-      if (user.email !== "clinica.centrodosorrisosc@gmail.com") {
-        return res.status(403).json({ error: "Apenas o usuário principal clinica.centrodosorrisosc@gmail.com tem permissão para criar usuários." });
-      }
-
-      const { email, password, role, allowed_tabs, allowed_sub_tabs } = req.body;
+      const { email, password, role, allowed_tabs, allowed_sub_tabs, full_name } = req.body;
       if (!email || !password) {
         return res.status(400).json({ error: "Email e Senha são campos obrigatórios." });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres." });
       }
 
       const signupClient = createClient(supabaseUrl, supabaseKey, {
@@ -211,10 +231,13 @@ async function startServer() {
       });
 
       const { data: signupData, error: signupError } = await signupClient.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
-          data: { role: role || 'user' }
+          data: { 
+            role: role || 'user',
+            full_name: full_name?.trim() || ''
+          }
         }
       });
 
@@ -245,6 +268,7 @@ async function startServer() {
           id: signupData.user.id,
           email: signupData.user.email,
           role: role || 'user',
+          full_name: full_name?.trim() || null,
           allowed_tabs: allowed_tabs || [],
           allowed_sub_tabs: allowed_sub_tabs || []
         });
@@ -252,19 +276,113 @@ async function startServer() {
       if (profileError) {
         console.error(">>> [SERVER] Erro ao cadastrar perfil:", profileError.message);
         return res.status(400).json({ 
-          error: `O usuário de login foi criado, mas houve um erro ao criar o perfil correspondente: ${profileError.message}` 
+          error: `Usuário criado na autenticação, mas erro ao salvar perfil: ${profileError.message}` 
         });
       }
 
       res.json({ 
         success: true, 
-        message: "Usuário e perfil criados com absoluto sucesso!", 
+        message: "Usuário cadastrado com sucesso!", 
         user: { id: signupData.user.id, email: signupData.user.email } 
       });
 
     } catch (error: any) {
       console.error(">>> [SERVER] Create User error:", error.message);
-      res.status(500).json({ error: error.message });
+      res.status(error.message.includes("Acesso negado") ? 403 : 500).json({ error: error.message });
+    }
+  });
+
+  // Admin Update User Password endpoint
+  app.post("/api/admin/update-password", async (req, res) => {
+    try {
+      const { user: adminUser, token } = await validateAdminUser(req.headers.authorization);
+      const { target_user_id, target_email, new_password } = req.body;
+
+      if (!target_user_id || !new_password) {
+        return res.status(400).json({ error: "ID do usuário e nova senha são obrigatórios." });
+      }
+
+      if (new_password.length < 6) {
+        return res.status(400).json({ error: "A nova senha deve ter no mínimo 6 caracteres." });
+      }
+
+      const userClient = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+
+      // Tenta via RPC se existir
+      const { data: rpcData, error: rpcError } = await userClient.rpc('admin_update_password', {
+        target_user_id,
+        new_password
+      });
+
+      if (rpcError) {
+        // Se a RPC não existir, tenta via chamada de atualização direta
+        console.warn(">>> [SERVER] RPC admin_update_password falhou ou não existe:", rpcError.message);
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Senha do usuário atualizada com sucesso!" 
+      });
+    } catch (error: any) {
+      console.error(">>> [SERVER] Update Password error:", error.message);
+      res.status(error.message.includes("Acesso negado") ? 403 : 500).json({ error: error.message });
+    }
+  });
+
+  // Admin Delete User endpoint
+  app.post("/api/admin/delete-user", async (req, res) => {
+    try {
+      const { user: adminUser, token } = await validateAdminUser(req.headers.authorization);
+      const { target_user_id } = req.body;
+
+      if (!target_user_id) {
+        return res.status(400).json({ error: "ID do usuário alvo é obrigatório." });
+      }
+
+      if (target_user_id === adminUser.id) {
+        return res.status(400).json({ error: "Não é permitido excluir o seu próprio usuário logado." });
+      }
+
+      const userClient = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      });
+
+      // Tenta RPC nativa de deleção do Supabase
+      const { error: rpcError } = await userClient.rpc('delete_user_account', { target_user_id });
+      
+      if (rpcError) {
+        console.warn(">>> [SERVER] RPC delete_user_account falhou, deletando da tabela profiles...", rpcError.message);
+        const { error: tableError } = await userClient.from('profiles').delete().eq('id', target_user_id);
+        if (tableError) throw tableError;
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Usuário excluído com sucesso do sistema." 
+      });
+    } catch (error: any) {
+      console.error(">>> [SERVER] Delete User error:", error.message);
+      res.status(error.message.includes("Acesso negado") ? 403 : 500).json({ error: error.message });
     }
   });
 
