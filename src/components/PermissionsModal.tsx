@@ -42,6 +42,7 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
     { id: 'financial_overview', label: 'Visão Geral' },
     { id: 'financial_transactions', label: 'Receitas' },
     { id: 'financial_pricing', label: 'Precificação' },
+    { id: 'financial_viability', label: 'Viabilidade & Comissões (Exclusivo Admin)' },
     { id: 'financial_settings', label: 'Configurações' },
   ],
   [Tab.ORTHODONTICS]: [
@@ -83,7 +84,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
       Tab.SUPPORT, Tab.PASSWORDS, Tab.RESPONSIBILITIES, Tab.BIBLIOTECA, Tab.TASKS
     ],
     subTabs: [
-      'financial_overview', 'financial_transactions', 'financial_pricing', 'financial_settings',
+      'financial_overview', 'financial_transactions', 'financial_pricing', 'financial_viability', 'financial_settings',
       'ortho_vision', 'ortho_calendar', 'ortho_grid', 'ortho_patients', 'ortho_settings',
       'dash_financial', 'lab_kanban', 'campaign_calendar', 'meeting_minutes', 'clinic_ideas', 'sales_playbook',
       'tasks', 'reports', 'management_overview', 'management_breakeven'

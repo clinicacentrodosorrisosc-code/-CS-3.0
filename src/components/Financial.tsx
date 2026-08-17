@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Transaction, Account, Service } from '../types';
 import { PricingSystem } from './PricingSystem';
+import { FinancialViability } from './FinancialViability';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
@@ -23,7 +24,7 @@ import { playCashRegisterSound } from '../lib/sound';
 
 // --- TYPES & INTERFACES ---
 
-type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing';
+type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing' | 'viability';
 
 interface SubCategory {
     id: string;
@@ -101,6 +102,7 @@ const ALL_TABS_CONFIG = [
   { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
   { id: 'transactions', label: 'Receitas', permissionId: 'financial_transactions' },
   { id: 'pricing', label: 'Precificação', permissionId: 'financial_pricing' },
+  { id: 'viability', label: 'Viabilidade & Comissões', permissionId: 'financial_viability', adminOnly: true },
   { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' }
 ];
 
@@ -113,9 +115,13 @@ interface FinancialProps {
 
 export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs = [], requestedSubTab, requestedAction }) => {
   const visibleTabs = useMemo(() => {
-      if (userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0) return ALL_TABS_CONFIG;
-      const filtered = ALL_TABS_CONFIG.filter(tab => Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permissionId));
-      return filtered.length > 0 ? filtered : ALL_TABS_CONFIG;
+      let tabs = ALL_TABS_CONFIG;
+      if (userRole !== 'admin') {
+          tabs = tabs.filter((tab: any) => !tab.adminOnly);
+      }
+      if (userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0) return tabs;
+      const filtered = tabs.filter(tab => Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permissionId));
+      return filtered.length > 0 ? filtered : tabs;
   }, [userRole, allowedSubTabs]);
 
   const [activeSubTab, setActiveSubTab] = useState<SubTab>(visibleTabs[0]?.id as SubTab || 'overview');
@@ -2518,6 +2524,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             )}
             {activeSubTab === 'transactions' && renderTransactionsTable()}
             {activeSubTab === 'pricing' && renderPricing()}
+            {activeSubTab === 'viability' && <FinancialViability transactions={transactions} userRole={userRole} />}
             {activeSubTab === 'settings' && renderSettings()}
           </div>
         </div>

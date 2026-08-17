@@ -51,9 +51,8 @@ const MENU_STRUCTURE = [
     subItems: [
         { id: 'overview', label: 'Visão Geral' },
         { id: 'transactions', label: 'Receitas' },
-        { id: 'expenses', label: 'Despesas' },
-        { id: 'dre', label: 'DRE & Auditoria' },
-        { id: 'accounts', label: 'Contas & Extratos' },
+        { id: 'pricing', label: 'Precificação' },
+        { id: 'viability', label: 'Viabilidade & Comissões', adminOnly: true },
         { id: 'settings', label: 'Configurações' }
     ]
   },
@@ -349,7 +348,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         {/* MOBILE SUB-ITEMS ACCORDION */}
                         {isActive && item.subItems && item.subItems.length > 0 && (
                           <div className="pl-6 pr-2 py-1 flex flex-col gap-1 lg:hidden w-full mb-2">
-                            {item.subItems.map(subItem => (
+                            {item.subItems.filter(subItem => !(subItem as any).adminOnly || userRole === 'admin').map(subItem => (
                               <button
                                 key={subItem.id}
                                 onClick={(e) => {
@@ -584,7 +583,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {/* Submenu Items List */}
               <div className="flex-1 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
-                {MENU_STRUCTURE.find(m => m.id === activeSubmenuTab)?.subItems.map((subItem) => {
+                {(MENU_STRUCTURE.find(m => m.id === activeSubmenuTab)?.subItems || []).filter(subItem => !(subItem as any).adminOnly || userRole === 'admin').map((subItem) => {
                   return (
                     <button
                       key={subItem.id}
