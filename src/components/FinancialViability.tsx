@@ -809,8 +809,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             </div>
           </div>
 
-          {/* CARDS DE CADA CENÁRIO COM SEUS PRÓPRIOS CONTROLES INDIVIDUAIS */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* CARDS COMPARATIVOS EXECUTIVOS LADO A LADO */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {simulationResults.map(({ 
               scenario, 
               rev, 
@@ -836,57 +836,59 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               return (
                 <SpotlightCard 
                   key={scenario.id}
-                  className={`glass-panel rounded-2xl p-6 border flex flex-col justify-between transition-all duration-300 relative overflow-hidden ${
-                    isBase ? 'border-blue-500/50 bg-blue-950/15 ring-1 ring-blue-500/20' : 'border-border hover:border-slate-600'
+                  className={`glass-panel rounded-3xl p-6 border flex flex-col justify-between transition-all duration-300 relative shadow-xl ${
+                    isBase 
+                      ? 'border-blue-500/60 bg-blue-950/20 ring-1 ring-blue-500/30' 
+                      : 'border-border/80 bg-surface/90 hover:border-slate-500'
                   }`}
-                  spotlightColor={scenario.color + '25'}
+                  spotlightColor={scenario.color + '20'}
                 >
                   <div className="flex flex-col gap-5">
-                    {/* Header do Card */}
-                    <div className="flex justify-between items-start">
+                    {/* 1. CABEÇALHO DO CENÁRIO */}
+                    <div className="flex justify-between items-start gap-2 border-b border-border/50 pb-4">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: scenario.color }} />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full ring-2 ring-white/20" style={{ backgroundColor: scenario.color }} />
+                          <span className="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-md bg-panel border border-border text-slate-300">
                             {scenario.targetGroup}
                           </span>
                           {isBase && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                              Atual
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-blue-500 text-white shadow-sm">
+                              Modelo Atual
                             </span>
                           )}
                         </div>
-                        <h4 className="text-base font-bold text-text font-display leading-snug">
+                        <h4 className="text-base font-black text-text font-display leading-tight">
                           {scenario.name}
                         </h4>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          {scenario.description}
+                        </p>
                       </div>
-                      <button
-                        onClick={() => handleEditScenario(scenario)}
-                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-panel transition-colors"
-                        title="Configurar regras avançadas deste cenário"
-                      >
-                        <Sliders className="w-4 h-4" />
-                      </button>
+                      
+                      {!isBase && (
+                        <button
+                          onClick={() => handleEditScenario(scenario)}
+                          className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-panel transition-colors border border-transparent hover:border-border"
+                          title="Ajustar configurações avançadas deste modelo"
+                        >
+                          <Sliders className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      {scenario.description}
-                    </p>
+                    {/* 2. ENTRADAS DE FATURAMENTO E VENDAS */}
+                    <div className="flex flex-col gap-2.5 bg-panel/60 p-3.5 rounded-2xl border border-border/60">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> 1. Faturamento & Base de Vendas
+                      </span>
 
-                    {/* BLOCO DE CONTROLES INDIVIDUAIS DESTE CENÁRIO */}
-                    <div className="bg-panel/70 p-4 rounded-xl border border-border flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">
-                          🎛️ Parâmetros Editáveis Deste Cenário
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* 1. Faturamento Total Deste Cenário */}
-                        <div className="flex flex-col gap-1 bg-surface p-2.5 rounded-lg border border-border">
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Faturamento Total</label>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] font-mono text-slate-400">R$</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Faturamento Total */}
+                        <div className="bg-surface p-2 rounded-xl border border-border flex flex-col">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">Faturamento Total</span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-xs font-bold text-slate-400 font-mono">R$</span>
                             <input 
                               type="number" 
                               step="5000"
@@ -897,304 +899,214 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           </div>
                         </div>
 
-                        {/* 2. Fatia de Ortodontia Deste Cenário */}
-                        <div className="flex flex-col gap-1 bg-surface p-2.5 rounded-lg border border-border">
+                        {/* Fatia de Ortodontia */}
+                        <div className="bg-surface p-2 rounded-xl border border-border flex flex-col">
                           <div className="flex justify-between items-center">
-                            <label className="text-[9px] font-bold text-slate-400 uppercase">Ortodontia</label>
-                            <span className="text-[9px] font-mono text-amber-400">R$ {(orthoRev / 1000).toFixed(0)}k</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">Ortodontia</span>
+                            <span className="text-[9px] font-mono text-amber-400 font-bold">R$ {(orthoRev / 1000).toFixed(0)}k</span>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 mt-0.5">
                             <input 
                               type="number" 
                               min={0}
                               max={100}
                               value={orthoP}
                               onChange={(e) => handleUpdateScenarioField(scenario.id, 'customOrthoPct', Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                              className="w-14 bg-transparent text-sm font-black font-mono text-amber-300 outline-none"
+                              className="w-12 bg-transparent text-sm font-black font-mono text-amber-300 outline-none"
                             />
                             <span className="text-xs font-bold text-slate-400">%</span>
                           </div>
                         </div>
-
-                        {/* 3. Pessoas / Beneficiários Deste Cenário */}
-                        <div className="flex flex-col gap-1 bg-surface p-2.5 rounded-lg border border-border">
-                          <label className="text-[9px] font-bold text-slate-400 uppercase">Beneficiários</label>
-                          <div className="flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-purple-400" />
-                            <input 
-                              type="number" 
-                              min={1}
-                              max={30}
-                              value={peopleCount}
-                              onChange={(e) => handleUpdateScenarioField(scenario.id, 'beneficiariesCount', Math.max(1, parseInt(e.target.value) || 1))}
-                              className="w-12 bg-transparent text-sm font-black font-mono text-purple-300 outline-none"
-                            />
-                            <span className="text-[10px] text-slate-500">{peopleCount > 1 ? 'pessoas' : 'pessoa'}</span>
-                          </div>
-                        </div>
                       </div>
 
-                      {/* SE FOR REGRA DE DENTISTAS + RECEPÇÃO: INPUTS DE PROCEDIMENTOS DE CADA DENTISTA */}
+                      {/* Se for a regra de Dentistas (inputs de procedimentos) */}
                       {scenario.ruleType === 'dentists_2_comm_reception' && (
-                        <div className="bg-surface/90 p-3 rounded-xl border border-cyan-500/30 flex flex-col gap-3 mt-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1.5">
-                              <Stethoscope className="w-3.5 h-3.5" /> Definição de Vendas por Dentista
-                            </span>
-                            <span className="text-[9px] text-slate-400 font-mono">Clínica Geral (sem Orto): R$ {commEligible.toLocaleString('pt-BR')}</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {/* Dentista 1: Procedimentos Clínicos Indicados (além da Orto) */}
-                            <div className="bg-panel p-2.5 rounded-lg border border-border flex flex-col gap-1.5">
-                              <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-bold text-slate-300 uppercase">Dentista 1 (Procedimentos Clínicos)</label>
-                                <span className="text-[9px] font-mono text-cyan-400">Comissão: {(scenario.d1Pct ?? 1.0)}%</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] font-mono text-slate-400">R$</span>
+                        <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+                          <span className="text-[9px] font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1">
+                            <Stethoscope className="w-3 h-3" /> Procedimentos Clínicos por Dentista
+                          </span>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Dentista 1 Clínico */}
+                            <div className="bg-surface p-2 rounded-xl border border-cyan-500/30 flex flex-col">
+                              <span className="text-[9px] font-bold text-slate-300 uppercase">Clínico Dentista 1</span>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="text-xs font-bold text-slate-400 font-mono">R$</span>
                                 <input 
                                   type="number" 
                                   step="1000"
                                   value={scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)}
                                   onChange={(e) => handleUpdateScenarioField(scenario.id, 'd1ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-full bg-transparent text-sm font-black font-mono text-cyan-300 outline-none"
-                                  placeholder="Procedimentos D1"
+                                  className="w-full bg-transparent text-xs font-black font-mono text-cyan-300 outline-none"
                                 />
                               </div>
-                              <div className="text-[10px] text-slate-400 bg-surface/60 p-1.5 rounded flex justify-between items-center">
-                                <span>Base D1 (Orto + Clínico):</span>
-                                <strong className="text-cyan-300 font-mono">
-                                  R$ {((orthoRev) + (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2))).toLocaleString('pt-BR')}
-                                </strong>
-                              </div>
+                              <span className="text-[8px] text-slate-400 font-mono mt-1">
+                                Base D1: R$ {((orthoRev) + (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2))).toLocaleString('pt-BR')} (c/ Orto)
+                              </span>
                             </div>
 
-                            {/* Dentista 2: Procedimentos Clínicos */}
-                            <div className="bg-panel p-2.5 rounded-lg border border-border flex flex-col gap-1.5">
-                              <div className="flex justify-between items-center">
-                                <label className="text-[10px] font-bold text-slate-300 uppercase">Dentista 2 (Procedimentos Clínicos)</label>
-                                <span className="text-[9px] font-mono text-cyan-400">Comissão: {(scenario.d2Pct ?? 1.0)}%</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] font-mono text-slate-400">R$</span>
+                            {/* Dentista 2 Clínico */}
+                            <div className="bg-surface p-2 rounded-xl border border-cyan-500/30 flex flex-col">
+                              <span className="text-[9px] font-bold text-slate-300 uppercase">Clínico Dentista 2</span>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="text-xs font-bold text-slate-400 font-mono">R$</span>
                                 <input 
                                   type="number" 
                                   step="1000"
                                   value={scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))}
                                   onChange={(e) => handleUpdateScenarioField(scenario.id, 'd2ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-full bg-transparent text-sm font-black font-mono text-cyan-300 outline-none"
-                                  placeholder="Procedimentos D2"
+                                  className="w-full bg-transparent text-xs font-black font-mono text-cyan-300 outline-none"
                                 />
                               </div>
-                              <div className="text-[10px] text-slate-400 bg-surface/60 p-1.5 rounded flex justify-between items-center">
-                                <span>Base D2 (Clínico s/ Orto):</span>
-                                <strong className="text-cyan-300 font-mono">
-                                  R$ {(scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))).toLocaleString('pt-BR')}
-                                </strong>
-                              </div>
+                              <span className="text-[8px] text-slate-400 font-mono mt-1">
+                                Base D2: R$ {(scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))).toLocaleString('pt-BR')} (s/ Orto)
+                              </span>
                             </div>
-                          </div>
-
-                          {/* Recepção 0.5% */}
-                          <div className="bg-panel/60 px-3 py-2 rounded-lg border border-border flex justify-between items-center text-[10px]">
-                            <span className="text-slate-300 font-medium">Recepção (0,5% sobre Faturamento Total):</span>
-                            <strong className="text-emerald-400 font-mono">
-                              R$ {(rev * (scenario.receptionPct !== undefined ? scenario.receptionPct / 100 : 0.005)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Base: R$ {rev.toLocaleString('pt-BR')})
-                            </strong>
                           </div>
                         </div>
                       )}
-
-                      {/* Resumo da Base Contabilizada */}
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-border/50">
-                        {isBase ? (
-                          <span>Vendas Elegíveis Comercial (sem Orto): <strong className="text-slate-200">R$ {commEligible.toLocaleString('pt-BR')}</strong></span>
-                        ) : (
-                          <span>Valor Faturado Contabilizado: <strong className="text-emerald-300">R$ {baseRevenueUsed.toLocaleString('pt-BR')}</strong></span>
-                        )}
-                        <span className="text-indigo-400 font-bold">{activeTierLabel}</span>
-                      </div>
                     </div>
 
-                    {/* BLOCO DE RESULTADO: COMISSÃO A PAGAR */}
-                    <div className="bg-panel/40 p-4 rounded-xl border border-border flex flex-col gap-3">
-                      {/* Se tiver detalhamento específico (ex: Proposta dos Dentistas) */}
-                      {breakdownDetails && breakdownDetails.length > 0 ? (
-                        <div className="flex flex-col gap-2 pb-2 border-b border-border/60">
-                          <span className="text-[10px] font-bold uppercase text-slate-400">Detalhamento por Função / Colaborador</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            {breakdownDetails.map((b, idx) => (
-                              <div key={idx} className="bg-surface/80 p-2.5 rounded-lg border border-border/60 flex flex-col justify-between gap-1">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[11px] text-slate-200 font-bold">{b.label}</span>
-                                  <span className="text-xs font-black font-mono text-emerald-400">R$ {b.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                </div>
+                    {/* 3. QUEM RECEBE QUANTO (DISTRIBUIÇÃO INDIVIDUAL) */}
+                    <div className="flex flex-col gap-2 bg-panel/40 p-3.5 rounded-2xl border border-border/60">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-purple-400" /> 2. Quem Recebe Quanto
+                        </span>
+                        <span className="text-[9px] text-indigo-400 font-bold font-mono">
+                          {scenario.ruleType === 'tiered' ? activeTierLabel : `${peopleCount} ${peopleCount > 1 ? 'pessoas' : 'pessoa'}`}
+                        </span>
+                      </span>
+
+                      {/* Lista de Beneficiários com valores individuais */}
+                      <div className="flex flex-col gap-1.5 mt-1">
+                        {breakdownDetails && breakdownDetails.length > 0 ? (
+                          breakdownDetails.map((b, idx) => (
+                            <div key={idx} className="bg-surface/90 px-3 py-2 rounded-xl border border-border flex justify-between items-center">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-200">{b.label}</span>
                                 {b.detail && (
                                   <span className="text-[9px] text-slate-400 font-mono">{b.detail}</span>
                                 )}
                               </div>
-                            ))}
+                              <span className="text-xs font-black font-mono text-emerald-400">
+                                R$ {b.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="bg-surface/90 px-3 py-2.5 rounded-xl border border-border flex justify-between items-center">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-slate-200">Valor pago a CADA colaborador</span>
+                              <span className="text-[9px] text-slate-400">({peopleCount} pessoas recebem esse valor)</span>
+                            </div>
+                            <span className="text-sm font-black font-mono text-emerald-400">
+                              R$ {amountPerPerson.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
                           </div>
-                        </div>
-                      ) : (
-                        /* Se for valor único por pessoa */
-                        <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                          <div>
-                            <span className="text-[9px] font-bold uppercase text-slate-400 block">Comissão Paga a CADA UM</span>
-                            <span className="text-[10px] text-indigo-400 font-medium">({activeTierLabel})</span>
-                          </div>
-                          <span className="text-lg font-black text-emerald-400 font-mono">
-                            R$ {amountPerPerson.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
-                      {/* Custo Total da Clínica */}
-                      <div className="flex justify-between items-baseline">
-                        <div>
-                          <span className="text-[10px] font-black uppercase text-slate-300 block">Custo Total Clínica</span>
-                          <span className="text-[9px] text-slate-500 font-mono">({commPct.toFixed(2)}% do faturamento total)</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-text font-mono">
+                      {/* Total Pago em Comissões */}
+                      <div className="flex justify-between items-center pt-2 mt-1 border-t border-border/50">
+                        <span className="text-[10px] font-black uppercase text-slate-300">Custo Total em Comissões</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-base font-black font-mono text-text">
                             R$ {totalClinicAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
-                          {!isBase && (
-                            <span className={`text-xs font-bold font-mono flex items-center ${costDiff <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                              {costDiff <= 0 ? (
-                                <>
-                                  <ArrowDownRight className="w-3 h-3 inline" />
-                                  -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
-                                </>
-                              ) : (
-                                <>
-                                  <ArrowUpRight className="w-3 h-3 inline" />
-                                  +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
-                                </>
-                              )}
-                            </span>
-                          )}
+                          <span className="text-[10px] font-bold text-slate-400 font-mono">({commPct.toFixed(2)}%)</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Lucro Líquido dos Sócios & Margem */}
-                    <div className="bg-panel/30 p-3.5 rounded-xl border border-border flex justify-between items-center">
+                    {/* 4. RESULTADO LÍQUIDO DOS SÓCIOS */}
+                    <div className="bg-gradient-to-r from-panel to-surface p-3.5 rounded-2xl border border-border flex justify-between items-center">
                       <div>
-                        <span className="text-[9px] font-bold uppercase text-slate-400 block">Lucro Líquido Residual</span>
-                        <span className={`text-lg font-black font-mono ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">
+                          Lucro Líquido dos Sócios
+                        </span>
+                        <span className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
-                      <span className={`text-xs font-black font-mono px-2.5 py-1 rounded-lg ${
-                        netMarginPct >= 20 ? 'bg-emerald-500/20 text-emerald-400' :
-                        netMarginPct >= 10 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'
+                      <span className={`text-xs font-black font-mono px-3 py-1.5 rounded-xl border ${
+                        netMarginPct >= 20 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' :
+                        netMarginPct >= 10 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-red-500/15 text-red-400 border-red-500/30'
                       }`}>
                         {netMarginPct.toFixed(1)}% margem
                       </span>
                     </div>
 
-                    {/* SEÇÃO INFERIOR: PONTO DE EQUILÍBRIO E META DE FATURAMENTO DETALHADA E DIDÁTICA */}
+                    {/* 5. PONTO DE EQUILÍBRIO & ANÁLISE COMPARATIVA (CLARA E DIRETA) */}
                     {isBase ? (
-                      <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-blue-400">
+                      <div className="bg-blue-500/10 p-3.5 rounded-2xl border border-blue-500/25 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5 text-blue-400">
                           <Target className="w-4 h-4 flex-shrink-0" />
-                          <span className="text-xs font-black uppercase tracking-wider">Ponto de Equilíbrio Operacional (Modelo Atual)</span>
+                          <span className="text-xs font-black uppercase tracking-wider">Referência Atual da Clínica</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 mt-1">
-                          <div className="bg-surface/60 p-2.5 rounded-lg border border-border/50">
-                            <span className="text-[10px] text-slate-400 block uppercase font-bold">Faturamento Mínimo p/ Não ter Prejuízo</span>
-                            <strong className="text-white font-mono text-xs">
-                              R$ {((fixedExpenses) / Math.max(0.1, (1 - (taxesAndFeesPct + directMaterialsPct + commPct) / 100))).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} / mês
-                            </strong>
-                          </div>
-                          <div className="bg-surface/60 p-2.5 rounded-lg border border-border/50">
-                            <span className="text-[10px] text-slate-400 block uppercase font-bold">Lucro Residual dos Sócios</span>
-                            <strong className="text-emerald-400 font-mono text-xs">
-                              R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({netMarginPct.toFixed(1)}% margem)
-                            </strong>
-                          </div>
+                        <div className="bg-surface/80 p-2.5 rounded-xl border border-blue-500/20 flex justify-between items-center text-xs">
+                          <span className="text-slate-300 font-medium">Ponto de Equilíbrio (Zero a Zero):</span>
+                          <strong className="text-white font-mono">
+                            R$ {((fixedExpenses) / Math.max(0.1, (1 - (taxesAndFeesPct + directMaterialsPct + commPct) / 100))).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                          </strong>
                         </div>
-                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                          💡 No faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, a clínica gera <strong>R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> líquidos para os sócios após cobrir custos fixos, impostos, insumos e comissões.
+                        <p className="text-[11px] text-slate-400 leading-snug">
+                          💡 Este é o modelo atualmente vigente na clínica (comercial 2% a 5% sem ortodontia).
                         </p>
                       </div>
                     ) : costDiff > 0 ? (
-                      <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/25 flex flex-col gap-2.5">
+                      <div className="bg-indigo-500/10 p-3.5 rounded-2xl border border-indigo-500/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-indigo-300">
+                          <div className="flex items-center gap-1.5 text-indigo-300">
                             <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" />
-                            <span className="text-xs font-black uppercase tracking-wider text-indigo-300">
-                              Meta de Faturamento para Compensar a Comissão
-                            </span>
+                            <span className="text-xs font-black uppercase tracking-wider">Meta para se Pagar</span>
                           </div>
-                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                            +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em comissões
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em comissão
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                          <div className="bg-surface/80 p-2.5 rounded-lg border border-indigo-500/30 flex flex-col justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Faturamento Alvo Necessário</span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span className="text-sm font-black font-mono text-emerald-400">
-                                R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-[10px] font-bold text-indigo-400 font-mono">
-                                (+R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })})
-                              </span>
-                            </div>
+                        <div className="bg-surface/90 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col gap-1">
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Faturamento Necessário</span>
+                            <span className="text-sm font-black font-mono text-emerald-400">
+                              R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                            </span>
                           </div>
-
-                          <div className="bg-surface/80 p-2.5 rounded-lg border border-indigo-500/30 flex flex-col justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Crescimento de Vendas Exigido</span>
-                            <div className="flex items-baseline gap-1.5 mt-1">
-                              <span className="text-sm font-black font-mono text-indigo-300">
-                                +{requiredGrowthPct.toFixed(1)}%
-                              </span>
-                              <span className="text-[10px] text-slate-400">acima de R$ {(rev/1000).toFixed(0)}k</span>
-                            </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-border/40 pt-1 mt-0.5">
+                            <span>Aumento de vendas necessário:</span>
+                            <strong className="text-indigo-300 font-mono">
+                              +R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} (+{requiredGrowthPct.toFixed(1)}%)
+                            </strong>
                           </div>
                         </div>
 
-                        <div className="bg-panel/70 p-2.5 rounded-lg border border-border/60 text-[11px] text-slate-300 leading-relaxed">
-                          📌 <strong>Entenda o cálculo:</strong> Como esse modelo paga <strong className="text-amber-400">R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> a mais em comissões no faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, a clínica precisará faturar <strong className="text-emerald-400">R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> no mês para que o lucro líquido dos sócios continue sendo os mesmos <strong className="text-white">R$ {currentNetProfit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> do modelo atual.
-                        </div>
+                        <p className="text-[10px] text-slate-300 leading-tight">
+                          📌 Para pagar esse modelo sem diminuir o lucro atual dos sócios, o faturamento deve atingir <strong>R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong>.
+                        </p>
                       </div>
                     ) : (
-                      <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/25 flex flex-col gap-2.5">
+                      <div className="bg-emerald-500/10 p-3.5 rounded-2xl border border-emerald-500/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-emerald-400">
+                          <div className="flex items-center gap-1.5 text-emerald-400">
                             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                            <span className="text-xs font-black uppercase tracking-wider">
-                              Modelo com Economia Imediata para a Clínica
-                            </span>
+                            <span className="text-xs font-black uppercase tracking-wider">Economia Imediata</span>
                           </div>
-                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em comissões
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                          <div className="bg-surface/80 p-2.5 rounded-lg border border-emerald-500/30 flex flex-col justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Economia Mensal em Comissões</span>
-                            <span className="text-sm font-black font-mono text-emerald-400 mt-1">
-                              R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} / mês
-                            </span>
-                          </div>
-
-                          <div className="bg-surface/80 p-2.5 rounded-lg border border-emerald-500/30 flex flex-col justify-between">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido Residual</span>
-                            <span className="text-sm font-black font-mono text-white mt-1">
-                              R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({netMarginPct.toFixed(1)}%)
-                            </span>
-                          </div>
+                        <div className="bg-surface/90 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs">
+                          <span className="text-slate-300 font-medium">Economia no mês:</span>
+                          <strong className="text-emerald-400 font-mono text-sm">
+                            +R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} a mais no lucro
+                          </strong>
                         </div>
 
-                        <div className="bg-panel/70 p-2.5 rounded-lg border border-border/60 text-[11px] text-emerald-300 leading-relaxed">
-                          ✅ <strong>Vantagem Financeira:</strong> No faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, este modelo reduz os custos em <strong>R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> em comparação com o modelo atual, aumentando diretamente o lucro líquido no bolso dos sócios.
-                        </div>
+                        <p className="text-[10px] text-emerald-300 leading-tight">
+                          ✅ Esse modelo é mais econômico que o atual no faturamento de R$ {rev.toLocaleString('pt-BR')}.
+                        </p>
                       </div>
                     )}
                   </div>
