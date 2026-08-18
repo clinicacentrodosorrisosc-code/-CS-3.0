@@ -91,7 +91,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   {
     id: 'current_commercial_tiered',
     name: 'Modelo Atual (Comercial: 2% > 45k | 3% > 55k | 5% > 60k)',
-    description: 'Comercial ganha sobre o total vendido (sem Ortodontia): 0% (<45k), 2% (45k a 54.9k), 3% (55k a 59.9k) e 5% (≥ 60k). Pago para 1 profissional do Comercial.',
+    description: 'Comercial ganha sobre o total vendido SEM Ortodontia: 0% (<45k), 2% (45k a 54.9k), 3% (55k a 59.9k) e 5% (≥ 60k). Ortodontia NÃO contabiliza.',
     isCurrent: true,
     targetGroup: 'Comercial',
     ruleType: 'tiered',
@@ -181,7 +181,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v6');
+      const saved = localStorage.getItem('om_viability_scenarios_v7');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -191,7 +191,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v6', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v7', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
