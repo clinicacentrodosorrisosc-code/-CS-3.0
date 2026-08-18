@@ -30,7 +30,8 @@ import {
   Info,
   Calendar,
   Eye,
-  Settings
+  Settings,
+  UserCheck
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -70,7 +71,8 @@ export interface ScenarioRule {
   percentage: number; // Ex: 2% ou 1%
   applyOnSurplusOnly: boolean; // se true: aplica % apenas sobre o que passar da meta; se false: aplica sobre o faturamento total assim que bate a meta
   excludeOrtho: boolean; // se true: NÃO contabiliza pacientes/receitas de Ortodontia
-  bonusFixedAmount?: number; // bônus fixo extra ao atingir supermeta
+  beneficiariesCount: number; // Quantidade de pessoas que receberão esse valor individualmente (ex: 4 pessoas = 4 x valor)
+  bonusFixedAmount?: number; // bônus fixo extra por pessoa ao atingir supermeta
   bonusTriggerAmount?: number; // meta para ganhar o bônus fixo extra
   tiers?: CommissionTier[]; // para regras escalonadas
   color: string;
@@ -86,7 +88,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   {
     id: 'current_commercial_tiered',
     name: 'Modelo Atual (Comercial: 2% > 45k | 3% > 55k | 5% > 60k)',
-    description: 'Comercial ganha sobre o total vendido (sem Ortodontia): 0% (<45k), 2% (45k a 54.9k), 3% (55k a 59.9k) e 5% (≥ 60k). Ortodontia não contabiliza.',
+    description: 'Comercial ganha sobre o total vendido (sem Ortodontia): 0% (<45k), 2% (45k a 54.9k), 3% (55k a 59.9k) e 5% (≥ 60k). Pago para 1 profissional do Comercial.',
     isCurrent: true,
     targetGroup: 'Comercial',
     ruleType: 'tiered',
@@ -94,6 +96,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
     percentage: 2.0,
     applyOnSurplusOnly: false,
     excludeOrtho: true,
+    beneficiariesCount: 1,
     tiers: [
       { minRevenue: 0, maxRevenue: 45000, percentage: 0.0, label: 'Abaixo de 45k (0%)' },
       { minRevenue: 45000, maxRevenue: 55000, percentage: 2.0, label: '45k a 55k (2%)' },
@@ -104,61 +107,57 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   },
   {
     id: 'team_flat_1pct',
-    name: 'Proposta 1 (Time Todo 1% de Tudo)',
-    description: 'Toda a equipe (comercial, recepção, suporte) ganha 1% linear sobre todo o faturamento da clínica (todas as especialidades).',
+    name: 'Proposta 1 (Time Todo: 1% de Tudo para Cada um)',
+    description: 'Cada membro da equipe (ex: 4 pessoas) ganha 1% individual sobre todo o faturamento da clínica (Custo clínica: 4 x 1% = 4%).',
     targetGroup: 'Toda a Equipe',
     ruleType: 'flat',
     triggerAmount: 0,
     percentage: 1.0,
     applyOnSurplusOnly: false,
     excludeOrtho: false,
+    beneficiariesCount: 4, // 4 pessoas recebendo 1% cada
     color: '#10b981' // Verde Esmeralda
   },
   {
     id: 'commercial_70k_2pct',
     name: 'Proposta 2 (Comercial 2% a partir de 70k)',
-    description: 'Comercial ganha 2% sobre o vendido (sem Ortodontia) apenas ao atingir R$ 70.000 ou mais.',
+    description: 'Comercial ganha 2% sobre o vendido (sem Ortodontia) apenas ao atingir R$ 70.000 ou mais. Pago para 1 profissional.',
     targetGroup: 'Comercial',
     ruleType: 'trigger',
     triggerAmount: 70000,
     percentage: 2.0,
     applyOnSurplusOnly: false,
     excludeOrtho: true,
+    beneficiariesCount: 1,
     color: '#f59e0b' // Âmbar
   },
   {
-    id: 'commercial_progressive_70k',
-    name: 'Proposta 3 (Comercial Escalonado 50k / 70k / 90k)',
-    description: 'Comercial sem Orto: 0% (<50k), 2% (50k a 70k), 3% (70k a 90k) e 4% (≥ 90k) + bônus de R$ 500 se atingir 100k.',
-    targetGroup: 'Comercial',
-    ruleType: 'tiered',
+    id: 'team_reception_tiered',
+    name: 'Proposta 3 (Recepção/Equipe: 0.5% cada a partir de 50k)',
+    description: 'Equipe de apoio (4 pessoas) ganha 0.5% individual cada uma a partir de R$ 50.000 faturados na clínica.',
+    targetGroup: 'Recepção & Apoio',
+    ruleType: 'trigger',
     triggerAmount: 50000,
-    percentage: 2.0,
+    percentage: 0.5,
     applyOnSurplusOnly: false,
-    excludeOrtho: true,
-    bonusFixedAmount: 500,
-    bonusTriggerAmount: 100000,
-    tiers: [
-      { minRevenue: 0, maxRevenue: 50000, percentage: 0.0, label: '< 50k (0%)' },
-      { minRevenue: 50000, maxRevenue: 70000, percentage: 2.0, label: '50k a 70k (2%)' },
-      { minRevenue: 70000, maxRevenue: 90000, percentage: 3.0, label: '70k a 90k (3%)' },
-      { minRevenue: 90000, percentage: 4.0, label: '≥ 90k (4%)' }
-    ],
+    excludeOrtho: false,
+    beneficiariesCount: 4,
     color: '#8b5cf6' // Roxo
   },
   {
     id: 'hybrid_comm_team',
-    name: 'Proposta 4 (Híbrido: Comercial 2% > 55k + Time 0.5%)',
-    description: 'Comercial ganha 2% a partir de 55k (sem Orto) + Toda a equipe ganha 0.5% sobre o faturamento total da clínica.',
+    name: 'Proposta 4 (Híbrido: Comercial 2% > 50k + 4 Pessoas Time 0.5% cada)',
+    description: 'Comercial ganha 2% a partir de 50k (sem Orto) + 4 pessoas da equipe ganham 0.5% cada sobre o total da clínica a partir de 50k.',
     targetGroup: 'Personalizado',
     ruleType: 'tiered',
-    triggerAmount: 55000,
-    percentage: 2.5,
+    triggerAmount: 50000,
+    percentage: 4.0, // 2% comercial + (4 x 0.5% = 2% time)
     applyOnSurplusOnly: false,
     excludeOrtho: false,
+    beneficiariesCount: 1,
     tiers: [
-      { minRevenue: 0, maxRevenue: 55000, percentage: 0.5, label: '< 55k: Time 0.5%' },
-      { minRevenue: 55000, percentage: 2.5, label: '≥ 55k: Com. 2% + Time 0.5% (2.5%)' }
+      { minRevenue: 0, maxRevenue: 50000, percentage: 0.0, label: '< 50k (0%)' },
+      { minRevenue: 50000, percentage: 4.0, label: '≥ 50k: Com. 2% + 4x 0.5% Time (Total 4%)' }
     ],
     color: '#ec4899' // Rosa
   }
@@ -183,7 +182,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v2');
+      const saved = localStorage.getItem('om_viability_scenarios_v3');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -193,7 +192,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v2', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v3', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
@@ -202,7 +201,9 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados de Simulação
   const [simulatedTotalRevenue, setSimulatedTotalRevenue] = useState<number>(80000); // R$ 80.000 faturamento total clínica
   const [orthoSharePct, setOrthoSharePct] = useState<number>(25); // 25% do faturamento da clínica é Ortodontia
+  const [globalPeopleCount, setGlobalPeopleCount] = useState<number>(4); // 4 pessoas na equipe por padrão
   const [activeTab, setActiveTab] = useState<'simulator' | 'comparison' | 'historical' | 'settings'>('simulator');
+  const [selectedHistoricalMonth, setSelectedHistoricalMonth] = useState<string | null>(null);
   
   // Parâmetros de Custos e Margens da Clínica (Customizáveis)
   const [taxesAndFeesPct, setTaxesAndFeesPct] = useState<number>(9.5); // Impostos + Taxa de Cartão (% médio)
@@ -216,149 +217,19 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     id: '',
     name: '',
     description: '',
-    targetGroup: 'Comercial',
-    ruleType: 'tiered',
-    triggerAmount: 45000,
-    percentage: 2.0,
+    targetGroup: 'Toda a Equipe',
+    ruleType: 'flat',
+    triggerAmount: 0,
+    percentage: 1.0,
     applyOnSurplusOnly: false,
-    excludeOrtho: true,
+    excludeOrtho: false,
+    beneficiariesCount: 4,
     bonusFixedAmount: 0,
     bonusTriggerAmount: 0,
-    tiers: [
-      { minRevenue: 0, maxRevenue: 45000, percentage: 0.0, label: '< 45k (0%)' },
-      { minRevenue: 45000, maxRevenue: 55000, percentage: 2.0, label: '45k a 55k (2%)' },
-      { minRevenue: 55000, maxRevenue: 60000, percentage: 3.0, label: '55k a 60k (3%)' },
-      { minRevenue: 60000, percentage: 5.0, label: '≥ 60k (5%)' }
-    ],
     color: '#06b6d4'
   });
 
-  // Função para calcular a comissão de uma regra dado o faturamento total e a fatia de Orto
-  const calculateCommission = (
-    rule: ScenarioRule, 
-    totalRevenue: number, 
-    orthoPct: number = orthoSharePct
-  ): { amount: number; effectivePct: number; baseRevenueUsed: number; activeTierLabel?: string } => {
-    if (totalRevenue <= 0) return { amount: 0, effectivePct: 0, baseRevenueUsed: 0 };
-
-    // Se a regra exclui ortodontia, o faturamento base para atingir a meta e calcular o % é apenas o que não é Orto
-    const baseRevenueUsed = rule.excludeOrtho 
-      ? totalRevenue * (1 - (orthoPct / 100))
-      : totalRevenue;
-
-    let amount = 0;
-    let activeTierLabel: string | undefined = undefined;
-
-    if (rule.ruleType === 'flat') {
-      amount = baseRevenueUsed * (rule.percentage / 100);
-      activeTierLabel = `${rule.percentage}% de tudo`;
-    } else if (rule.ruleType === 'trigger') {
-      if (baseRevenueUsed >= rule.triggerAmount) {
-        if (rule.applyOnSurplusOnly) {
-          amount = (baseRevenueUsed - rule.triggerAmount) * (rule.percentage / 100);
-        } else {
-          amount = baseRevenueUsed * (rule.percentage / 100);
-        }
-        activeTierLabel = `${rule.percentage}% (meta atingida)`;
-      } else {
-        amount = 0;
-        activeTierLabel = 'Meta não atingida (0%)';
-      }
-    } else if (rule.ruleType === 'tiered' && rule.tiers && rule.tiers.length > 0) {
-      const activeTier = rule.tiers.find(t => baseRevenueUsed >= t.minRevenue && (t.maxRevenue === undefined || baseRevenueUsed < t.maxRevenue)) 
-        || rule.tiers[rule.tiers.length - 1];
-      if (activeTier) {
-        amount = baseRevenueUsed * (activeTier.percentage / 100);
-        activeTierLabel = activeTier.label || `${activeTier.percentage}%`;
-      }
-    }
-
-    // Adiciona bônus fixo se atingiu a supermeta
-    if (rule.bonusFixedAmount && rule.bonusTriggerAmount && baseRevenueUsed >= rule.bonusTriggerAmount) {
-      amount += rule.bonusFixedAmount;
-    }
-
-    const effectivePct = totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0;
-    return { amount, effectivePct, baseRevenueUsed, activeTierLabel };
-  };
-
-  // Cálculo detalhado de viabilidade para o faturamento simulado
-  const currentScenario = scenarios.find(s => s.isCurrent) || scenarios[0];
-
-  const simulatedOrthoRevenue = simulatedTotalRevenue * (orthoSharePct / 100);
-  const simulatedCommercialEligibleRevenue = simulatedTotalRevenue - simulatedOrthoRevenue;
-
-  const simulationResults = useMemo(() => {
-    return scenarios.map(scenario => {
-      const { amount: commAmount, effectivePct: commPct, baseRevenueUsed, activeTierLabel } = calculateCommission(scenario, simulatedTotalRevenue, orthoSharePct);
-      
-      const taxesAndFees = simulatedTotalRevenue * (taxesAndFeesPct / 100);
-      const directMaterials = simulatedTotalRevenue * (directMaterialsPct / 100);
-      const totalVariableCosts = taxesAndFees + directMaterials + commAmount;
-      const contributionMarginR$ = simulatedTotalRevenue - totalVariableCosts;
-      const contributionMarginPct = simulatedTotalRevenue > 0 ? (contributionMarginR$ / simulatedTotalRevenue) * 100 : 0;
-
-      const netProfit = contributionMarginR$ - fixedExpenses;
-      const netMarginPct = simulatedTotalRevenue > 0 ? (netProfit / simulatedTotalRevenue) * 100 : 0;
-
-      // Comparação com o Modelo Atual
-      const currentComm = calculateCommission(currentScenario, simulatedTotalRevenue, orthoSharePct).amount;
-      const currentNetProfit = (simulatedTotalRevenue - (taxesAndFees + directMaterials + currentComm)) - fixedExpenses;
-      const costDiff = commAmount - currentComm;
-      const profitDiff = netProfit - currentNetProfit;
-
-      // Elasticidade / Break-even do aumento: Quanto precisa vender a mais para compensar o custo extra de comissão?
-      const baseContributionMarginRate = Math.max(0.1, (contributionMarginPct / 100));
-      const requiredExtraSales = costDiff > 0 ? costDiff / baseContributionMarginRate : 0;
-      const requiredGrowthPct = (costDiff > 0 && simulatedTotalRevenue > 0) ? (requiredExtraSales / simulatedTotalRevenue) * 100 : 0;
-
-      return {
-        scenario,
-        commAmount,
-        commPct,
-        baseRevenueUsed,
-        activeTierLabel,
-        taxesAndFees,
-        directMaterials,
-        totalVariableCosts,
-        contributionMarginR$,
-        contributionMarginPct,
-        netProfit,
-        netMarginPct,
-        costDiff,
-        profitDiff,
-        requiredExtraSales,
-        requiredGrowthPct
-      };
-    });
-  }, [scenarios, simulatedTotalRevenue, orthoSharePct, taxesAndFeesPct, directMaterialsPct, fixedExpenses, currentScenario]);
-
-  // Curva de Faturamento para Gráficos Comparativos (de 30k a 160k)
-  const chartRevenuePoints = useMemo(() => {
-    const points: number[] = [30000, 45000, 55000, 60000, 70000, 80000, 90000, 100000, 120000, 140000, 160000];
-    return points.map(rev => {
-      const pointData: any = {
-        revenue: rev,
-        revenueLabel: `R$ ${(rev / 1000).toFixed(0)}k`
-      };
-
-      scenarios.forEach(sc => {
-        const { amount: comm } = calculateCommission(sc, rev, orthoSharePct);
-        const taxes = rev * (taxesAndFeesPct / 100);
-        const mat = rev * (directMaterialsPct / 100);
-        const netProf = rev - (taxes + mat + comm) - fixedExpenses;
-        const netMargin = rev > 0 ? (netProf / rev) * 100 : 0;
-
-        pointData[`comm_${sc.id}`] = comm;
-        pointData[`margin_${sc.id}`] = parseFloat(netMargin.toFixed(1));
-        pointData[`profit_${sc.id}`] = netProf;
-      });
-
-      return pointData;
-    });
-  }, [scenarios, orthoSharePct, taxesAndFeesPct, directMaterialsPct, fixedExpenses]);
-
-  // Histórico Real da Clínica (Separando Ortodontia a partir das Transactions)
+  // Histórico Real da Clínica (Calculado a partir das Transactions)
   const historicalMonthlyData = useMemo(() => {
     const mapTotal = new Map<string, number>();
     const mapOrtho = new Map<string, number>();
@@ -380,7 +251,6 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
     const months = Array.from(mapTotal.keys()).sort();
     if (months.length === 0) {
-      // Mock inteligente com meses recentes e separação de Orto
       const mockMonths = [
         { month: '2026-01', label: 'Jan/26', revenue: 48000, ortho: 12000 },
         { month: '2026-02', label: 'Fev/26', revenue: 54000, ortho: 13500 },
@@ -395,16 +265,11 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       return mockMonths.map(item => {
         const commEligible = item.revenue - item.ortho;
         const realOrthoPct = item.revenue > 0 ? (item.ortho / item.revenue) * 100 : 0;
-        const results: any = { 
+        return { 
           ...item, 
           commEligible, 
           orthoPct: realOrthoPct.toFixed(0) 
         };
-        scenarios.forEach(sc => {
-          const { amount } = calculateCommission(sc, item.revenue, realOrthoPct);
-          results[`comm_${sc.id}`] = amount;
-        });
-        return results;
       });
     }
 
@@ -418,7 +283,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
       const label = `${monthNames[parseInt(month, 10) - 1]}/${year.slice(2)}`;
       
-      const results: any = { 
+      return { 
         month: mKey, 
         label, 
         revenue, 
@@ -426,14 +291,185 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         commEligible, 
         orthoPct: realOrthoPct.toFixed(0) 
       };
+    });
+  }, [transactions]);
+
+  // Carregar dados validados de um mês histórico para o simulador
+  const handleLoadHistoricalMonth = (m: any) => {
+    setSimulatedTotalRevenue(m.revenue);
+    setOrthoSharePct(parseFloat(m.orthoPct) || 25);
+    setSelectedHistoricalMonth(m.label);
+    toast.success(`Valores validados de ${m.label} carregados no simulador!`, {
+      description: `Faturamento: R$ ${m.revenue.toLocaleString('pt-BR')} | Ortodontia: R$ ${m.ortho.toLocaleString('pt-BR')} (${m.orthoPct}%)`
+    });
+  };
+
+  // Função para calcular a comissão por pessoa e custo total da clínica
+  const calculateCommission = (
+    rule: ScenarioRule, 
+    totalRevenue: number, 
+    orthoPct: number = orthoSharePct
+  ): { 
+    amountPerPerson: number; 
+    totalClinicAmount: number; 
+    effectivePct: number; 
+    baseRevenueUsed: number; 
+    activeTierLabel?: string;
+    peopleCount: number;
+  } => {
+    if (totalRevenue <= 0) {
+      return { amountPerPerson: 0, totalClinicAmount: 0, effectivePct: 0, baseRevenueUsed: 0, peopleCount: rule.beneficiariesCount || 1 };
+    }
+
+    // Se a regra exclui ortodontia, o faturamento base para atingir a meta e calcular o % é apenas o que não é Orto
+    const baseRevenueUsed = rule.excludeOrtho 
+      ? totalRevenue * (1 - (orthoPct / 100))
+      : totalRevenue;
+
+    const peopleCount = rule.beneficiariesCount || (rule.targetGroup === 'Toda a Equipe' || rule.targetGroup === 'Recepção & Apoio' ? globalPeopleCount : 1);
+
+    let amountPerPerson = 0;
+    let activeTierLabel: string | undefined = undefined;
+
+    if (rule.ruleType === 'flat') {
+      amountPerPerson = baseRevenueUsed * (rule.percentage / 100);
+      activeTierLabel = `${rule.percentage}% para cada`;
+    } else if (rule.ruleType === 'trigger') {
+      if (baseRevenueUsed >= rule.triggerAmount) {
+        if (rule.applyOnSurplusOnly) {
+          amountPerPerson = (baseRevenueUsed - rule.triggerAmount) * (rule.percentage / 100);
+        } else {
+          amountPerPerson = baseRevenueUsed * (rule.percentage / 100);
+        }
+        activeTierLabel = `${rule.percentage}% (meta atingida)`;
+      } else {
+        amountPerPerson = 0;
+        activeTierLabel = 'Meta não atingida (0%)';
+      }
+    } else if (rule.ruleType === 'tiered' && rule.tiers && rule.tiers.length > 0) {
+      const activeTier = rule.tiers.find(t => baseRevenueUsed >= t.minRevenue && (t.maxRevenue === undefined || baseRevenueUsed < t.maxRevenue)) 
+        || rule.tiers[rule.tiers.length - 1];
+      if (activeTier) {
+        amountPerPerson = baseRevenueUsed * (activeTier.percentage / 100);
+        activeTierLabel = activeTier.label || `${activeTier.percentage}%`;
+      }
+    }
+
+    // Adiciona bônus fixo por pessoa se atingiu a supermeta
+    if (rule.bonusFixedAmount && rule.bonusTriggerAmount && baseRevenueUsed >= rule.bonusTriggerAmount) {
+      amountPerPerson += rule.bonusFixedAmount;
+    }
+
+    // IMPORTANTE: O valor não é dividido; CADA pessoa recebe amountPerPerson, então a clínica paga (amountPerPerson * peopleCount)
+    const totalClinicAmount = amountPerPerson * peopleCount;
+    const effectivePct = totalRevenue > 0 ? (totalClinicAmount / totalRevenue) * 100 : 0;
+
+    return { 
+      amountPerPerson, 
+      totalClinicAmount, 
+      effectivePct, 
+      baseRevenueUsed, 
+      activeTierLabel,
+      peopleCount 
+    };
+  };
+
+  // Cálculo detalhado de viabilidade para o faturamento simulado
+  const currentScenario = scenarios.find(s => s.isCurrent) || scenarios[0];
+
+  const simulatedOrthoRevenue = simulatedTotalRevenue * (orthoSharePct / 100);
+  const simulatedCommercialEligibleRevenue = simulatedTotalRevenue - simulatedOrthoRevenue;
+
+  const simulationResults = useMemo(() => {
+    return scenarios.map(scenario => {
+      const { 
+        amountPerPerson, 
+        totalClinicAmount, 
+        effectivePct: commPct, 
+        baseRevenueUsed, 
+        activeTierLabel, 
+        peopleCount 
+      } = calculateCommission(scenario, simulatedTotalRevenue, orthoSharePct);
+      
+      const taxesAndFees = simulatedTotalRevenue * (taxesAndFeesPct / 100);
+      const directMaterials = simulatedTotalRevenue * (directMaterialsPct / 100);
+      const totalVariableCosts = taxesAndFees + directMaterials + totalClinicAmount;
+      const contributionMarginR$ = simulatedTotalRevenue - totalVariableCosts;
+      const contributionMarginPct = simulatedTotalRevenue > 0 ? (contributionMarginR$ / simulatedTotalRevenue) * 100 : 0;
+
+      const netProfit = contributionMarginR$ - fixedExpenses;
+      const netMarginPct = simulatedTotalRevenue > 0 ? (netProfit / simulatedTotalRevenue) * 100 : 0;
+
+      // Comparação com o Modelo Atual
+      const currentClinicCost = calculateCommission(currentScenario, simulatedTotalRevenue, orthoSharePct).totalClinicAmount;
+      const currentNetProfit = (simulatedTotalRevenue - (taxesAndFees + directMaterials + currentClinicCost)) - fixedExpenses;
+      const costDiff = totalClinicAmount - currentClinicCost;
+      const profitDiff = netProfit - currentNetProfit;
+
+      // Elasticidade / Break-even do aumento: Quanto precisa vender a mais para compensar o custo extra de comissão?
+      const baseContributionMarginRate = Math.max(0.1, (contributionMarginPct / 100));
+      const requiredExtraSales = costDiff > 0 ? costDiff / baseContributionMarginRate : 0;
+      const requiredGrowthPct = (costDiff > 0 && simulatedTotalRevenue > 0) ? (requiredExtraSales / simulatedTotalRevenue) * 100 : 0;
+
+      return {
+        scenario,
+        amountPerPerson,
+        totalClinicAmount,
+        commPct,
+        peopleCount,
+        baseRevenueUsed,
+        activeTierLabel,
+        taxesAndFees,
+        directMaterials,
+        totalVariableCosts,
+        contributionMarginR$,
+        contributionMarginPct,
+        netProfit,
+        netMarginPct,
+        costDiff,
+        profitDiff,
+        requiredExtraSales,
+        requiredGrowthPct
+      };
+    });
+  }, [scenarios, simulatedTotalRevenue, orthoSharePct, globalPeopleCount, taxesAndFeesPct, directMaterialsPct, fixedExpenses, currentScenario]);
+
+  // Curva de Faturamento para Gráficos Comparativos
+  const chartRevenuePoints = useMemo(() => {
+    const points: number[] = [30000, 45000, 55000, 60000, 70000, 80000, 90000, 100000, 120000, 140000, 160000];
+    return points.map(rev => {
+      const pointData: any = {
+        revenue: rev,
+        revenueLabel: `R$ ${(rev / 1000).toFixed(0)}k`
+      };
 
       scenarios.forEach(sc => {
-        const { amount } = calculateCommission(sc, revenue, realOrthoPct);
-        results[`comm_${sc.id}`] = amount;
+        const { totalClinicAmount: comm } = calculateCommission(sc, rev, orthoSharePct);
+        const taxes = rev * (taxesAndFeesPct / 100);
+        const mat = rev * (directMaterialsPct / 100);
+        const netProf = rev - (taxes + mat + comm) - fixedExpenses;
+        const netMargin = rev > 0 ? (netProf / rev) * 100 : 0;
+
+        pointData[`comm_${sc.id}`] = comm;
+        pointData[`margin_${sc.id}`] = parseFloat(netMargin.toFixed(1));
+        pointData[`profit_${sc.id}`] = netProf;
+      });
+
+      return pointData;
+    });
+  }, [scenarios, orthoSharePct, globalPeopleCount, taxesAndFeesPct, directMaterialsPct, fixedExpenses]);
+
+  // Histórico com cálculo dos cenários
+  const historicalCalculatedData = useMemo(() => {
+    return historicalMonthlyData.map(item => {
+      const results: any = { ...item };
+      scenarios.forEach(sc => {
+        const { totalClinicAmount } = calculateCommission(sc, item.revenue, parseFloat(item.orthoPct) || 25);
+        results[`comm_${sc.id}`] = totalClinicAmount;
       });
       return results;
     });
-  }, [transactions, scenarios]);
+  }, [historicalMonthlyData, scenarios, globalPeopleCount]);
 
   // Handlers para Criar / Editar Cenários
   const handleOpenNewScenario = () => {
@@ -442,19 +478,15 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       id: 'custom_' + Date.now(),
       name: 'Novo Cenário Personalizado',
       description: 'Regra de incentivo customizada.',
-      targetGroup: 'Comercial',
-      ruleType: 'tiered',
-      triggerAmount: 45000,
-      percentage: 2.0,
+      targetGroup: 'Toda a Equipe',
+      ruleType: 'flat',
+      triggerAmount: 0,
+      percentage: 1.0,
       applyOnSurplusOnly: false,
-      excludeOrtho: true,
+      excludeOrtho: false,
+      beneficiariesCount: globalPeopleCount,
       bonusFixedAmount: 0,
       bonusTriggerAmount: 0,
-      tiers: [
-        { minRevenue: 0, maxRevenue: 45000, percentage: 0.0, label: '< 45k (0%)' },
-        { minRevenue: 45000, maxRevenue: 60000, percentage: 2.0, label: '45k a 60k (2%)' },
-        { minRevenue: 60000, percentage: 4.0, label: '≥ 60k (4%)' }
-      ],
       color: '#06b6d4'
     });
     setIsModalOpen(true);
@@ -495,8 +527,9 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   };
 
   const handleResetDefaults = () => {
-    if (confirm('Restaurar os cenários padrão do sistema (incluindo as faixas de 45k/55k/60k sem Orto)?')) {
+    if (confirm('Restaurar os cenários padrão do sistema (incluindo as 4 pessoas na equipe e as regras de 45k/55k/60k do Comercial)?')) {
       setScenarios(DEFAULT_SCENARIOS);
+      setGlobalPeopleCount(4);
       toast.success('Cenários restaurados para o padrão.');
     }
   };
@@ -506,13 +539,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     let report = `📊 PARECER DE VIABILIDADE & COMISSIONAMENTO\n`;
     report += `Faturamento Total Clínica: R$ ${simulatedTotalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
     report += `Ortodontia (${orthoSharePct}% - Isento no Comercial): R$ ${simulatedOrthoRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
-    report += `Faturamento Elegível Comercial: R$ ${simulatedCommercialEligibleRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n\n`;
+    report += `Faturamento Comercial Elegível: R$ ${simulatedCommercialEligibleRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+    report += `Número Padrão de Pessoas na Equipe: ${globalPeopleCount} pessoas\n\n`;
     
     simulationResults.forEach(res => {
       report += `🔹 ${res.scenario.name}\n`;
-      report += `   - Base Usada: R$ ${res.baseRevenueUsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${res.scenario.excludeOrtho ? 'Sem Orto' : 'Total'})\n`;
-      report += `   - Faixa/Status: ${res.activeTierLabel || '-'}\n`;
-      report += `   - Comissão a Pagar: R$ ${res.commAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${res.commPct.toFixed(2)}% do faturamento total)\n`;
+      report += `   - Beneficiários: ${res.peopleCount} ${res.peopleCount > 1 ? 'pessoas' : 'pessoa'}\n`;
+      report += `   - Valor PAGO PARA CADA UM: R$ ${res.amountPerPerson.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+      report += `   - CUSTO TOTAL DA CLÍNICA: R$ ${res.totalClinicAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${res.commPct.toFixed(2)}% do faturamento)\n`;
       report += `   - Lucro Líquido dos Sócios: R$ ${res.netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Margem: ${res.netMarginPct.toFixed(1)}%)\n`;
       if (!res.scenario.isCurrent) {
         report += `   - Diferença vs Atual: ${res.costDiff >= 0 ? '+' : ''}R$ ${res.costDiff.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
@@ -543,7 +577,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Simulação de comissões com regras de gatilho (45k / 55k / 60k), isenção de Ortodontia e impacto em margens.
+              Simulação de comissões por colaborador (sem divisão entre a equipe), regras de gatilho e histórico validado de meses anteriores.
             </p>
           </div>
         </div>
@@ -596,7 +630,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               : 'text-slate-400 hover:text-white hover:bg-panel'
           }`}
         >
-          <History className="w-3.5 h-3.5" /> Retro-Simulação (Dados Reais)
+          <History className="w-3.5 h-3.5" /> Retro-Simulação (Meses Anteriores)
         </button>
         <button
           onClick={() => setActiveTab('settings')}
@@ -613,13 +647,51 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       {/* ABA 1: SIMULADOR INTERATIVO */}
       {activeTab === 'simulator' && (
         <div className="flex flex-col gap-6">
-          {/* CONTROLE DE FATURAMENTO TOTAL & SEPARAÇÃO DE ORTODONTIA */}
+          {/* BARRA DE SELEÇÃO RÁPIDA DE MESES VALIDADOS ANTERIORES */}
+          <div className="glass-panel p-4 rounded-2xl border border-border flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gradient-to-r from-indigo-950/20 via-panel to-panel">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">Simulação com Dados Reais</span>
+                <p className="text-xs font-bold text-text">Carregar Valores Validados de Meses Anteriores:</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {historicalMonthlyData.slice(-6).map((m: any) => (
+                <button
+                  key={m.month}
+                  onClick={() => handleLoadHistoricalMonth(m)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                    selectedHistoricalMonth === m.label
+                      ? 'bg-amber-500 text-black font-black shadow-lg shadow-amber-500/20 scale-105'
+                      : 'bg-surface hover:bg-panel text-slate-300 hover:text-white border border-border'
+                  }`}
+                  title={`Carregar ${m.label}: Total R$ ${m.revenue.toLocaleString('pt-BR')} | Orto R$ ${m.ortho.toLocaleString('pt-BR')}`}
+                >
+                  <span>{m.label}</span>
+                  <span className="text-[10px] opacity-75 font-sans">R$ {(m.revenue / 1000).toFixed(0)}k</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTROLES DE FATURAMENTO, ORTODONTIA E PESSOAS DA EQUIPE */}
           <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {/* Card 1: Faturamento Total */}
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">1. Faturamento Total Clínica</span>
-                <span className="text-3xl font-black text-emerald-400 font-mono">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">1. Faturamento Total</span>
+                  {selectedHistoricalMonth && (
+                    <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                      Mês: {selectedHistoricalMonth}
+                    </span>
+                  )}
+                </div>
+                <span className="text-2xl lg:text-3xl font-black text-emerald-400 font-mono">
                   R$ {simulatedTotalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
                 <input 
@@ -628,16 +700,22 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   max={200000} 
                   step={2500} 
                   value={simulatedTotalRevenue}
-                  onChange={(e) => setSimulatedTotalRevenue(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    setSimulatedTotalRevenue(parseFloat(e.target.value));
+                    setSelectedHistoricalMonth(null);
+                  }}
                   className="w-full h-2.5 bg-panel rounded-lg appearance-none cursor-pointer accent-indigo-500 mt-2"
                 />
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {[45000, 60000, 75000, 85000, 100000, 120000].map(v => (
+                  {[45000, 60000, 75000, 85000, 100000].map(v => (
                     <button
                       key={v}
-                      onClick={() => setSimulatedTotalRevenue(v)}
+                      onClick={() => {
+                        setSimulatedTotalRevenue(v);
+                        setSelectedHistoricalMonth(null);
+                      }}
                       className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${
-                        simulatedTotalRevenue === v ? 'bg-indigo-600 text-white' : 'bg-panel text-slate-400 border border-border'
+                        simulatedTotalRevenue === v && !selectedHistoricalMonth ? 'bg-indigo-600 text-white' : 'bg-panel text-slate-400 border border-border'
                       }`}
                     >
                       {(v / 1000)}k
@@ -646,13 +724,13 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                 </div>
               </div>
 
-              {/* Card 2: Fatia de Ortodontia (Isenta no Comercial) */}
+              {/* Card 2: Fatia de Ortodontia */}
               <div className="flex flex-col gap-2 bg-panel/50 p-4 rounded-xl border border-border">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest">2. Ortodontia (Isento Com. Comercial)</span>
-                  <span className="text-xs font-mono font-bold text-amber-400">{orthoSharePct}% da clínica</span>
+                  <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest">2. Ortodontia (Isento Com.)</span>
+                  <span className="text-xs font-mono font-bold text-amber-400">{orthoSharePct}%</span>
                 </div>
-                <span className="text-2xl font-black text-amber-300 font-mono">
+                <span className="text-xl font-black text-amber-300 font-mono">
                   R$ {simulatedOrthoRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
                 <input 
@@ -661,35 +739,70 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   max={60} 
                   step={1} 
                   value={orthoSharePct}
-                  onChange={(e) => setOrthoSharePct(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    setOrthoSharePct(parseFloat(e.target.value));
+                    setSelectedHistoricalMonth(null);
+                  }}
                   className="w-full h-2 bg-panel rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
-                <p className="text-[10px] text-slate-400">
-                  Manutenções ortodônticas e documentações não entram no cálculo de comissão do Comercial.
+                <p className="text-[9px] text-slate-400">
+                  Isento da comissão de vendas do Comercial.
                 </p>
               </div>
 
-              {/* Card 3: Faturamento Elegível do Comercial */}
+              {/* Card 3: Vendas Elegíveis Comercial */}
               <div className="flex flex-col gap-2 bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/25">
-                <span className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">3. Vendas Elegíveis Comercial</span>
-                <span className="text-2xl font-black text-white font-mono">
+                <span className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">3. Vendas Comercial</span>
+                <span className="text-xl font-black text-white font-mono">
                   R$ {simulatedCommercialEligibleRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
                     simulatedCommercialEligibleRevenue >= 60000 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
                     simulatedCommercialEligibleRevenue >= 55000 ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' :
                     simulatedCommercialEligibleRevenue >= 45000 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                     'bg-slate-500/20 text-slate-400 border border-slate-500/30'
                   }`}>
-                    {simulatedCommercialEligibleRevenue >= 60000 ? '🔥 Faixa Máxima: 5%' :
-                     simulatedCommercialEligibleRevenue >= 55000 ? '⚡ Faixa Intermediária: 3%' :
-                     simulatedCommercialEligibleRevenue >= 45000 ? '✅ Faixa Inicial: 2%' :
-                     '❌ Abaixo de 45k: 0%'}
+                    {simulatedCommercialEligibleRevenue >= 60000 ? 'Faixa: 5%' :
+                     simulatedCommercialEligibleRevenue >= 55000 ? 'Faixa: 3%' :
+                     simulatedCommercialEligibleRevenue >= 45000 ? 'Faixa: 2%' :
+                     '< 45k: 0%'}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Base que determina o gatilho e o percentual de comissão do Comercial no Modelo Atual.
+              </div>
+
+              {/* Card 4: Quantidade de Pessoas na Equipe */}
+              <div className="flex flex-col gap-2 bg-purple-500/10 p-4 rounded-xl border border-purple-500/25">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-purple-300 tracking-widest">4. Pessoas na Equipe</span>
+                  <span className="text-xs font-bold font-mono text-purple-300">{globalPeopleCount} pessoas</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-purple-400" />
+                  <input 
+                    type="number" 
+                    min={1} 
+                    max={20}
+                    value={globalPeopleCount}
+                    onChange={(e) => setGlobalPeopleCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 bg-surface border border-border rounded-lg px-3 py-1 text-base font-mono font-bold text-text outline-none focus:border-purple-500"
+                  />
+                  <div className="flex gap-1">
+                    {[2, 3, 4, 5, 6].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setGlobalPeopleCount(n)}
+                        className={`size-7 rounded-lg text-xs font-bold ${
+                          globalPeopleCount === n ? 'bg-purple-600 text-white' : 'bg-surface text-slate-400 border border-border'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-[9px] text-slate-400 leading-tight">
+                  <strong className="text-purple-300">Sem divisão:</strong> Cada colaborador recebe o valor integral da comissão.
                 </p>
               </div>
             </div>
@@ -698,7 +811,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             <div className="border-t border-border pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1 bg-panel/60 p-3 rounded-xl border border-border">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Custos Fixos Totais</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Custos Fixos Mensais</label>
                   <span className="text-xs font-mono font-bold text-text">R$ {fixedExpenses.toLocaleString('pt-BR')}</span>
                 </div>
                 <input 
@@ -741,7 +854,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
           {/* CARDS COMPARATIVOS DOS CENÁRIOS */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {simulationResults.map(({ scenario, commAmount, commPct, baseRevenueUsed, activeTierLabel, netProfit, netMarginPct, costDiff, requiredExtraSales, requiredGrowthPct }) => {
+            {simulationResults.map(({ scenario, amountPerPerson, totalClinicAmount, commPct, peopleCount, baseRevenueUsed, activeTierLabel, netProfit, netMarginPct, costDiff, requiredExtraSales, requiredGrowthPct }) => {
               const isBase = scenario.isCurrent;
 
               return (
@@ -766,18 +879,12 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           </span>
                           {isBase && (
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                              Modelo Atual
+                              Atual
                             </span>
                           )}
-                          {scenario.excludeOrtho ? (
-                            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                              Sem Orto
-                            </span>
-                          ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              Faturamento Total
-                            </span>
-                          )}
+                          <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/25 flex items-center gap-0.5">
+                            <Users className="w-2.5 h-2.5" /> {peopleCount} {peopleCount > 1 ? 'pessoas' : 'pessoa'}
+                          </span>
                         </div>
                         <h4 className="text-base font-bold text-text font-display leading-snug">
                           {scenario.name}
@@ -796,34 +903,48 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                       {scenario.description}
                     </p>
 
-                    {/* Bloco 1: Comissão a Pagar & Base Usada */}
-                    <div className="bg-panel/70 p-4 rounded-xl border border-border flex flex-col gap-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase text-slate-400">Comissão a Pagar</span>
-                        <span className="text-[11px] font-mono font-bold text-indigo-400">{activeTierLabel || `${commPct.toFixed(2)}%`}</span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black text-text font-mono">
-                          R$ {commAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {/* Bloco 1: Destaque Individual por Pessoa vs Custo Total Clínica */}
+                    <div className="bg-panel/70 p-4 rounded-xl border border-border flex flex-col gap-3">
+                      {/* Valor Individual por Pessoa */}
+                      <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                        <div>
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Comissão PAGA A CADA UM</span>
+                          <span className="text-[10px] text-indigo-400 font-medium">({activeTierLabel || `${scenario.percentage}%`})</span>
+                        </div>
+                        <span className="text-lg font-black text-emerald-400 font-mono">
+                          R$ {amountPerPerson.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
-                        {!isBase && (
-                          <span className={`text-xs font-bold font-mono flex items-center ${costDiff <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {costDiff <= 0 ? (
-                              <>
-                                <ArrowDownRight className="w-3 h-3 inline" />
-                                -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
-                              </>
-                            ) : (
-                              <>
-                                <ArrowUpRight className="w-3 h-3 inline" />
-                                +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
-                              </>
-                            )}
+                      </div>
+
+                      {/* Custo Total para a Clínica */}
+                      <div className="flex justify-between items-baseline">
+                        <div>
+                          <span className="text-[10px] font-black uppercase text-slate-300 block">Custo Total Clínica</span>
+                          <span className="text-[9px] text-slate-500 font-mono">({peopleCount} x R$ {amountPerPerson.toLocaleString('pt-BR', { maximumFractionDigits: 0 })})</span>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-text font-mono">
+                            R$ {totalClinicAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
-                        )}
+                          {!isBase && (
+                            <span className={`text-xs font-bold font-mono flex items-center ${costDiff <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                              {costDiff <= 0 ? (
+                                <>
+                                  <ArrowDownRight className="w-3 h-3 inline" />
+                                  -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                                </>
+                              ) : (
+                                <>
+                                  <ArrowUpRight className="w-3 h-3 inline" />
+                                  +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono">
-                        Base de cálculo: R$ {baseRevenueUsed.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} ({commPct.toFixed(2)}% da clínica)
+                        Base: R$ {baseRevenueUsed.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} ({scenario.excludeOrtho ? 'Sem Orto' : 'Total'}) • {commPct.toFixed(2)}% da clínica
                       </div>
                     </div>
 
@@ -851,7 +972,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           <span className="text-[10px] font-bold uppercase tracking-wider">Meta para se Pagar</span>
                         </div>
                         <p className="text-[11px] text-slate-300 leading-snug">
-                          A clínica precisa faturar <strong className="text-white">+R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> (+{requiredGrowthPct.toFixed(1)}%) para compensar a comissão extra sem reduzir o lucro dos sócios.
+                          A clínica precisa faturar <strong className="text-white">+R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> (+{requiredGrowthPct.toFixed(1)}%) para pagar a comissão de todos sem reduzir o lucro dos sócios.
                         </p>
                       </div>
                     )}
@@ -870,14 +991,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             })}
           </div>
 
-          {/* GRÁFICO COMPARATIVO DE CURVAS (COMISSÕES VS FATURAMENTO) */}
+          {/* GRÁFICO COMPARATIVO DE CURVAS */}
           <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
             <div>
               <h3 className="text-base font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-indigo-400" /> Curva de Comissões por Nível de Faturamento Total
+                <TrendingUp className="w-4 h-4 text-indigo-400" /> Custo Total de Comissões por Nível de Faturamento
               </h3>
               <p className="text-[11px] text-slate-400">
-                Considerando {orthoSharePct}% do faturamento como Ortodontia (isento no Comercial) para os modelos correspondentes.
+                Considera a quantidade individual de colaboradores de cada modelo (ex: 4 pessoas na equipe vs 1 no comercial).
               </p>
             </div>
 
@@ -930,7 +1051,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   <Layers className="w-4 h-4 text-emerald-400" /> Tabela Comparativa de Comissões e Lucro Líquido
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Valores calculados com {orthoSharePct}% do faturamento sendo Ortodontia para cada degrau de receita da clínica.
+                  Valores individuais por pessoa e custo total pago pela clínica para cada nível de vendas.
                 </p>
               </div>
             </div>
@@ -940,6 +1061,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                 <thead>
                   <tr className="bg-panel border-b border-border text-[10px] font-black uppercase text-slate-400 tracking-wider">
                     <th className="p-4 pl-6">Cenário / Modelo</th>
+                    <th className="p-4">Beneficiários</th>
                     <th className="p-4">Regra Orto</th>
                     <th className="p-4 text-right">R$ 45.000</th>
                     <th className="p-4 text-right">R$ 55.000</th>
@@ -965,6 +1087,9 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                             </div>
                           </div>
                         </td>
+                        <td className="p-4 text-purple-300 font-mono text-[11px] font-bold">
+                          {sc.beneficiariesCount || 1} { (sc.beneficiariesCount || 1) > 1 ? 'pessoas' : 'pessoa' }
+                        </td>
                         <td className="p-4 text-slate-400 text-[11px]">
                           {sc.excludeOrtho ? (
                             <span className="text-amber-400 font-bold">Sem Orto</span>
@@ -974,17 +1099,18 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </td>
                         
                         {testValues.map(v => {
-                          const { amount: comm } = calculateCommission(sc, v, orthoSharePct);
+                          const { amountPerPerson, totalClinicAmount } = calculateCommission(sc, v, orthoSharePct);
                           const taxes = v * (taxesAndFeesPct / 100);
                           const mat = v * (directMaterialsPct / 100);
-                          const netProfit = v - (taxes + mat + comm) - fixedExpenses;
+                          const netProfit = v - (taxes + mat + totalClinicAmount) - fixedExpenses;
                           const netMargin = v > 0 ? (netProfit / v) * 100 : 0;
 
                           return (
                             <td key={v} className="p-4 text-right font-mono">
-                              <div className="font-bold text-text">R$ {comm.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</div>
-                              <div className={`text-[10px] ${netMargin >= 18 ? 'text-emerald-400' : netMargin >= 10 ? 'text-amber-400' : 'text-red-400'}`}>
-                                Lucro: {netMargin.toFixed(0)}% (R$ {(netProfit / 1000).toFixed(1)}k)
+                              <div className="font-bold text-text">R$ {totalClinicAmount.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</div>
+                              <div className="text-[9px] text-indigo-400">R$ {amountPerPerson.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}/cada</div>
+                              <div className={`text-[10px] mt-0.5 ${netMargin >= 18 ? 'text-emerald-400' : netMargin >= 10 ? 'text-amber-400' : 'text-red-400'}`}>
+                                Lucro: {netMargin.toFixed(0)}%
                               </div>
                             </td>
                           );
@@ -999,7 +1125,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </div>
       )}
 
-      {/* ABA 3: RETRO-SIMULAÇÃO (DADOS HISTÓRICOS REAIS) */}
+      {/* ABA 3: RETRO-SIMULAÇÃO (MESES ANTERIORES VALIDADOS) */}
       {activeTab === 'historical' && (
         <div className="flex flex-col gap-6">
           <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
@@ -1010,7 +1136,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   <History className="w-5 h-5 text-amber-400" /> "Quanto teríamos pago em cada modelo nos meses passados?"
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  O sistema analisa cada lançamento individualmente, subtraindo os pacientes e procedimentos de Ortodontia para o Comercial.
+                  Valores calculados com os dados reais dos meses passados. Clique em "Simular no Painel" para carregar qualquer mês no simulador.
                 </p>
               </div>
             </div>
@@ -1032,10 +1158,11 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </div>
                       </th>
                     ))}
+                    <th className="p-4 text-center">Ação</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-xs text-slate-200">
-                  {historicalMonthlyData.map((row: any) => {
+                  {historicalCalculatedData.map((row: any) => {
                     const currentComm = row[`comm_${currentScenario.id}`] || 0;
 
                     return (
@@ -1067,6 +1194,17 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                             </td>
                           );
                         })}
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => {
+                              handleLoadHistoricalMonth(row);
+                              setActiveTab('simulator');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[10px] font-bold uppercase transition-all"
+                          >
+                            Simular
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -1087,7 +1225,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   Regras de Comissionamento Cadastradas
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Gerencie as faixas de atingimento, percentuais e regras de exclusão de Ortodontia.
+                  Gerencie as faixas de atingimento, percentuais, quantidade de pessoas e regras de exclusão de Ortodontia.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -1146,7 +1284,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
                     <div className="flex flex-wrap gap-2 mt-2">
                       <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-slate-300 border border-border">
-                        👥 Grupo: {sc.targetGroup}
+                        👥 {sc.targetGroup} ({sc.beneficiariesCount || 1} { (sc.beneficiariesCount || 1) > 1 ? 'pessoas' : 'pessoa' })
                       </span>
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
                         sc.excludeOrtho ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -1159,7 +1297,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </span>
                       ) : (
                         <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-indigo-400 border border-border">
-                          📈 {sc.percentage}%
+                          📈 {sc.percentage}% por pessoa
                         </span>
                       )}
                     </div>
@@ -1189,7 +1327,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   type="text" 
                   value={formScenario.name} 
                   onChange={(e) => setFormScenario({ ...formScenario, name: e.target.value })}
-                  placeholder="Ex: Comercial 2% > 45k | 3% > 55k | 5% > 60k"
+                  placeholder="Ex: Time Todo 1% cada (4 pessoas)"
                   className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-sm text-text outline-none focus:border-indigo-500 font-bold"
                 />
               </div>
@@ -1221,64 +1359,36 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Quantas Pessoas Receberão?</label>
+                  <input 
+                    type="number" 
+                    min={1} 
+                    max={30}
+                    value={formScenario.beneficiariesCount || 1}
+                    onChange={(e) => setFormScenario({ ...formScenario, beneficiariesCount: Math.max(1, parseInt(e.target.value) || 1) })}
+                    placeholder="Ex: 4"
+                    className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold font-mono outline-none focus:border-indigo-500"
+                  />
+                  <span className="text-[9px] text-slate-500">Cada uma receberá o valor integral.</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Regra</label>
                   <select 
                     value={formScenario.ruleType}
                     onChange={(e: any) => setFormScenario({ ...formScenario, ruleType: e.target.value })}
                     className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text outline-none"
                   >
-                    <option value="tiered">Escalonado por Faixas (Ex: 45k/55k/60k)</option>
-                    <option value="trigger">Gatilho Único (Ex: a partir de 70k)</option>
                     <option value="flat">Linear / Fixo em tudo (Ex: 1% de tudo)</option>
+                    <option value="trigger">Gatilho Único (Ex: a partir de 70k)</option>
+                    <option value="tiered">Escalonado por Faixas</option>
                   </select>
                 </div>
-              </div>
 
-              {/* OPÇÃO DE EXCLUIR ORTODONTIA */}
-              <div className="flex items-center gap-2 p-3 bg-panel rounded-xl border border-border">
-                <input 
-                  type="checkbox" 
-                  id="excludeOrthoCheckbox"
-                  checked={formScenario.excludeOrtho}
-                  onChange={(e) => setFormScenario({ ...formScenario, excludeOrtho: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="excludeOrthoCheckbox" className="text-xs text-slate-300 font-medium cursor-pointer">
-                  <strong>Não contabilizar Ortodontia</strong> (pacientes e procedimentos de ortodontia são isentos de comissão comercial).
-                </label>
-              </div>
-
-              {formScenario.ruleType === 'trigger' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual (%)</label>
-                    <input 
-                      type="number" 
-                      step="0.1" 
-                      value={formScenario.percentage}
-                      onChange={(e) => setFormScenario({ ...formScenario, percentage: parseFloat(e.target.value) || 0 })}
-                      placeholder="Ex: 2.0"
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Gatilho Mínimo (R$)</label>
-                    <input 
-                      type="number" 
-                      step="5000" 
-                      value={formScenario.triggerAmount}
-                      onChange={(e) => setFormScenario({ ...formScenario, triggerAmount: parseFloat(e.target.value) || 0 })}
-                      placeholder="Ex: 70000"
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {formScenario.ruleType === 'flat' && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual Fixo (%)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual por Pessoa (%)</label>
                   <input 
                     type="number" 
                     step="0.1" 
@@ -1288,7 +1398,35 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              {formScenario.ruleType === 'trigger' && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Gatilho Mínimo (R$)</label>
+                  <input 
+                    type="number" 
+                    step="5000" 
+                    value={formScenario.triggerAmount}
+                    onChange={(e) => setFormScenario({ ...formScenario, triggerAmount: parseFloat(e.target.value) || 0 })}
+                    placeholder="Ex: 70000"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
+                  />
+                </div>
               )}
+
+              {/* OPÇÃO DE EXCLUIR ORTODONTIA */}
+              <div className="flex items-center gap-2 p-3 bg-panel rounded-xl border border-border">
+                <input 
+                  type="checkbox" 
+                  id="modalExcludeOrtho"
+                  checked={formScenario.excludeOrtho}
+                  onChange={(e) => setFormScenario({ ...formScenario, excludeOrtho: e.target.checked })}
+                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="modalExcludeOrtho" className="text-xs text-slate-300 font-medium cursor-pointer">
+                  <strong>Não contabilizar Ortodontia</strong> (pacientes/procedimentos de ortodontia isentos da base).
+                </label>
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Cor do Cenário nos Gráficos</label>
