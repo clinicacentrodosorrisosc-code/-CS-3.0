@@ -113,7 +113,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   {
     id: 'team_tiered_70k_80k',
     name: 'Proposta 1 (Time Todo: 1% > 0 | 2% > 70k | 3% > 80k)',
-    description: 'Toda a equipe ganha sobre o faturamento total: 1% (até 70k), 2% (70k a 80k) e 3% (acima de 80k) pago integralmente para cada colaborador.',
+    description: 'Toda a equipe ganha sobre o valor total faturado: 1% (até 70k), 2% (70k a 80k) e 3% (acima de 80k) pago integralmente para cada colaborador.',
     targetGroup: 'Toda a Equipe',
     ruleType: 'tiered',
     triggerAmount: 0,
@@ -132,14 +132,14 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   },
   {
     id: 'commercial_70k_2pct',
-    name: 'Proposta 2 (Comercial 2% a partir de 70k)',
-    description: 'Comercial ganha 2% sobre o vendido (sem Ortodontia) apenas ao atingir R$ 70.000 ou mais. Pago para 1 profissional.',
+    name: 'Proposta 2 (Comercial 2% a partir de 70k Faturados)',
+    description: 'Comercial ganha 2% sobre o valor total faturado a partir de R$ 70.000 faturados (contabiliza o faturamento total).',
     targetGroup: 'Comercial',
     ruleType: 'trigger',
     triggerAmount: 70000,
     percentage: 2.0,
     applyOnSurplusOnly: false,
-    excludeOrtho: true,
+    excludeOrtho: false,
     beneficiariesCount: 1,
     customRevenue: 80000,
     customOrthoPct: 25,
@@ -147,8 +147,8 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   },
   {
     id: 'dentists_2_comm_reception_hybrid',
-    name: 'Proposta 3 (2 Dentistas + Comercial Atual + Recepção 0.5%)',
-    description: 'Dentista 1 ganha 1% COM Orto + Dentista 2 ganha 1% SEM Orto + Comercial segue o modelo atual (2%/3%/5% sem Orto) + Recepção ganha 0.5% do total da clínica.',
+    name: 'Proposta 3 (2 Dentistas + Comercial + Recepção 0.5%)',
+    description: 'Dentista 1 ganha 1% faturado COM Orto + Dentista 2 ganha 1% faturado SEM Orto + Comercial ganha sobre o faturado + Recepção ganha 0.5% do total.',
     targetGroup: 'Personalizado',
     ruleType: 'dentists_2_comm_reception',
     triggerAmount: 0,
@@ -181,7 +181,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v7');
+      const saved = localStorage.getItem('om_viability_scenarios_v8');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -191,7 +191,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v7', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v8', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
@@ -911,9 +911,13 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </div>
                       </div>
 
-                      {/* Resumo da Base Comercial sem Orto */}
+                      {/* Resumo da Base Contabilizada */}
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-border/50">
-                        <span>Vendas Elegíveis Comercial (sem Orto): <strong className="text-slate-200">R$ {commEligible.toLocaleString('pt-BR')}</strong></span>
+                        {isBase ? (
+                          <span>Vendas Elegíveis Comercial (sem Orto): <strong className="text-slate-200">R$ {commEligible.toLocaleString('pt-BR')}</strong></span>
+                        ) : (
+                          <span>Valor Faturado Contabilizado: <strong className="text-emerald-300">R$ {baseRevenueUsed.toLocaleString('pt-BR')}</strong></span>
+                        )}
                         <span className="text-indigo-400 font-bold">{activeTierLabel}</span>
                       </div>
                     </div>
