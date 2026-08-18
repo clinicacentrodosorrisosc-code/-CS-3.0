@@ -21,7 +21,7 @@ interface OrthoPatient {
   contractType?: 'Digital' | 'Papel';
   aditivoMsgSent?: boolean;
   aditivoMsgSentAt?: string;
-  aditivoStatus?: 'pending' | 'signed_digital' | 'signed_papel' | 'signed' | 'refused';
+  aditivoSigned?: boolean;
   aditivoSignedAt?: string;
   startDate: string;
   endDate?: string;
@@ -138,7 +138,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [feeFilter, setFeeFilter] = useState<number | 'All'>('All');
   const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
   const [aditivoMsgFilter, setAditivoMsgFilter] = useState<'All' | 'Sent' | 'Pending'>('All');
-  const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending' | 'signed_digital' | 'signed_papel' | 'refused'>('All');
+  const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending'>('All');
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
@@ -322,7 +322,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   contractType: att.__contract_type || undefined,
                   aditivoMsgSent: Boolean(att.__aditivo_msg_sent),
                   aditivoMsgSentAt: att.__aditivo_msg_sent_at || undefined,
-                  aditivoStatus: att.__aditivo_status || (att.__aditivo_signed ? (att.__aditivo_type === 'Papel' ? 'signed_papel' : 'signed_digital') : 'pending'),
+                  aditivoSigned: Boolean(att.__aditivo_signed || att.__aditivo_status === 'signed_digital' || att.__aditivo_status === 'signed'),
                   aditivoSignedAt: att.__aditivo_signed_at || undefined,
                   startDate: p.start_date,
                   endDate: p.end_date,
@@ -374,8 +374,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           if (txs) {
               setDocInitialTransactions(txs);
           }
-      } catch (error) {
-          console.error("Error loading ortho data", error);
+      } catch (err) {
+          console.error("Error loading ortho data", err);
       } finally {
           setLoading(false);
       }
@@ -429,15 +429,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
       if (aditivoStatusFilter !== 'All') {
           if (aditivoStatusFilter === 'Signed') {
-              result = result.filter(p => p.aditivoStatus === 'signed_digital' || p.aditivoStatus === 'signed_papel' || p.aditivoStatus === 'signed');
+              result = result.filter(p => p.aditivoSigned);
           } else if (aditivoStatusFilter === 'Pending') {
-              result = result.filter(p => !p.aditivoStatus || p.aditivoStatus === 'pending');
-          } else if (aditivoStatusFilter === 'signed_digital') {
-              result = result.filter(p => p.aditivoStatus === 'signed_digital');
-          } else if (aditivoStatusFilter === 'signed_papel') {
-              result = result.filter(p => p.aditivoStatus === 'signed_papel');
-          } else if (aditivoStatusFilter === 'refused') {
-              result = result.filter(p => p.aditivoStatus === 'refused');
+              result = result.filter(p => !p.aditivoSigned);
           }
       }
 
@@ -459,8 +453,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
               }
               if (sortConfig.key === 'aditivoSigned') {
-                  const isSignedA = (a.aditivoStatus === 'signed_digital' || a.aditivoStatus === 'signed_papel' || a.aditivoStatus === 'signed') ? 1 : 0;
-                  const isSignedB = (b.aditivoStatus === 'signed_digital' || b.aditivoStatus === 'signed_papel' || b.aditivoStatus === 'signed') ? 1 : 0;
+                  const isSignedA = a.aditivoSigned ? 1 : 0;
+                  const isSignedB = b.aditivoSigned ? 1 : 0;
                   return sortConfig.direction === 'asc' ? isSignedA - isSignedB : isSignedB - isSignedA;
               }
               if (sortConfig.key === 'maintenanceValue') {
@@ -578,14 +572,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (!editingPatient) return;
       try {
           const nowStr = new Date().toISOString().split('T')[0];
-          const isSigned = editingPatient.aditivoStatus === 'signed_digital' || editingPatient.aditivoStatus === 'signed_papel' || editingPatient.aditivoStatus === 'signed';
+          const isSigned = Boolean(editingPatient.aditivoSigned);
           const updatedAttendance = {
               ...editingPatient.attendance,
               __aditivo_msg_sent: Boolean(editingPatient.aditivoMsgSent),
               __aditivo_msg_sent_at: editingPatient.aditivoMsgSent ? (editingPatient.aditivoMsgSentAt || nowStr) : null,
-              __aditivo_status: editingPatient.aditivoStatus || 'pending',
+              __aditivo_status: isSigned ? 'signed_digital' : 'pending',
               __aditivo_signed: isSigned,
-              __aditivo_type: editingPatient.aditivoStatus === 'signed_papel' ? 'Papel' : editingPatient.aditivoStatus === 'signed_digital' ? 'Digital' : null,
+              __aditivo_type: isSigned ? 'Digital' : null,
               __aditivo_signed_at: isSigned ? (editingPatient.aditivoSignedAt || nowStr) : null
           };
 
@@ -714,24 +708,24 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
   };
 
-  const handleUpdateAditivoStatus = async (patientId: string, status: 'pending' | 'signed_digital' | 'signed_papel' | 'refused') => {
+  const handleToggleAditivoSigned = async (patientId: string) => {
       const patient = patients.find(p => p.id === patientId);
       if (!patient) return;
 
-      const isSigned = status === 'signed_digital' || status === 'signed_papel';
+      const newSigned = !patient.aditivoSigned;
       const nowStr = new Date().toISOString().split('T')[0];
       const updatedAttendance = {
           ...patient.attendance,
-          __aditivo_status: status,
-          __aditivo_signed: isSigned,
-          __aditivo_type: status === 'signed_papel' ? 'Papel' : status === 'signed_digital' ? 'Digital' : null,
-          __aditivo_signed_at: isSigned ? (patient.aditivoSignedAt || nowStr) : null
+          __aditivo_signed: newSigned,
+          __aditivo_type: newSigned ? 'Digital' : null,
+          __aditivo_status: newSigned ? 'signed_digital' : 'pending',
+          __aditivo_signed_at: newSigned ? (patient.aditivoSignedAt || nowStr) : null
       };
 
       setPatients(prev => prev.map(p => p.id === patientId ? {
           ...p,
-          aditivoStatus: status,
-          aditivoSignedAt: isSigned ? (patient.aditivoSignedAt || nowStr) : undefined,
+          aditivoSigned: newSigned,
+          aditivoSignedAt: newSigned ? (patient.aditivoSignedAt || nowStr) : undefined,
           attendance: updatedAttendance
       } : p));
 
@@ -741,15 +735,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               .update({ attendance: updatedAttendance })
               .eq('id', patientId);
           if (error) {
-              toast.error('Erro ao atualizar status do aditivo: ' + error.message);
+              toast.error('Erro ao atualizar aditivo: ' + error.message);
               await loadData();
           } else {
               notifyDataChange('ortho_patients');
-              const label = status === 'signed_digital' ? 'Assinado (Digital)' : status === 'signed_papel' ? 'Assinado (Papel)' : status === 'refused' ? 'Recusado' : 'Pendente';
-              toast.success(`Aditivo de ${patient.name}: ${label}`);
+              toast.success(newSigned ? `Aditivo digital marcado como assinado para ${patient.name}` : `Assinatura de aditivo desmarcada para ${patient.name}`);
           }
       } catch (err) {
-          toast.error('Erro ao atualizar status do aditivo');
+          toast.error('Erro ao atualizar aditivo');
           await loadData();
       }
   };
@@ -1957,9 +1950,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const totalActive = active.length;
       const msgSentCount = active.filter(p => p.aditivoMsgSent).length;
       const msgPendingCount = totalActive - msgSentCount;
-      const signedCount = active.filter(p => p.aditivoStatus === 'signed_digital' || p.aditivoStatus === 'signed_papel' || p.aditivoStatus === 'signed').length;
-      const signedDigitalCount = active.filter(p => p.aditivoStatus === 'signed_digital').length;
-      const signedPapelCount = active.filter(p => p.aditivoStatus === 'signed_papel').length;
+      const signedCount = active.filter(p => p.aditivoSigned).length;
       const pendingSignedCount = totalActive - signedCount;
       
       const msgSentPct = totalActive > 0 ? Math.round((msgSentCount / totalActive) * 100) : 0;
@@ -1970,8 +1961,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           msgSentCount,
           msgPendingCount,
           signedCount,
-          signedDigitalCount,
-          signedPapelCount,
           pendingSignedCount,
           msgSentPct,
           signedPct
@@ -1980,7 +1969,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* ADITIVO & MESSAGE CONTROL KPI CARDS */}
+          {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Card 1: Total Pacientes Ativos */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
@@ -2012,10 +2001,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </div>
               </div>
 
-              {/* Card 3: Aditivos Assinados */}
+              {/* Card 3: Aditivos Assinados Digitalmente */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados (Digital)</span>
                       <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">draw</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
@@ -2025,22 +2014,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-mono">{aditivoStats.signedPct}%</span>
                   </div>
-                  <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden flex">
-                      <div className="bg-blue-500 h-1.5 transition-all duration-500" style={{ width: `${aditivoStats.totalActive > 0 ? (aditivoStats.signedDigitalCount / aditivoStats.totalActive) * 100 : 0}%` }} title={`Digital: ${aditivoStats.signedDigitalCount}`} />
-                      <div className="bg-amber-500 h-1.5 transition-all duration-500" style={{ width: `${aditivoStats.totalActive > 0 ? (aditivoStats.signedPapelCount / aditivoStats.totalActive) * 100 : 0}%` }} title={`Papel: ${aditivoStats.signedPapelCount}`} />
+                  <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
+                      <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.signedPct}%` }} />
                   </div>
               </div>
 
               {/* Card 4: Pendências */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Aditivo</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Assinatura</span>
                       <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">pending_actions</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
                           <span className="text-2xl font-black text-amber-400 font-mono">{aditivoStats.pendingSignedCount}</span>
-                          <span className="text-xs text-slate-400">sem assinatura</span>
+                          <span className="text-xs text-slate-400">não assinados</span>
                       </div>
                       <span className="text-xs text-slate-400">({aditivoStats.msgPendingCount} sem msg)</span>
                   </div>
@@ -2100,12 +2088,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 onChange={(e) => setAditivoStatusFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
               >
-                  <option value="All">Status Aditivo: Todos</option>
-                  <option value="Signed">✍️ Assinado (Todos)</option>
-                  <option value="signed_digital">📱 Assinado (Digital)</option>
-                  <option value="signed_papel">📄 Assinado (Papel)</option>
+                  <option value="All">Aditivo Digital: Todos</option>
+                  <option value="Signed">✍️ Assinado (Digital)</option>
                   <option value="Pending">⏳ Pendente</option>
-                  <option value="refused">❌ Recusado</option>
               </select>
               <select
                 value={sortConfig.direction === 'none' ? 'default' : `${sortConfig.key}-${sortConfig.direction}`}
@@ -2197,7 +2182,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             onClick={() => toggleSort('aditivoSigned')}
                           >
                             <div className="flex items-center gap-1">
-                                Aditivo
+                                Aditivo Digital
                                 <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'aditivoSigned' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
                                     {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                                 </span>
@@ -2318,26 +2303,42 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </button>
                                 </td>
 
-                                {/* Coluna Aditivo Assinado */}
+                                {/* Coluna Aditivo Digital Assinado */}
                                 <td className="p-5">
-                                    <select
-                                        value={p.aditivoStatus || 'pending'}
-                                        onChange={(e) => handleUpdateAditivoStatus(p.id, e.target.value as any)}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all bg-surface hover:bg-surface ${
-                                            p.aditivoStatus === 'signed_digital'
-                                            ? 'text-blue-400 border-blue-500/30 font-bold focus:border-blue-500 bg-blue-500/5'
-                                            : p.aditivoStatus === 'signed_papel'
-                                            ? 'text-amber-400 border-amber-500/30 font-bold focus:border-amber-500 bg-amber-500/5'
-                                            : p.aditivoStatus === 'refused'
-                                            ? 'text-red-400 border-red-500/30 font-bold focus:border-red-500 bg-red-500/5'
-                                            : 'text-slate-400 border-border font-medium focus:border-purple-500'
+                                    <button
+                                        onClick={() => handleToggleAditivoSigned(p.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+                                            p.aditivoSigned
+                                            ? 'bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25 hover:border-blue-500/50'
+                                            : 'bg-panel hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border-border hover:border-amber-500/30'
                                         }`}
+                                        title={p.aditivoSigned ? `Aditivo assinado digitalmente${p.aditivoSignedAt ? ` em ${p.aditivoSignedAt.split('-').reverse().join('/')}` : ''}. Clique para desmarcar.` : 'Clique para marcar como assinado digitalmente'}
                                     >
-                                        <option value="pending" className="bg-surface text-slate-400">⏳ Pendente</option>
-                                        <option value="signed_digital" className="bg-surface text-blue-400 font-bold">✍️ Assinado (Digital)</option>
-                                        <option value="signed_papel" className="bg-surface text-amber-400 font-bold">📄 Assinado (Papel)</option>
-                                        <option value="refused" className="bg-surface text-red-400 font-bold">❌ Recusado</option>
-                                    </select>
+                                        <span className="material-symbols-outlined text-sm">
+                                            {p.aditivoSigned ? 'draw' : 'edit_document'}
+                                        </span>
+                                        {p.aditivoSigned ? 'Assinado (Digital)' : 'Pendente'}
+                                        {p.aditivoSigned && p.aditivoSignedAt && (
+                                            <span className="text-[10px] font-mono opacity-75 ml-0.5">
+                                                ({p.aditivoSignedAt.split('-').slice(1).reverse().join('/')})
+                                            </span>
+                                        )}
+                                    </button>
+                                </td>
+
+                                <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
+                                <td className="p-5 text-slate-300 text-xs font-mono">
+                                    {calculateDuration(p.startDate, p.endDate)}
+                                </td>
+                                <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
+                                <td className="p-5 text-center">
+                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
+                                        p.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                        p.status === 'Finished' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                        'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                    }`}>
+                                        {p.status === 'Active' ? 'Ativo' : p.status === 'Finished' ? 'Finalizado' : 'Suspenso'}
+                                    </span>
                                 </td>
 
                                 <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
@@ -3333,18 +3334,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1.5">
                                   <span className="material-symbols-outlined text-sm text-blue-400">draw</span>
-                                  Status do Aditivo
+                                  Aditivo Digital
                               </label>
-                              <select 
-                                  value={editingPatient.aditivoStatus || 'pending'}
-                                  onChange={(e) => setEditingPatient({ ...editingPatient, aditivoStatus: e.target.value as any })}
-                                  className="bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-bold outline-none focus:border-purple-500"
-                              >
-                                  <option value="pending">⏳ Pendente</option>
-                                  <option value="signed_digital">✍️ Assinado (Digital)</option>
-                                  <option value="signed_papel">📄 Assinado (Papel)</option>
-                                  <option value="refused">❌ Recusado</option>
-                              </select>
+                              <label className="flex items-center gap-2 cursor-pointer mt-1">
+                                  <input 
+                                      type="checkbox"
+                                      checked={Boolean(editingPatient.aditivoSigned)}
+                                      onChange={(e) => setEditingPatient({ ...editingPatient, aditivoSigned: e.target.checked })}
+                                      className="size-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600"
+                                  />
+                                  <span className="text-xs font-semibold text-text">
+                                      {editingPatient.aditivoSigned ? '✍️ Aditivo Assinado Digitalmente' : '⏳ Aditivo Pendente'}
+                                  </span>
+                              </label>
                           </div>
                       </div>
 
