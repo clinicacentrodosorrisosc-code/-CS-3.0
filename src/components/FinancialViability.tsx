@@ -67,14 +67,19 @@ export interface ScenarioRule {
   description: string;
   isCurrent?: boolean; // Modelo Atual
   targetGroup: 'Comercial' | 'Toda a Equipe' | 'Recepção & Apoio' | 'Clínico & Geral' | 'Personalizado';
-  ruleType: 'trigger' | 'flat' | 'tiered' | 'dentists_2_comm_reception'; // gatilho único, fixo em tudo, escalonado ou 2 dentistas+comercial+recepção
+  ruleType: 'trigger' | 'flat' | 'tiered' | 'dentists_2_comm_reception'; // gatilho único, fixo em tudo, escalonado ou 2 dentistas+recepção
   triggerAmount: number; // Ex: 45000 ou 70000
   percentage: number; // Ex: 2% ou 1%
   applyOnSurplusOnly: boolean; // se true: aplica % apenas sobre o que passar da meta; se false: aplica sobre o faturamento total assim que bate a meta
   excludeOrtho: boolean; // se true: NÃO contabiliza pacientes/receitas de Ortodontia
-  beneficiariesCount: number; // Quantidade de pessoas que receberão esse valor individualmente (ex: 4 pessoas = 4 x valor)
+  beneficiariesCount: number; // Quantidade de pessoas que receberão esse valor individualmente
   customRevenue?: number; // Faturamento total específico deste cenário (editável individualmente)
   customOrthoPct?: number; // Fatia de ortodontia específica deste cenário (editável individualmente)
+  d1ClinicalRevenue?: number; // Procedimentos clínicos indicados para Dentista 1 (além da Orto)
+  d2ClinicalRevenue?: number; // Procedimentos clínicos indicados para Dentista 2
+  d1Pct?: number; // % comissão Dentista 1 (padrão 1.0%)
+  d2Pct?: number; // % comissão Dentista 2 (padrão 1.0%)
+  receptionPct?: number; // % comissão Recepção (padrão 0.5%)
   bonusFixedAmount?: number; // bônus fixo extra por pessoa ao atingir supermeta
   bonusTriggerAmount?: number; // meta para ganhar o bônus fixo extra
   tiers?: CommissionTier[]; // para regras escalonadas
@@ -90,7 +95,7 @@ interface FinancialViabilityProps {
 const DEFAULT_SCENARIOS: ScenarioRule[] = [
   {
     id: 'current_commercial_tiered',
-    name: 'Modelo Atual (Comercial: 2% > 45k | 3% > 55k | 5% > 60k)',
+    name: 'Modelo Atual (Comercial: 2% > 45k | 3% > 55k | 5% > 60k s/ Orto)',
     description: 'Comercial ganha sobre o total vendido SEM Ortodontia: 0% (<45k), 2% (45k a 54.9k), 3% (55k a 59.9k) e 5% (≥ 60k). Ortodontia NÃO contabiliza.',
     isCurrent: true,
     targetGroup: 'Comercial',
@@ -113,14 +118,14 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   {
     id: 'team_tiered_70k_80k',
     name: 'Proposta 1 (Time Todo: 1% > 0 | 2% > 70k | 3% > 80k)',
-    description: 'Toda a equipe ganha sobre o valor total faturado: 1% (até 70k), 2% (70k a 80k) e 3% (acima de 80k) pago integralmente para cada colaborador.',
+    description: 'Toda a equipe ganha sobre o valor total faturado: 1% (até 70k), 2% (70k a 80k) e 3% (acima de 80k) pago integralmente para cada colaborador (4 pessoas).',
     targetGroup: 'Toda a Equipe',
     ruleType: 'tiered',
     triggerAmount: 0,
     percentage: 1.0,
     applyOnSurplusOnly: false,
     excludeOrtho: false,
-    beneficiariesCount: 4, // 4 pessoas recebendo a comissão individual
+    beneficiariesCount: 4,
     customRevenue: 80000,
     customOrthoPct: 25,
     tiers: [
@@ -131,33 +136,23 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
     color: '#10b981' // Verde Esmeralda
   },
   {
-    id: 'commercial_70k_2pct',
-    name: 'Proposta 2 (Comercial 2% a partir de 70k Faturados)',
-    description: 'Comercial ganha 2% sobre o valor total faturado a partir de R$ 70.000 faturados (contabiliza o faturamento total).',
-    targetGroup: 'Comercial',
-    ruleType: 'trigger',
-    triggerAmount: 70000,
-    percentage: 2.0,
-    applyOnSurplusOnly: false,
-    excludeOrtho: false,
-    beneficiariesCount: 1,
-    customRevenue: 80000,
-    customOrthoPct: 25,
-    color: '#f59e0b' // Âmbar
-  },
-  {
-    id: 'dentists_2_comm_reception_hybrid',
-    name: 'Proposta 3 (2 Dentistas + Comercial + Recepção 0.5%)',
-    description: 'Dentista 1 ganha 1% faturado COM Orto + Dentista 2 ganha 1% faturado SEM Orto + Comercial ganha sobre o faturado + Recepção ganha 0.5% do total.',
+    id: 'dentists_custom_comm_reception',
+    name: 'Proposta 2 (Dentistas por Procedimento + Recepção 0.5%)',
+    description: 'Dentista 1 (1% sobre Ortodontia + Procedimentos Clínicos D1 indicados) + Dentista 2 (1% sobre Procedimentos Clínicos D2 indicados) + Recepção (0,5% sobre o faturamento total da clínica).',
     targetGroup: 'Personalizado',
     ruleType: 'dentists_2_comm_reception',
     triggerAmount: 0,
     percentage: 1.0,
     applyOnSurplusOnly: false,
     excludeOrtho: false,
-    beneficiariesCount: 1,
+    beneficiariesCount: 3,
     customRevenue: 80000,
     customOrthoPct: 25,
+    d1ClinicalRevenue: 25000,
+    d2ClinicalRevenue: 35000,
+    d1Pct: 1.0,
+    d2Pct: 1.0,
+    receptionPct: 0.5,
     color: '#06b6d4' // Ciano
   }
 ];
@@ -181,7 +176,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v8');
+      const saved = localStorage.getItem('om_viability_scenarios_v9');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -191,7 +186,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v8', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v9', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
@@ -213,15 +208,20 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     id: '',
     name: '',
     description: '',
-    targetGroup: 'Toda a Equipe',
-    ruleType: 'flat',
+    targetGroup: 'Personalizado',
+    ruleType: 'dentists_2_comm_reception',
     triggerAmount: 0,
     percentage: 1.0,
     applyOnSurplusOnly: false,
     excludeOrtho: false,
-    beneficiariesCount: 4,
+    beneficiariesCount: 3,
     customRevenue: 80000,
     customOrthoPct: 25,
+    d1ClinicalRevenue: 25000,
+    d2ClinicalRevenue: 35000,
+    d1Pct: 1.0,
+    d2Pct: 1.0,
+    receptionPct: 0.5,
     bonusFixedAmount: 0,
     bonusTriggerAmount: 0,
     color: '#06b6d4'
@@ -326,7 +326,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     baseRevenueUsed: number; 
     activeTierLabel?: string;
     peopleCount: number;
-    breakdownDetails?: { label: string; amount: number; pct: string }[];
+    breakdownDetails?: { label: string; amount: number; pct: string; detail?: string; baseAmount?: number }[];
   } => {
     if (totalRevenue <= 0) {
       return { amountPerPerson: 0, totalClinicAmount: 0, effectivePct: 0, baseRevenueUsed: 0, peopleCount: rule.beneficiariesCount || 1 };
@@ -335,27 +335,25 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     const orthoRevenue = totalRevenue * (orthoPct / 100);
     const commercialEligible = totalRevenue - orthoRevenue;
 
-    // Cenário Proposta 3: 2 Dentistas (1 COM Orto + 1 SEM Orto) + Comercial Atual + Recepção 0.5%
+    // Cenário Dentistas por Procedimentos (D1 c/ Orto + Clínico D1, D2 Clínico D2) + Recepção 0.5%
     if (rule.ruleType === 'dentists_2_comm_reception') {
-      const generalClinicalRevenue = commercialEligible; // faturamento de clínica geral dividido entre os 2 dentistas
-      const d1Production = orthoRevenue + (generalClinicalRevenue / 2); // Dentista 1: Ortodontia + metade da clínica
-      const d2Production = generalClinicalRevenue / 2; // Dentista 2: metade da clínica geral (sem Orto)
+      const d1Pct = (rule.d1Pct !== undefined ? rule.d1Pct : 1.0) / 100;
+      const d2Pct = (rule.d2Pct !== undefined ? rule.d2Pct : 1.0) / 100;
+      const recPct = (rule.receptionPct !== undefined ? rule.receptionPct : 0.5) / 100;
 
-      const d1Cost = d1Production * 0.01; // 1% com Orto
-      const d2Cost = d2Production * 0.01; // 1% sem Orto
-      const totalDentistsCost = d1Cost + d2Cost;
+      const clinicalEligible = commercialEligible; // Total sem orto
+      const d1Clinical = rule.d1ClinicalRevenue !== undefined ? rule.d1ClinicalRevenue : (clinicalEligible / 2);
+      const d2Clinical = rule.d2ClinicalRevenue !== undefined ? rule.d2ClinicalRevenue : Math.max(0, clinicalEligible - d1Clinical);
 
-      // Comercial Atual sobre vendas sem Orto
-      let commPctUsed = 0;
-      if (commercialEligible >= 60000) commPctUsed = 0.05;
-      else if (commercialEligible >= 55000) commPctUsed = 0.03;
-      else if (commercialEligible >= 45000) commPctUsed = 0.02;
-      const commercialCost = commercialEligible * commPctUsed;
+      const d1TotalSales = orthoRevenue + d1Clinical;
+      const d1Cost = d1TotalSales * d1Pct;
 
-      // Recepção: 0.5% do total da clínica
-      const receptionCost = totalRevenue * 0.005;
+      const d2TotalSales = d2Clinical;
+      const d2Cost = d2TotalSales * d2Pct;
 
-      const totalClinicAmount = totalDentistsCost + commercialCost + receptionCost;
+      const receptionCost = totalRevenue * recPct;
+
+      const totalClinicAmount = d1Cost + d2Cost + receptionCost;
       const effectivePct = totalRevenue > 0 ? (totalClinicAmount / totalRevenue) * 100 : 0;
 
       return {
@@ -363,13 +361,30 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         totalClinicAmount,
         effectivePct,
         baseRevenueUsed: totalRevenue,
-        activeTierLabel: `Dent.1 (c/ Orto): 1% • Dent.2 (s/ Orto): 1% • Com.: ${(commPctUsed * 100).toFixed(0)}% • Recep.: 0.5%`,
-        peopleCount: 4, // 2 dentistas + 1 comercial + 1 recepção
+        activeTierLabel: `D1: 1% (Orto+Clínico) • D2: 1% (Clínico) • Recep.: 0.5% (Total)`,
+        peopleCount: 3,
         breakdownDetails: [
-          { label: 'Dentista 1 (1% c/ Orto)', amount: d1Cost, pct: '1% prod.' },
-          { label: 'Dentista 2 (1% s/ Orto)', amount: d2Cost, pct: '1% prod.' },
-          { label: `Comercial (${(commPctUsed * 100).toFixed(0)}% s/ Orto)`, amount: commercialCost, pct: `${(commPctUsed * 100).toFixed(0)}%` },
-          { label: 'Recepção (0.5% Total)', amount: receptionCost, pct: '0.5%' }
+          { 
+            label: `Dentista 1 (${(d1Pct * 100).toFixed(1)}% Orto + Clínico)`, 
+            amount: d1Cost, 
+            pct: `${(d1Pct * 100).toFixed(1)}%`,
+            baseAmount: d1TotalSales,
+            detail: `Orto: R$ ${orthoRevenue.toLocaleString('pt-BR')} + Clínico: R$ ${d1Clinical.toLocaleString('pt-BR')}`
+          },
+          { 
+            label: `Dentista 2 (${(d2Pct * 100).toFixed(1)}% Clínico)`, 
+            amount: d2Cost, 
+            pct: `${(d2Pct * 100).toFixed(1)}%`,
+            baseAmount: d2TotalSales,
+            detail: `Clínico Indicado: R$ ${d2Clinical.toLocaleString('pt-BR')}`
+          },
+          { 
+            label: `Recepção (${(recPct * 100).toFixed(1)}% Total)`, 
+            amount: receptionCost, 
+            pct: `${(recPct * 100).toFixed(1)}%`,
+            baseAmount: totalRevenue,
+            detail: `Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR')}`
+          }
         ]
       };
     }
@@ -489,6 +504,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         netMarginPct,
         costDiff,
         profitDiff,
+        currentClinicCost,
+        currentNetProfit,
         requiredExtraSales,
         requiredGrowthPct
       };
@@ -541,15 +558,20 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       id: 'custom_' + Date.now(),
       name: 'Novo Cenário Personalizado',
       description: 'Regra de incentivo customizada.',
-      targetGroup: 'Toda a Equipe',
-      ruleType: 'flat',
+      targetGroup: 'Personalizado',
+      ruleType: 'dentists_2_comm_reception',
       triggerAmount: 0,
       percentage: 1.0,
       applyOnSurplusOnly: false,
       excludeOrtho: false,
-      beneficiariesCount: 4,
+      beneficiariesCount: 3,
       customRevenue: 80000,
       customOrthoPct: 25,
+      d1ClinicalRevenue: 25000,
+      d2ClinicalRevenue: 35000,
+      d1Pct: 1.0,
+      d2Pct: 1.0,
+      receptionPct: 0.5,
       bonusFixedAmount: 0,
       bonusTriggerAmount: 0,
       color: '#06b6d4'
@@ -592,7 +614,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   };
 
   const handleResetDefaults = () => {
-    if (confirm('Restaurar os 4 cenários padrão do sistema (incluindo as regras de 2 Dentistas, Comercial e Time Todo)?')) {
+    if (confirm('Restaurar os cenários padrão do sistema (incluindo as regras de Dentistas e Time Todo)?')) {
       setScenarios(DEFAULT_SCENARIOS);
       toast.success('Cenários restaurados para o padrão.');
     }
@@ -644,7 +666,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Simulador com edição individual por cenário (Faturamento, Ortodontia, Pessoas e Regras específicas).
+              Simulador com edição individual por cenário (Faturamento, Ortodontia, Procedimentos de Dentistas e Regras).
             </p>
           </div>
         </div>
@@ -805,6 +827,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               netProfit, 
               netMarginPct, 
               costDiff, 
+              currentNetProfit,
               requiredExtraSales, 
               requiredGrowthPct 
             }) => {
@@ -911,6 +934,78 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </div>
                       </div>
 
+                      {/* SE FOR REGRA DE DENTISTAS + RECEPÇÃO: INPUTS DE PROCEDIMENTOS DE CADA DENTISTA */}
+                      {scenario.ruleType === 'dentists_2_comm_reception' && (
+                        <div className="bg-surface/90 p-3 rounded-xl border border-cyan-500/30 flex flex-col gap-3 mt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1.5">
+                              <Stethoscope className="w-3.5 h-3.5" /> Definição de Vendas por Dentista
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-mono">Clínica Geral (sem Orto): R$ {commEligible.toLocaleString('pt-BR')}</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Dentista 1: Procedimentos Clínicos Indicados (além da Orto) */}
+                            <div className="bg-panel p-2.5 rounded-lg border border-border flex flex-col gap-1.5">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-bold text-slate-300 uppercase">Dentista 1 (Procedimentos Clínicos)</label>
+                                <span className="text-[9px] font-mono text-cyan-400">Comissão: {(scenario.d1Pct ?? 1.0)}%</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] font-mono text-slate-400">R$</span>
+                                <input 
+                                  type="number" 
+                                  step="1000"
+                                  value={scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)}
+                                  onChange={(e) => handleUpdateScenarioField(scenario.id, 'd1ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
+                                  className="w-full bg-transparent text-sm font-black font-mono text-cyan-300 outline-none"
+                                  placeholder="Procedimentos D1"
+                                />
+                              </div>
+                              <div className="text-[10px] text-slate-400 bg-surface/60 p-1.5 rounded flex justify-between items-center">
+                                <span>Base D1 (Orto + Clínico):</span>
+                                <strong className="text-cyan-300 font-mono">
+                                  R$ {((orthoRev) + (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2))).toLocaleString('pt-BR')}
+                                </strong>
+                              </div>
+                            </div>
+
+                            {/* Dentista 2: Procedimentos Clínicos */}
+                            <div className="bg-panel p-2.5 rounded-lg border border-border flex flex-col gap-1.5">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-bold text-slate-300 uppercase">Dentista 2 (Procedimentos Clínicos)</label>
+                                <span className="text-[9px] font-mono text-cyan-400">Comissão: {(scenario.d2Pct ?? 1.0)}%</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] font-mono text-slate-400">R$</span>
+                                <input 
+                                  type="number" 
+                                  step="1000"
+                                  value={scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))}
+                                  onChange={(e) => handleUpdateScenarioField(scenario.id, 'd2ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
+                                  className="w-full bg-transparent text-sm font-black font-mono text-cyan-300 outline-none"
+                                  placeholder="Procedimentos D2"
+                                />
+                              </div>
+                              <div className="text-[10px] text-slate-400 bg-surface/60 p-1.5 rounded flex justify-between items-center">
+                                <span>Base D2 (Clínico s/ Orto):</span>
+                                <strong className="text-cyan-300 font-mono">
+                                  R$ {(scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))).toLocaleString('pt-BR')}
+                                </strong>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Recepção 0.5% */}
+                          <div className="bg-panel/60 px-3 py-2 rounded-lg border border-border flex justify-between items-center text-[10px]">
+                            <span className="text-slate-300 font-medium">Recepção (0,5% sobre Faturamento Total):</span>
+                            <strong className="text-emerald-400 font-mono">
+                              R$ {(rev * (scenario.receptionPct !== undefined ? scenario.receptionPct / 100 : 0.005)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (Base: R$ {rev.toLocaleString('pt-BR')})
+                            </strong>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Resumo da Base Contabilizada */}
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-border/50">
                         {isBase ? (
@@ -924,15 +1019,20 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
                     {/* BLOCO DE RESULTADO: COMISSÃO A PAGAR */}
                     <div className="bg-panel/40 p-4 rounded-xl border border-border flex flex-col gap-3">
-                      {/* Se tiver detalhamento específico (ex: Proposta 3 dos 2 Dentistas) */}
+                      {/* Se tiver detalhamento específico (ex: Proposta dos Dentistas) */}
                       {breakdownDetails && breakdownDetails.length > 0 ? (
                         <div className="flex flex-col gap-2 pb-2 border-b border-border/60">
                           <span className="text-[10px] font-bold uppercase text-slate-400">Detalhamento por Função / Colaborador</span>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             {breakdownDetails.map((b, idx) => (
-                              <div key={idx} className="bg-surface/80 p-2 rounded-lg border border-border/60 flex justify-between items-center">
-                                <span className="text-[10px] text-slate-300 font-medium">{b.label}</span>
-                                <span className="text-xs font-black font-mono text-emerald-400">R$ {b.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                              <div key={idx} className="bg-surface/80 p-2.5 rounded-lg border border-border/60 flex flex-col justify-between gap-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[11px] text-slate-200 font-bold">{b.label}</span>
+                                  <span className="text-xs font-black font-mono text-emerald-400">R$ {b.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                {b.detail && (
+                                  <span className="text-[9px] text-slate-400 font-mono">{b.detail}</span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -995,22 +1095,106 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                       </span>
                     </div>
 
-                    {/* Elasticidade / Break-Even */}
-                    {!isBase && costDiff > 0 && (
-                      <div className="bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20 flex items-center gap-2 text-indigo-300">
-                        <Zap className="w-4 h-4 flex-shrink-0" />
-                        <p className="text-[11px] leading-tight">
-                          A clínica precisa faturar <strong className="text-white">+R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> (+{requiredGrowthPct.toFixed(1)}%) para que este modelo se pague.
+                    {/* SEÇÃO INFERIOR: PONTO DE EQUILÍBRIO E META DE FATURAMENTO DETALHADA E DIDÁTICA */}
+                    {isBase ? (
+                      <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-blue-400">
+                          <Target className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-xs font-black uppercase tracking-wider">Ponto de Equilíbrio Operacional (Modelo Atual)</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 mt-1">
+                          <div className="bg-surface/60 p-2.5 rounded-lg border border-border/50">
+                            <span className="text-[10px] text-slate-400 block uppercase font-bold">Faturamento Mínimo p/ Não ter Prejuízo</span>
+                            <strong className="text-white font-mono text-xs">
+                              R$ {((fixedExpenses) / Math.max(0.1, (1 - (taxesAndFeesPct + directMaterialsPct + commPct) / 100))).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} / mês
+                            </strong>
+                          </div>
+                          <div className="bg-surface/60 p-2.5 rounded-lg border border-border/50">
+                            <span className="text-[10px] text-slate-400 block uppercase font-bold">Lucro Residual dos Sócios</span>
+                            <strong className="text-emerald-400 font-mono text-xs">
+                              R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({netMarginPct.toFixed(1)}% margem)
+                            </strong>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
+                          💡 No faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, a clínica gera <strong>R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> líquidos para os sócios após cobrir custos fixos, impostos, insumos e comissões.
                         </p>
                       </div>
-                    )}
+                    ) : costDiff > 0 ? (
+                      <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/25 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-indigo-300">
+                            <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                            <span className="text-xs font-black uppercase tracking-wider text-indigo-300">
+                              Meta de Faturamento para Compensar a Comissão
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            +R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em comissões
+                          </span>
+                        </div>
 
-                    {!isBase && costDiff <= 0 && (
-                      <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 flex items-center gap-2 text-emerald-400">
-                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-[11px] font-medium leading-tight">
-                          Economia de R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em relação ao modelo atual.
-                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                          <div className="bg-surface/80 p-2.5 rounded-lg border border-indigo-500/30 flex flex-col justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Faturamento Alvo Necessário</span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
+                              <span className="text-sm font-black font-mono text-emerald-400">
+                                R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                              </span>
+                              <span className="text-[10px] font-bold text-indigo-400 font-mono">
+                                (+R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })})
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="bg-surface/80 p-2.5 rounded-lg border border-indigo-500/30 flex flex-col justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Crescimento de Vendas Exigido</span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
+                              <span className="text-sm font-black font-mono text-indigo-300">
+                                +{requiredGrowthPct.toFixed(1)}%
+                              </span>
+                              <span className="text-[10px] text-slate-400">acima de R$ {(rev/1000).toFixed(0)}k</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-panel/70 p-2.5 rounded-lg border border-border/60 text-[11px] text-slate-300 leading-relaxed">
+                          📌 <strong>Entenda o cálculo:</strong> Como esse modelo paga <strong className="text-amber-400">R$ {costDiff.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> a mais em comissões no faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, a clínica precisará faturar <strong className="text-emerald-400">R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> no mês para que o lucro líquido dos sócios continue sendo os mesmos <strong className="text-white">R$ {currentNetProfit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> do modelo atual.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/25 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-emerald-400">
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-xs font-black uppercase tracking-wider">
+                              Modelo com Economia Imediata para a Clínica
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} em comissões
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                          <div className="bg-surface/80 p-2.5 rounded-lg border border-emerald-500/30 flex flex-col justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Economia Mensal em Comissões</span>
+                            <span className="text-sm font-black font-mono text-emerald-400 mt-1">
+                              R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} / mês
+                            </span>
+                          </div>
+
+                          <div className="bg-surface/80 p-2.5 rounded-lg border border-emerald-500/30 flex flex-col justify-between">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido Residual</span>
+                            <span className="text-sm font-black font-mono text-white mt-1">
+                              R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({netMarginPct.toFixed(1)}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="bg-panel/70 p-2.5 rounded-lg border border-border/60 text-[11px] text-emerald-300 leading-relaxed">
+                          ✅ <strong>Vantagem Financeira:</strong> No faturamento de <strong>R$ {rev.toLocaleString('pt-BR')}</strong>, este modelo reduz os custos em <strong>R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</strong> em comparação com o modelo atual, aumentando diretamente o lucro líquido no bolso dos sócios.
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1414,12 +1598,12 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     <option value="flat">Linear / Fixo em tudo (Ex: 1% de tudo)</option>
                     <option value="trigger">Gatilho Único (Ex: a partir de 70k)</option>
                     <option value="tiered">Escalonado por Faixas</option>
-                    <option value="dentists_2_comm_reception">2 Dentistas (1 c/ Orto + 1 s/ Orto) + Com. + Recepção</option>
+                    <option value="dentists_2_comm_reception">Dentistas (Procedimentos Indicados) + Recepção 0.5%</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual por Pessoa (%)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual Base (%)</label>
                   <input 
                     type="number" 
                     step="0.1" 
@@ -1430,6 +1614,33 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   />
                 </div>
               </div>
+
+              {formScenario.ruleType === 'dentists_2_comm_reception' && (
+                <div className="grid grid-cols-2 gap-4 p-3 bg-panel/70 rounded-xl border border-cyan-500/30">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-cyan-400 uppercase">Procedimentos D1 (R$)</label>
+                    <input 
+                      type="number" 
+                      step="1000" 
+                      value={formScenario.d1ClinicalRevenue || 25000}
+                      onChange={(e) => setFormScenario({ ...formScenario, d1ClinicalRevenue: parseFloat(e.target.value) || 0 })}
+                      placeholder="Ex: 25000"
+                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-cyan-400 uppercase">Procedimentos D2 (R$)</label>
+                    <input 
+                      type="number" 
+                      step="1000" 
+                      value={formScenario.d2ClinicalRevenue || 35000}
+                      onChange={(e) => setFormScenario({ ...formScenario, d2ClinicalRevenue: parseFloat(e.target.value) || 0 })}
+                      placeholder="Ex: 35000"
+                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+              )}
 
               {formScenario.ruleType === 'trigger' && (
                 <div className="flex flex-col gap-1.5">
