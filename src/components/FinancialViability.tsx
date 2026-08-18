@@ -106,16 +106,21 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
     color: '#3b82f6' // Azul
   },
   {
-    id: 'team_flat_1pct',
-    name: 'Proposta 1 (Time Todo: 1% de Tudo para Cada um)',
-    description: 'Cada membro da equipe (ex: 4 pessoas) ganha 1% individual sobre todo o faturamento da clínica (Custo clínica: 4 x 1% = 4%).',
+    id: 'team_tiered_70k_80k',
+    name: 'Proposta 1 (Time Todo: 1% > 0 | 2% > 70k | 3% > 80k)',
+    description: 'Toda a equipe ganha sobre o faturamento total: 1% (até 70k), 2% (70k a 80k) e 3% (acima de 80k) pago integralmente para cada um (ex: 4 pessoas).',
     targetGroup: 'Toda a Equipe',
-    ruleType: 'flat',
+    ruleType: 'tiered',
     triggerAmount: 0,
     percentage: 1.0,
     applyOnSurplusOnly: false,
     excludeOrtho: false,
-    beneficiariesCount: 4, // 4 pessoas recebendo 1% cada
+    beneficiariesCount: 4, // 4 pessoas recebendo a comissão individual
+    tiers: [
+      { minRevenue: 0, maxRevenue: 70000, percentage: 1.0, label: 'Até 70k (1% cada)' },
+      { minRevenue: 70000, maxRevenue: 80000, percentage: 2.0, label: '70k a 80k (2% cada)' },
+      { minRevenue: 80000, percentage: 3.0, label: 'Acima de 80k (3% cada)' }
+    ],
     color: '#10b981' // Verde Esmeralda
   },
   {
@@ -182,7 +187,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v3');
+      const saved = localStorage.getItem('om_viability_scenarios_v4');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -192,7 +197,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v3', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v4', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
