@@ -19,6 +19,10 @@ interface OrthoPatient {
   name: string;
   applianceType: string;
   contractType?: 'Digital' | 'Papel';
+  aditivoMsgSent?: boolean;
+  aditivoMsgSentAt?: string;
+  aditivoStatus?: 'pending' | 'signed_digital' | 'signed_papel' | 'signed' | 'refused';
+  aditivoSignedAt?: string;
   startDate: string;
   endDate?: string;
   estimatedDuration: number; // months
@@ -133,6 +137,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Finished' | 'Suspended'>('All');
   const [feeFilter, setFeeFilter] = useState<number | 'All'>('All');
   const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
+  const [aditivoMsgFilter, setAditivoMsgFilter] = useState<'All' | 'Sent' | 'Pending'>('All');
+  const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending' | 'signed_digital' | 'signed_papel' | 'refused'>('All');
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
@@ -307,19 +313,26 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       setLoading(true);
       try {
           const { data: pats } = await supabase.from('ortho_patients').select('*');
-          const mappedPats = pats ? pats.map(p => ({
-              id: p.id,
-              name: p.name,
-              applianceType: p.appliance_type,
-              contractType: p.attendance?.__contract_type || undefined,
-              startDate: p.start_date,
-              endDate: p.end_date,
-              estimatedDuration: p.estimated_duration,
-              status: p.status,
-              maintenanceValue: Number(p.maintenance_value || 0),
-              attendance: p.attendance || {},
-              problemNote: p.problem_note
-          })) : [];
+          const mappedPats = pats ? pats.map(p => {
+              const att = p.attendance || {};
+              return {
+                  id: p.id,
+                  name: p.name,
+                  applianceType: p.appliance_type,
+                  contractType: att.__contract_type || undefined,
+                  aditivoMsgSent: Boolean(att.__aditivo_msg_sent),
+                  aditivoMsgSentAt: att.__aditivo_msg_sent_at || undefined,
+                  aditivoStatus: att.__aditivo_status || (att.__aditivo_signed ? (att.__aditivo_type === 'Papel' ? 'signed_papel' : 'signed_digital') : 'pending'),
+                  aditivoSignedAt: att.__aditivo_signed_at || undefined,
+                  startDate: p.start_date,
+                  endDate: p.end_date,
+                  estimatedDuration: p.estimated_duration,
+                  status: p.status,
+                  maintenanceValue: Number(p.maintenance_value || 0),
+                  attendance: att,
+                  problemNote: p.problem_note
+              };
+          }) : [];
 
           // Ensure Militza is present as a deactivated/finished orthodontic patient
           const hasMilitza = mappedPats.some(p => p.name.toLowerCase().includes('militza'));
@@ -406,6 +419,28 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           });
       }
 
+      if (aditivoMsgFilter !== 'All') {
+          if (aditivoMsgFilter === 'Sent') {
+              result = result.filter(p => p.aditivoMsgSent);
+          } else if (aditivoMsgFilter === 'Pending') {
+              result = result.filter(p => !p.aditivoMsgSent);
+          }
+      }
+
+      if (aditivoStatusFilter !== 'All') {
+          if (aditivoStatusFilter === 'Signed') {
+              result = result.filter(p => p.aditivoStatus === 'signed_digital' || p.aditivoStatus === 'signed_papel' || p.aditivoStatus === 'signed');
+          } else if (aditivoStatusFilter === 'Pending') {
+              result = result.filter(p => !p.aditivoStatus || p.aditivoStatus === 'pending');
+          } else if (aditivoStatusFilter === 'signed_digital') {
+              result = result.filter(p => p.aditivoStatus === 'signed_digital');
+          } else if (aditivoStatusFilter === 'signed_papel') {
+              result = result.filter(p => p.aditivoStatus === 'signed_papel');
+          } else if (aditivoStatusFilter === 'refused') {
+              result = result.filter(p => p.aditivoStatus === 'refused');
+          }
+      }
+
       if (sortConfig.direction !== 'none') {
           result.sort((a, b) => {
               if (sortConfig.key === 'startDate') {
@@ -417,6 +452,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   return sortConfig.direction === 'asc' 
                       ? (a.name || '').localeCompare(b.name || '') 
                       : (b.name || '').localeCompare(a.name || '');
+              }
+              if (sortConfig.key === 'aditivoMsg') {
+                  const valA = a.aditivoMsgSent ? 1 : 0;
+                  const valB = b.aditivoMsgSent ? 1 : 0;
+                  return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+              }
+              if (sortConfig.key === 'aditivoSigned') {
+                  const isSignedA = (a.aditivoStatus === 'signed_digital' || a.aditivoStatus === 'signed_papel' || a.aditivoStatus === 'signed') ? 1 : 0;
+                  const isSignedB = (b.aditivoStatus === 'signed_digital' || b.aditivoStatus === 'signed_papel' || b.aditivoStatus === 'signed') ? 1 : 0;
+                  return sortConfig.direction === 'asc' ? isSignedA - isSignedB : isSignedB - isSignedA;
               }
               if (sortConfig.key === 'maintenanceValue') {
                   const valA = a.maintenanceValue || 0;
@@ -441,7 +486,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
       
       return result;
-  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, sortConfig]);
+  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, aditivoMsgFilter, aditivoStatusFilter, sortConfig]);
 
   // --- ACTIONS ---
 
@@ -532,17 +577,30 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const handleSaveEditedPatient = async () => {
       if (!editingPatient) return;
       try {
+          const nowStr = new Date().toISOString().split('T')[0];
+          const isSigned = editingPatient.aditivoStatus === 'signed_digital' || editingPatient.aditivoStatus === 'signed_papel' || editingPatient.aditivoStatus === 'signed';
+          const updatedAttendance = {
+              ...editingPatient.attendance,
+              __aditivo_msg_sent: Boolean(editingPatient.aditivoMsgSent),
+              __aditivo_msg_sent_at: editingPatient.aditivoMsgSent ? (editingPatient.aditivoMsgSentAt || nowStr) : null,
+              __aditivo_status: editingPatient.aditivoStatus || 'pending',
+              __aditivo_signed: isSigned,
+              __aditivo_type: editingPatient.aditivoStatus === 'signed_papel' ? 'Papel' : editingPatient.aditivoStatus === 'signed_digital' ? 'Digital' : null,
+              __aditivo_signed_at: isSigned ? (editingPatient.aditivoSignedAt || nowStr) : null
+          };
+
           const { error } = await supabase.from('ortho_patients').update({
               name: editingPatient.name,
               appliance_type: editingPatient.applianceType,
               maintenance_value: Number(editingPatient.maintenanceValue) || 0,
               start_date: editingPatient.startDate,
               status: editingPatient.status,
-              problem_note: editingPatient.problemNote || ''
+              problem_note: editingPatient.problemNote || '',
+              attendance: updatedAttendance
           }).eq('id', editingPatient.id);
 
           if (!error) {
-              setPatients(prev => prev.map(p => p.id === editingPatient.id ? editingPatient : p));
+              setPatients(prev => prev.map(p => p.id === editingPatient.id ? { ...editingPatient, attendance: updatedAttendance } : p));
               notifyDataChange('ortho_patients');
               toast.success('Informações do paciente atualizadas com sucesso!');
               setEditingPatient(null);
@@ -615,6 +673,83 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           }
       } catch (err) {
           console.error("Error updating contract type", err);
+          await loadData();
+      }
+  };
+
+  const handleToggleAditivoMsg = async (patientId: string) => {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+
+      const newSent = !patient.aditivoMsgSent;
+      const nowStr = new Date().toISOString().split('T')[0];
+      const updatedAttendance = {
+          ...patient.attendance,
+          __aditivo_msg_sent: newSent,
+          __aditivo_msg_sent_at: newSent ? (patient.aditivoMsgSentAt || nowStr) : null
+      };
+
+      setPatients(prev => prev.map(p => p.id === patientId ? {
+          ...p,
+          aditivoMsgSent: newSent,
+          aditivoMsgSentAt: newSent ? (patient.aditivoMsgSentAt || nowStr) : undefined,
+          attendance: updatedAttendance
+      } : p));
+
+      try {
+          const { error } = await supabase
+              .from('ortho_patients')
+              .update({ attendance: updatedAttendance })
+              .eq('id', patientId);
+          if (error) {
+              toast.error('Erro ao atualizar envio de mensagem: ' + error.message);
+              await loadData();
+          } else {
+              notifyDataChange('ortho_patients');
+              toast.success(newSent ? `Mensagem de aditivo enviada para ${patient.name}` : `Envio de mensagem desmarcado para ${patient.name}`);
+          }
+      } catch (err) {
+          toast.error('Erro ao atualizar mensagem');
+          await loadData();
+      }
+  };
+
+  const handleUpdateAditivoStatus = async (patientId: string, status: 'pending' | 'signed_digital' | 'signed_papel' | 'refused') => {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+
+      const isSigned = status === 'signed_digital' || status === 'signed_papel';
+      const nowStr = new Date().toISOString().split('T')[0];
+      const updatedAttendance = {
+          ...patient.attendance,
+          __aditivo_status: status,
+          __aditivo_signed: isSigned,
+          __aditivo_type: status === 'signed_papel' ? 'Papel' : status === 'signed_digital' ? 'Digital' : null,
+          __aditivo_signed_at: isSigned ? (patient.aditivoSignedAt || nowStr) : null
+      };
+
+      setPatients(prev => prev.map(p => p.id === patientId ? {
+          ...p,
+          aditivoStatus: status,
+          aditivoSignedAt: isSigned ? (patient.aditivoSignedAt || nowStr) : undefined,
+          attendance: updatedAttendance
+      } : p));
+
+      try {
+          const { error } = await supabase
+              .from('ortho_patients')
+              .update({ attendance: updatedAttendance })
+              .eq('id', patientId);
+          if (error) {
+              toast.error('Erro ao atualizar status do aditivo: ' + error.message);
+              await loadData();
+          } else {
+              notifyDataChange('ortho_patients');
+              const label = status === 'signed_digital' ? 'Assinado (Digital)' : status === 'signed_papel' ? 'Assinado (Papel)' : status === 'refused' ? 'Recusado' : 'Pendente';
+              toast.success(`Aditivo de ${patient.name}: ${label}`);
+          }
+      } catch (err) {
+          toast.error('Erro ao atualizar status do aditivo');
           await loadData();
       }
   };
@@ -1817,8 +1952,101 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       );
   };
 
+  const aditivoStats = useMemo(() => {
+      const active = patients.filter(p => p.status === 'Active');
+      const totalActive = active.length;
+      const msgSentCount = active.filter(p => p.aditivoMsgSent).length;
+      const msgPendingCount = totalActive - msgSentCount;
+      const signedCount = active.filter(p => p.aditivoStatus === 'signed_digital' || p.aditivoStatus === 'signed_papel' || p.aditivoStatus === 'signed').length;
+      const signedDigitalCount = active.filter(p => p.aditivoStatus === 'signed_digital').length;
+      const signedPapelCount = active.filter(p => p.aditivoStatus === 'signed_papel').length;
+      const pendingSignedCount = totalActive - signedCount;
+      
+      const msgSentPct = totalActive > 0 ? Math.round((msgSentCount / totalActive) * 100) : 0;
+      const signedPct = totalActive > 0 ? Math.round((signedCount / totalActive) * 100) : 0;
+
+      return {
+          totalActive,
+          msgSentCount,
+          msgPendingCount,
+          signedCount,
+          signedDigitalCount,
+          signedPapelCount,
+          pendingSignedCount,
+          msgSentPct,
+          signedPct
+      };
+  }, [patients]);
+
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* ADITIVO & MESSAGE CONTROL KPI CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Card 1: Total Pacientes Ativos */}
+              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
+                      <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400 material-symbols-outlined text-base">groups</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-text font-mono">{aditivoStats.totalActive}</span>
+                      <span className="text-xs text-slate-400">em tratamento</span>
+                  </div>
+              </div>
+
+              {/* Card 2: Mensagens Enviadas */}
+              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
+                      <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 material-symbols-outlined text-base">send</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-emerald-400 font-mono">{aditivoStats.msgSentCount}</span>
+                          <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono">{aditivoStats.msgSentPct}%</span>
+                  </div>
+                  <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
+                      <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
+                  </div>
+              </div>
+
+              {/* Card 3: Aditivos Assinados */}
+              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados</span>
+                      <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">draw</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-blue-400 font-mono">{aditivoStats.signedCount}</span>
+                          <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-mono">{aditivoStats.signedPct}%</span>
+                  </div>
+                  <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden flex">
+                      <div className="bg-blue-500 h-1.5 transition-all duration-500" style={{ width: `${aditivoStats.totalActive > 0 ? (aditivoStats.signedDigitalCount / aditivoStats.totalActive) * 100 : 0}%` }} title={`Digital: ${aditivoStats.signedDigitalCount}`} />
+                      <div className="bg-amber-500 h-1.5 transition-all duration-500" style={{ width: `${aditivoStats.totalActive > 0 ? (aditivoStats.signedPapelCount / aditivoStats.totalActive) * 100 : 0}%` }} title={`Papel: ${aditivoStats.signedPapelCount}`} />
+                  </div>
+              </div>
+
+              {/* Card 4: Pendências */}
+              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Aditivo</span>
+                      <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">pending_actions</span>
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-amber-400 font-mono">{aditivoStats.pendingSignedCount}</span>
+                          <span className="text-xs text-slate-400">sem assinatura</span>
+                      </div>
+                      <span className="text-xs text-slate-400">({aditivoStats.msgPendingCount} sem msg)</span>
+                  </div>
+              </div>
+          </div>
+
           {/* Filters */}
           <div className="flex flex-wrap gap-4 items-center bg-surface p-4 rounded-xl border border-border">
               <input 
@@ -1853,10 +2081,31 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 onChange={(e) => setContractFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500"
               >
-                  <option value="All">Todos Contratos</option>
+                  <option value="All">Contrato Original: Todos</option>
                   <option value="Digital">Digital</option>
                   <option value="Papel">Papel</option>
                   <option value="Empty">Vazio / Sem Contrato</option>
+              </select>
+              <select 
+                value={aditivoMsgFilter}
+                onChange={(e) => setAditivoMsgFilter(e.target.value as any)}
+                className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
+              >
+                  <option value="All">Msg Aditivo: Todas</option>
+                  <option value="Sent">📱 Mensagem Enviada</option>
+                  <option value="Pending">⏳ Mensagem Pendente</option>
+              </select>
+              <select 
+                value={aditivoStatusFilter}
+                onChange={(e) => setAditivoStatusFilter(e.target.value as any)}
+                className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
+              >
+                  <option value="All">Status Aditivo: Todos</option>
+                  <option value="Signed">✍️ Assinado (Todos)</option>
+                  <option value="signed_digital">📱 Assinado (Digital)</option>
+                  <option value="signed_papel">📄 Assinado (Papel)</option>
+                  <option value="Pending">⏳ Pendente</option>
+                  <option value="refused">❌ Recusado</option>
               </select>
               <select
                 value={sortConfig.direction === 'none' ? 'default' : `${sortConfig.key}-${sortConfig.direction}`}
@@ -1876,6 +2125,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="startDate-asc">📅 Início: Mais antigos primeiro</option>
                   <option value="name-asc">🔤 Nome: A - Z</option>
                   <option value="name-desc">🔤 Nome: Z - A</option>
+                  <option value="aditivoMsg-desc">📱 Msg Aditivo: Enviadas primeiro</option>
+                  <option value="aditivoMsg-asc">📱 Msg Aditivo: Pendentes primeiro</option>
+                  <option value="aditivoSigned-desc">✍️ Aditivo: Assinados primeiro</option>
+                  <option value="aditivoSigned-asc">✍️ Aditivo: Pendentes primeiro</option>
                   <option value="duration-desc">⏳ Duração: Maior primeiro</option>
                   <option value="duration-asc">⏳ Duração: Menor primeiro</option>
                   <option value="maintenanceValue-desc">💰 Mensalidade: Maior valor</option>
@@ -1927,7 +2180,29 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </th>
                           {selectedDate && <th className="p-5 font-semibold text-center">Presença ({selectedDate.toLocaleDateString()})</th>}
                           <th className="p-5 font-semibold">Aparelho</th>
-                          <th className="p-5 font-semibold">Contrato</th>
+                          <th className="p-5 font-semibold">Contrato Inicial</th>
+                          <th 
+                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            onClick={() => toggleSort('aditivoMsg')}
+                          >
+                            <div className="flex items-center gap-1">
+                                Msg Aditivo
+                                <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'aditivoMsg' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                    {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                            </div>
+                          </th>
+                          <th 
+                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            onClick={() => toggleSort('aditivoSigned')}
+                          >
+                            <div className="flex items-center gap-1">
+                                Aditivo
+                                <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'aditivoSigned' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                    {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                            </div>
+                          </th>
                           <th 
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('startDate')}
@@ -2019,6 +2294,52 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         <option value="Papel" className="bg-surface text-amber-400 font-bold">Papel</option>
                                     </select>
                                 </td>
+                                
+                                {/* Coluna Msg Aditivo */}
+                                <td className="p-5">
+                                    <button
+                                        onClick={() => handleToggleAditivoMsg(p.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+                                            p.aditivoMsgSent
+                                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25 hover:border-emerald-500/50'
+                                            : 'bg-panel hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border-border hover:border-amber-500/30'
+                                        }`}
+                                        title={p.aditivoMsgSent ? `Mensagem enviada${p.aditivoMsgSentAt ? ` em ${p.aditivoMsgSentAt.split('-').reverse().join('/')}` : ''}. Clique para desmarcar.` : 'Clique para marcar como mensagem enviada'}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">
+                                            {p.aditivoMsgSent ? 'check_circle' : 'send'}
+                                        </span>
+                                        {p.aditivoMsgSent ? 'Enviada' : 'Pendente'}
+                                        {p.aditivoMsgSent && p.aditivoMsgSentAt && (
+                                            <span className="text-[10px] font-mono opacity-75 ml-0.5">
+                                                ({p.aditivoMsgSentAt.split('-').slice(1).reverse().join('/')})
+                                            </span>
+                                        )}
+                                    </button>
+                                </td>
+
+                                {/* Coluna Aditivo Assinado */}
+                                <td className="p-5">
+                                    <select
+                                        value={p.aditivoStatus || 'pending'}
+                                        onChange={(e) => handleUpdateAditivoStatus(p.id, e.target.value as any)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all bg-surface hover:bg-surface ${
+                                            p.aditivoStatus === 'signed_digital'
+                                            ? 'text-blue-400 border-blue-500/30 font-bold focus:border-blue-500 bg-blue-500/5'
+                                            : p.aditivoStatus === 'signed_papel'
+                                            ? 'text-amber-400 border-amber-500/30 font-bold focus:border-amber-500 bg-amber-500/5'
+                                            : p.aditivoStatus === 'refused'
+                                            ? 'text-red-400 border-red-500/30 font-bold focus:border-red-500 bg-red-500/5'
+                                            : 'text-slate-400 border-border font-medium focus:border-purple-500'
+                                        }`}
+                                    >
+                                        <option value="pending" className="bg-surface text-slate-400">⏳ Pendente</option>
+                                        <option value="signed_digital" className="bg-surface text-blue-400 font-bold">✍️ Assinado (Digital)</option>
+                                        <option value="signed_papel" className="bg-surface text-amber-400 font-bold">📄 Assinado (Papel)</option>
+                                        <option value="refused" className="bg-surface text-red-400 font-bold">❌ Recusado</option>
+                                    </select>
+                                </td>
+
                                 <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
                                 <td className="p-5 text-slate-300 text-xs font-mono">
                                     {calculateDuration(p.startDate, p.endDate)}
@@ -2986,6 +3307,43 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   <option value="Active">Ativo</option>
                                   <option value="Finished">Finalizado</option>
                                   <option value="Suspended">Suspenso</option>
+                              </select>
+                          </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-panel/50 rounded-xl border border-border">
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                                  <span className="material-symbols-outlined text-sm text-emerald-400">send</span>
+                                  Mensagem de Aditivo
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer mt-1">
+                                  <input 
+                                      type="checkbox"
+                                      checked={Boolean(editingPatient.aditivoMsgSent)}
+                                      onChange={(e) => setEditingPatient({ ...editingPatient, aditivoMsgSent: e.target.checked })}
+                                      className="size-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600"
+                                  />
+                                  <span className="text-xs font-semibold text-text">
+                                      {editingPatient.aditivoMsgSent ? '✅ Mensagem Já Enviada' : '⏳ Mensagem Pendente'}
+                                  </span>
+                              </label>
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                                  <span className="material-symbols-outlined text-sm text-blue-400">draw</span>
+                                  Status do Aditivo
+                              </label>
+                              <select 
+                                  value={editingPatient.aditivoStatus || 'pending'}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, aditivoStatus: e.target.value as any })}
+                                  className="bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-bold outline-none focus:border-purple-500"
+                              >
+                                  <option value="pending">⏳ Pendente</option>
+                                  <option value="signed_digital">✍️ Assinado (Digital)</option>
+                                  <option value="signed_papel">📄 Assinado (Papel)</option>
+                                  <option value="refused">❌ Recusado</option>
                               </select>
                           </div>
                       </div>
