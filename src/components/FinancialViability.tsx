@@ -66,7 +66,7 @@ export interface ScenarioRule {
   description: string;
   isCurrent?: boolean; // Modelo Atual
   targetGroup: 'Comercial' | 'Toda a Equipe' | 'Recepção & Apoio' | 'Clínico & Geral' | 'Personalizado';
-  ruleType: 'trigger' | 'flat' | 'tiered'; // gatilho único, fixo em tudo, ou escalonado
+  ruleType: 'trigger' | 'flat' | 'tiered' | 'dentists_commercial_reception'; // gatilho único, fixo em tudo, escalonado ou híbrido dentistas+comercial+recepção
   triggerAmount: number; // Ex: 45000 ou 70000
   percentage: number; // Ex: 2% ou 1%
   applyOnSurplusOnly: boolean; // se true: aplica % apenas sobre o que passar da meta; se false: aplica sobre o faturamento total assim que bate a meta
@@ -137,8 +137,21 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
     color: '#f59e0b' // Âmbar
   },
   {
+    id: 'dentists_comm_reception_hybrid',
+    name: 'Proposta 3 (Dentistas 1% + Comercial Atual + Recepção 0.5%)',
+    description: 'Dentistas ganham 1% de tudo que produzirem + Comercial segue o modelo atual (2%/3%/5% sem Orto) + Recepção ganha 0.5% do faturamento total.',
+    targetGroup: 'Personalizado',
+    ruleType: 'dentists_commercial_reception',
+    triggerAmount: 0,
+    percentage: 1.0,
+    applyOnSurplusOnly: false,
+    excludeOrtho: false,
+    beneficiariesCount: 1,
+    color: '#06b6d4' // Ciano
+  },
+  {
     id: 'team_reception_tiered',
-    name: 'Proposta 3 (Recepção/Equipe: 0.5% cada a partir de 50k)',
+    name: 'Proposta 4 (Recepção/Equipe: 0.5% cada a partir de 50k)',
     description: 'Equipe de apoio (4 pessoas) ganha 0.5% individual cada uma a partir de R$ 50.000 faturados na clínica.',
     targetGroup: 'Recepção & Apoio',
     ruleType: 'trigger',
@@ -151,7 +164,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
   },
   {
     id: 'hybrid_comm_team',
-    name: 'Proposta 4 (Híbrido: Comercial 2% > 50k + 4 Pessoas Time 0.5% cada)',
+    name: 'Proposta 5 (Híbrido: Comercial 2% > 50k + 4 Pessoas Time 0.5% cada)',
     description: 'Comercial ganha 2% a partir de 50k (sem Orto) + 4 pessoas da equipe ganham 0.5% cada sobre o total da clínica a partir de 50k.',
     targetGroup: 'Personalizado',
     ruleType: 'tiered',
@@ -187,7 +200,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados dos Cenários
   const [scenarios, setScenarios] = useState<ScenarioRule[]>(() => {
     try {
-      const saved = localStorage.getItem('om_viability_scenarios_v4');
+      const saved = localStorage.getItem('om_viability_scenarios_v5');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Erro ao carregar cenários:', e);
@@ -197,7 +210,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   useEffect(() => {
     try {
-      localStorage.setItem('om_viability_scenarios_v4', JSON.stringify(scenarios));
+      localStorage.setItem('om_viability_scenarios_v5', JSON.stringify(scenarios));
     } catch (e) {
       console.warn('Erro ao salvar cenários:', e);
     }
@@ -324,6 +337,29 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   } => {
     if (totalRevenue <= 0) {
       return { amountPerPerson: 0, totalClinicAmount: 0, effectivePct: 0, baseRevenueUsed: 0, peopleCount: rule.beneficiariesCount || 1 };
+    }
+
+    // Cenário Especial: Dentistas 1% + Comercial Atual (sem Orto) + Recepção 0.5%
+    if (rule.ruleType === 'dentists_commercial_reception') {
+      const dentistsCost = totalRevenue * 0.01; // 1% de tudo que as dentistas fizerem
+      const commercialEligible = totalRevenue * (1 - (orthoPct / 100));
+      let commPctUsed = 0;
+      if (commercialEligible >= 60000) commPctUsed = 0.05;
+      else if (commercialEligible >= 55000) commPctUsed = 0.03;
+      else if (commercialEligible >= 45000) commPctUsed = 0.02;
+      const commercialCost = commercialEligible * commPctUsed;
+      const receptionCost = totalRevenue * 0.005; // 0.5% do faturamento total da clínica
+
+      const totalClinicAmount = dentistsCost + commercialCost + receptionCost;
+      const effectivePct = totalRevenue > 0 ? (totalClinicAmount / totalRevenue) * 100 : 0;
+      return {
+        amountPerPerson: totalClinicAmount,
+        totalClinicAmount,
+        effectivePct,
+        baseRevenueUsed: totalRevenue,
+        activeTierLabel: `Dentistas 1% (R$ ${dentistsCost.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}) + Com. ${(commPctUsed * 100).toFixed(0)}% (R$ ${commercialCost.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}) + Recepção 0.5% (R$ ${receptionCost.toLocaleString('pt-BR', { maximumFractionDigits: 0 })})`,
+        peopleCount: 1
+      };
     }
 
     // Se a regra exclui ortodontia, o faturamento base para atingir a meta e calcular o % é apenas o que não é Orto
@@ -1389,6 +1425,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     <option value="flat">Linear / Fixo em tudo (Ex: 1% de tudo)</option>
                     <option value="trigger">Gatilho Único (Ex: a partir de 70k)</option>
                     <option value="tiered">Escalonado por Faixas</option>
+                    <option value="dentists_commercial_reception">Dentistas 1% + Comercial Atual + Recepção 0.5%</option>
                   </select>
                 </div>
 
