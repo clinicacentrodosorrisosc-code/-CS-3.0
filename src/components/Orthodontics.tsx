@@ -408,6 +408,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
       if (sortConfig.direction !== 'none') {
           result.sort((a, b) => {
+              if (sortConfig.key === 'startDate') {
+                  const timeA = a.startDate ? new Date(a.startDate).getTime() : (sortConfig.direction === 'asc' ? Infinity : -Infinity);
+                  const timeB = b.startDate ? new Date(b.startDate).getTime() : (sortConfig.direction === 'asc' ? Infinity : -Infinity);
+                  return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
+              }
+              if (sortConfig.key === 'name') {
+                  return sortConfig.direction === 'asc' 
+                      ? (a.name || '').localeCompare(b.name || '') 
+                      : (b.name || '').localeCompare(a.name || '');
+              }
+              if (sortConfig.key === 'maintenanceValue') {
+                  const valA = a.maintenanceValue || 0;
+                  const valB = b.maintenanceValue || 0;
+                  return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+              }
               if (sortConfig.key === 'duration') {
                   const getDurationMs = (p: OrthoPatient) => {
                       if (!p.startDate) return 0;
@@ -946,7 +961,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       // Trajectory per ortho day
       const trajectoryIncrement = totalOrthoDaysInMonth > 0 ? activePatientsCount / totalOrthoDaysInMonth : 0;
       
-      const chartData = [];
+      const chartData: Array<{
+          day: number;
+          meta: number;
+          atual: number | null;
+          presentNames: string[];
+          absentNames: string[];
+          scheduledNames: string[];
+          note: string | null;
+      }> = [];
       let cumulativeMeta = 0;
       let cumulativeActual = 0;
       let lastDayWithData = 0;
@@ -1835,6 +1858,29 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="Papel">Papel</option>
                   <option value="Empty">Vazio / Sem Contrato</option>
               </select>
+              <select
+                value={sortConfig.direction === 'none' ? 'default' : `${sortConfig.key}-${sortConfig.direction}`}
+                onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'default') {
+                        setSortConfig({ key: 'duration', direction: 'none' });
+                    } else {
+                        const [key, dir] = val.split('-');
+                        setSortConfig({ key, direction: dir as 'asc' | 'desc' });
+                    }
+                }}
+                className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
+              >
+                  <option value="default">↕ Ordenação: Padrão</option>
+                  <option value="startDate-desc">📅 Início: Mais recentes primeiro</option>
+                  <option value="startDate-asc">📅 Início: Mais antigos primeiro</option>
+                  <option value="name-asc">🔤 Nome: A - Z</option>
+                  <option value="name-desc">🔤 Nome: Z - A</option>
+                  <option value="duration-desc">⏳ Duração: Maior primeiro</option>
+                  <option value="duration-asc">⏳ Duração: Menor primeiro</option>
+                  <option value="maintenanceValue-desc">💰 Mensalidade: Maior valor</option>
+                  <option value="maintenanceValue-asc">💰 Mensalidade: Menor valor</option>
+              </select>
           </div>
 
           {/* PROBLEM ALERTS SECTION */}
@@ -1868,11 +1914,31 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <table className="w-full text-left border-collapse">
                   <thead>
                       <tr className="border-b border-border bg-panel text-gray-400 text-xs uppercase tracking-wider font-medium">
-                          <th className="p-5 font-semibold">Paciente</th>
+                          <th 
+                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            onClick={() => toggleSort('name')}
+                          >
+                            <div className="flex items-center gap-1">
+                                Paciente
+                                <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'name' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                    {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                            </div>
+                          </th>
                           {selectedDate && <th className="p-5 font-semibold text-center">Presença ({selectedDate.toLocaleDateString()})</th>}
                           <th className="p-5 font-semibold">Aparelho</th>
                           <th className="p-5 font-semibold">Contrato</th>
-                          <th className="p-5 font-semibold">Início</th>
+                          <th 
+                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            onClick={() => toggleSort('startDate')}
+                          >
+                            <div className="flex items-center gap-1">
+                                Início
+                                <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'startDate' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                    {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                            </div>
+                          </th>
                           <th 
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('duration')}
@@ -1884,7 +1950,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
-                          <th className="p-5 font-semibold text-right">Mensalidade</th>
+                          <th 
+                            className="p-5 font-semibold text-right cursor-pointer hover:text-text transition-colors group/sort"
+                            onClick={() => toggleSort('maintenanceValue')}
+                          >
+                            <div className="flex items-center justify-end gap-1">
+                                Mensalidade
+                                <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'maintenanceValue' && sortConfig.direction !== 'none' ? 'opacity-100 text-purple-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                    {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                </span>
+                            </div>
+                          </th>
                           <th className="p-5 font-semibold text-center">Status</th>
                           <th className="p-5 font-semibold text-right">Ação</th>
                       </tr>
