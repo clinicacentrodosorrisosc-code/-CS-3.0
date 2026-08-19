@@ -785,44 +785,44 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </div>
       </div>
 
-      {/* SELETOR DE SUB-ABAS INTERNAS */}
-      <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto no-scrollbar">
+      {/* SUB-TABS NAVIGATION */}
+      <div className="flex items-center gap-2 border-b border-border/80 pb-4 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('simulator')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'simulator' 
-              ? 'bg-indigo-600 text-white shadow-md' 
-              : 'text-slate-400 hover:text-white hover:bg-panel'
+              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+              : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <Sliders className="w-3.5 h-3.5" /> Simulador Individual por Cenário
+          <Sliders className="w-3.5 h-3.5" /> Simulador Interativo
         </button>
         <button
           onClick={() => setActiveTab('comparison')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'comparison' 
-              ? 'bg-indigo-600 text-white shadow-md' 
-              : 'text-slate-400 hover:text-white hover:bg-panel'
+              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+              : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" /> Comparador de Cenários & Margens
         </button>
         <button
           onClick={() => setActiveTab('historical')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'historical' 
-              ? 'bg-indigo-600 text-white shadow-md' 
-              : 'text-slate-400 hover:text-white hover:bg-panel'
+              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+              : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <History className="w-3.5 h-3.5" /> Retro-Simulação (Meses Anteriores)
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'settings' 
-              ? 'bg-indigo-600 text-white shadow-md' 
-              : 'text-slate-400 hover:text-white hover:bg-panel'
+              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+              : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <Target className="w-3.5 h-3.5" /> Gerenciar Regras ({scenarios.length})
@@ -930,16 +930,16 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               const isBase = scenario.isCurrent;
 
               return (
-                <SpotlightCard 
-                  key={scenario.id}
-                  className={`glass-panel rounded-3xl p-6 border flex flex-col justify-between transition-all duration-300 relative shadow-xl ${
-                    isBase 
-                      ? 'border-blue-500/60 bg-blue-950/20 ring-1 ring-blue-500/30' 
-                      : 'border-border/80 bg-surface/90 hover:border-slate-500'
-                  }`}
-                  spotlightColor={scenario.color + '20'}
-                >
-                  <div className="flex flex-col gap-5">
+                <div key={scenario.id} className="bezel-outer h-full">
+                  <SpotlightCard 
+                    className={`bezel-inner rounded-[calc(1.25rem-0.375rem)] p-3.5 flex flex-col justify-between h-full transition-all duration-300 relative shadow-md ${
+                      isBase 
+                        ? 'border-sky-500/50 bg-sky-950/15 ring-1 ring-sky-500/20' 
+                        : 'border-white/[0.08] bg-surface/90 hover:border-slate-500/40'
+                    }`}
+                    spotlightColor={scenario.color + '15'}
+                  >
+                  <div className="flex flex-col gap-3.5">
                     {/* 1. CABEÇALHO DO CENÁRIO */}
                     <div className="flex justify-between items-start gap-2 border-b border-border/50 pb-4">
                       <div>
@@ -1286,9 +1286,10 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     )}
                   </div>
                 </SpotlightCard>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
           {/* GRÁFICO COMPARATIVO DE CURVAS */}
           <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">

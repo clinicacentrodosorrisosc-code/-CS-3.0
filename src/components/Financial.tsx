@@ -2263,37 +2263,37 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         {/* View Content */}
-        <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar">
 
-           <div className="w-full h-full space-y-10">
+           <div className="w-full h-full space-y-4">
                
-               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
                    <div>
-                       <h1 className="text-4xl md:text-5xl font-bold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-tight mb-2">
+                       <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
                           {visibleTabs.find(t => t.id === activeSubTab)?.label || 'Financeiro'}
                        </h1>
-                       <p className="text-slate-400 text-sm">Gestão de fluxo de caixa e auditoria.</p>
+                       <p className="text-slate-400 text-xs">Gestão de fluxo de caixa, DRE e auditoria.</p>
                    </div>
 
-                   <div className="flex flex-wrap gap-2 text-sm justify-end">
-                      <button onClick={() => openBulkModal('income')} className="px-4 py-2 glass-button text-indigo-400 rounded-xl font-bold flex items-center gap-2 transition-all"><List className="w-4 h-4" /> Massa Receita</button>
-                      <button onClick={() => openBulkModal('expense')} className="px-4 py-2 glass-button text-red-400 rounded-xl font-bold flex items-center gap-2 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
-                      <button onClick={() => openModal('income')} className="px-4 py-2 glass-button glass-button-primary text-text rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg"><Plus className="w-4 h-4" /> Receita</button>
-                      <button onClick={() => openModal('expense')} className="px-4 py-2 glass-button bg-red-500/20 border-red-500/30 text-text rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg"><Minus className="w-4 h-4" /> Despesa</button>
+                   <div className="flex flex-wrap gap-2 text-xs justify-end">
+                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-sky-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
+                      <button onClick={() => openBulkModal('expense')} className="px-3 py-1.5 glass-button text-rose-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
+                      <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
+                      <button onClick={() => openModal('expense')} className="px-3 py-1.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 rounded-xl font-bold flex items-center gap-1.5 transition-all"><Minus className="w-3.5 h-3.5" /> Despesa</button>
                    </div>
                </div>
 
                {/* SUB NAVIGATION BAR */}
-               <div className="flex items-center gap-1 overflow-x-auto pb-4 no-scrollbar border-b border-border">
+               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-border/80">
                     {visibleTabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveSubTab(tab.id as SubTab)}
                             className={`
-                                px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
+                                px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
                                 ${activeSubTab === tab.id 
-                                    ? 'bg-panel/80 text-text shadow-lg' 
-                                    : 'text-slate-500 opacity-60 hover:opacity-100'}
+                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+                                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
                             `}
                         >
                             {tab.label}
@@ -2301,13 +2301,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     ))}
                </div>
 
-               <div className="flex-1 w-full pb-20">
+               <div className="flex-1 w-full pb-10">
             {activeSubTab === 'overview' && (
-                <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-                    <div className="glass-panel p-4 rounded-xl border border-border flex flex-wrap gap-4 items-center justify-between relative z-20">
+                <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+                    <div className="glass-panel p-3 rounded-xl border border-border flex flex-wrap gap-3 items-center justify-between relative z-20">
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-400 uppercase font-bold">Período:</span>
-                            <div className="w-64">
+                            <div className="w-60">
                                 <DateRangePicker 
                                     value={{ start: overviewFilters.start, end: overviewFilters.end }} 
                                     onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))} 
@@ -2316,37 +2316,44 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     </div>
                     
-                    {overviewMetrics.errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-3 rounded-xl flex items-center gap-3 animate-pulse"><span className="material-symbols-outlined text-red-500">warning</span><span className="text-xs font-bold text-red-400 uppercase tracking-widest">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
+                    {overviewMetrics.errorCount > 0 && (<div className="bg-rose-500/15 border border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-400 text-sm">warning</span><span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <SpotlightCard className="glass-panel rounded-2xl p-6 bg-gradient-to-br from-emerald-900/20 to-slate-900/40" spotlightColor="rgba(52, 211, 153, 0.4)"><p className="text-emerald-400 text-xs font-bold uppercase mb-2">Receita Realizada</p><span className="text-3xl font-bold text-text">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span></SpotlightCard>
-                        <SpotlightCard className="glass-panel rounded-2xl p-6 bg-gradient-to-br from-cyan-900/20 to-slate-900/40" spotlightColor="rgba(34, 211, 238, 0.4)">
-                            <p className="text-cyan-400 text-xs font-bold uppercase mb-2">Ticket Médio Total</p>
-                            <span className="text-3xl font-bold text-text">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                        </SpotlightCard>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div className="bezel-outer">
+                          <SpotlightCard className="bezel-inner rounded-[calc(1.25rem-0.375rem)] p-4.5 bg-gradient-to-br from-emerald-950/20 to-slate-900/40 border-emerald-500/30" spotlightColor="rgba(52, 211, 153, 0.15)">
+                              <p className="text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
+                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-slate-50">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
+                          </SpotlightCard>
+                        </div>
+                        <div className="bezel-outer">
+                          <SpotlightCard className="bezel-inner rounded-[calc(1.25rem-0.375rem)] p-4.5 bg-gradient-to-br from-sky-950/20 to-slate-900/40 border-sky-500/30" spotlightColor="rgba(56, 189, 248, 0.15)">
+                              <p className="text-sky-400 text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
+                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-slate-50">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </SpotlightCard>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Ticket Médio por Categoria</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Ticket Médio por Categoria</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                             {overviewMetrics.categoryTicketAverage.map(cat => (
-                                <SpotlightCard key={cat.name} className="glass-panel rounded-2xl p-4 bg-panel/40 border border-border flex flex-col gap-1" spotlightColor="rgba(34, 211, 238, 0.2)">
+                                <SpotlightCard key={cat.name} className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5" spotlightColor="rgba(56, 189, 248, 0.15)">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase truncate" title={cat.name}>{cat.name}</p>
-                                    <span className="text-lg font-black text-text">R$ {cat.average.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
+                                    <span className="text-base font-bold font-mono text-text">R$ {cat.average.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
                                 </SpotlightCard>
                             ))}
                         </div>
                     </div>
 
                     {/* GRÁFICOS FINANCEIROS UI REFINADA */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                         {[
                             { title: 'Por Categoria', data: overviewMetrics.categoryData, activeIndex: activeCategoryIndex, setActive: setActiveCategoryIndex },
                             { title: 'Por Procedimento', data: overviewMetrics.procedureData, activeIndex: activeProcedureIndex, setActive: setActiveProcedureIndex },
                             { title: 'Por Pagamento', data: overviewMetrics.paymentData, activeIndex: activePaymentIndex, setActive: setActivePaymentIndex }
                         ].map((chart, idx) => (
-                            <div key={idx} className="glass-panel rounded-2xl p-6 border border-border flex flex-col min-h-[420px] transition-all hover:border-border">
-                                <h3 className="text-sm font-bold text-text mb-6 uppercase tracking-widest text-center">{chart.title}</h3>
+                            <div key={idx} className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[220px]">
+                                <h3 className="text-xs font-bold text-text mb-3 uppercase tracking-wider text-center">{chart.title}</h3>
                                 <div className="flex-1 w-full relative">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
@@ -2354,10 +2361,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 data={chart.data}
                                                 cx="50%"
                                                 cy="45%"
-                                                innerRadius="60%"
-                                                outerRadius="80%"
-                                                paddingAngle={5}
-                                                cornerRadius={6}
+                                                innerRadius="55%"
+                                                outerRadius="75%"
+                                                paddingAngle={4}
+                                                cornerRadius={4}
                                                 dataKey="value"
                                                 stroke="none"
                                                 onMouseEnter={(_, index) => chart.setActive(index)}
@@ -2375,10 +2382,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                         const entry = chart.data[chart.activeIndex];
                                                         return (
                                                             <g>
-                                                                <text x={cx} y={cy - 5} textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-sm font-display">
+                                                                <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-xs font-mono">
                                                                     R$ {entry.value?.toLocaleString('pt-BR', { notation: "compact", maximumFractionDigits: 1 })}
                                                                 </text>
-                                                                <text x={cx} y={cy + 15} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[9px] font-bold uppercase tracking-widest">
+                                                                <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[8px] font-bold uppercase tracking-wider">
                                                                     {entry.name?.slice(0, 12)}
                                                                 </text>
                                                             </g>
@@ -2391,8 +2398,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 align="center"
                                                 iconType="circle" 
                                                 layout="horizontal"
-                                                formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase ml-1">{value}</span>}
-                                                wrapperStyle={{ paddingTop: '20px', bottom: -10 }}
+                                                formatter={(value) => <span className="text-[9px] text-slate-400 font-bold uppercase ml-1">{value}</span>}
+                                                wrapperStyle={{ paddingTop: '10px', bottom: -5 }}
                                             />
                                         </PieChart>
                                     </ResponsiveContainer>
@@ -2403,118 +2410,118 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
 
                     {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
-                    <div className="glass-panel rounded-2xl p-6 border border-border flex flex-col gap-6 mt-2">
+                    <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-3">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                             <div>
-                                <h3 className="text-sm font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
+                                <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
+                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
                                 </h3>
-                                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Análise de tendência para tomada de decisão estratégica</p>
+                                <p className="text-[9px] text-slate-400 uppercase tracking-wider">Análise de tendência comercial</p>
                             </div>
                         </div>
                         
-                        <div className="h-[320px] w-full">
+                        <div className="h-[210px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 25, right: 30, bottom: 30, left: 20 }}>
+                                <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 15, right: 20, bottom: 20, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                     <XAxis 
                                         dataKey="month" 
                                         stroke="#94a3b8" 
-                                        fontSize={10} 
-                                        tickMargin={12} 
+                                        fontSize={9} 
+                                        tickMargin={8} 
                                     />
                                     <YAxis 
                                         stroke="#94a3b8" 
-                                        fontSize={10} 
+                                        fontSize={9} 
                                         tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                                     />
                                     <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                                         formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita Realizada' : 'Meta']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
+                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
                                     />
-                                    <Legend verticalAlign="top" height={36} formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita Realizada' : 'Meta Mensal'}</span>} />
+                                    <Legend verticalAlign="top" height={28} formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita Realizada' : 'Meta Mensal'}</span>} />
                                     <Line 
                                         type="monotone" 
                                         dataKey="revenue" 
                                         name="revenue" 
                                         stroke="#10b981" 
-                                        strokeWidth={3} 
-                                        dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }} 
-                                        activeDot={{ r: 8, strokeWidth: 2, stroke: '#fff' }}
+                                        strokeWidth={2.5} 
+                                        dot={{ fill: '#10b981', r: 3.5, strokeWidth: 1.5, stroke: '#fff' }} 
+                                        activeDot={{ r: 6, strokeWidth: 1.5, stroke: '#fff' }}
                                     >
-                                        <LabelList dataKey="revenueLabel" position="top" fill="#10b981" fontSize={11} offset={12} />
+                                        <LabelList dataKey="revenueLabel" position="top" fill="#10b981" fontSize={9} offset={8} />
                                     </Line>
-                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
                     {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
-                    <div className="glass-panel rounded-2xl p-6 border border-border flex flex-col gap-6 mt-2">
-                        <h3 className="text-sm font-bold text-text uppercase tracking-widest">Visualização Mensal (Últimos 12 Meses)</h3>
+                    <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
+                        <h3 className="text-xs font-bold text-text uppercase tracking-wider">Visualização Mensal (Últimos 12 Meses)</h3>
                         
-                        <div className="h-[350px] w-full">
+                        <div className="h-[210px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={monthlyRevenueData} margin={{ top: 30, right: 30, bottom: 60, left: 20 }}>
+                                <ComposedChart data={monthlyRevenueData} margin={{ top: 15, right: 20, bottom: 40, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                     <XAxis 
                                         dataKey="month" 
                                         stroke="#94a3b8" 
-                                        fontSize={10} 
-                                        tickMargin={15} 
-                                        angle={-45}
-                                        textAnchor="end"
-                                    />
-                                    <YAxis 
-                                        stroke="#94a3b8" 
-                                        fontSize={10} 
-                                        tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-                                    />
-                                    <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                                        formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita' : 'Meta']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
-                                    />
-                                    <Legend verticalAlign="top" height={36} formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita' : 'Meta Mensal'}</span>} />
-                                    <Bar dataKey="revenue" name="revenue" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={50}>
-                                        <LabelList dataKey="revenueLabel" position="top" fill="#94a3b8" fontSize={10} offset={12} />
-                                    </Bar>
-                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        <div className="h-[200px] w-full mt-4 border-t border-border pt-6">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-4">Variance (%)</h4>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={monthlyRevenueData} margin={{ top: 20, right: 20, bottom: 40, left: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <ReferenceLine y={0} stroke="#94a3b8" />
-                                    <XAxis 
-                                        dataKey="month" 
-                                        stroke="#94a3b8" 
-                                        fontSize={10} 
+                                        fontSize={9} 
                                         tickMargin={10} 
                                         angle={-45}
                                         textAnchor="end"
                                     />
                                     <YAxis 
                                         stroke="#94a3b8" 
-                                        fontSize={10} 
+                                        fontSize={9} 
+                                        tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                                    />
+                                    <RechartsTooltip 
+                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                                        formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita' : 'Meta']}
+                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
+                                    />
+                                    <Legend verticalAlign="top" height={28} formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita' : 'Meta Mensal'}</span>} />
+                                    <Bar dataKey="revenue" name="revenue" fill="#0ea5e9" radius={[3, 3, 0, 0]} maxBarSize={36}>
+                                        <LabelList dataKey="revenueLabel" position="top" fill="#94a3b8" fontSize={8} offset={6} />
+                                    </Bar>
+                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        <div className="h-[140px] w-full border-t border-border pt-3">
+                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Variance (%)</h4>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthlyRevenueData} margin={{ top: 15, right: 15, bottom: 25, left: 10 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <ReferenceLine y={0} stroke="#94a3b8" />
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
+                                        tickMargin={8} 
+                                        angle={-45}
+                                        textAnchor="end"
+                                    />
+                                    <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
                                         tickFormatter={(value) => `${value}%`}
                                     />
                                     <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                                         formatter={(value: number) => [`${value}%`, 'Variação']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
+                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
                                     />
-                                    <Bar dataKey="variance" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                                    <Bar dataKey="variance" radius={[3, 3, 0, 0]} maxBarSize={36}>
                                         {monthlyRevenueData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill="#93c5fd" opacity={entry.variance >= 0 ? 0.8 : 0.5} />
+                                            <Cell key={`cell-${index}`} fill="#38bdf8" opacity={entry.variance >= 0 ? 0.8 : 0.4} />
                                         ))}
-                                        <LabelList dataKey="variance" position="top" fill="#94a3b8" fontSize={10} formatter={(val: number) => `${val}%`} />
+                                        <LabelList dataKey="variance" position="top" fill="#94a3b8" fontSize={8} formatter={(val: number) => `${val}%`} />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
