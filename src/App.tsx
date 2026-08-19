@@ -18,6 +18,7 @@ import { supabase } from './supabaseClient';
 import { Toaster, toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatWidget } from './components/Chat/ChatWidget';
+import { AppHeader } from './components/Layout/AppHeader';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
 
@@ -444,7 +445,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-transparent overflow-hidden transition-colors duration-300">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#07090E] light:bg-[#F8FAFC] text-slate-100 light:text-slate-900 overflow-hidden transition-colors duration-200">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
@@ -460,7 +461,20 @@ const App: React.FC = () => {
         openNotifications={() => setIsNotificationsOpen(true)}
       />
       
-      <main className="flex-1 flex flex-col min-w-0 h-full relative glass-panel overflow-hidden transition-colors duration-300">
+      <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-transparent">
+        <AppHeader
+          activeTab={activeTab}
+          requestedSubTab={requestedSubTab}
+          userRole={userRole}
+          userEmail={session.user.email}
+          onlineUsers={onlineUsers}
+          notificationCount={notificationCount}
+          openNotifications={() => setIsNotificationsOpen(true)}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          openPermissions={() => setIsPermissionsOpen(true)}
+        />
+
         <NotificationCenter 
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
@@ -471,74 +485,75 @@ const App: React.FC = () => {
           }}
         />
 
-        <AnimatePresence mode="wait">
-          {activeTab === Tab.DASHBOARD && (
-            <TabContainer key="dashboard">
-              <Dashboard userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
-            </TabContainer>
-          )}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            {activeTab === Tab.DASHBOARD && (
+              <TabContainer key="dashboard">
+                <Dashboard userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.FINANCIAL && (
-            <TabContainer key="financial">
-              <Financial userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.FINANCIAL && (
+              <TabContainer key="financial">
+                <Financial userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.ORTHODONTICS && (
-            <TabContainer key="orthodontics">
-              <Orthodontics userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.ORTHODONTICS && (
+              <TabContainer key="orthodontics">
+                <Orthodontics userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.LABWORK && (
-            <TabContainer key="labwork">
-              <LabWork userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} userEmail={session.user.email} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.LABWORK && (
+              <TabContainer key="labwork">
+                <LabWork userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} userEmail={session.user.email} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.MEETINGS && (
-            <TabContainer key="meetings">
-              <Meetings requestedSubTab={requestedSubTab} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.MEETINGS && (
+              <TabContainer key="meetings">
+                <Meetings requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.SUPPORT && (
-            <TabContainer key="support">
-              <Support userRole={userRole} allowedSubTabs={allowedSubTabs} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.SUPPORT && (
+              <TabContainer key="support">
+                <Support userRole={userRole} allowedSubTabs={allowedSubTabs} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.PASSWORDS && (
-            <TabContainer key="passwords">
-              <Passwords 
-                requestedSubTab={requestedSubTab} 
-                userRole={userRole} 
-                userEmail={session?.user?.email} 
-              />
-            </TabContainer>
-          )}
+            {activeTab === Tab.PASSWORDS && (
+              <TabContainer key="passwords">
+                <Passwords 
+                  requestedSubTab={requestedSubTab} 
+                  userRole={userRole} 
+                  userEmail={session?.user?.email} 
+                />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.RESPONSIBILITIES && (
-            <TabContainer key="responsibilities">
-              <Responsibilities requestedSubTab={requestedSubTab} />
-            </TabContainer>
-          )}
+            {activeTab === Tab.RESPONSIBILITIES && (
+              <TabContainer key="responsibilities">
+                <Responsibilities requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
 
-          {activeTab === Tab.BIBLIOTECA && (
-            <TabContainer key="biblioteca">
-              <Biblioteca />
-            </TabContainer>
-          )}
-        </AnimatePresence>
+            {activeTab === Tab.BIBLIOTECA && (
+              <TabContainer key="biblioteca">
+                <Biblioteca />
+              </TabContainer>
+            )}
+          </AnimatePresence>
+        </div>
 
-        {/* Inbox/CRM Tab removed */}
-
-        {/* FAB removed by user request */}
+        {/* Chat Widget FAB */}
         <ChatWidget currentUserId={session.user.id} currentUserName={session.user.email} />
         
+        {/* Permissions Modal */}
         <PermissionsModal isOpen={isPermissionsOpen} onClose={() => setIsPermissionsOpen(false)} onlineUsers={onlineUsers} />
-        
       </main>
+
       <Toaster 
         position="bottom-right" 
         richColors 

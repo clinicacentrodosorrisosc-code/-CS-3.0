@@ -42,14 +42,21 @@ async function startServer() {
   const supabaseProxyCache = new Map<string, CacheEntry>();
 
   // Initialize AI
-  const ai = new GoogleGenAI({ 
-    apiKey: process.env.GEMINI_API_KEY || "",
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
+  let ai: GoogleGenAI | null = null;
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      ai = new GoogleGenAI({ 
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+    } catch (e) {
+      console.warn(">>> [SERVER] Gemini AI initialization skipped:", e);
     }
-  });
+  }
 
   // Supabase Proxy route to avoid "Failed to fetch" browser errors (CORS, CSP, Tracking/Ad blockers)
   app.all("/api/supabase-proxy", async (req, res) => {
