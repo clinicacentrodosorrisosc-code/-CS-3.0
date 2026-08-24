@@ -475,151 +475,145 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
     return (
       <div className="flex flex-col gap-3.5 animate-in fade-in pb-6">
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* KPI 1: Faturamento Total */}
-                <div className="bezel-outer">
-                  <div className="bezel-inner p-4.5 flex flex-col justify-between h-full relative overflow-hidden">
-                    <div className="flex justify-between items-start mb-2.5">
-                        <div>
-                            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">Faturamento Total</p>
-                            <h3 className="text-2xl lg:text-3xl font-black text-slate-50 light:text-slate-900 tabular-nums mt-1 tracking-tight">{formatCurrency(totalRev)}</h3>
+                <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-2.5 flex-wrap gap-2">
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-slate-400 truncate">Faturamento Total</p>
+                            <h3 className="text-2xl lg:text-3xl font-black text-[#181B26] dark:text-white tabular-nums mt-1 tracking-tight truncate">{formatCurrency(totalRev)}</h3>
                         </div>
-                        <div className="text-right flex flex-col items-end gap-1">
+                        <div className="text-right flex flex-col items-end gap-1 min-w-0 max-w-[50%]">
                             {Object.entries(teamRevenues).map(([team, amount]) => (
-                                <div key={team} className="flex items-center gap-1.5">
-                                    <span className="text-[10px] font-bold uppercase text-slate-400">{team}</span>
-                                    <span className="text-[10px] font-bold text-slate-100 tabular-nums">{formatCurrency(amount)}</span>
+                                <div key={team} className="flex items-center gap-1.5 min-w-0 max-w-full">
+                                    <span className="text-[10px] font-bold uppercase text-[#94A3B8] dark:text-slate-400 truncate">{team}</span>
+                                    <span className="text-[10px] font-bold text-[#181B26] dark:text-slate-100 tabular-nums shrink-0">{formatCurrency(amount)}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div className="mt-1.5 w-full bg-white/[0.08] light:bg-black/[0.08] h-2 rounded-full overflow-hidden p-[1px]">
-                        <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-500" style={{ width: `${Math.min(perc, 100)}%` }}></div>
+                    <div className="mt-2 w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-2 rounded-full overflow-hidden p-[1px]">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[#5347CE] via-[#887CFD] to-[#16C8C7] transition-all duration-500" style={{ width: `${Math.min(perc, 100)}%` }}></div>
                     </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-[11px] text-slate-300 font-semibold">Meta: {formatCurrency(Number(currentGoals.revenue))}</span>
-                      <span className={`text-[10px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full ${perc >= 100 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}`}>
-                        {perc.toFixed(1)}% da meta
+                    <div className="flex justify-between items-center mt-3 flex-wrap gap-1 min-w-0">
+                      <span className="text-[11px] text-[#64748B] dark:text-slate-400 font-semibold truncate">Meta: {formatCurrency(Number(currentGoals.revenue))}</span>
+                      <span className={`text-[10px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full shrink-0 ${perc >= 100 ? 'bg-[#E8FAF8] text-[#0D9488] border border-[#CCF4F0]' : 'bg-[#FEECEF] text-[#E11D48] border border-[#FCD4DC]'}`}>
+                        {perc >= 100 ? `+${perc.toFixed(1)}% ↗` : `${perc.toFixed(1)}% ↘`}
                       </span>
                     </div>
-                  </div>
                 </div>
 
                 {/* KPI 2: Falta para Meta */}
-                <div className="bezel-outer">
-                  <div className="bezel-inner p-4.5 flex flex-col justify-between h-full">
+                <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full">
                     <div>
-                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mb-1">Falta para a Meta</p>
-                      <h3 className="text-2xl lg:text-3xl font-black text-slate-50 light:text-slate-900 tabular-nums tracking-tight">{formatCurrency(neededRevenueReal)}</h3>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] dark:text-slate-400 mb-1">Falta para a Meta</p>
+                      <h3 className="text-2xl lg:text-3xl font-black text-[#181B26] dark:text-white tabular-nums tracking-tight">{formatCurrency(neededRevenueReal)}</h3>
                     </div>
-                    <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/[0.08] text-[11px] text-slate-300">
+                    <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#EAEFF6] dark:border-white/[0.08] text-[11px] text-[#64748B] dark:text-slate-400">
                         <span>Dias úteis totais</span>
-                        <strong className="text-slate-100 font-mono font-extrabold">{getWorkDaysInRange(1, daysInMonthCount)} dias</strong>
+                        <strong className="text-[#181B26] dark:text-slate-100 font-mono font-extrabold">{getWorkDaysInRange(1, daysInMonthCount)} dias</strong>
                     </div>
-                  </div>
                 </div>
 
                 {/* KPI 3: Meta Diária Necessária */}
-                <div className="bezel-outer">
-                  <div className="bezel-inner p-4.5 flex flex-col justify-between h-full">
+                <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full">
                     <div>
-                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-sky-400 mb-1">Meta Diária Necessária</p>
-                      <h3 className="text-2xl lg:text-3xl font-black text-sky-400 tabular-nums tracking-tight">{formatCurrency(dailyMetaRequiredLocked)}</h3>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#5347CE] dark:text-[#887CFD] mb-1">Meta Diária Necessária</p>
+                      <h3 className="text-2xl lg:text-3xl font-black text-[#5347CE] dark:text-[#887CFD] tabular-nums tracking-tight">{formatCurrency(dailyMetaRequiredLocked)}</h3>
                     </div>
-                    <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/[0.08] text-[11px] text-slate-300">
+                    <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#EAEFF6] dark:border-white/[0.08] text-[11px] text-[#64748B] dark:text-slate-400">
                         <span>Restam na operação</span>
-                        <strong className="text-sky-300 font-mono font-extrabold">{remainingWorkDays} dias úteis</strong>
+                        <strong className="text-[#5347CE] dark:text-[#887CFD] font-mono font-extrabold">{remainingWorkDays} dias úteis</strong>
                     </div>
-                  </div>
                 </div>
           </section>
 
-          <section className="glass-panel p-4 rounded-xl border border-border bg-panel/30">
+          <section className="bg-white dark:bg-[#141A29] p-5 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                   <div>
-                      <h3 className="text-sm font-bold text-text">Tendência de Vendas</h3>
-                      <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">
+                      <h3 className="text-sm font-bold text-[#181B26] dark:text-white">Tendência de Vendas</h3>
+                      <p className="text-[10px] text-[#64748B] dark:text-slate-400 font-bold uppercase tracking-wider">
                           Desempenho ({trendViewMode === 'diaria' ? 'Visão Diária' : trendViewMode === 'mensal' ? 'Visão Mensal (Anual)' : 'Período Personalizado'})
                       </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                      <div className="flex bg-surface p-0.5 rounded-lg border border-border">
+                      <div className="flex bg-[#F4F6FB] dark:bg-white/[0.04] p-0.5 rounded-xl border border-[#EAEFF6] dark:border-white/[0.08]">
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('diaria')}
-                              className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-sky-600/30 text-sky-300 border border-sky-500/40 shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-[#5347CE] text-white shadow-sm' : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white'}`}
                           >
                               Diária
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('mensal')}
-                              className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-sky-600/30 text-sky-300 border border-sky-500/40 shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-[#5347CE] text-white shadow-sm' : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white'}`}
                           >
                               Mensal
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('personalizado')}
-                              className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-sky-600/30 text-sky-300 border border-sky-500/40 shadow-sm' : 'text-slate-400 hover:text-text'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-[#5347CE] text-white shadow-sm' : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white'}`}
                           >
                               Personalizado
                           </button>
                       </div>
 
                       {trendViewMode === 'personalizado' && (
-                          <div className="flex items-center gap-1.5 bg-surface p-1 rounded-lg border border-border text-[11px]">
+                          <div className="flex items-center gap-1.5 bg-white dark:bg-white/[0.04] p-1 rounded-xl border border-[#EAEFF6] dark:border-white/[0.08] text-[11px]">
                               <input
                                   type="date"
                                   value={customStartDate}
                                   onChange={e => setCustomStartDate(e.target.value)}
-                                  className="bg-panel border border-border rounded px-2 py-0.5 text-text text-xs focus:outline-none focus:border-sky-500"
+                                  className="bg-[#F4F6FB] dark:bg-white/[0.06] border border-[#EAEFF6] dark:border-white/10 rounded-lg px-2 py-0.5 text-[#181B26] dark:text-white text-xs focus:outline-none focus:border-[#5347CE]"
                               />
-                              <span className="text-slate-400 text-xs">até</span>
+                              <span className="text-[#94A3B8] text-xs">até</span>
                               <input
                                   type="date"
                                   value={customEndDate}
                                   onChange={e => setCustomEndDate(e.target.value)}
-                                  className="bg-panel border border-border rounded px-2 py-0.5 text-text text-xs focus:outline-none focus:border-sky-500"
+                                  className="bg-[#F4F6FB] dark:bg-white/[0.06] border border-[#EAEFF6] dark:border-white/10 rounded-lg px-2 py-0.5 text-[#181B26] dark:text-white text-xs focus:outline-none focus:border-[#5347CE]"
                               />
                           </div>
                       )}
 
                       <div className="flex gap-3">
                           <div className="flex items-center gap-1.5">
-                              <div className="size-2.5 rounded-sm bg-sky-500"></div>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">Vendas</span>
+                              <div className="size-2.5 rounded-full bg-[#5347CE]"></div>
+                              <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase">Vendas</span>
                           </div>
                           {trendViewMode === 'diaria' && (
                               <div className="flex items-center gap-1.5">
-                                  <div className="size-2.5 rounded-sm bg-indigo-400"></div>
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase">Média Móvel (9p)</span>
+                                  <div className="size-2.5 rounded-full bg-[#16C8C7]"></div>
+                                  <span className="text-[10px] font-bold text-[#64748B] dark:text-slate-400 uppercase">Média Móvel</span>
                               </div>
                           )}
                       </div>
                   </div>
               </div>
-              <div className="h-[210px] w-full">
+              <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={activeTrendData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                           <defs>
-                              <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25}/>
-                                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                              <linearGradient id="colorVendasNexus" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#5347CE" stopOpacity={0.25}/>
+                                  <stop offset="95%" stopColor="#5347CE" stopOpacity={0}/>
                               </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                           <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9, fontWeight: 'bold' }} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} tickFormatter={(val) => `R$${val >= 1000 ? (val/1000).toFixed(0) + 'k' : val}`} />
                           <RechartsTooltip 
-                              contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '11px' }}
+                              contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text)', fontSize: '11px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}
                               itemStyle={{ color: 'var(--text)' }}
                               formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                           />
-                          <Area type="monotone" dataKey="vendas" fillOpacity={1} fill="url(#colorVendas)" stroke="none" />
-                          <Line type="monotone" dataKey="vendas" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 2.5, fill: '#0ea5e9', strokeWidth: 0 }} activeDot={{ r: 4.5 }} />
+                          <Area type="monotone" dataKey="vendas" fillOpacity={1} fill="url(#colorVendasNexus)" stroke="none" />
+                          <Line type="monotone" dataKey="vendas" stroke="#5347CE" strokeWidth={2.5} dot={{ r: 2.5, fill: '#5347CE', strokeWidth: 0 }} activeDot={{ r: 5 }} />
                           {trendViewMode === 'diaria' && (
-                              <Line type="monotone" dataKey="mediaMovel" stroke="#818cf8" strokeWidth={1.5} dot={false} strokeDasharray="4 4" />
+                              <Line type="monotone" dataKey="mediaMovel" stroke="#16C8C7" strokeWidth={2} dot={false} strokeDasharray="4 4" />
                           )}
                       </ComposedChart>
                   </ResponsiveContainer>
@@ -633,22 +627,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
               currentMonth={currentMonth}
           />
 
-          <section className="glass-panel rounded-xl border border-border overflow-hidden flex flex-col shadow-lg transition-colors duration-300">
-                <div className="p-3 bg-panel/70 border-b border-border flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-text flex items-center gap-2">
-                        <Calendar className="text-sky-400 w-4 h-4" />
+          <section className="bg-white dark:bg-[#141A29] rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] overflow-hidden flex flex-col shadow-sm transition-colors duration-300">
+                <div className="p-3.5 bg-[#F8F9FD] dark:bg-white/[0.02] border-b border-[#EAEFF6] dark:border-white/[0.08] flex justify-between items-center">
+                    <h3 className="text-xs font-bold text-[#181B26] dark:text-slate-100 flex items-center gap-2">
+                        <Calendar className="text-[#5347CE] dark:text-[#887CFD] w-4 h-4" />
                         Calendário de Faturamento: Realizado vs Meta
                     </h3>
                 </div>
                 <div className="grid grid-cols-7">
-                    {WEEKDAYS.map(day => <div key={day} className="p-2 text-center text-[9px] font-bold uppercase text-slate-400 border-b border-border bg-panel/30">{day}</div>)}
+                    {WEEKDAYS.map(day => <div key={day} className="p-2 text-center text-[9px] font-extrabold uppercase text-[#94A3B8] border-b border-[#EAEFF6] dark:border-white/[0.08] bg-[#F8F9FD]/50 dark:bg-white/[0.02]">{day}</div>)}
                     {Array.from({ length: 35 }).map((_, idx) => {
                         const daysInMonthCountCell = new Date(currentYear, currentMonth + 1, 0).getDate();
                         const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
                         const day = idx - firstDayOfMonth + 1;
                         return (
-                            <div key={idx} className="min-h-[75px] border-b border-border border-r border-border last:border-r-0">
-                                {(day > 0 && day <= daysInMonthCountCell) ? renderFinancialCalendarCell(day) : <div className="w-full h-full bg-panel/30"></div>}
+                            <div key={idx} className="min-h-[75px] border-b border-[#EAEFF6] dark:border-white/[0.08] border-r border-[#EAEFF6] dark:border-white/[0.08] last:border-r-0">
+                                {(day > 0 && day <= daysInMonthCountCell) ? renderFinancialCalendarCell(day) : <div className="w-full h-full bg-[#F8F9FD]/30 dark:bg-white/[0.01]"></div>}
                             </div>
                         );
                     })}

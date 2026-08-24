@@ -23,6 +23,10 @@ interface OrthoPatient {
   aditivoMsgSentAt?: string;
   aditivoSigned?: boolean;
   aditivoSignedAt?: string;
+  dueDateChanged?: boolean;
+  dueDateChangedAt?: string;
+  dueDay?: number | string;
+  dueDateNotes?: string;
   startDate: string;
   endDate?: string;
   estimatedDuration: number; // months
@@ -132,6 +136,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number } | null>(null);
   const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
 
+  const isAdmin = userRole === 'admin';
+
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Finished' | 'Suspended'>('All');
@@ -139,6 +145,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
   const [aditivoMsgFilter, setAditivoMsgFilter] = useState<'All' | 'Sent' | 'Pending'>('All');
   const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending'>('All');
+  const [dueDateFilter, setDueDateFilter] = useState<'All' | 'Changed' | 'Standard'>('All');
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
@@ -324,6 +331,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   aditivoMsgSentAt: att.__aditivo_msg_sent_at || undefined,
                   aditivoSigned: Boolean(att.__aditivo_signed || att.__aditivo_status === 'signed_digital' || att.__aditivo_status === 'signed'),
                   aditivoSignedAt: att.__aditivo_signed_at || undefined,
+                  dueDateChanged: Boolean(att.__due_date_changed || p.due_date_changed),
+                  dueDateChangedAt: att.__due_date_changed_at || p.due_date_changed_at || undefined,
+                  dueDay: att.__due_day ?? p.due_day ?? undefined,
+                  dueDateNotes: att.__due_date_notes || p.due_date_notes || undefined,
                   startDate: p.start_date,
                   endDate: p.end_date,
                   estimatedDuration: p.estimated_duration,
@@ -435,6 +446,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           }
       }
 
+      if (isAdmin && dueDateFilter !== 'All') {
+          if (dueDateFilter === 'Changed') {
+              result = result.filter(p => p.dueDateChanged);
+          } else if (dueDateFilter === 'Standard') {
+              result = result.filter(p => !p.dueDateChanged);
+          }
+      }
+
       if (sortConfig.direction !== 'none') {
           result.sort((a, b) => {
               if (sortConfig.key === 'startDate') {
@@ -456,6 +475,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   const isSignedA = a.aditivoSigned ? 1 : 0;
                   const isSignedB = b.aditivoSigned ? 1 : 0;
                   return sortConfig.direction === 'asc' ? isSignedA - isSignedB : isSignedB - isSignedA;
+              }
+              if (sortConfig.key === 'dueDateChanged') {
+                  const valA = a.dueDateChanged ? 1 : 0;
+                  const valB = b.dueDateChanged ? 1 : 0;
+                  return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
               }
               if (sortConfig.key === 'maintenanceValue') {
                   const valA = a.maintenanceValue || 0;
@@ -480,7 +504,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
       
       return result;
-  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, aditivoMsgFilter, aditivoStatusFilter, sortConfig]);
+  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, aditivoMsgFilter, aditivoStatusFilter, dueDateFilter, sortConfig, isAdmin]);
 
   // --- ACTIONS ---
 
@@ -568,11 +592,53 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
   };
 
+  const handleToggleDueDateChanged = async (patientId: string) => {
+      if (!isAdmin) return;
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+
+      const newStatus = !patient.dueDateChanged;
+      const nowStr = new Date().toISOString().split('T')[0];
+      const updatedAttendance = {
+          ...patient.attendance,
+          __due_date_changed: newStatus,
+          __due_date_changed_at: newStatus ? nowStr : null
+      };
+
+      // Optimistic update
+      setPatients(prev => prev.map(p => p.id === patientId ? {
+          ...p,
+          dueDateChanged: newStatus,
+          dueDateChangedAt: newStatus ? nowStr : undefined,
+          attendance: updatedAttendance
+      } : p));
+
+      try {
+          const { error } = await supabase.from('ortho_patients').update({
+              attendance: updatedAttendance
+          }).eq('id', patientId);
+
+          if (!error) {
+              notifyDataChange('ortho_patients');
+              toast.success(newStatus ? 'Vencimento marcado como alterado!' : 'Vencimento retornado ao padrão!');
+          } else {
+              console.error("Error updating due date status", error);
+              toast.error('Erro ao atualizar vencimento: ' + error.message);
+              await loadData();
+          }
+      } catch (err: any) {
+          console.error("Critical error updating due date status", err);
+          toast.error('Erro crítico ao atualizar vencimento.');
+          await loadData();
+      }
+  };
+
   const handleSaveEditedPatient = async () => {
       if (!editingPatient) return;
       try {
           const nowStr = new Date().toISOString().split('T')[0];
           const isSigned = Boolean(editingPatient.aditivoSigned);
+          const isDueDateChanged = Boolean(editingPatient.dueDateChanged);
           const updatedAttendance = {
               ...editingPatient.attendance,
               __aditivo_msg_sent: Boolean(editingPatient.aditivoMsgSent),
@@ -580,7 +646,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               __aditivo_status: isSigned ? 'signed_digital' : 'pending',
               __aditivo_signed: isSigned,
               __aditivo_type: isSigned ? 'Digital' : null,
-              __aditivo_signed_at: isSigned ? (editingPatient.aditivoSignedAt || nowStr) : null
+              __aditivo_signed_at: isSigned ? (editingPatient.aditivoSignedAt || nowStr) : null,
+              __due_date_changed: isDueDateChanged,
+              __due_date_changed_at: isDueDateChanged ? (editingPatient.dueDateChangedAt || nowStr) : null,
+              __due_day: editingPatient.dueDay || null,
+              __due_date_notes: editingPatient.dueDateNotes || null
           };
 
           const { error } = await supabase.from('ortho_patients').update({
@@ -1952,9 +2022,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const msgPendingCount = totalActive - msgSentCount;
       const signedCount = active.filter(p => p.aditivoSigned).length;
       const pendingSignedCount = totalActive - signedCount;
+      const changedDueDateCount = active.filter(p => p.dueDateChanged).length;
       
       const msgSentPct = totalActive > 0 ? Math.round((msgSentCount / totalActive) * 100) : 0;
       const signedPct = totalActive > 0 ? Math.round((signedCount / totalActive) * 100) : 0;
+      const changedDueDatePct = totalActive > 0 ? Math.round((changedDueDateCount / totalActive) * 100) : 0;
 
       return {
           totalActive,
@@ -1962,15 +2034,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           msgPendingCount,
           signedCount,
           pendingSignedCount,
+          changedDueDateCount,
           msgSentPct,
-          signedPct
+          signedPct,
+          changedDueDatePct
       };
   }, [patients]);
 
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
               {/* Card 1: Total Pacientes Ativos */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
@@ -2033,6 +2107,29 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <span className="text-xs text-slate-400">({aditivoStats.msgPendingCount} sem msg)</span>
                   </div>
               </div>
+
+              {/* Card 5: Vencimentos Alterados (Visível Somente para Administrador) */}
+              {isAdmin && (
+                  <div className="glass-panel p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between shadow-lg shadow-amber-950/10">
+                      <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Vencimento Alterado</span>
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase">Admin</span>
+                          </div>
+                          <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">edit_calendar</span>
+                      </div>
+                      <div className="mt-2 flex items-baseline justify-between">
+                          <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-black text-amber-400 font-mono">{aditivoStats.changedDueDateCount}</span>
+                              <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
+                          </div>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">{aditivoStats.changedDueDatePct}%</span>
+                      </div>
+                      <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
+                          <div className="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.changedDueDatePct}%` }} />
+                      </div>
+                  </div>
+              )}
           </div>
 
           {/* Filters */}
@@ -2092,6 +2189,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="Signed">✍️ Assinado (Digital)</option>
                   <option value="Pending">⏳ Pendente</option>
               </select>
+
+              {/* Filtro de Vencimento (Visível Apenas para Administrador) */}
+              {isAdmin && (
+                  <select 
+                    value={dueDateFilter}
+                    onChange={(e) => setDueDateFilter(e.target.value as any)}
+                    className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg text-sm px-3 py-2 outline-none focus:border-amber-400 font-medium"
+                  >
+                      <option value="All" className="bg-surface text-text">⚡ Vencimento: Todos</option>
+                      <option value="Changed" className="bg-surface text-amber-400 font-bold">⚡ Vencimento Alterado ({aditivoStats.changedDueDateCount})</option>
+                      <option value="Standard" className="bg-surface text-slate-300">📅 Vencimento Padrão</option>
+                  </select>
+              )}
+
               <select
                 value={sortConfig.direction === 'none' ? 'default' : `${sortConfig.key}-${sortConfig.direction}`}
                 onChange={(e) => {
@@ -2114,6 +2225,12 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="aditivoMsg-asc">📱 Msg Aditivo: Pendentes primeiro</option>
                   <option value="aditivoSigned-desc">✍️ Aditivo: Assinados primeiro</option>
                   <option value="aditivoSigned-asc">✍️ Aditivo: Pendentes primeiro</option>
+                  {isAdmin && (
+                      <>
+                          <option value="dueDateChanged-desc">⚡ Vencimento: Alterados primeiro</option>
+                          <option value="dueDateChanged-asc">📅 Vencimento: Padrão primeiro</option>
+                      </>
+                  )}
                   <option value="duration-desc">⏳ Duração: Maior primeiro</option>
                   <option value="duration-asc">⏳ Duração: Menor primeiro</option>
                   <option value="maintenanceValue-desc">💰 Mensalidade: Maior valor</option>
@@ -2188,6 +2305,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
+                          {/* Coluna Vencimento (Visível Apenas para Administrador) */}
+                          {isAdmin && (
+                              <th 
+                                className="p-5 font-semibold text-center cursor-pointer hover:text-text transition-colors group/sort text-amber-400"
+                                onClick={() => toggleSort('dueDateChanged')}
+                              >
+                                <div className="flex items-center justify-center gap-1">
+                                    <span>Vencimento</span>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase font-black">Admin</span>
+                                    <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'dueDateChanged' && sortConfig.direction !== 'none' ? 'opacity-100 text-amber-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                        {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                    </span>
+                                </div>
+                              </th>
+                          )}
                           <th 
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('startDate')}
@@ -2326,20 +2458,32 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </button>
                                 </td>
 
-                                <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
-                                <td className="p-5 text-slate-300 text-xs font-mono">
-                                    {calculateDuration(p.startDate, p.endDate)}
-                                </td>
-                                <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
-                                <td className="p-5 text-center">
-                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
-                                        p.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                                        p.status === 'Finished' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                                        'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                                    }`}>
-                                        {p.status === 'Active' ? 'Ativo' : p.status === 'Finished' ? 'Finalizado' : 'Suspenso'}
-                                    </span>
-                                </td>
+                                {/* Coluna Vencimento (Visível Apenas para Administrador) */}
+                                {isAdmin && (
+                                    <td className="p-5 text-center">
+                                        <button
+                                            onClick={() => handleToggleDueDateChanged(p.id)}
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+                                                p.dueDateChanged
+                                                ? 'bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25 shadow-amber-950/20'
+                                                : 'bg-panel hover:bg-amber-500/10 text-slate-500 hover:text-amber-300 border-border hover:border-amber-500/30'
+                                            }`}
+                                            title={
+                                                p.dueDateChanged 
+                                                ? `Vencimento alterado${p.dueDay ? ` para: ${p.dueDay}` : ''}${p.dueDateChangedAt ? ` (em ${p.dueDateChangedAt.split('-').reverse().join('/')})` : ''}${p.dueDateNotes ? ` - Obs: ${p.dueDateNotes}` : ''}. Clique para alternar.`
+                                                : 'Vencimento padrão. Clique para marcar como vencimento alterado.'
+                                            }
+                                        >
+                                            <span className="material-symbols-outlined text-sm">
+                                                {p.dueDateChanged ? 'edit_calendar' : 'calendar_today'}
+                                            </span>
+                                            <span>{p.dueDateChanged ? (p.dueDay ? `${p.dueDay}` : 'Alterado') : 'Padrão'}</span>
+                                            {p.dueDateChanged && (
+                                                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                            )}
+                                        </button>
+                                    </td>
+                                )}
 
                                 <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
                                 <td className="p-5 text-slate-300 text-xs font-mono">
@@ -2515,6 +2659,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                 <div className="flex items-center gap-2">
                                                     {p.name}
                                                     {hasProblem && <span className="text-red-400 font-normal text-[10px]">(Alert)</span>}
+                                                    {isAdmin && p.dueDateChanged && (
+                                                        <span 
+                                                            className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded"
+                                                            title={`Vencimento Alterado${p.dueDay ? `: ${p.dueDay}` : ''}${p.dueDateNotes ? ` - ${p.dueDateNotes}` : ''}`}
+                                                        >
+                                                            ⚡ {p.dueDay || 'Venc Alt'}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <button 
                                                     onClick={async (e) => {
@@ -3347,6 +3499,60 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               </label>
                           </div>
                       </div>
+
+                      {/* Controle de Vencimento Alterado (Visível Somente para Perfil Administrador) */}
+                      {isAdmin && (
+                          <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl flex flex-col gap-3">
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                      <span className="material-symbols-outlined text-amber-400 text-base">edit_calendar</span>
+                                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Controle de Vencimento (Admin)</span>
+                                  </div>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Somente Administrador</span>
+                              </div>
+                              
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                  <input 
+                                      type="checkbox"
+                                      checked={Boolean(editingPatient.dueDateChanged)}
+                                      onChange={(e) => setEditingPatient({ 
+                                          ...editingPatient, 
+                                          dueDateChanged: e.target.checked,
+                                          dueDateChangedAt: e.target.checked ? (editingPatient.dueDateChangedAt || new Date().toISOString().split('T')[0]) : undefined
+                                      })}
+                                      className="size-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500"
+                                  />
+                                  <span className="text-xs font-bold text-text">
+                                      {editingPatient.dueDateChanged ? '⚡ Data de Vencimento Alterada' : '📅 Vencimento Padrão'}
+                                  </span>
+                              </label>
+
+                              {editingPatient.dueDateChanged && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-amber-500/20 animate-in fade-in">
+                                      <div className="flex flex-col gap-1.5">
+                                          <label className="text-[11px] font-semibold text-slate-300">Novo Dia / Data de Vencimento</label>
+                                          <input 
+                                              type="text"
+                                              placeholder="Ex: Dia 10 ou 15/09"
+                                              value={editingPatient.dueDay || ''}
+                                              onChange={(e) => setEditingPatient({ ...editingPatient, dueDay: e.target.value })}
+                                              className="bg-panel border border-border rounded-lg px-3 py-2 text-xs text-text focus:border-amber-500 outline-none"
+                                          />
+                                      </div>
+                                      <div className="flex flex-col gap-1.5">
+                                          <label className="text-[11px] font-semibold text-slate-300">Motivo / Observação</label>
+                                          <input 
+                                              type="text"
+                                              placeholder="Ex: Solicitado pelo paciente"
+                                              value={editingPatient.dueDateNotes || ''}
+                                              onChange={(e) => setEditingPatient({ ...editingPatient, dueDateNotes: e.target.value })}
+                                              className="bg-panel border border-border rounded-lg px-3 py-2 text-xs text-text focus:border-amber-500 outline-none"
+                                          />
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      )}
 
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Observações / Alerta Clínico</label>

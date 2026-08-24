@@ -300,8 +300,8 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             onClick={() => setActiveTab('daily')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
               activeTab === 'daily'
-                ? 'bg-gradient-to-r from-indigo-500 to-[#D63FA3] text-text shadow-md'
-                : 'text-slate-400 hover:text-text hover:bg-panel'
+                ? 'bg-[#5347CE] text-white shadow-sm'
+                : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white hover:bg-[#F4F6FB] dark:hover:bg-white/[0.04]'
             }`}
           >
             Detalhamento Diário
@@ -312,12 +312,12 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
       {/* Mini Widget Cards */}
       <div id="performance-kpis-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Ritmo de Pacing */}
-        <div id="kpi-card-pacing" className="bg-panel border border-border p-4 rounded-xl flex flex-col justify-between">
+        <div id="kpi-card-pacing" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
+            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
             <TrendingUp className={`w-4 h-4 ${
               summary.pacingStatus === 'ahead'
-                ? 'text-emerald-500'
+                ? 'text-[#16C8C7]'
                 : summary.pacingStatus === 'warning'
                 ? 'text-amber-500'
                 : 'text-rose-500'
@@ -327,10 +327,10 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <div className="flex justify-between items-baseline mb-1">
               <h4 className={`text-base font-black ${
                 summary.pacingStatus === 'ahead'
-                  ? 'text-emerald-400'
+                  ? 'text-[#16C8C7] dark:text-[#2DD4BF]'
                   : summary.pacingStatus === 'warning'
-                  ? 'text-amber-400'
-                  : 'text-rose-400'
+                  ? 'text-amber-500'
+                  : 'text-rose-500'
               }`}>
                 {summary.pacingStatus === 'ahead'
                   ? 'No Ritmo'
@@ -338,16 +338,16 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                   ? 'Abaixo da Meta'
                   : 'Atrasado (> R$3k)'}
               </h4>
-              <span className="text-xs font-bold text-text/90">
+              <span className="text-xs font-bold text-[#181B26] dark:text-white font-mono">
                 {summary.pacingStatus === 'ahead' ? '+' : '-'}{formatBRL(Math.abs(summary.pacingValue))}
               </span>
             </div>
             {/* Visual indicator of the pacing status */}
-            <div className="w-full bg-panel h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-1.5 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${
                     summary.pacingStatus === 'ahead'
-                      ? 'bg-emerald-500'
+                      ? 'bg-[#16C8C7]'
                       : summary.pacingStatus === 'warning'
                       ? 'bg-amber-500'
                       : 'bg-rose-500'
@@ -356,66 +356,66 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                 />
             </div>
           </div>
-          <span className="text-[9px] text-slate-500 font-bold">Projeção linear do mês</span>
+          <span className="text-[9px] text-[#94A3B8] font-bold">Projeção linear do mês</span>
         </div>
 
         {/* KPI 2: Realizado vs Meta */}
-        <div id="kpi-card-realized" className="bg-panel border border-border p-4 rounded-xl flex flex-col justify-between">
+        <div id="kpi-card-realized" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Atingimento da Meta</span>
-            <Award className="text-yellow-500 w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Atingimento da Meta</span>
+            <Award className="text-amber-500 w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-text">{summary.progressPerc.toFixed(1)}%</h4>
-            <div className="w-full bg-panel h-1.5 rounded-full mt-2 overflow-hidden">
+            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{summary.progressPerc.toFixed(1)}%</h4>
+            <div className="w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-1.5 rounded-full mt-2 overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-yellow-500 to-emerald-500 rounded-full" 
+                className="h-full bg-gradient-to-r from-[#5347CE] to-[#16C8C7] rounded-full" 
                 style={{ width: `${Math.min(summary.progressPerc, 100)}%` }}
               />
             </div>
           </div>
-          <span className="text-[9px] text-slate-500 font-bold">
+          <span className="text-[9px] text-[#94A3B8] font-bold font-mono">
             {formatBRL(summary.totalRevenue)} de {formatBRL(Number(currentGoals.revenue) || 0)}
           </span>
         </div>
 
         {/* KPI 3: Desempenho Operacional */}
-        <div id="kpi-card-average" className="bg-panel border border-border p-4 rounded-xl flex flex-col justify-between">
+        <div id="kpi-card-average" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Média por Dia Ativo</span>
-            <DollarSign className="text-cyan-500 w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Média por Dia Ativo</span>
+            <DollarSign className="text-[#5347CE] dark:text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-text">{formatBRL(summary.avgDailyRev)}</h4>
-            <p className="text-[10px] text-slate-400 font-bold mt-1">
-              Meta ideal por dia útil: <span className="text-[#D63FA3]">{formatBRL(staticDailyTarget)}</span>
+            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{formatBRL(summary.avgDailyRev)}</h4>
+            <p className="text-[10px] text-[#64748B] dark:text-slate-400 font-bold mt-1">
+              Meta ideal: <span className="text-[#5347CE] dark:text-[#887CFD] font-mono">{formatBRL(staticDailyTarget)}</span>
             </p>
           </div>
-          <span className="text-[9px] text-slate-500 font-bold">Exclui dias sem receita</span>
+          <span className="text-[9px] text-[#94A3B8] font-bold">Exclui dias sem receita</span>
         </div>
 
         {/* KPI 4: Meta Batida */}
-        <div id="kpi-card-days" className="bg-panel border border-border p-4 rounded-xl flex flex-col justify-between">
+        <div id="kpi-card-days" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Dias Acima da Meta</span>
-            <Calendar className="text-indigo-400 w-4 h-4" />
+            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Dias Acima da Meta</span>
+            <Calendar className="text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-text">
-              {summary.workDaysWithSalesMet} <span className="text-xs text-slate-500 font-bold">de {summary.totalWorkDays} dias úteis</span>
+            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">
+              {summary.workDaysWithSalesMet} <span className="text-xs text-[#94A3B8] font-bold">de {summary.totalWorkDays} dias</span>
             </h4>
             <div className="flex items-center gap-1.5 mt-2">
-              <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-mono font-bold">
+              <span className="text-[10px] bg-[#5347CE]/10 text-[#5347CE] dark:text-[#887CFD] border border-[#5347CE]/20 px-2 py-0.5 rounded-full font-mono font-bold">
                 {((summary.workDaysWithSalesMet / Math.max(1, summary.totalWorkDays)) * 100).toFixed(0)}% de aproveitamento
               </span>
             </div>
           </div>
-          <span className="text-[9px] text-slate-500 font-bold">Dias úteis com receita ≥ meta diária</span>
+          <span className="text-[9px] text-[#94A3B8] font-bold">Dias úteis com receita ≥ meta diária</span>
         </div>
       </div>
 
       {/* Main Graph Area */}
-      <div id="performance-chart-container" className="bg-panel border border-border p-5 rounded-xl">
+      <div id="performance-chart-container" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm">
         {activeTab === 'daily' ? (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">

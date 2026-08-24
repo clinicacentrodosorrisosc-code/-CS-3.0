@@ -75,10 +75,10 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
       const saved = localStorage.getItem('theme');
-      return (saved as 'light' | 'dark') || 'dark';
+      return (saved as 'light' | 'dark') || 'light';
     } catch (e) {
       console.warn("Could not read theme from localStorage inside App.tsx:", e);
-      return 'dark';
+      return 'light';
     }
   });
   
@@ -445,7 +445,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#07090E] light:bg-[#F8FAFC] text-slate-100 light:text-slate-900 overflow-hidden transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F8F9FD] dark:bg-[#0B0E17] text-[#181B26] dark:text-slate-100 overflow-hidden transition-colors duration-200">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}

@@ -96,7 +96,7 @@ interface LocalTransaction extends Transaction {
     isPartial?: boolean;
 }
 
-const COLORS = ['#d946ef', '#8b5cf6', '#2dd4bf', '#fb923c', '#ef4444', '#3b82f6'];
+const COLORS = ['#5347CE', '#887CFD', '#4896FE', '#16C8C7', '#38BDF8', '#818CF8'];
 
 const ALL_TABS_CONFIG = [
   { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
@@ -2283,63 +2283,59 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                    </div>
                </div>
 
-               {/* SUB NAVIGATION BAR */}
-               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-border/80">
-                    {visibleTabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveSubTab(tab.id as SubTab)}
-                            className={`
-                                px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                ${activeSubTab === tab.id 
-                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
-                                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
-                            `}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-               </div>
+                {/* SUB NAVIGATION BAR */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-[#EAEFF6] dark:border-white/[0.08]">
+                     {visibleTabs.map(tab => (
+                         <button
+                             key={tab.id}
+                             onClick={() => setActiveSubTab(tab.id as SubTab)}
+                             className={`
+                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
+                                 ${activeSubTab === tab.id 
+                                     ? 'bg-[#5347CE]/10 text-[#5347CE] dark:bg-[#887CFD]/15 dark:text-[#887CFD] border border-[#5347CE]/30 dark:border-[#887CFD]/30 shadow-sm' 
+                                     : 'text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent'}
+                             `}
+                         >
+                             {tab.label}
+                         </button>
+                     ))}
+                </div>
 
-               <div className="flex-1 w-full pb-10">
-            {activeSubTab === 'overview' && (
-                <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                    <div className="glass-panel p-3 rounded-xl border border-border flex flex-wrap gap-3 items-center justify-between relative z-20">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 uppercase font-bold">Período:</span>
-                            <div className="w-60">
-                                <DateRangePicker 
-                                    value={{ start: overviewFilters.start, end: overviewFilters.end }} 
-                                    onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))} 
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {overviewMetrics.errorCount > 0 && (<div className="bg-rose-500/15 border border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-400 text-sm">warning</span><span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div className="bezel-outer">
-                          <SpotlightCard className="bezel-inner rounded-[calc(1.25rem-0.375rem)] p-4.5 bg-gradient-to-br from-emerald-950/20 to-slate-900/40 border-emerald-500/30" spotlightColor="rgba(52, 211, 153, 0.15)">
-                              <p className="text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
-                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-slate-50">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
-                          </SpotlightCard>
-                        </div>
-                        <div className="bezel-outer">
-                          <SpotlightCard className="bezel-inner rounded-[calc(1.25rem-0.375rem)] p-4.5 bg-gradient-to-br from-sky-950/20 to-slate-900/40 border-sky-500/30" spotlightColor="rgba(56, 189, 248, 0.15)">
-                              <p className="text-sky-400 text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
-                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-slate-50">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                          </SpotlightCard>
-                        </div>
-                    </div>
+                <div className="flex-1 w-full pb-10">
+             {activeSubTab === 'overview' && (
+                 <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+                     <div className="bg-white dark:bg-[#141A29] p-3 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
+                         <div className="flex items-center gap-2">
+                             <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">Período:</span>
+                             <div className="w-60">
+                                 <DateRangePicker 
+                                     value={{ start: overviewFilters.start, end: overviewFilters.end }} 
+                                     onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))} 
+                                 />
+                             </div>
+                         </div>
+                     </div>
+                     
+                     {overviewMetrics.errorCount > 0 && (<div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-500 text-sm">warning</span><span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
+                             <p className="text-[#16C8C7] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
+                             <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
+                         </div>
+                         <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
+                             <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
+                             <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                         </div>
+                     </div>
 
                     <div className="flex flex-col gap-2">
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Ticket Médio por Categoria</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                             {overviewMetrics.categoryTicketAverage.map(cat => (
-                                <SpotlightCard key={cat.name} className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5" spotlightColor="rgba(56, 189, 248, 0.15)">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase truncate" title={cat.name}>{cat.name}</p>
-                                    <span className="text-base font-bold font-mono text-text">R$ {cat.average.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
+                                <SpotlightCard key={cat.name} className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5 min-w-0 overflow-hidden" spotlightColor="rgba(56, 189, 248, 0.15)">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase truncate w-full" title={cat.name}>{cat.name}</p>
+                                    <span className="text-sm font-bold font-mono text-text truncate w-full">R$ {cat.average.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
                                 </SpotlightCard>
                             ))}
                         </div>
@@ -2352,26 +2348,32 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             { title: 'Por Procedimento', data: overviewMetrics.procedureData, activeIndex: activeProcedureIndex, setActive: setActiveProcedureIndex },
                             { title: 'Por Pagamento', data: overviewMetrics.paymentData, activeIndex: activePaymentIndex, setActive: setActivePaymentIndex }
                         ].map((chart, idx) => (
-                            <div key={idx} className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[220px]">
-                                <h3 className="text-xs font-bold text-text mb-3 uppercase tracking-wider text-center">{chart.title}</h3>
-                                <div className="flex-1 w-full relative">
+                            <div key={idx} className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between">
+                                <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">{chart.title}</h3>
+                                
+                                <div className="h-[210px] w-full relative flex items-center justify-center">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
+                                        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                                             <Pie
                                                 data={chart.data}
                                                 cx="50%"
-                                                cy="45%"
-                                                innerRadius="55%"
-                                                outerRadius="75%"
-                                                paddingAngle={4}
-                                                cornerRadius={4}
+                                                cy="50%"
+                                                innerRadius="50%"
+                                                outerRadius="84%"
+                                                paddingAngle={3}
+                                                cornerRadius={5}
                                                 dataKey="value"
                                                 stroke="none"
                                                 onMouseEnter={(_, index) => chart.setActive(index)}
                                                 onMouseLeave={() => chart.setActive(null)}
                                             >
                                                 {chart.data.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    <Cell 
+                                                        key={`cell-${index}`} 
+                                                        fill={COLORS[index % COLORS.length]} 
+                                                        opacity={chart.activeIndex === null || chart.activeIndex === index ? 1 : 0.45}
+                                                        className="transition-all duration-200 cursor-pointer"
+                                                    />
                                                 ))}
                                                 <Label 
                                                     position="center"
@@ -2382,28 +2384,39 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                         const entry = chart.data[chart.activeIndex];
                                                         return (
                                                             <g>
-                                                                <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-xs font-mono">
+                                                                <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="middle" className="fill-white font-black text-sm font-mono">
                                                                     R$ {entry.value?.toLocaleString('pt-BR', { notation: "compact", maximumFractionDigits: 1 })}
                                                                 </text>
-                                                                <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[8px] font-bold uppercase tracking-wider">
-                                                                    {entry.name?.slice(0, 12)}
+                                                                <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="middle" className="fill-slate-300 text-[9px] font-extrabold uppercase tracking-wider">
+                                                                    {entry.name?.length > 14 ? `${entry.name.slice(0, 12)}...` : entry.name}
                                                                 </text>
                                                             </g>
                                                         );
                                                     }}
                                                 />
                                             </Pie>
-                                            <Legend 
-                                                verticalAlign="bottom" 
-                                                align="center"
-                                                iconType="circle" 
-                                                layout="horizontal"
-                                                formatter={(value) => <span className="text-[9px] text-slate-400 font-bold uppercase ml-1">{value}</span>}
-                                                wrapperStyle={{ paddingTop: '10px', bottom: -5 }}
-                                            />
                                         </PieChart>
                                     </ResponsiveContainer>
                                     {chart.data.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">Sem dados no período</div>}
+                                </div>
+
+                                {/* LEGENDA CUSTOMIZADA EM BADGES INTERATIVOS */}
+                                <div className="pt-2 border-t border-white/5 flex flex-wrap justify-center items-center gap-1.5 max-h-[75px] overflow-y-auto custom-scrollbar">
+                                    {chart.data.map((entry, index) => (
+                                        <button
+                                            key={index}
+                                            onMouseEnter={() => chart.setActive(index)}
+                                            onMouseLeave={() => chart.setActive(null)}
+                                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                                                chart.activeIndex === index 
+                                                    ? 'bg-sky-500/20 border-sky-400 text-sky-300 scale-105 shadow-sm' 
+                                                    : 'bg-panel/60 border-border/60 text-slate-400 hover:text-text hover:bg-panel'
+                                            }`}
+                                        >
+                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                                            <span className="truncate max-w-[100px]" title={entry.name}>{entry.name}</span>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         ))}
