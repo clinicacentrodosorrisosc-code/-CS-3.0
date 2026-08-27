@@ -1,36 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   /* Nexus Clean Minimalist Light Palette (Default UI) */
-  --bg: #F8F9FD;
-  --background: #F8F9FD;
-  --bg-subtle: #F0F3F9;
+  --bg: #F5F7F6;
+  --background: #F5F7F6;
+  --bg-subtle: #EEF2F0;
   --surface: #FFFFFF;
   --panel: #FFFFFF;
-  --surface-hover: #F4F6FB;
-  --surface-high: #F4F6FB;
-  --surface-elevated: #EBF0F8;
+  --surface-hover: #F0F4F2;
+  --surface-high: #F0F4F2;
+  --surface-elevated: #E7ECE9;
   
-  --border: #EAEFF6;
-  --border-subtle: #F1F4F9;
-  --border-hover: #D5DFED;
-  --border-focus: rgba(83, 71, 206, 0.4);
+  --border: #DFE6E2;
+  --border-subtle: #EAF0ED;
+  --border-hover: #C8D4CE;
+  --border-focus: rgba(31, 111, 91, 0.28);
 
   /* Nexus Official 4-Color Palette */
-  --primary: #5347CE;
-  --primary-hover: #4539BD;
-  --primary-dim: rgba(83, 71, 206, 0.08);
-  --primary-border: rgba(83, 71, 206, 0.22);
+  --primary: #1F6F5B;
+  --primary-hover: #185846;
+  --primary-dim: rgba(31, 111, 91, 0.09);
+  --primary-border: rgba(31, 111, 91, 0.22);
 
-  --secondary: #887CFD;
-  --secondary-dim: rgba(136, 124, 253, 0.12);
+  --secondary: #537267;
+  --secondary-dim: rgba(83, 114, 103, 0.12);
 
-  --accent-sky: #4896FE;
-  --accent-blue: #4896FE;
-  --accent-teal: #16C8C7;
-  --accent-mint: #16C8C7;
+  --accent-sky: #4D7569;
+  --accent-blue: #4D7569;
+  --accent-teal: #2A8069;
+  --accent-mint: #2A8069;
   
-  --success: #16C8C7;
+  --success: #2A8069;
   --success-text: #0D9488;
   --success-bg: #E8FAF8;
   --success-dim: rgba(22, 200, 199, 0.12);
@@ -46,10 +46,10 @@
   --danger-dim: rgba(244, 63, 94, 0.12);
   --danger-border: #FCD4DC;
 
-  --text: #181B26;
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
-  --text-dim: #CBD5E1;
+  --text: #17211D;
+  --text-secondary: #5E6D66;
+  --text-muted: #86938D;
+  --text-dim: #B8C2BD;
 
   --sidebar-width-expanded: 260px;
   --sidebar-width-collapsed: 72px;
@@ -58,34 +58,34 @@
 
 .dark {
   /* Nexus Midnight Obsidian Dark Palette */
-  --bg: #0B0E17;
-  --background: #0B0E17;
-  --bg-subtle: #101522;
-  --surface: #141A29;
-  --panel: #141A29;
-  --surface-hover: #1A2236;
-  --surface-high: #1A2236;
-  --surface-elevated: #222C46;
+  --bg: #101714;
+  --background: #101714;
+  --bg-subtle: #151E1A;
+  --surface: #19231F;
+  --panel: #19231F;
+  --surface-hover: #202D28;
+  --surface-high: #202D28;
+  --surface-elevated: #293832;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-hover: rgba(255, 255, 255, 0.15);
-  --border-focus: rgba(136, 124, 253, 0.5);
+  --border-focus: rgba(95, 179, 148, 0.38);
 
-  --primary: #887CFD;
-  --primary-hover: #9E94FE;
-  --primary-dim: rgba(136, 124, 253, 0.15);
-  --primary-border: rgba(136, 124, 253, 0.35);
+  --primary: #537267;
+  --primary-hover: #79C4A8;
+  --primary-dim: rgba(99, 181, 150, 0.14);
+  --primary-border: rgba(99, 181, 150, 0.3);
 
-  --secondary: #5347CE;
+  --secondary: #1F6F5B;
   --secondary-dim: rgba(83, 71, 206, 0.2);
 
-  --accent-sky: #4896FE;
-  --accent-blue: #4896FE;
-  --accent-teal: #16C8C7;
-  --accent-mint: #16C8C7;
+  --accent-sky: #4D7569;
+  --accent-blue: #4D7569;
+  --accent-teal: #2A8069;
+  --accent-mint: #2A8069;
 
-  --success: #16C8C7;
+  --success: #2A8069;
   --success-text: #2DD4BF;
   --success-bg: rgba(22, 200, 199, 0.15);
   --success-dim: rgba(22, 200, 199, 0.15);
@@ -101,10 +101,10 @@
   --danger-dim: rgba(244, 63, 94, 0.15);
   --danger-border: rgba(244, 63, 94, 0.3);
 
-  --text: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-dim: #475569;
+  --text: #F1F5F3;
+  --text-secondary: #86938D;
+  --text-muted: #5E6D66;
+  --text-dim: #53635C;
 }
 
 * {
@@ -112,8 +112,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", "Inter", sans-serif;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--bg);
+  background-image: radial-gradient(circle at 85% -10%, rgba(31, 111, 91, 0.055), transparent 32rem);
   color: var(--text);
   margin: 0;
   padding: 0;
@@ -156,8 +157,8 @@ body {
 .nexus-card, .fintech-card, .glass-panel, .bezel-outer, .bezel-inner {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 14px rgba(0, 0, 0, 0.02);
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 2px rgba(18, 45, 35, 0.025), 0 8px 24px rgba(18, 45, 35, 0.035);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -226,33 +227,33 @@ body {
 }
 
 .btn-primary {
-  background: #5347CE;
+  background: #1F6F5B;
   color: #ffffff;
-  border: 1px solid #5347CE;
+  border: 1px solid #1F6F5B;
   box-shadow: 0 2px 8px rgba(83, 71, 206, 0.28);
 }
 
 .btn-primary:hover {
-  background: #4539BD;
-  border-color: #4539BD;
+  background: #185846;
+  border-color: #185846;
   box-shadow: 0 4px 12px rgba(83, 71, 206, 0.38);
 }
 
 .dark .btn-primary {
-  background: #887CFD;
-  color: #0B0E17;
-  border-color: #887CFD;
+  background: #537267;
+  color: #101714;
+  border-color: #537267;
 }
 
 .dark .btn-primary:hover {
-  background: #9E94FE;
-  border-color: #9E94FE;
+  background: #79C4A8;
+  border-color: #79C4A8;
 }
 
 .btn-emerald {
-  background: #16C8C7;
+  background: #2A8069;
   color: #ffffff;
-  border: 1px solid #16C8C7;
+  border: 1px solid #2A8069;
   box-shadow: 0 2px 8px rgba(22, 200, 199, 0.25);
 }
 
@@ -299,14 +300,14 @@ select, option {
 
 select option {
   background-color: #FFFFFF !important;
-  color: #181B26 !important;
+  color: #17211D !important;
   padding: 8px 12px;
   font-weight: 500;
 }
 
 .dark select option {
-  background-color: #141A29 !important;
-  color: #F8FAFC !important;
+  background-color: #19231F !important;
+  color: #F1F5F3 !important;
 }
 
 /* Badges & Tags */

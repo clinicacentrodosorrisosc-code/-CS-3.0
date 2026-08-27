@@ -445,7 +445,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F8F9FD] dark:bg-[#0B0E17] text-[#181B26] dark:text-slate-100 overflow-hidden transition-colors duration-200">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F5F7F6] dark:bg-[#101714] text-[#17211D] dark:text-slate-100 overflow-hidden transition-colors duration-200">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
