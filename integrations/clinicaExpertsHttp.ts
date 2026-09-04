@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createUserScopedSupabase, syncClinicaExperts } from './clinicaExperts';
+import { createUserScopedSupabase, syncClinicaExperts } from './clinicaExperts.js';
 
 type ApiRequest = {
   method?: string;
@@ -106,4 +106,3 @@ export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
   }
 }
-
