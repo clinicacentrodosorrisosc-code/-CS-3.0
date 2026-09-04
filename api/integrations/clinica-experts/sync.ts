@@ -1,5 +1,10 @@
-import { handleClinicaExpertsSync } from '../../../integrations/clinicaExpertsHttp';
-
 export const maxDuration = 60;
-export default handleClinicaExpertsSync;
-
+export default async function sync(req: any, res: any) {
+  try {
+    const { handleClinicaExpertsSync } = await import('../../../integrations/clinicaExpertsHttp');
+    return handleClinicaExpertsSync(req, res);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao iniciar integracao.';
+    return res.status(500).json({ error: message });
+  }
+}
