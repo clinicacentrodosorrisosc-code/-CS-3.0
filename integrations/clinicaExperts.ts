@@ -3,6 +3,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const API_BASE_URL = 'https://api.clinicaexperts.com.br/api/v1';
 const PAGE_SIZE = 100;
 const REQUEST_GAP_MS = 550;
+const MAX_REQUEST_ATTEMPTS = 3;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 type ApiMeta = { page?: number; last_page?: number };
 type ApiList<T> = { data: T[]; meta?: ApiMeta };
@@ -41,21 +43,40 @@ class ClinicaExpertsClient {
     const url = new URL(`${API_BASE_URL}${path}`);
     Object.entries(query).forEach(([key, value]) => url.searchParams.set(key, String(value)));
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        Accept: 'application/json',
-      },
-      signal: AbortSignal.timeout(30_000),
-    });
+    for (let attempt = 1; attempt <= MAX_REQUEST_ATTEMPTS; attempt += 1) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            Accept: 'application/json',
+          },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
 
-    if (!response.ok) {
-      const body = await response.text();
-      const safeBody = body.slice(0, 300).replace(/[\r\n]+/g, ' ');
-      throw new Error(`Clinica Experts respondeu HTTP ${response.status}: ${safeBody}`);
+        if (response.ok) return response.json() as Promise<T>;
+
+        const body = await response.text();
+        const safeBody = body.slice(0, 300).replace(/[\r\n]+/g, ' ');
+        const retryable = response.status === 429 || response.status >= 500;
+        if (!retryable || attempt === MAX_REQUEST_ATTEMPTS) {
+          throw new Error(`Clinica Experts ${path} respondeu HTTP ${response.status}: ${safeBody}`);
+        }
+
+        const retryAfterSeconds = Number(response.headers.get('retry-after'));
+        const exponentialDelay = Math.min(8_000, 1_000 * (2 ** (attempt - 1)));
+        const waitMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+          ? Math.min(8_000, retryAfterSeconds * 1_000)
+          : exponentialDelay + Math.floor(Math.random() * 250);
+        await delay(waitMs);
+      } catch (error) {
+        if (attempt === MAX_REQUEST_ATTEMPTS || (error instanceof Error && error.message.includes('respondeu HTTP'))) {
+          throw error;
+        }
+        await delay(Math.min(8_000, 1_000 * (2 ** (attempt - 1))) + Math.floor(Math.random() * 250));
+      }
     }
 
-    return response.json() as Promise<T>;
+    throw new Error(`Clinica Experts ${path} nao respondeu apos varias tentativas.`);
   }
 
   private async listAll<T>(path: string, query: Record<string, string | number> = {}): Promise<T[]> {
