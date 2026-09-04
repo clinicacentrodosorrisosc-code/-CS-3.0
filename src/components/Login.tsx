@@ -1,6 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import { ChevronDown, Mail, Lock, Sparkles, Quote, ShieldCheck, User } from 'lucide-react';
+import { 
+  ChevronDown, 
+  Mail, 
+  Lock, 
+  Sparkles, 
+  Quote, 
+  ShieldCheck, 
+  User, 
+  Eye, 
+  EyeOff, 
+  ArrowRight,
+  HeartHandshake,
+  Clock
+} from 'lucide-react';
+import clinicShowcaseImg from '../assets/images/centro_do_sorriso_showcase.jpg';
 
 const DAILY_MESSAGES = [
   { text: "Posso todas as coisas naquele que me fortalece.", author: "Filipenses 4:13" },
@@ -28,6 +42,7 @@ const DAILY_MESSAGES = [
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('user'); 
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -74,110 +89,97 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0d0f18] p-4 sm:p-6 font-sans relative overflow-hidden text-slate-100 select-none">
+    <div className="min-h-screen flex items-center justify-center bg-[#07090e] p-3 sm:p-6 font-sans relative overflow-hidden text-slate-100 select-none">
       {/* Background Animated Rings & Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Main Split Container */}
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-900/60 backdrop-blur-2xl shadow-2xl shadow-purple-950/20 relative z-10 animate-slide-up">
+      {/* Main Split Container: Login on Left, Clinic Showcase Image on Right */}
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-black/60 relative z-10">
         
-        {/* Left Side: Brand Visual & Daily Inspiration (Desktop) */}
-        <div className="lg:col-span-5 relative hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-purple-900/40 via-slate-900/80 to-slate-950 border-r border-slate-800/60 overflow-hidden">
-          {/* Subtle background overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+        {/* ============================================================ */}
+        {/* LEFT SIDE: Login & Access Area (Posicionado mais à esquerda)  */}
+        {/* ============================================================ */}
+        <div className="lg:col-span-6 xl:col-span-5 p-7 sm:p-10 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-950/90 relative z-20">
           
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          {/* Header Brand */}
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold mb-5">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
               Gestão Odontológica Pro
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
-              Centro do <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Sorriso</span>
+            
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+              Centro do <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-teal-300 to-emerald-400">Sorriso</span>
             </h1>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-              Plataforma completa de gestão clínica, indicadores comerciais, laboratórios e métricas avançadas.
-            </p>
-          </div>
-
-          {/* Daily Inspiration Box */}
-          <div className="relative z-10 p-5 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-md">
-            <Quote className="w-6 h-6 text-purple-400/60 mb-2" />
-            <p className="text-xs italic text-slate-300 leading-relaxed">
-              "{dailyMessage.text}"
-            </p>
-            <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mt-3 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              {dailyMessage.author}
-            </p>
-          </div>
-
-          <div className="relative z-10 text-[10px] text-slate-500 flex items-center justify-between border-t border-slate-800/80 pt-4">
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Ambiente Seguro</span>
-            <span>v2.1 Pro</span>
-          </div>
-        </div>
-
-        {/* Right Side: Auth Form */}
-        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center bg-slate-900/40">
-          
-          {/* Mobile Logo Header */}
-          <div className="flex lg:hidden flex-col items-center mb-6 text-center">
-            <h1 className="text-2xl font-extrabold tracking-tight text-white">
-              Centro do <span className="text-purple-400">Sorriso</span>
-            </h1>
-            <p className="text-xs text-slate-400 mt-1">Acesse sua conta para continuar</p>
-          </div>
-
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-white tracking-tight">
-              {isSignUp ? 'Criar Nova Conta' : 'Bem-vindo de volta'}
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              {isSignUp ? 'Preencha seus dados para solicitar credenciais.' : 'Digite seu e-mail e senha para acessar o painel.'}
+            
+            <p className="text-xs sm:text-sm text-slate-400 mt-2 font-normal">
+              {isSignUp 
+                ? 'Preencha os dados abaixo para solicitar sua conta no sistema.' 
+                : 'Acesse seu painel com credenciais autorizadas.'}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-4 my-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">E-mail</label>
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                E-mail Profissional
+              </label>
               <div className="relative">
                 <input 
                   type="email" 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
-                  placeholder="seu@email.com"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition-all shadow-inner"
+                  placeholder="seu.email@centrodosorriso.com"
                 />
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Senha</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  Senha
+                </label>
+                {!isSignUp && (
+                  <span className="text-[11px] text-slate-500 hover:text-sky-400 transition-colors cursor-pointer">
+                    Esqueceu?
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <input 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition-all shadow-inner"
                   placeholder="••••••••"
                 />
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             {isSignUp && (
               <div className="animate-fade-in">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Cargo / Função</label>
+                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Cargo / Setor
+                </label>
                 <div className="relative">
                   <select 
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white appearance-none cursor-pointer focus:border-purple-500 outline-none transition-all"
+                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white appearance-none cursor-pointer focus:border-sky-500 outline-none transition-all"
                   >
                     <option value="reception">Recepção</option>
                     <option value="admin">Administrador</option>
@@ -203,34 +205,123 @@ export const Login: React.FC = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full btn btn-primary py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-purple-900/30 transition-all flex justify-center items-center mt-2 disabled:opacity-50"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-600 hover:from-sky-400 hover:to-emerald-500 text-white shadow-lg shadow-sky-950/40 transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                isSignUp ? 'Criar Minha Conta' : 'Acessar o Painel'
+                <>
+                  <span>{isSignUp ? 'Criar Minha Conta' : 'Entrar no Sistema'}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          {/* Toggle SignUp / SignIn */}
+          <div className="text-center pt-2">
             <p className="text-xs text-slate-400">
               {isSignUp ? 'Já possui cadastro?' : 'Ainda não tem acesso?'}
               <button 
                 onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); setSuccessMsg(''); }}
-                className="ml-2 text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-4 transition-all"
+                className="ml-2 text-sky-400 hover:text-sky-300 font-semibold underline underline-offset-4 transition-all"
               >
-                {isSignUp ? 'Fazer Login' : 'Criar Cadastro'}
+                {isSignUp ? 'Fazer Login' : 'Solicitar Cadastro'}
               </button>
             </p>
+          </div>
+
+          {/* Daily Inspiration Box (Sutil e elegante na esquerda) */}
+          <div className="mt-6 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-sky-400 mb-1.5">
+              <Quote className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mensagem do Dia</span>
+            </div>
+            <p className="text-[11px] italic text-slate-300 leading-relaxed">
+              "{dailyMessage.text}"
+            </p>
+            <p className="text-[9px] font-bold text-sky-400 uppercase tracking-widest mt-1.5 text-right">
+              — {dailyMessage.author}
+            </p>
+          </div>
+
+          {/* Bottom Security Footer */}
+          <div className="mt-5 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500">
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Ambiente Criptografado & Seguro
+            </span>
+            <span>v3.0 Pro</span>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* RIGHT SIDE: Dedicated Space for "Centro do Sorriso" Image     */}
+        {/* ============================================================ */}
+        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[640px] flex flex-col justify-between overflow-hidden group">
+          
+          {/* Main Showcase Image */}
+          <img 
+            src={clinicShowcaseImg} 
+            alt="Centro do Sorriso - Clínica de Excelência"
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out"
+          />
+
+          {/* Cinematic Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/30 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#07090e] via-transparent to-transparent z-10 hidden lg:block" />
+          <div className="absolute inset-0 bg-sky-950/20 mix-blend-overlay z-10" />
+
+          {/* Top Floating Glass Badge */}
+          <div className="relative z-20 p-6 sm:p-8 flex justify-between items-start">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/70 border border-white/10 backdrop-blur-xl text-white text-xs font-semibold shadow-xl">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Centro do Sorriso • Unidade Matriz
+            </div>
+
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-white/10 backdrop-blur-xl text-slate-300 text-[11px] font-medium shadow-lg">
+              <Clock className="w-3.5 h-3.5 text-sky-400" />
+              Atendimento Integrado
+            </div>
+          </div>
+
+          {/* Bottom Floating Information Showcase */}
+          <div className="relative z-20 p-6 sm:p-10 space-y-4">
+            <div className="max-w-md p-5 rounded-2xl bg-slate-950/80 border border-white/10 backdrop-blur-2xl shadow-2xl">
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-widest mb-1.5">
+                <HeartHandshake className="w-4 h-4 text-sky-400" />
+                Excelência & Cuidado Humano
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                Transformando vidas através de sorrisos únicos.
+              </h3>
+              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                Ambientes planejados com tecnologia de ponta, conforto e a dedicação dos melhores especialistas.
+              </p>
+
+              <div className="grid grid-cols-3 gap-2 pt-3.5 mt-3.5 border-t border-white/10 text-center">
+                <div>
+                  <div className="text-sm font-extrabold text-white">100%</div>
+                  <div className="text-[9px] uppercase tracking-wider text-slate-400">Digital</div>
+                </div>
+                <div className="border-x border-white/10">
+                  <div className="text-sm font-extrabold text-emerald-400">Seguro</div>
+                  <div className="text-[9px] uppercase tracking-wider text-slate-400">LGPD</div>
+                </div>
+                <div>
+                  <div className="text-sm font-extrabold text-sky-400">24/7</div>
+                  <div className="text-[9px] uppercase tracking-wider text-slate-400">Cloud Sync</div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
 
       </div>
 
-      {/* Footer */}
-      <div className="absolute bottom-3 text-center w-full text-[10px] text-slate-500">
+      {/* Page Minimal Footer */}
+      <div className="absolute bottom-2 text-center w-full text-[10px] text-slate-500 pointer-events-none">
         &copy; {new Date().getFullYear()} Centro do Sorriso | Todos os direitos reservados
       </div>
     </div>
