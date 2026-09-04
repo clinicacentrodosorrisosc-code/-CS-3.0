@@ -19,6 +19,7 @@ import { Toaster, toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatWidget } from './components/Chat/ChatWidget';
 import { AppHeader } from './components/Layout/AppHeader';
+import { ClinicaExpertsCRM } from './components/ClinicaExpertsCRM';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
 
@@ -490,6 +491,12 @@ const App: React.FC = () => {
             {activeTab === Tab.DASHBOARD && (
               <TabContainer key="dashboard">
                 <Dashboard userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
+
+            {activeTab === Tab.CRM && (
+              <TabContainer key="crm">
+                <ClinicaExpertsCRM />
               </TabContainer>
             )}
 

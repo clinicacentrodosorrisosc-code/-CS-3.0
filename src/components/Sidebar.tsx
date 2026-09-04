@@ -28,7 +28,8 @@ import {
   CheckSquare,
   BookOpen,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  KanbanSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -62,6 +63,13 @@ interface MenuItem {
 
 const MENU_STRUCTURE: MenuItem[] = [
   // PRINCIPAL
+  {
+    id: Tab.CRM,
+    label: 'CRM',
+    icon: KanbanSquare,
+    group: 'main',
+    subItems: []
+  },
   {
     id: Tab.DASHBOARD,
     label: 'Dashboard',

@@ -5,11 +5,17 @@ import path from "path";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
+import { createUserScopedSupabase, syncClinicaExperts } from "./integrations/clinicaExperts";
 
 const supabaseUrl = 'https://dmslcvvjxfulsocksave.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtc2xjdnZqeGZ1bHNvY2tzYXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMDQyNjgsImV4cCI6MjA4NDg4MDI2OH0.H0iDEj58mdwSFnLlyn1a2n_k3UZBtf_rHH8w4BkzfUw';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const clinicaExpertsToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+const clinicaExpertsOwnerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const cronSecret = process.env.CRON_SECRET || '';
 
 async function startServer() {
   console.log(">>> [SERVER] Iniciando servidor...");
@@ -394,6 +400,78 @@ async function startServer() {
   });
 
   // Health check
+  const activeClinicaExpertsSyncs = new Map<string, Promise<unknown>>();
+
+  async function resolveClinicaExpertsSyncContext(authorization?: string) {
+    const bearer = authorization?.replace(/^Bearer\s+/i, '') || '';
+    const isCron = Boolean(cronSecret && bearer === cronSecret);
+
+    if (isCron) {
+      if (!clinicaExpertsOwnerUserId || !supabaseServiceRoleKey) {
+        throw new Error('Sincronizacao agendada requer CLINICA_EXPERTS_OWNER_USER_ID e SUPABASE_SERVICE_ROLE_KEY.');
+      }
+      return {
+        userId: clinicaExpertsOwnerUserId,
+        db: createClient(supabaseUrl, supabaseServiceRoleKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        }),
+      };
+    }
+
+    if (!bearer) throw new Error('Sessao ausente. Faca login novamente.');
+    const { data: { user }, error } = await supabase.auth.getUser(bearer);
+    if (error || !user) throw new Error('Sessao invalida. Faca login novamente.');
+    return {
+      userId: user.id,
+      db: createUserScopedSupabase(supabaseUrl, supabaseKey, bearer),
+    };
+  }
+
+  app.get('/api/integrations/clinica-experts/status', async (req, res) => {
+    try {
+      const context = await resolveClinicaExpertsSyncContext(req.headers.authorization);
+      const { data, error } = await context.db
+        .from('clinic_experts_sync_runs')
+        .select('status, pipelines_count, stages_count, opportunities_count, started_at, finished_at, error_message')
+        .eq('user_id', context.userId)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      res.json({ configured: Boolean(clinicaExpertsToken), lastSync: data || null });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || 'Falha ao consultar integracao.' });
+    }
+  });
+
+  const runClinicaExpertsSync = async (req: express.Request, res: express.Response) => {
+    try {
+      if (!clinicaExpertsToken) {
+        return res.status(503).json({
+          error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.',
+        });
+      }
+      const context = await resolveClinicaExpertsSyncContext(req.headers.authorization);
+      const existing = activeClinicaExpertsSyncs.get(context.userId);
+      if (existing) {
+        return res.status(409).json({ error: 'Ja existe uma sincronizacao em andamento.' });
+      }
+
+      const operation = syncClinicaExperts(context.db, context.userId, clinicaExpertsToken)
+        .finally(() => activeClinicaExpertsSyncs.delete(context.userId));
+      activeClinicaExpertsSyncs.set(context.userId, operation);
+      const result = await operation;
+      res.json({ data: result });
+    } catch (error: any) {
+      console.error('>>> [CLINICA EXPERTS] Sync error:', error.message);
+      const status = /Sessao|Authorization/i.test(error.message) ? 401 : 500;
+      res.status(status).json({ error: error.message || 'Falha na sincronizacao.' });
+    }
+  };
+
+  app.post('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
+  app.get('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
+
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });

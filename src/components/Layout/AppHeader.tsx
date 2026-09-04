@@ -18,7 +18,8 @@ import {
   KeyRound,
   CheckSquare,
   BookOpen,
-  Menu
+  Menu,
+  KanbanSquare
 } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -37,7 +38,12 @@ interface AppHeaderProps {
 }
 
 const TAB_CONFIG: Record<Tab, { label: string; icon: React.ElementType; description: string }> = {
-  [Tab.DASHBOARD]: { 
+  [Tab.CRM]: {
+    label: 'CRM Clinica Experts',
+    icon: KanbanSquare,
+    description: 'Funis sincronizados e exportacao para WhatsApp'
+  },
+  [Tab.DASHBOARD]: {
     label: 'Dashboard Executivo', 
     icon: LayoutDashboard, 
     description: 'Métricas gerais e performance comercial' 
