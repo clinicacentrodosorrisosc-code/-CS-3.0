@@ -483,7 +483,7 @@ export const NotionWorkspace: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="text-xl">📁</span>
               <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-text">Páginas da Gestão</h3>
+                <h3 className="text-xs font-semibold text-text">Páginas da Gestão</h3>
                 <span className="text-[10px] text-slate-500">{pages.length} docs confidenciais</span>
               </div>
             </div>
@@ -539,7 +539,7 @@ export const NotionWorkspace: React.FC = () => {
           {/* Pinned / Favorites Section */}
           {pinnedPages.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-amber-400">
+              <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold text-amber-400">
                 <Star className="w-3 h-3 fill-amber-400" />
                 <span>Fixados & Favoritos</span>
               </div>
@@ -582,7 +582,7 @@ export const NotionWorkspace: React.FC = () => {
 
           {/* All Workspace Pages */}
           <div>
-            <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold text-slate-500">
               <Folder className="w-3 h-3" />
               <span>Documentos ({unpinnedPages.length})</span>
             </div>
@@ -834,7 +834,7 @@ export const NotionWorkspace: React.FC = () => {
 
                   {/* Notion Block Inserter Bar */}
                   <div className="flex flex-wrap items-center gap-1.5 p-2 bg-surface border border-border rounded-xl">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-2">Inserir Bloco:</span>
+                    <span className="text-[10px] font-semibold text-slate-500 px-2">Inserir Bloco:</span>
                     <button
                       type="button"
                       onClick={() => insertBlock('# Título da Seção')}
@@ -941,7 +941,7 @@ export const NotionWorkspace: React.FC = () => {
             <p className="text-sm font-semibold">Nenhum documento selecionado.</p>
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs shadow-lg transition-all"
+              className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-semibold text-xs shadow-lg transition-all"
             >
               Criar Primeira Página
             </button>

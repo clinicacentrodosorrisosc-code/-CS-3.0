@@ -417,7 +417,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <motion.aside
         initial={false}
         animate={{
-          width: isExpanded ? 224 : 60
+          width: isExpanded ? 208 : 56
         }}
         transition={{
           type: 'spring',
@@ -546,7 +546,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             transition={{ duration: 0.15 }}
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
-            className="fixed left-[64px] top-16 w-52 rounded-xl bg-white dark:bg-[#19191F] border border-[#E6E6EB] dark:border-white/10 shadow-xl p-3 z-50 hidden lg:flex flex-col gap-1"
+            className="fixed left-[60px] top-16 w-52 rounded-xl bg-white dark:bg-[#19191F] border border-[#E6E6EB] dark:border-white/10 shadow-xl p-3 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
@@ -692,7 +692,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Role Pill */}
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-medium">
                     <span className="size-1.5 rounded-full bg-blue-400 animate-pulse"></span>
                     {userRole === 'admin' ? 'Administrador Pro' : 'Membro da Equipe'}
                   </div>

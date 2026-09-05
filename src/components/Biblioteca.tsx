@@ -94,7 +94,7 @@ export const Biblioteca: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
-      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
+      <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar relative z-10 w-full">
         <div className="w-full h-full max-w-7xl mx-auto relative z-10">
 
           {selectedLink ? (
@@ -105,7 +105,7 @@ export const Biblioteca: React.FC = () => {
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
                 <button
                   onClick={() => setSelectedPreviewId(null)}
-                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-text transition-all glass-button px-4 py-2 rounded-xl"
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-text transition-all glass-button px-4 py-2 rounded-xl"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Voltar para Biblioteca
@@ -116,7 +116,7 @@ export const Biblioteca: React.FC = () => {
                     href={selectedLink.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-all glass-button bg-blue-500/10 border-blue-500/20 px-4 py-2 rounded-xl"
+                    className="flex items-center gap-2 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-all glass-button bg-blue-500/10 border-blue-500/20 px-4 py-2 rounded-xl"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Abrir link original
@@ -132,7 +132,7 @@ export const Biblioteca: React.FC = () => {
                   value={selectedLink.title}
                   onChange={e => updateCurrentPage({ title: e.target.value })}
                   placeholder="Documento sem título"
-                  className="text-4xl md:text-5xl font-bold text-text bg-transparent outline-none w-full placeholder-white/20 block resize-none leading-tight"
+                  className="text-2xl md:text-3xl font-semibold text-text bg-transparent outline-none w-full placeholder-white/20 block resize-none leading-tight"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export const Biblioteca: React.FC = () => {
               {/* Header Title section */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
                 <div>
-                  <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
+                  <h1 className="text-2xl md:text-3xl font-semibold text-text leading-tight tracking-tight mb-2">
                     Biblioteca de Manuais
                   </h1>
                   <p className="text-slate-400 text-sm">
@@ -199,7 +199,7 @@ export const Biblioteca: React.FC = () => {
                 <div className="flex gap-2 text-sm justify-end">
                   <button
                     onClick={() => handleAddPage()}
-                    className="px-6 py-2 glass-button glass-button-primary text-text rounded-xl font-bold shadow-lg transition-all flex items-center gap-2"
+                    className="px-6 py-2 glass-button glass-button-primary text-text rounded-lg font-semibold shadow-lg transition-all flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" /> Adicionar Link
                   </button>
@@ -216,7 +216,7 @@ export const Biblioteca: React.FC = () => {
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`
-                          px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
+                          px-4 py-2 rounded-xl text-[10px] font-semibold transition-all whitespace-nowrap glass-button
                           ${selectedCategory === cat
                             ? 'bg-panel/80 text-text shadow-lg'
                             : 'text-slate-500 opacity-60 hover:opacity-100'}
@@ -268,7 +268,7 @@ export const Biblioteca: React.FC = () => {
                           </h3>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 pt-4 border-t border-border">
+                      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 pt-4 border-t border-border">
                         <Folder className="w-3.5 h-3.5 text-blue-400" />
                         <span>{link.category || 'Geral'}</span>
                       </div>

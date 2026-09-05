@@ -89,31 +89,31 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07090e] p-3 sm:p-6 font-sans relative overflow-hidden text-slate-100 select-none">
+    <div className="min-h-screen flex items-center justify-center bg-[#f3f3f6] p-3 sm:p-6 font-sans relative overflow-hidden text-[#202027] select-none">
       {/* Background Animated Rings & Ambient Glows */}
-      <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="hidden" />
+      <div className="hidden" />
 
       {/* Main Split Container: Login on Left, Clinic Showcase Image on Right */}
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-black/60 relative z-10">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-[#e2e2e8] bg-white shadow-[0_24px_70px_rgba(32,32,39,0.10)] relative z-10">
 
         {/* ============================================================ */}
         {/* LEFT SIDE: Login & Access Area (Posicionado mais à esquerda)  */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 xl:col-span-5 p-7 sm:p-10 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-950/90 relative z-20">
+        <div className="lg:col-span-6 xl:col-span-5 p-7 sm:p-10 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#e8e8ed] bg-white relative z-20">
 
           {/* Header Brand */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-5">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#536fd1]/[0.08] text-[#4059b2] text-[11px] font-medium mb-5">
               <Sparkles className="w-3.5 h-3.5 text-blue-400" />
               Gestão Odontológica Pro
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-              Centro do <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-300 to-blue-400">Sorriso</span>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.04em] text-[#202027] leading-[1.05]">
+              Centro do <span className="text-[#4059b2]">Sorriso</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 font-normal">
+            <p className="text-xs sm:text-sm text-[#777782] mt-3 font-normal">
               {isSignUp
                 ? 'Preencha os dados abaixo para solicitar sua conta no sistema.'
                 : 'Acesse seu painel com credenciais autorizadas.'}
@@ -123,7 +123,7 @@ export const Login: React.FC = () => {
           {/* Form */}
           <form onSubmit={handleAuth} className="space-y-4 my-6">
             <div>
-              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-medium text-[#696974] mb-1.5">
                 E-mail Profissional
               </label>
               <div className="relative">
@@ -132,16 +132,16 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-inner"
+                  className="w-full bg-[#fafafd] border border-[#ddddE4] rounded-lg pl-10 pr-4 py-3 text-sm text-[#202027] placeholder-[#a0a0aa] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all "
                   placeholder="seu.email@centrodosorriso.com"
                 />
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#85858f] w-4 h-4" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                <label className="text-[11px] font-medium text-[#696974]">
                   Senha
                 </label>
                 {!isSignUp && (
@@ -156,14 +156,14 @@ export const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-inner"
+                  className="w-full bg-[#fafafd] border border-[#ddddE4] rounded-lg pl-10 pr-10 py-3 text-sm text-[#202027] placeholder-[#a0a0aa] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all "
                   placeholder="••••••••"
                 />
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#85858f] w-4 h-4" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#85858f] hover:text-[#4059b2] transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -172,20 +172,20 @@ export const Login: React.FC = () => {
 
             {isSignUp && (
               <div className="animate-fade-in">
-                <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-medium text-[#696974] mb-1.5">
                   Cargo / Setor
                 </label>
                 <div className="relative">
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white appearance-none cursor-pointer focus:border-blue-500 outline-none transition-all"
+                    className="w-full bg-[#fafafd] border border-[#ddddE4] rounded-lg pl-10 pr-10 py-3 text-sm text-white appearance-none cursor-pointer focus:border-blue-500 outline-none transition-all"
                   >
                     <option value="reception">Recepção</option>
                     <option value="admin">Administrador</option>
                     <option value="user">Usuário Padrão</option>
                   </select>
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#85858f] w-4 h-4" />
                   <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-4 h-4" />
                 </div>
               </div>
@@ -205,7 +205,7 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-lg shadow-blue-950/40 transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
+              className="w-full py-3.5 px-4 rounded-lg font-semibold text-sm tracking-wide bg-[#4059b2] hover:bg-[#354da4] text-white shadow-[0_8px_20px_rgba(64,89,178,0.16)] transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -232,12 +232,12 @@ export const Login: React.FC = () => {
           </div>
 
           {/* Daily Inspiration Box (Sutil e elegante na esquerda) */}
-          <div className="mt-6 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+          <div className="mt-6 p-4 rounded-xl bg-[#f7f7f9] border border-[#e8e8ed]">
             <div className="flex items-center gap-1.5 text-blue-400 mb-1.5">
               <Quote className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mensagem do Dia</span>
+              <span className="text-[10px] font-medium text-slate-400">Mensagem do Dia</span>
             </div>
-            <p className="text-[11px] italic text-slate-300 leading-relaxed">
+            <p className="text-[11px] italic text-[#5f5f6a] leading-relaxed">
               "{dailyMessage.text}"
             </p>
             <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mt-1.5 text-right">
@@ -246,7 +246,7 @@ export const Login: React.FC = () => {
           </div>
 
           {/* Bottom Security Footer */}
-          <div className="mt-5 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="mt-5 pt-4 border-t border-[#e8e8ed] flex items-center justify-between text-[10px] text-[#85858f]">
             <span className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
               Ambiente Criptografado & Seguro
@@ -258,28 +258,28 @@ export const Login: React.FC = () => {
         {/* ============================================================ */}
         {/* RIGHT SIDE: Dedicated Space for "Centro do Sorriso" Image     */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[640px] flex flex-col justify-between overflow-hidden group">
+        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[620px] flex flex-col justify-between overflow-hidden group">
 
           {/* Main Showcase Image */}
           <img
             src={clinicShowcaseImg}
             alt="Centro do Sorriso - Clínica de Excelência"
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out"
+            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out"
           />
 
           {/* Cinematic Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/30 to-transparent z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07090e] via-transparent to-transparent z-10 hidden lg:block" />
-          <div className="absolute inset-0 bg-blue-950/20 mix-blend-overlay z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101014] via-[#101014]/25 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#101014]/70 via-transparent to-transparent z-10 hidden lg:block" />
+          <div className="absolute inset-0 bg-[#4059b2]/10 mix-blend-multiply z-10" />
 
           {/* Top Floating Glass Badge */}
           <div className="relative z-20 p-6 sm:p-8 flex justify-between items-start">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/70 border border-white/10 backdrop-blur-xl text-white text-xs font-semibold shadow-xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#101014]/70 border border-white/10 backdrop-blur-xl text-white text-xs font-semibold shadow-xl">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
               Centro do Sorriso • Unidade Matriz
             </div>
 
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-white/10 backdrop-blur-xl text-slate-300 text-[11px] font-medium shadow-lg">
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#101014]/65 border border-white/10 backdrop-blur-xl text-slate-300 text-[11px] font-medium shadow-lg">
               <Clock className="w-3.5 h-3.5 text-blue-400" />
               Atendimento Integrado
             </div>
@@ -287,7 +287,7 @@ export const Login: React.FC = () => {
 
           {/* Bottom Floating Information Showcase */}
           <div className="relative z-20 p-6 sm:p-10 space-y-4">
-            <div className="max-w-md p-5 rounded-2xl bg-slate-950/80 border border-white/10 backdrop-blur-2xl shadow-2xl">
+            <div className="max-w-md p-5 rounded-xl bg-[#101014]/78 border border-white/10 backdrop-blur-2xl shadow-2xl">
               <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-widest mb-1.5">
                 <HeartHandshake className="w-4 h-4 text-blue-400" />
                 Excelência & Cuidado Humano
@@ -321,7 +321,7 @@ export const Login: React.FC = () => {
       </div>
 
       {/* Page Minimal Footer */}
-      <div className="absolute bottom-2 text-center w-full text-[10px] text-slate-500 pointer-events-none">
+      <div className="absolute bottom-2 text-center w-full text-[10px] text-[#85858f] pointer-events-none">
         &copy; {new Date().getFullYear()} Centro do Sorriso | Todos os direitos reservados
       </div>
     </div>

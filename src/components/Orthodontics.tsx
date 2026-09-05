@@ -1363,7 +1363,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                       <span className="material-symbols-outlined text-6xl text-purple-500">groups</span>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pacientes Ativos (Total)</p>
+                  <p className="text-slate-400 text-[10px] font-semibold mb-1">Pacientes Ativos (Total)</p>
                   <div className="flex items-end gap-2">
                       <span className="text-3xl font-display font-bold text-text">{activeCount}</span>
                   </div>
@@ -1374,7 +1374,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                       <span className="material-symbols-outlined text-6xl text-blue-500">person_add</span>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                  <p className="text-slate-400 text-[10px] font-semibold mb-1">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
                   <div className="flex items-end gap-2 mb-2">
                       <span className="text-3xl font-display font-bold text-blue-400">+{startedInMonth}</span>
                   </div>
@@ -1392,7 +1392,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                       <span className="material-symbols-outlined text-6xl text-blue-500">flag</span>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                  <p className="text-slate-400 text-[10px] font-semibold mb-1">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
                   <div className="flex items-end gap-2 mb-2">
                       <span className="text-3xl font-display font-bold text-blue-400">{finishedInMonth}</span>
                   </div>
@@ -1408,7 +1408,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               {/* Attendance */}
               <SpotlightCard className="glass-panel rounded-2xl p-4 relative overflow-hidden group flex items-center justify-between" spotlightColor="rgba(139, 92, 246, 0.4)">
                   <div>
-                      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Taxa de Presença</p>
+                      <p className="text-slate-400 text-[10px] font-semibold mb-1">Taxa de Presença</p>
                       <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</span>
                           <span className={`text-[10px] font-black uppercase ${
@@ -1619,7 +1619,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                 <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-3xl font-display">
                                                     {entry.value}
                                                 </text>
-                                                <text x={cx} y={cy + 22} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                                                <text x={cx} y={cy + 22} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] font-semibold">
                                                     {entry.name}
                                                 </text>
                                             </g>
@@ -1845,7 +1845,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(168, 85, 247, 0.2)">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Dias de Ortodontia</span>
+                          <span className="text-[10px] font-medium text-purple-400">Dias de Ortodontia</span>
                           <Calendar className="w-4 h-4 text-purple-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-text">{orthoDaysCount} <span className="text-xs font-normal text-slate-400">dias</span></span>
@@ -1854,7 +1854,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(59, 130, 246, 0.2)">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Total Agendados</span>
+                          <span className="text-[10px] font-medium text-blue-400">Total Agendados</span>
                           <Clock className="w-4 h-4 text-blue-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-text">{totalScheduledCount} <span className="text-xs font-normal text-slate-400">consultas</span></span>
@@ -1863,7 +1863,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.2)">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Atendidos / Presentes</span>
+                          <span className="text-[10px] font-medium text-blue-400">Atendidos / Presentes</span>
                           <CheckCircle2 className="w-4 h-4 text-blue-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-blue-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
@@ -1872,7 +1872,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(244, 63, 94, 0.2)">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Faltas / Ausentes</span>
+                          <span className="text-[10px] font-medium text-rose-400">Faltas / Ausentes</span>
                           <XCircle className="w-4 h-4 text-rose-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-rose-400">{totalAbsentCount} <span className="text-xs font-normal text-slate-400">ausências</span></span>
@@ -1889,7 +1889,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           return ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((dayName, idx) => (
                               <div
                                   key={dayName}
-                                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl ${
+                                  className={`py-2 text-xs font-medium rounded-xl ${
                                       orthoDaysHeader.includes(idx)
                                           ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                                           : 'text-slate-400 bg-panel/50'
@@ -2048,7 +2048,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               {/* Card 1: Total Pacientes Ativos */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
+                      <span className="text-xs font-medium text-slate-400">Pacientes Ativos</span>
                       <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400 material-symbols-outlined text-base">groups</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
@@ -2060,7 +2060,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               {/* Card 2: Mensagens Enviadas */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
+                      <span className="text-xs font-medium text-slate-400">Mensagens Enviadas</span>
                       <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">send</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
@@ -2078,7 +2078,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               {/* Card 3: Aditivos Assinados Digitalmente */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados (Digital)</span>
+                      <span className="text-xs font-medium text-slate-400">Aditivos Assinados (Digital)</span>
                       <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">draw</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
@@ -2096,7 +2096,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               {/* Card 4: Pendências */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Assinatura</span>
+                      <span className="text-xs font-medium text-slate-400">Pendentes de Assinatura</span>
                       <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">pending_actions</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
@@ -2113,7 +2113,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="glass-panel p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between shadow-lg shadow-amber-950/10">
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Vencimento Alterado</span>
+                              <span className="text-xs font-medium text-amber-400">Vencimento Alterado</span>
                               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase">Admin</span>
                           </div>
                           <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">edit_calendar</span>
@@ -2901,7 +2901,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       {activeSubTab === 'patients' && (
                           <button
                               onClick={() => { setIsNewContractModalOpen(true); }}
-                              className="px-3.5 py-1.5 btn btn-primary text-white rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                              className="px-3.5 py-1.5 btn btn-primary text-white rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
                           >
                               <LayoutPanelLeft className="w-3.5 h-3.5" /> Novo Paciente
                           </button>
@@ -2928,7 +2928,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             key={tab.id}
                             onClick={() => setActiveSubTab(tab.id as OrthoTab)}
                             className={`
-                                px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
+                                px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer
                                 ${activeSubTab === tab.id
                                     ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
                                     : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
@@ -3257,7 +3257,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                       {/* Add/Schedule Patient Control */}
                       <div className="bg-purple-950/20 border border-purple-500/30 p-4 rounded-xl flex flex-col gap-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                          <h4 className="text-xs font-medium text-purple-300 flex items-center gap-2">
                               <UserPlus className="w-4 h-4" /> Agendar / Marcar Presença de Paciente
                           </h4>
                           <div className="flex flex-wrap gap-2">
@@ -3301,7 +3301,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                       {/* Scheduled Patients List */}
                       <div className="flex flex-col gap-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          <h4 className="text-xs font-medium text-slate-400">
                               Pacientes do Dia ({patients.filter(p => {
                                   const dateKey = formatDateKey(selectedCalendarDay);
                                   const status = p.attendance?.[dateKey];
@@ -3506,7 +3506,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                       <span className="material-symbols-outlined text-amber-400 text-base">edit_calendar</span>
-                                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Controle de Vencimento (Admin)</span>
+                                      <span className="text-xs font-medium text-amber-400">Controle de Vencimento (Admin)</span>
                                   </div>
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Somente Administrador</span>
                               </div>

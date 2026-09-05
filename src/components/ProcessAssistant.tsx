@@ -110,7 +110,7 @@ export const ProcessAssistant: React.FC = () => {
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-text">IA de Processos</h3>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest leading-none mt-1">Assistente de Treinamento</p>
+                        <p className="text-[10px] text-blue-400 font-semibold leading-none mt-1">Assistente de Treinamento</p>
                     </div>
                 </div>
             </div>

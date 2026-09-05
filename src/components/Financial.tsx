@@ -1609,11 +1609,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedIncomes.length})</span>
                             <div className="flex gap-3">
                                 <div className="flex flex-col items-end">
-                                    <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">Bruto</span>
+                                    <span className="text-[7px] text-slate-500 font-semibold mb-0">Bruto</span>
                                     <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex flex-col items-end border-l border-border pl-3">
-                                    <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0">Líquido</span>
+                                    <span className="text-[7px] text-slate-400 font-semibold mb-0">Líquido</span>
                                     <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesNetSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
@@ -1625,7 +1625,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         setIsBulkDeleteConfirmOpen(false);
                                         setActiveBulkActionTab(activeBulkActionTab === 'income' ? null : 'income');
                                     }}
-                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/10"
+                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[9px] font-semibold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/10"
                                 >
                                     Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                                 </button>
@@ -1697,15 +1697,15 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     )}
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">Meta Diária</span>
+                        <span className="text-[8px] text-amber-500 font-semibold mb-0">Meta Diária</span>
                         <span className="text-[10px] text-amber-400 font-bold">R$ {dailyMetaRequired.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">Receita</span>
+                        <span className="text-[8px] text-slate-500 font-semibold mb-0">Receita</span>
                         <span className="text-[10px] text-blue-400 font-bold">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">Total NF</span>
+                        <span className="text-[8px] text-blue-500 font-semibold mb-0">Total NF</span>
                         <span className="text-[10px] text-blue-400 font-bold">R$ {totalNF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                 </div>
@@ -1810,7 +1810,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <span className="text-[9px] text-red-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedExpenses.length})</span>
                     <div className="flex gap-3">
                         <div className="flex flex-col items-end">
-                            <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">Total</span>
+                            <span className="text-[7px] text-slate-500 font-semibold mb-0">Total</span>
                             <span className="text-[10px] text-red-300 font-bold">R$ {selectedExpensesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                     </div>
@@ -1822,7 +1822,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 setIsBulkDeleteExpensesConfirmOpen(false);
                                 setActiveBulkActionTab(activeBulkActionTab === 'expense' ? null : 'expense');
                             }}
-                            className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+                            className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-semibold transition-all flex items-center gap-1.5 shadow-md"
                         >
                             Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                         </button>
@@ -2000,7 +2000,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                 </div>
                 <div className="flex items-center gap-2 bg-panel p-1 rounded-xl border border-border">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">Mês:</label>
+                    <label className="text-[10px] text-slate-400 font-medium px-2">Mês:</label>
                     <input type="month" value={selectedDreMonth} onChange={e => setSelectedDreMonth(e.target.value)} className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                 </div>
             </div>
@@ -2034,8 +2034,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <TrendingUp className="w-4 h-4 text-blue-500" /> Fluxo de Caixa (12 Meses)
                     </h3>
                     <div className="flex gap-4">
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entradas</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Saídas</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-[10px] text-slate-400 font-medium">Entradas</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><span className="text-[10px] text-slate-400 font-medium">Saídas</span></div>
                     </div>
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
@@ -2148,7 +2148,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center">
                                     <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
                                 </div>
-                                <p className="text-[10px] text-blue-300 font-black uppercase tracking-widest">Recomendação Estratégica</p>
+                                <p className="text-[10px] text-blue-300 font-semibold">Recomendação Estratégica</p>
                             </div>
                             <p className="text-xs text-slate-300 leading-relaxed font-medium">
                                 {currentData.result > 0
@@ -2276,10 +2276,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                    </div>
 
                    <div className="flex flex-wrap gap-2 text-xs justify-end">
-                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-blue-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
-                      <button onClick={() => openBulkModal('expense')} className="px-3 py-1.5 glass-button text-rose-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
-                      <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
-                      <button onClick={() => openModal('expense')} className="px-3 py-1.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 rounded-xl font-bold flex items-center gap-1.5 transition-all"><Minus className="w-3.5 h-3.5" /> Despesa</button>
+                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-blue-400 rounded-lg font-semibold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
+                      <button onClick={() => openBulkModal('expense')} className="px-3 py-1.5 glass-button text-rose-400 rounded-lg font-semibold flex items-center gap-1.5 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
+                      <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-lg font-semibold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
+                      <button onClick={() => openModal('expense')} className="px-3 py-1.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 rounded-lg font-semibold flex items-center gap-1.5 transition-all"><Minus className="w-3.5 h-3.5" /> Despesa</button>
                    </div>
                </div>
 
@@ -2290,7 +2290,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                              key={tab.id}
                              onClick={() => setActiveSubTab(tab.id as SubTab)}
                              className={`
-                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
+                                 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer
                                  ${activeSubTab === tab.id
                                      ? 'bg-[#4059B2]/10 text-[#4059B2] dark:bg-[#7460A8]/15 dark:text-[#7460A8] border border-[#4059B2]/30 dark:border-[#7460A8]/30 shadow-sm'
                                      : 'text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent'}
@@ -2320,11 +2320,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#7460A8] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
+                             <p className="text-[#7460A8] dark:text-[#2DD4BF] text-[11px] font-semibold mb-1">Receita Realizada</p>
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
                          </div>
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#4059B2] dark:text-[#7460A8] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
+                             <p className="text-[#4059B2] dark:text-[#7460A8] text-[11px] font-semibold mb-1">Ticket Médio Total</p>
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                          </div>
                      </div>
@@ -2387,7 +2387,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                                 <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="middle" className="fill-white font-black text-sm font-mono">
                                                                     R$ {entry.value?.toLocaleString('pt-BR', { notation: "compact", maximumFractionDigits: 1 })}
                                                                 </text>
-                                                                <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="middle" className="fill-slate-300 text-[9px] font-extrabold uppercase tracking-wider">
+                                                                <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="middle" className="fill-slate-300 text-[9px] font-semibold">
                                                                     {entry.name?.length > 14 ? `${entry.name.slice(0, 12)}...` : entry.name}
                                                                 </text>
                                                             </g>
@@ -2572,7 +2572,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                         <div>
                             <h3 className="text-xl font-black text-text uppercase tracking-tight">Lançamentos em Massa (Grade Excel)</h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
+                            <p className="text-xs text-slate-500 font-semibold">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
                         </div>
                         <button onClick={() => setIsBulkModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button>
                     </div>
@@ -2833,9 +2833,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {selectedAccountForStatement && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
                 <div className="bg-surface border border-border w-full max-w-5xl rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><div className="flex items-center gap-4"><div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10"><Wallet className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-text leading-none mb-1">Extrato: {selectedAccountForStatement.name}</h3><p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{selectedAccountForStatement.bank}</p></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
+                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><div className="flex items-center gap-4"><div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10"><Wallet className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-text leading-none mb-1">Extrato: {selectedAccountForStatement.name}</h3><p className="text-xs text-slate-500 font-semibold">{selectedAccountForStatement.bank}</p></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
                     <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">Líquido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} • {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-blue-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>)}</div>
-                    <div className="p-8 border-t border-border bg-surface flex justify-between items-center"><div className="flex gap-8"><div className="flex flex-col"><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saldo Atual Real</span><span className="text-2xl font-bold text-text">R$ {((selectedAccountForStatement.initialBalance || 0) + transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95">Fechar Extrato</button></div>
+                    <div className="p-8 border-t border-border bg-surface flex justify-between items-center"><div className="flex gap-8"><div className="flex flex-col"><span className="text-[10px] text-slate-500 font-semibold">Saldo Atual Real</span><span className="text-2xl font-bold text-text">R$ {((selectedAccountForStatement.initialBalance || 0) + transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95">Fechar Extrato</button></div>
                 </div>
             </div>
         )}

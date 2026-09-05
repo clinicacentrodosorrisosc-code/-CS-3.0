@@ -145,12 +145,12 @@ export const Support: React.FC<SupportProps> = () => {
   return (
     <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
-        <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
+        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
 
                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                    <div>
-                       <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
+                       <h1 className="text-2xl md:text-3xl font-semibold text-text leading-tight tracking-tight mb-2">
                           Chamados & Suporte
                        </h1>
                        <p className="text-slate-400 text-sm">Relate problemas no sistema, operacionais ou de manutenção.</p>

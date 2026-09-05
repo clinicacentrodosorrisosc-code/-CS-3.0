@@ -82,7 +82,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
           </div>
 
           <div className="text-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
+            <span className="text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
               Restrito à Gestão
             </span>
             <h2 className="text-2xl font-bold text-text mt-3 mb-1">Cofre & Workspace da Gestão</h2>
@@ -106,14 +106,14 @@ export const Passwords: React.FC<PasswordsProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-900/40 transition-all active:scale-98 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-lg font-semibold text-sm shadow-lg shadow-rose-900/40 transition-all active:scale-98 flex items-center justify-center gap-2"
             >
               <Unlock className="w-4 h-4" />
               <span>Desbloquear Cofre</span>
             </button>
           </form>
 
-          <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-border/60 w-full justify-center">
+          <div className="flex items-center gap-2 text-[10px] text-slate-500 font-medium pt-2 border-t border-border/60 w-full justify-center">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
             <span>Sessão Protegida de Alta Segurança</span>
           </div>

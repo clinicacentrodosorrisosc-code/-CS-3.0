@@ -220,7 +220,7 @@ export const BankingVault: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/60 border border-border p-4 md:p-6 rounded-3xl backdrop-blur-sm">
           <div>
-            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400">
+            <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
               <Building2 className="w-4 h-4" />
               <span>Contas & Chaves Pix da Gestão</span>
             </div>
@@ -271,7 +271,7 @@ export const BankingVault: React.FC = () => {
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div>
-                      <span className="px-2.5 py-0.5 rounded-md bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider">
+                      <span className="px-2.5 py-0.5 rounded-md bg-white/10 text-white text-[10px] font-medium">
                         {bank.accountType}
                       </span>
                       <h4 className="text-lg font-bold text-white mt-1.5">{bank.bankName}</h4>
@@ -409,7 +409,7 @@ export const BankingVault: React.FC = () => {
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Cartão Empresarial</span>
+                      <span className="text-[10px] font-semibold text-purple-400">Cartão Empresarial</span>
                       <h4 className="text-sm font-bold text-white">{card.cardName}</h4>
                     </div>
                     <span className="text-xs font-bold text-slate-300 px-2 py-0.5 rounded bg-white/10">{card.brand}</span>
@@ -568,7 +568,7 @@ export const BankingVault: React.FC = () => {
 
               {/* Pix Info */}
               <div className="p-3 bg-blue-950/20 border border-blue-500/20 rounded-2xl space-y-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Dados do Pix</span>
+                <span className="text-[10px] font-semibold text-blue-400">Dados do Pix</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Chave</label>

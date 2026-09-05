@@ -51,9 +51,12 @@
   --text-muted: #85858F;
   --text-dim: #AEAEB7;
 
-  --sidebar-width-expanded: 224px;
-  --sidebar-width-collapsed: 60px;
+  --sidebar-width-expanded: 208px;
+  --sidebar-width-collapsed: 56px;
   --header-height: 60px;
+  --page-pad: clamp(1rem, 2vw, 1.5rem);
+  --radius-panel: 0.875rem;
+  --radius-control: 0.5rem;
 }
 
 .dark {
@@ -122,6 +125,165 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  border-radius: 0.5rem;
+  background: #4059B2;
+  color: white;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.skip-link:focus { top: 1rem; }
+
+.odonto-app {
+  background-image:
+    linear-gradient(rgba(83, 111, 209, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 111, 209, 0.018) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.dark .odonto-app {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+}
+
+.module-stage {
+  background: rgba(247, 247, 249, 0.82);
+}
+
+.dark .module-stage {
+  background: rgba(15, 15, 19, 0.88);
+}
+
+.odonto-app h1,
+.odonto-app h2,
+.odonto-app h3,
+.odonto-app h4 {
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.odonto-app h1 { font-weight: 600 !important; }
+.odonto-app h2,
+.odonto-app h3,
+.odonto-app h4 { font-weight: 600; }
+
+.odonto-app button,
+.odonto-app [role="tab"] {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.odonto-app .uppercase {
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+.odonto-app .font-black,
+.odonto-app .font-extrabold {
+  font-weight: 600 !important;
+}
+
+.odonto-app .glass-panel,
+.odonto-app .nexus-card,
+.odonto-app .fintech-card,
+.odonto-app .bezel-outer,
+.odonto-app .bezel-inner {
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 1px 2px rgba(32, 32, 39, 0.025), 0 10px 28px rgba(32, 32, 39, 0.025) !important;
+}
+
+.dark .odonto-app .glass-panel,
+.dark .odonto-app .nexus-card,
+.dark .odonto-app .fintech-card,
+.dark .odonto-app .bezel-outer,
+.dark .odonto-app .bezel-inner {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035) !important;
+}
+
+.odonto-app .bg-panel {
+  background-color: color-mix(in srgb, var(--surface) 88%, var(--bg-subtle)) !important;
+}
+
+.odonto-app .bg-surface {
+  background-color: var(--surface) !important;
+}
+
+.odonto-app table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.odonto-app thead {
+  background: var(--bg-subtle) !important;
+  color: var(--text-muted) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.odonto-app thead th {
+  font-size: 0.6875rem;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+.odonto-app tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.odonto-app input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.odonto-app select,
+.odonto-app textarea {
+  border-radius: var(--radius-control) !important;
+  box-shadow: none !important;
+}
+
+.odonto-app [class*="blur-[120px]"],
+.odonto-app [class*="blur-[140px]"],
+.odonto-app [class*="blur-[160px]"] {
+  display: none !important;
+}
+
+.odonto-app .rounded-3xl { border-radius: 1rem !important; }
+.odonto-app .rounded-2xl { border-radius: 0.75rem !important; }
+.odonto-app .rounded-xl { border-radius: 0.625rem !important; }
+
+.odonto-app .shadow-2xl,
+.odonto-app .shadow-xl,
+.odonto-app .shadow-lg,
+.odonto-app .shadow-md,
+.odonto-app .shadow-sm {
+  --tw-shadow-color: rgba(32, 32, 39, 0.06) !important;
+}
+
+.dark .odonto-app .shadow-2xl,
+.dark .odonto-app .shadow-xl,
+.dark .odonto-app .shadow-lg,
+.dark .odonto-app .shadow-md,
+.dark .odonto-app .shadow-sm {
+  --tw-shadow-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+.light .odonto-app .text-slate-300 { color: #50505B !important; }
+.light .odonto-app .text-slate-400 { color: #696974 !important; }
+.light .odonto-app .text-slate-500 { color: #85858F !important; }
+.light .odonto-app .divide-white\/5 > :not([hidden]) ~ :not([hidden]),
+.light .odonto-app .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-subtle) !important;
+}
+
+@media (max-width: 1023px) {
+  .module-stage { padding-top: 0; }
 }
 
 button, a, input, select, textarea {

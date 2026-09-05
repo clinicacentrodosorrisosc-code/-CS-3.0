@@ -171,7 +171,7 @@ export const CampaignCalendar: React.FC = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-extrabold uppercase tracking-wider animate-pulse flex items-center gap-1.5 font-mono">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-semibold animate-pulse flex items-center gap-1.5 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                   Campanha Ativa do Mês ({MONTHS[activeMonthCampaign.monthIndex]})
                 </span>
