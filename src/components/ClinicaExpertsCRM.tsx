@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Download, RefreshCw, Users, Wifi, WifiOff } from 'lucide-react';
+import { Download, RefreshCw, Users, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../supabaseClient';
 
@@ -194,19 +194,36 @@ export const ClinicaExpertsCRM: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="h-full grid place-items-center text-sm text-slate-500">Carregando CRM...</div>;
+    return (
+      <div className="h-full bg-[#f7f7f9] p-5 dark:bg-[#0f0f13]">
+        <div className="mb-7 flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-5 w-44 animate-pulse rounded bg-slate-200/80 dark:bg-white/10" />
+            <div className="h-3 w-64 animate-pulse rounded bg-slate-200/60 dark:bg-white/[0.06]" />
+          </div>
+          <div className="h-9 w-36 animate-pulse rounded-lg bg-slate-200/70 dark:bg-white/[0.08]" />
+        </div>
+        <div className="flex gap-3 overflow-hidden">
+          {[0, 1, 2].map(item => <div key={item} className="h-72 w-[282px] shrink-0 animate-pulse rounded-xl bg-white dark:bg-white/[0.04]" />)}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="h-full min-h-0 flex flex-col bg-[#f5f7f6] dark:bg-[#101714] text-[#17211d] dark:text-slate-100">
-      <header className="px-5 py-4 border-b border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#15201b]/80 backdrop-blur-xl">
+    <div className="h-full min-h-0 flex flex-col bg-[#f7f7f9] dark:bg-[#0f0f13] text-[#202027] dark:text-[#f4f4f5]">
+      <header className="px-5 py-4 border-b border-[#e6e6eb] dark:border-white/[0.07] bg-white/85 dark:bg-[#141419]/90 backdrop-blur-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight">CRM Clinica Experts</h1>
-              {configured ? <Wifi className="w-4 h-4 text-emerald-500" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
+              <span className="h-5 w-1 rounded-full bg-[#536fd1]" aria-hidden="true" />
+              <h1 className="text-lg font-semibold tracking-[-0.02em]">CRM Clinica Experts</h1>
+              <span className={`ml-1 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium ${configured ? 'bg-[#536fd1]/8 text-[#4059b2] dark:bg-[#7c8fe0]/10 dark:text-[#aab7f4]' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'}`}>
+                {configured ? <span className="size-1.5 rounded-full bg-[#7460a8]" /> : <WifiOff className="size-3" />}
+                {configured ? 'Conectado' : 'Desconectado'}
+              </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-[11px] text-[#7b7b86] dark:text-[#92929d] mt-1.5 pl-3">
               {lastSync ? `Ultima atualizacao: ${new Date(lastSync).toLocaleString('pt-BR')}` : 'Aguardando a primeira sincronizacao'}
             </p>
           </div>
@@ -214,71 +231,75 @@ export const ClinicaExpertsCRM: React.FC = () => {
             <select
               value={selectedPipelineId}
               onChange={event => setSelectedPipelineId(event.target.value)}
-              className="h-10 px-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1a2620] text-sm font-semibold"
+              aria-label="Selecionar funil"
+              className="h-9 min-w-40 px-3 rounded-lg border border-[#dedee4] dark:border-white/10 bg-white dark:bg-[#1b1b21] text-xs font-medium outline-none focus:border-[#536fd1] focus:ring-2 focus:ring-[#536fd1]/10"
             >
               {pipelines.map(pipeline => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}
             </select>
             <button
               onClick={() => void synchronize(true)}
               disabled={syncing || !configured}
-              className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black uppercase tracking-wide flex items-center gap-2"
+              className="h-9 px-3.5 rounded-lg bg-[#4059b2] hover:bg-[#354da4] disabled:opacity-45 text-white text-xs font-semibold flex items-center gap-2 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Atualizando' : 'Atualizar agora'}
+              {syncing ? 'Atualizando...' : 'Atualizar'}
             </button>
           </div>
         </div>
         {!configured && (
-          <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-800 dark:text-amber-200">
+          <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/[0.07] px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200">
             A integracao ainda precisa do token do Clinica Experts e da migration 031 no Supabase.
           </div>
         )}
       </header>
 
-      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden p-4">
+      <div className="flex-1 min-h-0 overflow-x-auto overflow-y-hidden p-4 lg:p-5">
         <div className="h-full flex gap-3 min-w-max">
           {pipelineStages.map(stage => {
             const cards = opportunities.filter(item => item.stage_id === stage.id);
             const exportable = new Set(cards.map(item => normalizePhoneBR(item.patient_phone)).filter(Boolean)).size;
             return (
-              <section key={stage.id} className="w-[290px] h-full flex flex-col rounded-2xl border border-black/10 dark:border-white/10 bg-white/65 dark:bg-[#15201b]/70 overflow-hidden">
-                <div className="p-3 border-b border-black/10 dark:border-white/10">
+              <section key={stage.id} className="w-[282px] h-full flex flex-col rounded-xl border border-[#e7e7eb] dark:border-white/[0.07] bg-[#fbfbfc] dark:bg-[#15151a] overflow-hidden">
+                <div className="px-3.5 pt-3.5 pb-3 border-b border-[#ececf0] dark:border-white/[0.06]">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="font-black text-sm truncate">{stage.name}</h2>
-                    <span className="text-[10px] font-black px-2 py-1 rounded-full bg-slate-200 dark:bg-white/10">{cards.length}</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="size-1.5 shrink-0 rounded-full bg-[#7460a8]" aria-hidden="true" />
+                      <h2 className="font-semibold text-[13px] truncate">{stage.name}</h2>
+                    </div>
+                    <span className="text-[10px] font-medium tabular-nums text-[#777782] dark:text-[#a0a0aa]">{cards.length}</span>
                   </div>
                   <button
                     onClick={() => exportStage(stage)}
                     disabled={!exportable}
-                    className="mt-3 w-full h-9 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase flex items-center justify-center gap-2"
+                    className="mt-3 h-8 w-full rounded-lg border border-[#dfe2ef] bg-white hover:border-[#536fd1]/40 hover:text-[#4059b2] disabled:opacity-40 dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:text-[#aab7f4] text-[#5d5d68] dark:text-[#b0b0ba] text-[10px] font-medium flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5" /> Exportar {exportable} para WhatsApp
+                    <Download className="w-3.5 h-3.5" /> Exportar para WhatsApp <span className="text-[#92929c]">({exportable})</span>
                   </button>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
+                <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5">
                   {cards.map(card => (
-                    <article key={card.id} className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1a2620] p-3 shadow-sm">
+                    <article key={card.id} className="group rounded-lg border border-[#e9e9ed] dark:border-white/[0.07] bg-white dark:bg-[#1b1b21] p-3 transition-all hover:-translate-y-px hover:border-[#536fd1]/25 hover:shadow-[0_5px_18px_rgba(32,32,39,0.05)] dark:hover:border-[#7c8fe0]/20">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-bold text-sm truncate">{card.patient_name || card.title}</p>
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">{card.patient_phone || 'Sem telefone'}</p>
+                          <p className="font-medium text-[13px] truncate">{card.patient_name || card.title}</p>
+                          <p className={`text-[11px] truncate mt-1 ${card.patient_phone ? 'text-[#777782] dark:text-[#92929d]' : 'text-amber-600/80 dark:text-amber-300/80'}`}>{card.patient_phone || 'Sem telefone'}</p>
                         </div>
-                        <span className="text-[9px] font-black text-slate-400">P{card.priority}</span>
+                        <span className="text-[9px] font-medium text-[#a0a0a9]">P{card.priority}</span>
                       </div>
-                      {card.seller_name && <p className="mt-2 text-[10px] text-slate-500 flex items-center gap-1"><Users className="w-3 h-3" /> {card.seller_name}</p>}
+                      {card.seller_name && <p className="mt-2.5 pt-2 border-t border-[#f0f0f2] dark:border-white/[0.05] text-[10px] text-[#85858f] flex items-center gap-1.5"><Users className="w-3 h-3" /> {card.seller_name}</p>}
                     </article>
                   ))}
-                  {!cards.length && <div className="py-10 text-center text-xs text-slate-400">Nenhuma oportunidade</div>}
+                  {!cards.length && <div className="py-10 text-center text-[11px] text-[#a0a0a9]">Nenhuma oportunidade nesta etapa</div>}
                 </div>
               </section>
             );
           })}
           {!pipelineStages.length && (
-            <div className="w-[min(520px,calc(100vw-3rem))] rounded-2xl border border-dashed border-black/15 dark:border-white/15 grid place-items-center text-center p-8">
+            <div className="w-[min(520px,calc(100vw-3rem))] rounded-xl border border-dashed border-[#d8d8df] dark:border-white/10 bg-white/60 dark:bg-white/[0.02] grid place-items-center text-center p-8">
               <div>
-                <Users className="w-8 h-8 mx-auto text-slate-400 mb-3" />
-                <p className="font-bold">Nenhum funil sincronizado</p>
-                <p className="text-xs text-slate-500 mt-1">Configure o token e execute a primeira sincronizacao.</p>
+                <div className="mx-auto mb-3 grid size-9 place-items-center rounded-lg bg-[#536fd1]/8 text-[#536fd1] dark:bg-[#7c8fe0]/10 dark:text-[#aab7f4]"><Users className="w-4 h-4" /></div>
+                <p className="font-medium text-sm">Nenhum funil sincronizado</p>
+                <p className="text-xs text-[#85858f] mt-1">Configure o token e execute a primeira sincronizacao.</p>
               </div>
             </div>
           )}
