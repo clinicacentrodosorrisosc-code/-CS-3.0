@@ -302,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const renderNavGroup = (items: MenuItem[], groupTitle?: string) => (
     <div className="flex flex-col gap-1 w-full">
       {groupTitle && isExpanded && (
-        <span className="text-[10px] font-extrabold text-[#86938D] dark:text-slate-500 uppercase tracking-widest px-3 py-1.5 mt-2 select-none">
+        <span className="text-[10px] font-extrabold text-[#85858F] dark:text-slate-500 uppercase tracking-widest px-3 py-1.5 mt-2 select-none">
           {groupTitle}
         </span>
       )}
@@ -369,7 +369,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="pl-8 pr-2 py-1 flex flex-col gap-0.5 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-[#DFE6E2] dark:before:bg-white/10"
+                className="pl-8 pr-2 py-1 flex flex-col gap-0.5 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-[#E5E5EA] dark:before:bg-white/10"
               >
                 {validSubItems.map(subItem => (
                   <button
@@ -433,7 +433,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         `}
       >
         {/* Top Branding & Expand/Collapse Trigger */}
-        <div className="h-[60px] px-3.5 flex items-center justify-between border-b border-[#DFE6E2] dark:border-white/[0.06] select-none">
+        <div className="h-[60px] px-3.5 flex items-center justify-between border-b border-[#E5E5EA] dark:border-white/[0.06] select-none">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-[#536FD1] p-[1px] shrink-0">
               <div className="w-full h-full bg-white dark:bg-[#141419] rounded-[7px] flex items-center justify-center font-semibold text-[#4059B2] dark:text-[#AAB7F4] text-xs">
@@ -448,7 +448,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 exit={{ opacity: 0, x: -6 }}
                 className="flex flex-col min-w-0"
               >
-                <span className="text-xs font-bold text-[#17211D] dark:text-slate-100 tracking-tight truncate leading-tight">
+                <span className="text-xs font-bold text-[#202027] dark:text-slate-100 tracking-tight truncate leading-tight">
                   Centro do Sorriso
                 </span>
                 <span className="text-[9px] text-[#7460A8] dark:text-[#A99BD0] font-medium tracking-wide">
@@ -462,7 +462,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             type="button"
             onClick={toggleExpanded}
-            className="hidden lg:flex p-1.5 rounded-lg text-[#5E6D66] hover:text-[#17211D] hover:bg-[#F0F4F2] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.06] border border-transparent transition-all"
+            className="hidden lg:flex p-1.5 rounded-lg text-[#696974] hover:text-[#202027] hover:bg-[#F3F3F6] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.06] border border-transparent transition-all"
             title={isExpanded ? "Recolher Menu" : "Expandir Menu"}
             aria-label="Alternar Menu Lateral"
           >
@@ -509,10 +509,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {isExpanded && (
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[11px] font-bold text-[#17211D] dark:text-slate-100 truncate leading-tight">
+                  <span className="text-[11px] font-bold text-[#202027] dark:text-slate-100 truncate leading-tight">
                     {profileName}
                   </span>
-                  <span className="text-[9px] text-[#5E6D66] dark:text-slate-400 truncate">
+                  <span className="text-[9px] text-[#696974] dark:text-slate-400 truncate">
                     {userRole === 'admin' ? 'Administrador' : userRole === 'reception' ? 'Recepção' : userRole}
                   </span>
                 </div>
@@ -555,8 +555,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               return (
                 <>
-                  <div className="px-2 py-1.5 border-b border-[#DFE6E2] dark:border-white/[0.06] flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#17211D] dark:text-slate-100">
+                  <div className="px-2 py-1.5 border-b border-[#E5E5EA] dark:border-white/[0.06] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#202027] dark:text-slate-100">
                       {currentItem.label}
                     </span>
                   </div>
@@ -575,8 +575,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={`
                             text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between
                             ${requestedSubTab === sub.id
-                              ? 'text-[#1F6F5B] dark:text-[#63B596] bg-[#1F6F5B]/10 dark:bg-[#63B596]/10 font-bold'
-                              : 'text-[#5E6D66] hover:text-[#17211D] hover:bg-[#F0F4F2] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04]'}
+                              ? 'text-[#4059B2] dark:text-[#AAB7F4] bg-[#4059B2]/10 dark:bg-[#AAB7F4]/10 font-bold'
+                              : 'text-[#696974] hover:text-[#202027] hover:bg-[#F3F3F6] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04]'}
                           `}
                         >
                           <span>{sub.label}</span>
@@ -591,7 +591,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setActiveTab(currentItem.id);
                         setFlyoutTab(null);
                       }}
-                      className="text-left px-2.5 py-1.5 rounded-lg text-xs text-[#1F6F5B] dark:text-[#63B596] hover:bg-[#F0F4F2] dark:hover:bg-white/[0.04]"
+                      className="text-left px-2.5 py-1.5 rounded-lg text-xs text-[#4059B2] dark:text-[#AAB7F4] hover:bg-[#F3F3F6] dark:hover:bg-white/[0.04]"
                     >
                       Acessar módulo
                     </button>
@@ -632,7 +632,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               `}
             >
               {/* Cover Banner */}
-              <div className="relative h-[130px] w-full overflow-hidden bg-gradient-to-br from-[#29483E] to-[#16251F]">
+              <div className="relative h-[130px] w-full overflow-hidden bg-gradient-to-br from-[#252A43] to-[#171923]">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
                 <button
@@ -641,7 +641,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="absolute top-3 right-3 size-9 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 transition-all text-white"
                   title="Editar Perfil"
                 >
-                  {isEditingProfile ? <Check className="w-4 h-4 text-emerald-400" /> : <Edit2 className="w-4 h-4 text-slate-200" />}
+                  {isEditingProfile ? <Check className="w-4 h-4 text-blue-400" /> : <Edit2 className="w-4 h-4 text-slate-200" />}
                 </button>
               </div>
 
@@ -650,7 +650,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Overlapping Avatar */}
                 <div className="absolute -top-10 left-6">
                   <div className={`
-                    size-20 rounded-2xl border-4 overflow-hidden shadow-xl relative bg-[#1F6F5B] flex items-center justify-center text-2xl font-black text-white
+                    size-20 rounded-2xl border-4 overflow-hidden shadow-xl relative bg-[#4059B2] flex items-center justify-center text-2xl font-black text-white
                     ${theme === 'dark' ? 'border-slate-950' : 'border-white'}
                   `}>
                     {userRole.slice(0, 2).toUpperCase()}
@@ -692,8 +692,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Role Pill */}
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-bold uppercase tracking-wider">
-                    <span className="size-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="size-1.5 rounded-full bg-blue-400 animate-pulse"></span>
                     {userRole === 'admin' ? 'Administrador Pro' : 'Membro da Equipe'}
                   </div>
                 </div>
@@ -712,7 +712,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="text-[9px] text-slate-500 uppercase mt-0.5">Pacientes</span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span className="text-xs font-bold text-emerald-400">{profileScore}</span>
+                    <span className="text-xs font-bold text-blue-400">{profileScore}</span>
                     <span className="text-[9px] text-slate-500 uppercase mt-0.5">Score</span>
                   </div>
                 </div>
@@ -722,7 +722,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsEditingProfile(false)}
-                    className="w-full mb-3 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
+                    className="w-full mb-3 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Salvar Alterações

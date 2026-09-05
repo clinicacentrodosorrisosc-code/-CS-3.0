@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, ComposedChart, Area
 } from 'recharts';
@@ -21,7 +21,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
   // Aggregate data by month
   const monthlyData = useMemo(() => {
     const map: Record<string, { month: string; total: number; count: number }> = {};
-    
+
     // Last 12 months placeholder to ensure order
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
@@ -104,7 +104,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
     const ws = XLSX.utils.json_to_sheet(reportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Relatório Mensal');
-    
+
     // Add Category sheet
     const catWs = XLSX.utils.json_to_sheet(categoryData.map(c => ({
       'Categoria': c.name,
@@ -125,7 +125,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 group"
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-text rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 group"
         >
           <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
           Exportar Relatório Excel
@@ -134,27 +134,27 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Vendas Mês Atual" 
-          value={stats.currentTotal} 
-          icon={<DollarSign className="w-6 h-6 text-emerald-400" />}
+        <StatCard
+          title="Vendas Mês Atual"
+          value={stats.currentTotal}
+          icon={<DollarSign className="w-6 h-6 text-blue-400" />}
           trend={stats.growth}
           isCurrency
         />
-        <StatCard 
-          title="Ticket Médio" 
-          value={stats.averageTicket} 
-          icon={<Target className="w-6 h-6 text-indigo-400" />}
+        <StatCard
+          title="Ticket Médio"
+          value={stats.averageTicket}
+          icon={<Target className="w-6 h-6 text-blue-400" />}
           isCurrency
         />
-        <StatCard 
-          title="Total de Vendas" 
-          value={stats.totalSalesCount} 
+        <StatCard
+          title="Total de Vendas"
+          value={stats.totalSalesCount}
           icon={<Calendar className="w-6 h-6 text-purple-400" />}
         />
-        <StatCard 
-          title="Vendas Mês Anterior" 
-          value={stats.lastTotal} 
+        <StatCard
+          title="Vendas Mês Anterior"
+          value={stats.lastTotal}
           icon={<Users className="w-6 h-6 text-amber-400" />}
           isCurrency
         />
@@ -165,7 +165,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         {/* Monthly Trend */}
         <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
-            <TrendingUp className="w-5 h-5 text-indigo-400" />
+            <TrendingUp className="w-5 h-5 text-blue-400" />
             <h3 className="font-bold text-lg text-text">Evolução Mensal de Vendas</h3>
           </div>
           <div className="h-[350px]">
@@ -174,16 +174,16 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => [`R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
                 />
-                <Area type="monotone" dataKey="total" fill="url(#colorTotal)" stroke="#6366f1" strokeWidth={3} />
-                <Bar dataKey="total" barSize={30} fill="#6366f1" radius={[4, 4, 0, 0]} opacity={0.3} />
+                <Area type="monotone" dataKey="total" fill="url(#colorTotal)" stroke="#536fd1" strokeWidth={3} />
+                <Bar dataKey="total" barSize={30} fill="#536fd1" radius={[4, 4, 0, 0]} opacity={0.3} />
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#536fd1" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#536fd1" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
               </ComposedChart>
@@ -194,7 +194,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         {/* Sales by Category */}
         <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
-            <Target className="w-5 h-5 text-emerald-400" />
+            <Target className="w-5 h-5 text-blue-400" />
             <h3 className="font-bold text-lg text-text">Vendas por Categoria</h3>
           </div>
           <div className="h-[350px]">
@@ -203,11 +203,11 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" horizontal={true} vertical={false} />
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={11} width={120} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 />
-                <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+                <Bar dataKey="value" fill="#536fd1" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -216,7 +216,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         {/* Sales by Professional */}
         <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
-            <Users className="w-5 h-5 text-indigo-400" />
+            <Users className="w-5 h-5 text-blue-400" />
             <h3 className="font-bold text-lg text-text">Vendas por Profissional</h3>
           </div>
           <div className="h-[350px]">
@@ -225,11 +225,11 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="value" fill="#7460a8" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -254,7 +254,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                 {monthlyData.slice().reverse().map((row, idx) => (
                   <tr key={idx} className="border-b border-border last:border-0 hover:bg-panel transition-colors">
                     <td className="py-4 text-slate-300 font-medium">{row.month}</td>
-                    <td className="py-4 text-right font-mono text-emerald-400">
+                    <td className="py-4 text-right font-mono text-blue-400">
                       {row.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </td>
                     <td className="py-4 text-right text-slate-400">{row.count}</td>
@@ -278,7 +278,7 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurrency }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     className="bg-surface border border-border rounded-2xl p-6 shadow-xl hover:border-white/20 transition-all group"
@@ -288,7 +288,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurren
         {icon}
       </div>
       {trend !== undefined && (
-        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${trend >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${trend >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>
           {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
           {Math.abs(trend).toFixed(1)}%
         </div>
@@ -297,7 +297,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurren
     <div className="space-y-1">
       <h4 className="text-slate-400 text-sm font-medium">{title}</h4>
       <p className="text-2xl font-bold text-text font-mono">
-        {isCurrency 
+        {isCurrency
           ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
           : value.toLocaleString('pt-BR')}
       </p>

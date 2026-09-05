@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Responsibility } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Plus, 
-  Trash2, 
-  Edit, 
-  ClipboardCheck, 
-  User, 
-  Search, 
-  Loader2, 
+import {
+  Plus,
+  Trash2,
+  Edit,
+  ClipboardCheck,
+  User,
+  Search,
+  Loader2,
   Info,
   Mail,
   Sparkles,
@@ -30,8 +30,8 @@ import { ProcessAssistant } from './ProcessAssistant';
 const MASTER_EMAIL = 'clinica.centrodosorrisosc@gmail.com';
 
 const PERIODICITIES = [
-  { value: 'daily', label: 'Diária', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  { value: 'weekly', label: 'Semanal', color: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' },
+  { value: 'daily', label: 'Diária', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+  { value: 'weekly', label: 'Semanal', color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
   { value: 'monthly', label: 'Mensal', color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
   { value: 'occasional', label: 'Única / Ocasional', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' }
 ];
@@ -127,13 +127,13 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
       if (user) {
         setSessionUser(user);
         const isMaster = user.email === MASTER_EMAIL;
-        
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
-        
+
         const isProfileAdmin = profile?.role === 'admin';
         setIsAdmin(isMaster || isProfileAdmin);
       }
@@ -345,7 +345,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
             updatedAt: new Date().toISOString()
           }
         ];
-        
+
         await supabase
           .from('commercial_settings')
           .upsert({ key: 'clinical_work_instructions', value: defaultInstructions }, { onConflict: 'key' });
@@ -404,7 +404,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
     setTitle('');
     setDescription('');
     setPeriodicity('daily');
-    
+
     if (profiles.length > 0) {
       setTargetEmail(profiles[0].email || '');
       setIsManualEmail(false);
@@ -412,7 +412,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
       setTargetEmail('');
       setIsManualEmail(true);
     }
-    
+
     setShowModal(true);
   };
 
@@ -422,11 +422,11 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
     setTitle(resp.title);
     setDescription(resp.description || '');
     setPeriodicity(resp.periodicity);
-    
+
     const emailExists = profiles.some(p => p.email === resp.userEmail);
     setTargetEmail(resp.userEmail);
     setIsManualEmail(!emailExists);
-    
+
     setShowModal(true);
   };
 
@@ -664,7 +664,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
   if (loading) {
     return (
       <div className="flex-1 flex flex-col justify-center items-center h-full min-h-[400px] bg-transparent">
-        <Loader2 className="w-10 h-10 text-teal-400 animate-spin" />
+        <Loader2 className="w-10 h-10 text-purple-400 animate-spin" />
         <span className="text-xs font-bold font-mono text-slate-400 mt-3 uppercase tracking-wider animate-pulse">
           Carregando Módulo de Processos...
         </span>
@@ -680,7 +680,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
         {/* Hidden Print Frame */}
         {printData && (
           <div id="print-section" className="hidden print:block absolute inset-0 bg-white text-[#1e293b] p-12 z-[999999]">
-            <div className="border-b-2 border-teal-600 pb-4 mb-6">
+            <div className="border-b-2 border-purple-600 pb-4 mb-6">
               <h1 className="text-2xl font-black uppercase text-slate-900 tracking-wide">{printData.title}</h1>
               <p className="text-xs text-slate-500 mt-2">
                 <strong>Setor:</strong> {printData.sector} | <strong>Responsáculo de Execução:</strong> {printData.handler}
@@ -708,7 +708,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
         {/* View Content */}
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
-               
+
                <div className="flex flex-col gap-6 mb-2">
                    <div>
                        <h1 className="text-4xl md:text-5xl font-bold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-tight mb-2">
@@ -730,8 +730,8 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                             onClick={() => setActiveSubTab(tab.id as any)}
                             className={`
                                 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
-                                ${activeSubTab === tab.id 
-                                    ? 'bg-panel/80 text-text shadow-lg' 
+                                ${activeSubTab === tab.id
+                                    ? 'bg-panel/80 text-text shadow-lg'
                                     : 'text-slate-500 opacity-60 hover:opacity-100'}
                             `}
                         >
@@ -749,22 +749,22 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
         <div className="flex flex-col gap-8 animate-in fade-in-30">
           <div className="scale-in">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="text-teal-400 w-5 h-5 animate-pulse" />
+              <Sparkles className="text-purple-400 w-5 h-5 animate-pulse" />
               <h3 className="text-sm font-bold text-text uppercase tracking-wider">Treinamento Interativo por IA</h3>
             </div>
             <ProcessAssistant />
           </div>
 
           <div className="flex items-center gap-2 mt-4 mb-2">
-            <FolderOpen className="text-teal-400 w-5 h-5" />
+            <FolderOpen className="text-purple-400 w-5 h-5" />
             <h3 className="text-lg font-bold text-text uppercase tracking-wider">Acervo Geral de Processos</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
             {/* Financial Section */}
-            <article className="bg-surface rounded-2xl border border-border overflow-hidden flex flex-col hover:border-emerald-500/35 transition-all duration-300">
-              <div className="p-5 border-b border-border bg-gradient-to-r from-emerald-500/10 to-transparent flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-lg shadow-lg shadow-emerald-500/10">
+            <article className="bg-surface rounded-2xl border border-border overflow-hidden flex flex-col hover:border-blue-500/35 transition-all duration-300">
+              <div className="p-5 border-b border-border bg-gradient-to-r from-blue-500/10 to-transparent flex items-center gap-3">
+                <div className="p-2.5 bg-blue-500/20 text-blue-400 rounded-lg shadow-lg shadow-blue-500/10">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <h3 className="text-sm font-black text-text uppercase tracking-wide">Área Financeira</h3>
@@ -839,17 +839,17 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
       {/* 2. RESPONSIBILITIES PORTAL CHECKLIST */}
       {activeSubTab === 'responsibilities' && (
         <div className="flex flex-col animate-in fade-in-30">
-          
+
           {/* STATS HERO GRID */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-surface border border-border rounded-2xl p-5 flex items-center gap-4">
-              <div className="size-11 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0">
+              <div className="size-11 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
                 <User className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">COLABORADOR CONECTADO</span>
                 <span className="text-xs font-black text-text truncate block">{loggedInEmail || 'carregando...'}</span>
-                <span className="text-[10px] text-teal-400 font-bold uppercase tracking-widest block font-mono mt-0.5">
+                <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest block font-mono mt-0.5">
                   {isAdmin ? 'Perfil Master' : 'Membro Operacional'}
                 </span>
               </div>
@@ -868,7 +868,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
             </div>
 
             <div className="bg-surface border border-border rounded-2xl p-5 flex items-center gap-4">
-              <div className="size-11 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+              <div className="size-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
                 <Info className="w-5 h-5" />
               </div>
               <div className="flex-1">
@@ -885,7 +885,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
             {isAdmin && (
               <button
                 onClick={handleOpenCreateModal}
-                className="w-full md:w-auto bg-teal-600 hover:bg-teal-500 text-text font-extrabold text-xs tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full md:w-auto bg-purple-600 hover:bg-purple-500 text-text font-extrabold text-xs tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4 text-text" />
                 NOVA DIRETRIZ
@@ -902,7 +902,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 placeholder="Pesquisar por título, instrução ou email de colaborador..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-2 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-2 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                 id="responsibilities-search"
               />
             </div>
@@ -914,7 +914,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                   <select
                     value={selectedUserFilter}
                     onChange={(e) => setSelectedUserFilter(e.target.value)}
-                    className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text outline-none focus:border-teal-400 min-w-[140px] cursor-pointer"
+                    className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text outline-none focus:border-purple-400 min-w-[140px] cursor-pointer"
                   >
                     <option value="all">Todos Colaboradores</option>
                     {profiles.map(p => (
@@ -929,7 +929,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 <select
                   value={periodicityFilter}
                   onChange={(e) => setPeriodicityFilter(e.target.value)}
-                  className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text outline-none focus:border-teal-450 cursor-pointer"
+                  className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text outline-none focus:border-purple-450 cursor-pointer"
                 >
                   <option value="all">Frequência: Todas</option>
                   {PERIODICITIES.map(p => (
@@ -970,8 +970,8 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                           onClick={() => handleToggleStatus(item.id)}
                           className={`mt-1.5 size-5 flex items-center justify-center border rounded-md cursor-pointer transition-all ${
                             item.status === 'completed'
-                              ? 'bg-teal-500 border-teal-500 text-black shadow-lg shadow-teal-500/10'
-                              : 'border-white/20 hover:border-teal-400/50 hover:bg-panel'
+                              ? 'bg-purple-500 border-purple-500 text-black shadow-lg shadow-purple-500/10'
+                              : 'border-white/20 hover:border-purple-400/50 hover:bg-panel'
                           }`}
                         >
                           {item.status === 'completed' && <Check className="w-3.5 h-3.5 stroke-[4px]" />}
@@ -1038,11 +1038,11 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
       {/* 3. INSTRUÇÕES DE TRABALHO (POP / SOP MODULE) */}
       {activeSubTab === 'instructions' && (
         <div className="flex flex-col animate-in fade-in-30">
-          
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
               <h3 className="text-base font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
-                <FileText className="text-teal-400 w-5 h-5" /> Procedimentos Operacionais Padrão (POPs)
+                <FileText className="text-purple-400 w-5 h-5" /> Procedimentos Operacionais Padrão (POPs)
               </h3>
               <p className="text-xs text-slate-500 mt-1">Consulte os passos detalhados para a execução correta de rotinas clínicas, financeiras e de atendimento.</p>
             </div>
@@ -1176,7 +1176,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                           updatedAt: new Date().toISOString()
                         }
                       ];
-                      
+
                       await supabase
                         .from('commercial_settings')
                         .upsert({ key: 'clinical_work_instructions', value: defaultInstructions }, { onConflict: 'key' });
@@ -1190,7 +1190,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 </button>
                 <button
                   onClick={() => handleOpenInstructionModal(null)}
-                  className="w-full md:w-auto bg-teal-600 hover:bg-teal-500 text-text font-extrabold text-xs tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-md  flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full md:w-auto bg-purple-600 hover:bg-purple-500 text-text font-extrabold text-xs tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-md  flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-text" />
                   NOVA INSTRUÇÃO (POP)
@@ -1208,7 +1208,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 placeholder="Pesquisar POP por título, objetivo ou responsável..."
                 value={searchInstruction}
                 onChange={(e) => setSearchInstruction(e.target.value)}
-                className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-2 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-2 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                 id="instructions-search"
               />
             </div>
@@ -1218,7 +1218,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
               <select
                 value={sectorFilter}
                 onChange={(e) => setSectorFilter(e.target.value)}
-                className="bg-panel border border-border rounded-xl px-4 py-1.5 text-xs text-text outline-none focus:border-teal-500 cursor-pointer min-w-[120px]"
+                className="bg-panel border border-border rounded-xl px-4 py-1.5 text-xs text-text outline-none focus:border-purple-500 cursor-pointer min-w-[120px]"
               >
                 <option value="all">Todos Setores</option>
                 <option value="Clínico">Clínico</option>
@@ -1233,7 +1233,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
           {/* POP LISTING */}
           {instructionsLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
               <span className="text-xs font-bold text-slate-500 mt-2 font-mono">CARREGANDO POPs COMERCIAIS...</span>
             </div>
           ) : filteredInstructions.length === 0 ? (
@@ -1247,15 +1247,15 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
               {filteredInstructions.map(inst => (
                 <div
                   key={inst.id}
-                  className="bg-surface border border-border hover:border-teal-500/20 hover:scale-[1.01] rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 relative group"
+                  className="bg-surface border border-border hover:border-purple-500/20 hover:scale-[1.01] rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 relative group"
                 >
                   <div>
                     {/* Header */}
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <span className={`text-[9px] font-black uppercase tracking-wider border px-2 py-0.5 rounded-md ${
-                        inst.sector === 'Clínico' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
-                        inst.sector === 'Recepção' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                        inst.sector === 'Financeiro' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        inst.sector === 'Clínico' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                        inst.sector === 'Recepção' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                        inst.sector === 'Financeiro' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                         'bg-slate-800 text-slate-400 border-border'
                       }`}>
                         {inst.sector}
@@ -1266,7 +1266,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     </div>
 
                     {/* Title */}
-                    <h4 className="text-sm font-black text-text group-hover:text-teal-400 transition-colors leading-snug line-clamp-2" title={inst.title}>
+                    <h4 className="text-sm font-black text-text group-hover:text-purple-400 transition-colors leading-snug line-clamp-2" title={inst.title}>
                       {inst.title}
                     </h4>
 
@@ -1285,7 +1285,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                         <ClipboardCheck className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
-                        <span>Passos ordenados: <strong className="text-teal-400 font-semibold">{inst.steps.length} passos</strong></span>
+                        <span>Passos ordenados: <strong className="text-purple-400 font-semibold">{inst.steps.length} passos</strong></span>
                       </div>
                     </div>
                   </div>
@@ -1302,7 +1302,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
 
                     <button
                       onClick={() => triggerPrintContent(inst)}
-                      className="p-2 bg-teal-500/10 hover:bg-teal-500 hover:text-black rounded-xl text-teal-400 transition-colors cursor-pointer"
+                      className="p-2 bg-purple-500/10 hover:bg-purple-500 hover:text-black rounded-xl text-purple-400 transition-colors cursor-pointer"
                       title="Imprimir POP Corporativo"
                     >
                       <Printer className="w-3.5 h-3.5" />
@@ -1346,7 +1346,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
             >
               <div className="p-6 bg-surface border-b border-border shrink-0 animate-in slide-in-from-top-4">
                 <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                  <ClipboardCheck className="w-5 h-5 text-teal-400" />
+                  <ClipboardCheck className="w-5 h-5 text-purple-400" />
                   {editingResp ? 'Editar Diretriz Clínica' : 'Cadastrar Nova Diretriz'}
                 </h3>
               </div>
@@ -1364,7 +1364,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                           setIsManualEmail(!isManualEmail);
                           setTargetEmail(isManualEmail ? (profiles[0]?.email || '') : '');
                         }}
-                        className="text-[10px] text-teal-400 hover:text-teal-300 font-extrabold uppercase underline border-none bg-transparent cursor-pointer"
+                        className="text-[10px] text-purple-400 hover:text-purple-300 font-extrabold uppercase underline border-none bg-transparent cursor-pointer"
                       >
                         {isManualEmail ? 'Selecionar de Perfis' : 'Digitar e-mail manual'}
                       </button>
@@ -1378,14 +1378,14 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                       placeholder="exemplo@clinicasorriso.com"
                       value={targetEmail}
                       onChange={(e) => setTargetEmail(e.target.value)}
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                       id="resp-manual-email"
                     />
                   ) : (
                     <select
                       value={targetEmail}
                       onChange={(e) => setTargetEmail(e.target.value)}
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 cursor-pointer"
+                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 cursor-pointer"
                     >
                       {profiles.map(p => (
                         <option key={p.id} value={p.email} className="bg-surface text-text">
@@ -1406,7 +1406,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     placeholder="Ex: Checagem da Autoclave e Indicador Biológico"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                     id="resp-title"
                   />
                 </div>
@@ -1420,7 +1420,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     value={description}
                     rows={4}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors resize-none"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors resize-none"
                     id="resp-description"
                   />
                 </div>
@@ -1438,8 +1438,8 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                           key={p.value}
                           onClick={() => setPeriodicity(p.value as any)}
                           className={`px-3 py-2.5 rounded-xl text-xs font-black border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                            isSelected 
-                              ? 'bg-teal-500/10 border-teal-500/50 text-teal-300 font-extrabold' 
+                            isSelected
+                              ? 'bg-purple-500/10 border-purple-500/50 text-purple-300 font-extrabold'
                               : 'bg-panel border-border text-slate-500 hover:text-slate-300'
                           }`}
                         >
@@ -1461,7 +1461,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-text rounded-lg text-xs font-extrabold cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-lg text-xs font-extrabold cursor-pointer disabled:opacity-50 flex items-center gap-2"
                   >
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirmar e Salvar'}
                   </button>
@@ -1484,7 +1484,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
             >
               <div className="p-6 bg-surface border-b border-border shrink-0">
                 <h3 className="text-sm font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-teal-400" />
+                  <FileText className="w-5 h-5 text-purple-400" />
                   {editingInstruction ? 'Editar POP Clínico' : 'Cadastrar Nova Instrução de Trabalho'}
                 </h3>
               </div>
@@ -1496,7 +1496,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     <select
                       value={instSector}
                       onChange={(e) => setInstSector(e.target.value as any)}
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 cursor-pointer"
+                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 cursor-pointer"
                     >
                       <option value="Clínico">Setor Clínico</option>
                       <option value="Recepção">Recepção / Acolhimento</option>
@@ -1514,7 +1514,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                       placeholder="Ex: POP 04 - Cadastro de Ficha de Anamnese"
                       value={instTitle}
                       onChange={(e) => setInstTitle(e.target.value)}
-                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                      className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                       id="pop-title"
                     />
                   </div>
@@ -1528,7 +1528,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     placeholder="Ex: Recepcionistas, ASB"
                     value={instHandler}
                     onChange={(e) => setInstHandler(e.target.value)}
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                     id="pop-handler"
                   />
                 </div>
@@ -1541,7 +1541,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     value={instObjective}
                     rows={3}
                     onChange={(e) => setInstObjective(e.target.value)}
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-teal-500 transition-colors resize-none"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-xs text-text outline-none focus:border-purple-500 transition-colors resize-none"
                     id="pop-objective"
                   />
                 </div>
@@ -1552,7 +1552,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                     <button
                       type="button"
                       onClick={addStepField}
-                      className="text-[10px] text-teal-400 hover:text-teal-300 font-extrabold uppercase border-none bg-transparent cursor-pointer flex items-center gap-1"
+                      className="text-[10px] text-purple-400 hover:text-purple-300 font-extrabold uppercase border-none bg-transparent cursor-pointer flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[3px]" /> Adicionar Passo
                     </button>
@@ -1561,7 +1561,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                   <div className="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
                     {instSteps.map((step, idx) => (
                       <div key={idx} className="flex gap-2 items-center animate-in slide-in-from-left-2 duration-150">
-                        <span className="size-6 bg-panel text-teal-400 text-xs font-mono font-bold flex items-center justify-center shrink-0 rounded-full border border-teal-500/10">
+                        <span className="size-6 bg-panel text-purple-400 text-xs font-mono font-bold flex items-center justify-center shrink-0 rounded-full border border-purple-500/10">
                           {idx + 1}
                         </span>
                         <input
@@ -1570,7 +1570,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                           placeholder={`Descreva a ação de execução do passo nº ${idx + 1}...`}
                           value={step}
                           onChange={(e) => handleStepChange(idx, e.target.value)}
-                          className="flex-1 bg-panel border border-border rounded-xl px-4 py-2 text-xs text-text outline-none focus:border-teal-500 transition-colors"
+                          className="flex-1 bg-panel border border-border rounded-xl px-4 py-2 text-xs text-text outline-none focus:border-purple-500 transition-colors"
                         />
                         {instSteps.length > 1 && (
                           <button
@@ -1596,7 +1596,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-text rounded-lg text-xs font-extrabold cursor-pointer"
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-lg text-xs font-extrabold cursor-pointer"
                   >
                     Salvar POP Corporativo
                   </button>
@@ -1621,9 +1621,9 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 <div className="flex flex-col gap-2 min-w-0">
                   <div className="flex items-center gap-2.5">
                     <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
-                      viewingInstruction.sector === 'Clínico' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
-                      viewingInstruction.sector === 'Recepção' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                      viewingInstruction.sector === 'Financeiro' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                      viewingInstruction.sector === 'Clínico' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                      viewingInstruction.sector === 'Recepção' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                      viewingInstruction.sector === 'Financeiro' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                       'bg-slate-800 text-slate-400 border-border'
                     }`}>
                       {viewingInstruction.sector}
@@ -1642,10 +1642,10 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
 
               {/* Viewer scroll area */}
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar text-xs">
-                
+
                 {/* Objective block */}
                 <div className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-400 font-sans">Objetivo do Procedimento</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-purple-400 font-sans">Objetivo do Procedimento</h4>
                   <div className="p-5 bg-panel border border-border rounded-2xl text-slate-350 leading-relaxed font-light text-slate-300">
                     {viewingInstruction.objective}
                   </div>
@@ -1653,7 +1653,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
 
                 {/* Handler */}
                 <div className="flex items-center gap-2 p-4 bg-surface rounded-2xl border border-border text-slate-300">
-                  <User className="text-teal-400 w-5 h-5 flex-shrink-0" />
+                  <User className="text-purple-400 w-5 h-5 flex-shrink-0" />
                   <div>
                     <span className="text-[10px] font-extrabold text-slate-500 block uppercase tracking-wider">Responsabilidade de Execução</span>
                     <span className="text-sm font-bold text-text">{viewingInstruction.handler}</span>
@@ -1662,11 +1662,11 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
 
                 {/* Steps process listing */}
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-400 font-sans">Instruções Passo a Passo</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-purple-400 font-sans">Instruções Passo a Passo</h4>
                   <div className="space-y-3">
                     {viewingInstruction.steps.map((step, idx) => (
                       <div key={idx} className="flex gap-4 items-start p-4 bg-surface border border-border rounded-2xl relative overflow-hidden group">
-                        <div className="flex-shrink-0 size-8 bg-teal-500/10 text-teal-400 text-sm font-mono font-bold flex items-center justify-center rounded-full border border-teal-500/20 group-hover:bg-teal-500 group-hover:text-black group-hover:scale-105 transition-all duration-300">
+                        <div className="flex-shrink-0 size-8 bg-purple-500/10 text-purple-400 text-sm font-mono font-bold flex items-center justify-center rounded-full border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-black group-hover:scale-105 transition-all duration-300">
                           {idx + 1}
                         </div>
                         <div className="flex-1 min-w-0 pr-4 mt-0.5">
@@ -1683,7 +1683,7 @@ export const Responsibilities: React.FC<ResponsibilitiesProps> = ({ requestedSub
                 <span className="text-[9px] text-slate-600 font-mono">Última atualização em: {new Date(viewingInstruction.updatedAt).toLocaleDateString('pt-BR')}</span>
                 <button
                   onClick={() => triggerPrintContent(viewingInstruction)}
-                  className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-text rounded-xl text-xs font-black tracking-wide flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
+                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-black tracking-wide flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-500/10"
                 >
                   <Printer className="w-4 h-4 text-text" /> Imprimir POP
                 </button>

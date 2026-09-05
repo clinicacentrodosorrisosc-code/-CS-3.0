@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  BookOpen, MessageSquare, Copy, Check, 
+import {
+  BookOpen, MessageSquare, Copy, Check,
   HelpCircle, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -90,9 +90,9 @@ Pedimos a gentileza de responder com "Confirmado" para garantirmos a sua vaga na
     description: 'Enviar no dia seguinte após a consulta de avaliação.',
     messageTemplate: `Olá [Nome do Paciente], bom dia! ☀️
 
-Aqui é a [Seu Nome], da clínica. 
+Aqui é a [Seu Nome], da clínica.
 
-Como você está se sentindo após a consulta de ontem com o(a) [Dr. Nome]? 
+Como você está se sentindo após a consulta de ontem com o(a) [Dr. Nome]?
 
 Ficou alguma dúvida sobre o plano de tratamento ou as condições de parcelamento que conversamos? Estou à disposição para te ajudar a dar esse passo importante para a sua saúde e sorriso!`
   },
@@ -114,9 +114,9 @@ Gostaria de agendar o início do seu procedimento para esta semana ainda? Temos 
     description: 'Para pacientes que não comparecem há mais de 6 meses.',
     messageTemplate: `Olá, [Nome do Paciente]! Saudades de você por aqui! 🦷✨
 
-Notamos que já faz algum tempo desde a sua última profilaxia e revisão dental. 
+Notamos que já faz algum tempo desde a sua última profilaxia e revisão dental.
 
-A prevenção periódica é essencial para manter seu sorriso saudável e evitar surpresas. Estamos com a agenda de checkup aberta nesta semana com condições especiais para pacientes da casa. 
+A prevenção periódica é essencial para manter seu sorriso saudável e evitar surpresas. Estamos com a agenda de checkup aberta nesta semana com condições especiais para pacientes da casa.
 
 Qual o melhor dia para você dar um pulinho aqui?`
   },
@@ -148,11 +148,11 @@ export const SalesPlaybook: React.FC = () => {
   const objectionCategories = ['all', 'Preço', 'Decisão', 'Crédito', 'Concorrência', 'Medo'];
   const scriptCategories = ['all', 'Confirmação', 'Follow-up', 'Reativação', 'Pós-Venda'];
 
-  const filteredObjections = OBJECTIONS.filter(o => 
+  const filteredObjections = OBJECTIONS.filter(o =>
     filterCat === 'all' || o.category === filterCat
   );
 
-  const filteredScripts = SCRIPTS.filter(s => 
+  const filteredScripts = SCRIPTS.filter(s =>
     filterCat === 'all' || s.category === filterCat
   );
 
@@ -161,7 +161,7 @@ export const SalesPlaybook: React.FC = () => {
       {/* Playbook Header */}
       <div className="bg-panel border border-border p-6 rounded-3xl backdrop-blur-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
@@ -176,8 +176,8 @@ export const SalesPlaybook: React.FC = () => {
           <button
             onClick={() => { setActiveTab('objections'); setFilterCat('all'); }}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'objections' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+              activeTab === 'objections'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -186,8 +186,8 @@ export const SalesPlaybook: React.FC = () => {
           <button
             onClick={() => { setActiveTab('scripts'); setFilterCat('all'); }}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'scripts' 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+              activeTab === 'scripts'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -205,7 +205,7 @@ export const SalesPlaybook: React.FC = () => {
             onClick={() => setFilterCat(cat)}
             className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${
               filterCat === cat
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
                 : 'bg-panel border border-border text-slate-400 hover:text-white'
             }`}
           >
@@ -219,13 +219,13 @@ export const SalesPlaybook: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredObjections.map((obj) => (
-              <div 
-                key={obj.id} 
-                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 transition-all shadow-sm flex flex-col justify-between"
+              <div
+                key={obj.id}
+                className="bg-panel border border-border hover:border-blue-500/40 p-5 rounded-2xl space-y-4 transition-all shadow-sm flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-extrabold uppercase font-mono">
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-extrabold uppercase font-mono">
                       Objeção de {obj.category}
                     </span>
                     <HelpCircle className="w-4 h-4 text-slate-500" />
@@ -239,17 +239,17 @@ export const SalesPlaybook: React.FC = () => {
                     <strong>Por que o paciente diz isso:</strong> {obj.explanation}
                   </p>
 
-                  <div className="bg-indigo-950/20 border border-indigo-500/20 p-3.5 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-indigo-300">
+                  <div className="bg-blue-950/20 border border-blue-500/20 p-3.5 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-blue-300">
                       <span className="flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
                         Script Recomendado de Contorno:
                       </span>
                       <button
                         onClick={() => handleCopy(obj.recommendedResponse, obj.id)}
-                        className="text-xs font-bold text-indigo-400 hover:text-indigo-200 flex items-center gap-1"
+                        className="text-xs font-bold text-blue-400 hover:text-blue-200 flex items-center gap-1"
                       >
-                        {copiedId === obj.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        {copiedId === obj.id ? <Check className="w-3 h-3 text-blue-400" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedId === obj.id ? 'Copiado!' : 'Copiar'}</span>
                       </button>
                     </div>
@@ -274,9 +274,9 @@ export const SalesPlaybook: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredScripts.map((script) => (
-              <div 
+              <div
                 key={script.id}
-                className="bg-panel border border-border p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-sm hover:border-indigo-500/30 transition-all"
+                className="bg-panel border border-border p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-sm hover:border-blue-500/30 transition-all"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -285,9 +285,9 @@ export const SalesPlaybook: React.FC = () => {
                     </span>
                     <button
                       onClick={() => handleCopy(script.messageTemplate, script.id)}
-                      className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
                     >
-                      {copiedId === script.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedId === script.id ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedId === script.id ? 'Copiado!' : 'Copiar Mensagem'}</span>
                     </button>
                   </div>

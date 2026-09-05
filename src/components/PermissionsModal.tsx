@@ -1,28 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserProfile, Tab } from '../types';
-import { 
-  X, 
-  ChevronUp, 
-  ChevronDown, 
-  Trash2, 
-  Sliders, 
-  Loader2, 
-  UserPlus, 
-  Info, 
-  Key, 
-  Eye, 
-  EyeOff, 
-  Copy, 
-  Check, 
-  Search, 
-  Shield, 
+import {
+  X,
+  ChevronUp,
+  ChevronDown,
+  Trash2,
+  Sliders,
+  Loader2,
+  UserPlus,
+  Info,
+  Key,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  Search,
+  Shield,
   ShieldCheck,
-  ShieldAlert, 
-  Users, 
-  Sparkles, 
-  RefreshCw, 
-  CheckCircle2, 
+  ShieldAlert,
+  Users,
+  Sparkles,
+  RefreshCw,
+  CheckCircle2,
   Wand2,
   Lock,
   Mail,
@@ -139,14 +139,14 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
 };
 
 const ALL_AVAILABLE_TABS = [
-  Tab.CRM, 
-  Tab.FINANCIAL, 
-  Tab.ORTHODONTICS, 
-  Tab.LABWORK, 
+  Tab.CRM,
+  Tab.FINANCIAL,
+  Tab.ORTHODONTICS,
+  Tab.LABWORK,
   Tab.MEETINGS,
-  Tab.SUPPORT, 
-  Tab.PASSWORDS, 
-  Tab.RESPONSIBILITIES, 
+  Tab.SUPPORT,
+  Tab.PASSWORDS,
+  Tab.RESPONSIBILITIES,
   Tab.BIBLIOTECA,
   Tab.TASKS
 ];
@@ -158,7 +158,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  
+
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string>('user');
@@ -166,7 +166,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   // Deletion state
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [userToDelete, setUserToDelete] = useState<{ id: string; email: string } | null>(null);
-  
+
   // Password Reset state
   const [passwordModalUser, setPasswordModalUser] = useState<{ id: string; email: string } | null>(null);
   const [newResetPassword, setNewResetPassword] = useState('');
@@ -303,7 +303,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   const toggleTabPermission = async (userId: string, tabName: string, currentTabs: string[] | null) => {
     const safeTabs = Array.isArray(currentTabs) ? currentTabs : [];
     let newTabs: string[];
-    
+
     if (safeTabs.includes(tabName)) {
       newTabs = safeTabs.filter(t => t !== tabName);
     } else {
@@ -326,7 +326,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
   const toggleAllTabsForUser = async (userId: string, grantAll: boolean) => {
     const newTabs = grantAll ? [...ALL_AVAILABLE_TABS] : [Tab.CRM];
-    
+
     setProfiles(prev => prev.map(p => p.id === userId ? { ...p, allowed_tabs: newTabs } : p));
 
     const { error } = await supabase
@@ -358,7 +358,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       .from('profiles')
       .update({ allowed_sub_tabs: newSubTabs })
       .eq('id', userId);
-    
+
     if (error) {
       console.error('Error updating sub-tabs:', error);
       setProfiles(prev => prev.map(p => p.id === userId ? { ...p, allowed_sub_tabs: safeCurrentSubTabs } : p));
@@ -368,7 +368,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
   const updateRole = async (userId: string, newRole: 'admin' | 'user' | 'reception') => {
     setProfiles(prev => prev.map(p => p.id === userId ? { ...p, role: newRole } : p));
-    
+
     const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
     if (error) {
       console.error('Error updating role:', error);
@@ -443,7 +443,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
+
       if (!token) {
         throw new Error("Sessão expirada. Faça login novamente.");
       }
@@ -472,13 +472,13 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
         const text = await response.text();
         result = { error: text || `HTTP ${response.status}` };
       }
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao criar usuário.');
       }
 
       showFeedback(`Usuário ${newEmail} cadastrado com sucesso!`, 'success');
-      
+
       // Reset form
       setNewEmail('');
       setNewPassword('');
@@ -487,7 +487,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       setNewSelectedTabs([Tab.CRM]);
       setNewSelectedSubTabs(['dash_financial']);
       setShowCreateForm(false);
-      
+
       await fetchProfiles();
     } catch (err: any) {
       console.error("Error creating user:", err);
@@ -555,16 +555,16 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   // Filter profiles
   const filteredProfiles = useMemo(() => {
     return profiles.filter(p => {
-      const matchesSearch = 
+      const matchesSearch =
         p.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p as any).full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesRole = roleFilter === 'all' || (p.role || 'user') === roleFilter;
-      
+
       const isOnline = onlineUsers.includes(p.id);
-      const matchesStatus = 
-        statusFilter === 'all' || 
-        (statusFilter === 'online' && isOnline) || 
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'online' && isOnline) ||
         (statusFilter === 'offline' && !isOnline);
 
       return matchesSearch && matchesRole && matchesStatus;
@@ -587,11 +587,11 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 text-slate-100 w-full max-w-6xl rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
-        
+
         {/* MODAL HEADER */}
         <div className="p-5 sm:p-6 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="size-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20 text-white shrink-0">
+            <div className="size-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20 text-white shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
@@ -620,8 +620,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   }
                 }}
                 className={`text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer ${
-                  showCreateForm 
-                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700' 
+                  showCreateForm
+                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                     : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-purple-900/40'
                 }`}
               >
@@ -629,8 +629,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 {showCreateForm ? 'Fechar Cadastro' : 'Cadastrar Novo Usuário'}
               </button>
             )}
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -661,30 +661,30 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <div className="size-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
               <UserIcon className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400">Recepção / Outros</span>
-              <p className="text-lg font-black text-indigo-300">{stats.reception + (stats.total - stats.admins - stats.reception)}</p>
+              <p className="text-lg font-black text-blue-300">{stats.reception + (stats.total - stats.admins - stats.reception)}</p>
             </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <div className="size-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="size-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <div className="size-2.5 rounded-full bg-blue-400 animate-pulse" />
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400">Online Agora</span>
-              <p className="text-lg font-black text-emerald-400">{stats.online}</p>
+              <p className="text-lg font-black text-blue-400">{stats.online}</p>
             </div>
           </div>
         </div>
 
         {/* CREATE USER ACCORDION PANEL */}
         {showCreateForm && isCurrentUserAdmin && (
-          <form 
-            onSubmit={handleCreateUser} 
+          <form
+            onSubmit={handleCreateUser}
             className="m-4 sm:m-6 p-5 sm:p-6 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-purple-500/30 rounded-3xl shadow-xl flex flex-col gap-5 animate-in slide-in-from-top-4 duration-200"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -713,8 +713,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                       key={key}
                       onClick={() => applyTemplateToNewUser(key)}
                       className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                        isSelected 
-                          ? 'bg-purple-600/20 border-purple-500 text-white ring-2 ring-purple-500/30 shadow-lg' 
+                        isSelected
+                          ? 'bg-purple-600/20 border-purple-500 text-white ring-2 ring-purple-500/30 shadow-lg'
                           : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                       }`}
                     >
@@ -737,7 +737,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   <Mail className="w-3.5 h-3.5 text-purple-400" />
                   Email de Acesso *
                 </label>
-                <input 
+                <input
                   type="email"
                   required
                   value={newEmail}
@@ -762,7 +762,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   </button>
                 </label>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showNewPassword ? "text" : "password"}
                     required
                     value={newPassword}
@@ -785,7 +785,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   <Shield className="w-3.5 h-3.5 text-purple-400" />
                   Cargo no Sistema
                 </label>
-                <select 
+                <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as any)}
                   className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:border-purple-500 outline-none cursor-pointer"
@@ -839,8 +839,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                         }
                       }}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
-                        isChecked 
-                          ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm' 
+                        isChecked
+                          ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm'
                           : 'bg-slate-950/60 border-slate-800 text-slate-500 hover:text-slate-300'
                       }`}
                     >
@@ -858,14 +858,14 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 A senha poderá ser redefinida a qualquer momento após o cadastro.
               </div>
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={creatingUser}
                   className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-900/30 disabled:opacity-50"
@@ -891,9 +891,9 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
         <div className="p-4 sm:px-6 bg-slate-950/30 border-b border-slate-800/80 flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="Buscar por email ou nome do usuário..." 
+            <input
+              type="text"
+              placeholder="Buscar por email ou nome do usuário..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 outline-none transition-all"
@@ -931,7 +931,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
         {/* USERS LIST */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-4">
-          
+
           {loading ? (
             <div className="flex flex-col gap-3 animate-pulse">
               {[1, 2, 3, 4].map(i => (
@@ -954,22 +954,22 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 const isExpanded = expandedUser === user.id;
 
                 return (
-                  <div 
-                    key={user.id} 
+                  <div
+                    key={user.id}
                     className={`bg-slate-900/70 border rounded-2xl overflow-hidden transition-all duration-200 ${
                       isExpanded ? 'border-purple-500/40 ring-1 ring-purple-500/20 bg-slate-900' : 'border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     {/* User Card Main Row */}
                     <div className="p-4 sm:p-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-                      
+
                       {/* Left: User Identity */}
                       <div className="flex items-center gap-3.5">
                         <div className={`size-11 rounded-2xl flex items-center justify-center font-bold text-sm text-white shadow-inner uppercase shrink-0 ${
-                          user.role === 'admin' 
-                            ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-900/30' 
+                          user.role === 'admin'
+                            ? 'bg-gradient-to-tr from-purple-600 to-blue-600 shadow-purple-900/30'
                             : user.role === 'reception'
-                              ? 'bg-gradient-to-tr from-blue-600 to-cyan-600 shadow-blue-900/30'
+                              ? 'bg-gradient-to-tr from-blue-600 to-purple-600 shadow-blue-900/30'
                               : 'bg-gradient-to-tr from-slate-700 to-slate-600'
                         }`}>
                           {user.email ? user.email.slice(0, 2) : 'US'}
@@ -978,7 +978,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-white font-bold text-sm">{user.email}</span>
-                            
+
                             {isCurrent && (
                               <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">
                                 Você
@@ -986,8 +986,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                             )}
 
                             {isOnline ? (
-                              <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="text-[9px] bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="size-1.5 rounded-full bg-blue-400 animate-pulse" />
                                 Online
                               </span>
                             ) : (
@@ -1002,7 +1002,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                             {/* Role Selector */}
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] uppercase font-bold text-slate-400">Função:</span>
-                              <select 
+                              <select
                                 value={user.role || 'user'}
                                 onChange={(e) => updateRole(user.id, e.target.value as any)}
                                 disabled={!isCurrentUserAdmin}
@@ -1022,7 +1022,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
                       {/* Right: Quick Actions */}
                       <div className="flex items-center gap-2 self-end lg:self-auto w-full lg:w-auto justify-end flex-wrap">
-                        
+
                         {/* Redefinir Senha Button */}
                         {isCurrentUserAdmin && (
                           <button
@@ -1039,11 +1039,11 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                         )}
 
                         {/* Detalhes / Permissões Toggle */}
-                        <button 
+                        <button
                           onClick={() => setExpandedUser(isExpanded ? null : user.id)}
                           className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                            isExpanded 
-                              ? 'bg-purple-600/20 border-purple-500/50 text-purple-200' 
+                            isExpanded
+                              ? 'bg-purple-600/20 border-purple-500/50 text-purple-200'
                               : 'bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200'
                           }`}
                         >
@@ -1054,7 +1054,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
                         {/* Delete User Button */}
                         {isCurrentUserAdmin && !isCurrent && (
-                          <button 
+                          <button
                             onClick={() => setUserToDelete({ id: user.id, email: user.email || '' })}
                             disabled={deletingUserId !== null}
                             className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors border border-transparent hover:border-red-500/20 cursor-pointer disabled:opacity-50"
@@ -1073,7 +1073,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                     {/* EXPANDED PERMISSIONS DRAWER */}
                     {isExpanded && (
                       <div className="bg-slate-950/70 border-t border-slate-800 p-4 sm:p-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
-                        
+
                         {/* Quick Presets for this user */}
                         {isCurrentUserAdmin && (
                           <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-3.5">
@@ -1128,8 +1128,8 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                   onClick={() => toggleTabPermission(user.id, tab, safeTabs)}
                                   disabled={!isCurrentUserAdmin}
                                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed ${
-                                    hasAccess 
-                                      ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm' 
+                                    hasAccess
+                                      ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm'
                                       : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
                                   }`}
                                 >
@@ -1161,13 +1161,13 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                     {subTabs.map(sub => {
                                       const isAllowed = safeSubTabs.includes(sub.id);
                                       return (
-                                        <button 
+                                        <button
                                           key={sub.id}
                                           onClick={() => toggleSubTabPermission(user.id, sub.id, safeSubTabs)}
                                           disabled={!isCurrentUserAdmin}
                                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs transition-colors border cursor-pointer disabled:cursor-not-allowed ${
-                                            isAllowed 
-                                              ? 'bg-purple-500/20 border-purple-500/40 text-purple-200' 
+                                            isAllowed
+                                              ? 'bg-purple-500/20 border-purple-500/40 text-purple-200'
                                               : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300'
                                           }`}
                                         >
@@ -1213,7 +1213,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       {/* PASSWORD RESET DIALOG */}
       {passwordModalUser && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-150">
-          <form 
+          <form
             onSubmit={handleUpdatePassword}
             className="bg-slate-900 border border-slate-700 text-slate-100 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-150 flex flex-col gap-4"
           >
@@ -1239,7 +1239,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 </button>
               </label>
               <div className="relative">
-                <input 
+                <input
                   type={showResetPassword ? "text" : "password"}
                   required
                   value={newResetPassword}
@@ -1254,7 +1254,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                     className="p-1 text-slate-400 hover:text-white rounded cursor-pointer"
                     title="Copiar Senha"
                   >
-                    {passwordCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    {passwordCopied ? <Check className="w-4 h-4 text-blue-400" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <button
                     type="button"
@@ -1271,7 +1271,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   setPasswordModalUser(null);
@@ -1281,7 +1281,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 type="submit"
                 disabled={isUpdatingPassword || !newResetPassword}
                 className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
@@ -1323,15 +1323,15 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
             <p className="text-xs text-slate-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
               O acesso desta conta ao sistema será revogado imediatamente e seu perfil será removido da clínica.
             </p>
-            
+
             <div className="flex justify-end gap-3 pt-2">
-              <button 
+              <button
                 onClick={() => setUserToDelete(null)}
                 className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={async () => {
                   const { id } = userToDelete;
                   setUserToDelete(null);
@@ -1350,14 +1350,14 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       {/* FEEDBACK TOAST BANNER */}
       {toast && (
         <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[220] flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl animate-in slide-in-from-top-4 duration-200 text-xs font-bold min-w-[280px] max-w-[90vw] ${
-          toast.type === 'success' 
-            ? 'bg-slate-900/95 border-emerald-500/40 text-emerald-300 shadow-emerald-950/40' 
+          toast.type === 'success'
+            ? 'bg-slate-900/95 border-blue-500/40 text-blue-300 shadow-blue-950/40'
             : toast.type === 'error'
               ? 'bg-slate-900/95 border-red-500/40 text-red-300 shadow-red-950/40'
               : 'bg-slate-900/95 border-amber-500/40 text-amber-300 shadow-amber-950/40'
         }`}>
           <div className={`size-2 rounded-full shrink-0 ${
-            toast.type === 'success' ? 'bg-emerald-400 animate-pulse' : toast.type === 'error' ? 'bg-red-400' : 'bg-amber-400'
+            toast.type === 'success' ? 'bg-blue-400 animate-pulse' : toast.type === 'error' ? 'bg-red-400' : 'bg-amber-400'
           }`} />
           <span className="flex-1 text-slate-100">{toast.message}</span>
           <button onClick={() => setToast(null)} className="text-slate-400 hover:text-white p-1 rounded-lg">

@@ -3,12 +3,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { LabOrder, LabPayment } from '../types';
 import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Cell, PieChart, Pie, Legend
 } from 'recharts';
-import { 
-  Briefcase, DollarSign, CheckCircle, TrendingUp, ArrowRight, Edit2, Trash2, 
+import {
+  Briefcase, DollarSign, CheckCircle, TrendingUp, ArrowRight, Edit2, Trash2,
   Flag, PlusCircle, ChevronLeft, ChevronRight, Plus, X, CreditCard,
   UserCog, Ruler, Package, ClipboardCheck, Search, Clock
 } from 'lucide-react';
@@ -143,7 +143,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       .filter(item => item.remaining > 0.01)
       .sort((a, b) => b.remaining - a.remaining);
   }, [orders]);
-  
+
   // Forms
   const [newOrderForm, setNewOrderForm] = useState({
       patient_name: '',
@@ -175,14 +175,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       setLoading(true);
       try {
           const currentMonthKey = `lab_goal_${new Date().toISOString().slice(0, 7)}`;
-          
+
           // Carregar meta do laboratório
           const { data: goalData } = await supabase
             .from('dashboard_configs')
             .select('revenue_goal')
             .eq('month_key', currentMonthKey)
             .maybeSingle();
-          
+
           if (goalData) setLabRevenueGoal(Number(goalData.revenue_goal));
 
           const { data: ordersData, error: ordersError } = await supabase.from('lab_orders').select('*');
@@ -194,7 +194,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
               }
               throw ordersError;
           }
-          
+
           const { data: paymentsData } = await supabase.from('lab_payments').select('*');
 
           if (ordersData) {
@@ -228,7 +228,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
           if (prostError && prostError.code !== '42P01') {
               console.warn("Erro ao carregar tipos de prótese:", prostError.message);
           }
-          
+
           if (prostData) {
               setProsthesisList(prostData.map(p => ({
                   id: p.id,
@@ -254,13 +254,13 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
   // --- DASHBOARD CALCULATIONS ---
   const stats = useMemo(() => {
     const inProgress = orders.filter(o => o.status !== 'Entregue').length;
-    
+
     const currentMonthPrefix = new Date().toISOString().slice(0, 7);
     const completedThisMonth = orders.filter(o => o.status === 'Entregue' && o.startDate.startsWith(currentMonthPrefix)).length;
-    
+
     const readyToDeliver = orders.filter(o => o.status === 'Concluido').length;
     const trabalhosFinalizados = orders.filter(o => (o.status === 'Concluido' || o.status === 'Entregue') && o.startDate.startsWith(currentMonthPrefix)).length;
-    
+
     const monthlyRevenue = orders
         .filter(o => o.startDate.startsWith(currentMonthPrefix))
         .reduce((acc, o) => acc + o.saleValue, 0);
@@ -320,12 +320,12 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
              statusCounts[o.status]++;
         }
     });
-    
-    // Highlights the 'Pronto (LAB)' status in the pie chart 
+
+    // Highlights the 'Pronto (LAB)' status in the pie chart
     const pieChartData = [
-        { name: 'Moldagem', value: statusCounts['Moldagem'], fill: '#3b82f6' }, // blue-500
+        { name: 'Moldagem', value: statusCounts['Moldagem'], fill: '#536fd1' }, // blue-500
         { name: 'Provas', value: statusCounts['Provas'], fill: '#a855f7' }, // purple-500
-        { name: 'Pronto (LAB)', value: statusCounts['Concluido'], fill: '#10b981' }, // emerald-500
+        { name: 'Pronto (LAB)', value: statusCounts['Concluido'], fill: '#536fd1' }, // blue-500
         { name: 'Entregue', value: statusCounts['Entregue'], fill: '#64748b' } // slate-500
     ].filter(item => item.value > 0);
 
@@ -356,7 +356,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
             const d = o.startDate; // Full YYYY-MM-DD
             dateMap[d] = (dateMap[d] || 0) + 1;
         });
-        
+
         chartData = Object.entries(dateMap)
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([date, count]) => {
@@ -364,7 +364,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                 const [ , m, d] = date.split('-');
                 return { name: `${d}/${m}`, value: count };
             });
-            
+
         // Limit to reasonable number of ticks if the range is too wide
         if (chartData.length > 15) {
             // If many dates, group by week or just keep it as is but it might get crowded.
@@ -430,11 +430,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
     try {
         const val = parseFloat(String(configForm.value).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
         const cst = parseFloat(String(configForm.cost).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-        
-        const { error } = await supabase.from('lab_prosthesis_types').insert([{ 
-            name: configForm.name.trim(), 
-            default_value: val, 
-            default_cost: cst 
+
+        const { error } = await supabase.from('lab_prosthesis_types').insert([{
+            name: configForm.name.trim(),
+            default_value: val,
+            default_cost: cst
         }]);
 
         if (error) throw error;
@@ -451,7 +451,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
   const handleAddOrder = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!canManage) return alert("Sem permissão para criar/editar pedidos.");
-      
+
       if (!newOrderForm.patient_name.trim()) {
           alert("Por favor, preencha o nome do paciente.");
           return;
@@ -464,7 +464,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
           const finalSale = parseFloat(cleanSale) || 0;
           const finalCost = parseFloat(cleanCost) || 0;
-          
+
           const startDateString = newOrderForm.start_date || new Date().toISOString().split('T')[0];
           const startDateObj = new Date(startDateString + 'T12:00:00');
           const due = new Date(startDateObj.getTime() + (21 * 24 * 60 * 60 * 1000));
@@ -529,15 +529,15 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
   const handleDeleteOrder = async (id: string) => {
       if (!canManage) return alert("Sem permissão.");
-      
+
       setIsDeleting(true);
       try {
           // Deletar pagamentos relacionados primeiro para evitar erro de chave estrangeira
           await supabase.from('lab_payments').delete().eq('order_id', id);
-          
+
           const { error } = await supabase.from('lab_orders').delete().eq('id', id);
           if (error) throw error;
-          
+
           await loadData();
           notifyDataChange(['lab_orders', 'lab_payments', 'transactions']);
           setOrderToDelete(null);
@@ -554,7 +554,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
           alert("Acesso Negado: Sua função não permite mover etapas.");
           return;
       }
-      
+
       try {
           const { error } = await supabase.from('lab_orders').update({ status: nextStatus }).eq('id', order.id);
           if (error) {
@@ -574,7 +574,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                   payment_method: 'Interno',
                   observation: `Gerado automaticamente via Módulo Laboratório (Pedido: ${order.id})`
               };
-              
+
               await supabase.from('transactions').insert([expensePayload]);
           }
 
@@ -589,12 +589,12 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
           alert("Acesso Negado: Sua função não permite registrar pagamentos.");
           return;
       }
-      
+
       if (!selectedOrderForPayment) return;
-      
+
       const cleanString = String(paymentForm.amount || "0").replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
       const amount = parseFloat(cleanString) || 0;
-      
+
       if (amount <= 0) return alert("Valor inválido");
 
       setIsSaving(true);
@@ -616,11 +616,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
               if (error) throw error;
               alert("Pagamento registrado com sucesso!");
           }
-          
+
           setPaymentForm({ ...paymentForm, amount: '' });
           setEditingPaymentId(null);
           await loadData();
-          
+
           const updated = orders.find(o => o.id === selectedOrderForPayment.id);
           if (updated) {
               const { data: updatedPays } = await supabase.from('lab_payments').select('*').eq('order_id', updated.id);
@@ -652,11 +652,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
   const deletePayment = async (id: string) => {
       if (!canManage) return alert("Sem permissão.");
-      
+
       try {
           const { error } = await supabase.from('lab_payments').delete().eq('id', id);
           if (error) throw error;
-          
+
           await loadData();
           if (selectedOrderForPayment) {
               const updated = orders.find(o => o.id === selectedOrderForPayment.id);
@@ -749,7 +749,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                   <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                       <div className="flex items-center justify-between mb-4">
                           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Custos Lab</span>
-                          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                          <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                               <DollarSign className="w-5 h-5" />
                           </div>
                       </div>
@@ -762,11 +762,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                   <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                       <div className="flex items-center justify-between mb-4">
                           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pago ao Laboratório</span>
-                          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                               <CheckCircle className="w-5 h-5" />
                           </div>
                       </div>
-                      <div className="text-2xl font-black text-emerald-400 font-mono">
+                      <div className="text-2xl font-black text-blue-400 font-mono">
                           R$ {totalPaidToLab.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <p className="text-[10px] text-slate-500 mt-1">Valores já quitados com os parceiros</p>
@@ -794,11 +794,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           <p className="text-xs text-slate-400">Comparativo entre o Total Pago aos Laboratórios e o Recebimento dos Pacientes</p>
                       </div>
                       <div className="flex items-center gap-4 text-xs font-bold">
-                          <span className="flex items-center gap-1.5 text-indigo-400">
-                              <span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> Recebido de Pacientes
+                          <span className="flex items-center gap-1.5 text-blue-400">
+                              <span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Recebido de Pacientes
                           </span>
-                          <span className="flex items-center gap-1.5 text-emerald-400">
-                              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Pago ao Lab
+                          <span className="flex items-center gap-1.5 text-blue-400">
+                              <span className="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Pago ao Lab
                           </span>
                       </div>
                   </div>
@@ -814,15 +814,15 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                                   <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} />
                                   <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `R$ ${v}`} />
-                                  <RechartsTooltip 
+                                  <RechartsTooltip
                                       contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
                                       formatter={(value: any, name: string) => [
                                           `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
                                           name === 'patientRevenue' ? 'Recebido Pacientes' : 'Pago ao Laboratório'
                                       ]}
                                   />
-                                  <Bar dataKey="patientRevenue" fill="#6366f1" radius={[6, 6, 0, 0]} name="patientRevenue" />
-                                  <Bar dataKey="labCostPaid" fill="#10b981" radius={[6, 6, 0, 0]} name="labCostPaid" />
+                                  <Bar dataKey="patientRevenue" fill="#536fd1" radius={[6, 6, 0, 0]} name="patientRevenue" />
+                                  <Bar dataKey="labCostPaid" fill="#536fd1" radius={[6, 6, 0, 0]} name="labCostPaid" />
                               </BarChart>
                           </ResponsiveContainer>
                       )}
@@ -838,7 +838,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           placeholder="Buscar por paciente, laboratório ou detalhe..."
                           value={labPaymentsSearch}
                           onChange={(e) => setLabPaymentsSearch(e.target.value)}
-                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-4 py-2.5 outline-none focus:border-indigo-500 transition-colors"
+                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-4 py-2.5 outline-none focus:border-blue-500 transition-colors"
                       />
                   </div>
 
@@ -847,7 +847,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                       <select
                           value={labPaymentsStatusFilter}
                           onChange={(e) => setLabPaymentsStatusFilter(e.target.value as any)}
-                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2.5 outline-none cursor-pointer focus:border-indigo-500"
+                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2.5 outline-none cursor-pointer focus:border-blue-500"
                       >
                           <option value="all">Todos</option>
                           <option value="pending">Pendentes</option>
@@ -859,14 +859,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                       onClick={() => setShowPatientPaymentsRegistry(!showPatientPaymentsRegistry)}
                       className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
                           showPatientPaymentsRegistry
-                              ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
+                              ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20'
                               : 'bg-panel hover:bg-panel/80 text-slate-300 border-border'
                       }`}
                   >
                       {showPatientPaymentsRegistry ? 'Ocultar Extrato de Pagamentos' : 'Extrato de Pagamentos de Pacientes'}
                   </button>
 
-                  <div className="ml-auto text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
+                  <div className="ml-auto text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3 py-1.5 rounded-xl border border-blue-500/20">
                       {filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}
                   </div>
               </div>
@@ -914,7 +914,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                               const payDateFormatted = item.paymentDate ? item.paymentDate.split('T')[0].split('-').reverse().join('/') : 'N/A';
                                               return (
                                                   <tr key={idx} className="hover:bg-panel/50 transition-colors">
-                                                      <td className="p-3 pl-4 font-mono font-medium text-emerald-400">
+                                                      <td className="p-3 pl-4 font-mono font-medium text-blue-400">
                                                           {payDateFormatted}
                                                       </td>
                                                       <td className="p-3">
@@ -929,7 +929,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                               {item.paymentMethod || 'PIX'}
                                                           </span>
                                                       </td>
-                                                      <td className="p-3 text-right font-mono font-bold text-emerald-400">
+                                                      <td className="p-3 text-right font-mono font-bold text-blue-400">
                                                           R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                       </td>
                                                       <td className="p-3 text-right font-mono text-slate-400">
@@ -973,7 +973,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                       const meta = labPaymentsMetaMap[order.id];
                                       const isPaid = !!meta?.paid;
                                       const formattedDueDate = order.dueDate ? order.dueDate.split('T')[0].split('-').reverse().join('/') : 'N/A';
-                                      
+
                                       const totalPaidByPatient = order.payments?.reduce((s, p) => s + p.amount, 0) || 0;
                                       const patientFullyPaid = totalPaidByPatient >= order.saleValue - 0.01;
                                       const patientRemaining = Math.max(0, order.saleValue - totalPaidByPatient);
@@ -998,7 +998,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                               <td className="p-4 text-center">
                                                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                                       patientFullyPaid
-                                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                                           : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                                   }`}>
                                                       {patientFullyPaid ? (
@@ -1011,7 +1011,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                               <td className="p-4 text-slate-300">
                                                   {isPaid ? (
                                                       <div className="space-y-0.5 text-[11px]">
-                                                          <div className="font-medium text-emerald-400">
+                                                          <div className="font-medium text-blue-400">
                                                               Data: {formattedPayDate}
                                                           </div>
                                                           <div className="text-slate-400">
@@ -1027,8 +1027,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                               </td>
                                               <td className="p-4 text-center">
                                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                                      isPaid 
-                                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                                      isPaid
+                                                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                                           : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                                   }`}>
                                                       {isPaid ? 'Pago ao Lab' : 'Pendente'}
@@ -1046,7 +1046,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                               });
                                                               setIsLabPayModalOpen(true);
                                                           }}
-                                                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border-emerald-500/30"
+                                                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border-blue-500/30"
                                                       >
                                                           {isPaid ? 'Editar' : 'Pagar ao Lab'}
                                                       </button>
@@ -1092,9 +1092,9 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.inProgress}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                        <div className="size-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
                             <Package className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 bg-panel px-2 py-0.5 rounded-full">Pronto</span>
@@ -1103,9 +1103,9 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.readyToDeliver}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                        <div className="size-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
                             <CheckCircle className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 bg-panel px-2 py-0.5 rounded-full">Mês</span>
@@ -1150,23 +1150,23 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         <div className="flex flex-wrap items-center gap-3">
                             {productionPeriod === 'custom' && (
                                 <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1 animate-in slide-in-from-right-4 duration-300">
-                                    <input 
-                                        type="date" 
-                                        value={customStartDate} 
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
                                         onChange={(e) => setCustomStartDate(e.target.value)}
                                         className="bg-transparent border-none text-[10px] font-bold text-text outline-none px-2 cursor-pointer"
                                     />
                                     <span className="text-text/30 text-[10px]">até</span>
-                                    <input 
-                                        type="date" 
-                                        value={customEndDate} 
+                                    <input
+                                        type="date"
+                                        value={customEndDate}
                                         onChange={(e) => setCustomEndDate(e.target.value)}
                                         className="bg-transparent border-none text-[10px] font-bold text-text outline-none px-2 cursor-pointer"
                                     />
                                 </div>
                             )}
-                            <select 
-                                value={productionPeriod} 
+                            <select
+                                value={productionPeriod}
                                 onChange={(e) => setProductionPeriod(e.target.value as any)}
                                 className="bg-panel border border-border rounded-lg text-[10px] font-bold uppercase text-slate-400 px-3 py-1.5 outline-none cursor-pointer hover:bg-panel transition-colors"
                             >
@@ -1182,13 +1182,13 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10, fontWeight: 'bold' }} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10 }} />
-                                <RechartsTooltip 
-                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                                <RechartsTooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                                     contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                 />
-                                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40}>
+                                <Bar dataKey="value" fill="#7460a8" radius={[4, 4, 0, 0]} barSize={40}>
                                     {stats.weeklyData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={index === 2 ? '#d946ef' : '#8b5cf6'} opacity={0.8} />
+                                        <Cell key={`cell-${index}`} fill={index === 2 ? '#8b73be' : '#7460a8'} opacity={0.8} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -1215,16 +1215,16 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                             <Cell key={`cell-${index}`} fill={entry.fill} stroke="rgba(0,0,0,0.3)" strokeWidth={2} />
                                         ))}
                                     </Pie>
-                                    <RechartsTooltip 
+                                    <RechartsTooltip
                                         contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                         itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
                                     />
-                                    <Legend 
+                                    <Legend
                                         verticalAlign="bottom"
                                         align="center"
                                         iconType="circle"
                                         iconSize={8}
-                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }} 
+                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -1255,8 +1255,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                         <span className="text-[10px] font-mono text-slate-500">{item.count}</span>
                                     </div>
                                     <div className="h-1 w-full bg-panel rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-indigo-500 transition-all duration-1000" 
+                                        <div
+                                            className="h-full bg-blue-500 transition-all duration-1000"
                                             style={{ width: `${(item.count / stats.prosthesisRanking[0].count) * 100}%` }}
                                         ></div>
                                     </div>
@@ -1277,8 +1277,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             <div key={order.id} className="flex gap-4 group">
                                 <div className="relative">
                                     <div className={`size-2.5 rounded-full mt-1.5 ${
-                                        order.status === 'Entregue' ? 'bg-emerald-500' : 
-                                        order.status === 'Concluido' ? 'bg-blue-500' : 
+                                        order.status === 'Entregue' ? 'bg-blue-500' :
+                                        order.status === 'Concluido' ? 'bg-blue-500' :
                                         'bg-amber-500'
                                     }`}></div>
                                     <div className="absolute top-4 bottom-0 left-1 w-px bg-panel group-last:hidden"></div>
@@ -1325,7 +1325,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 const totalPaid = order.payments?.reduce((s,p) => s+p.amount, 0) || 0;
                                 const isPaid = totalPaid >= order.saleValue;
                                 const progress = order.status === 'Entregue' ? 100 : order.status === 'Concluido' ? 90 : order.status === 'Provas' ? 65 : 24;
-                                const progressColor = order.status === 'Concluido' ? 'bg-emerald-500' : 'bg-fuchsia-500';
+                                const progressColor = order.status === 'Concluido' ? 'bg-blue-500' : 'bg-purple-500';
 
                                 return (
                                     <tr key={order.id} className="hover:bg-panel transition-colors group">
@@ -1338,7 +1338,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                         </td>
                                         <td className="p-4">
                                             <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase border ${
-                                                isPaid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                isPaid ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                             }`}>
                                                 {isPaid ? 'PAGO' : 'PENDENTE'}
                                             </span>
@@ -1384,11 +1384,11 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
               <div className="flex gap-4 items-center">
                   <div className="relative flex-1 max-w-xs">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold">R$</span>
-                      <input 
-                          type="number" 
-                          value={labRevenueGoal} 
-                          onChange={e => setLabRevenueGoal(Number(e.target.value))} 
-                          className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text outline-none focus:border-purple-500 font-mono font-bold" 
+                      <input
+                          type="number"
+                          value={labRevenueGoal}
+                          onChange={e => setLabRevenueGoal(Number(e.target.value))}
+                          className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text outline-none focus:border-purple-500 font-mono font-bold"
                       />
                   </div>
                   <button onClick={handleSaveLabGoal} disabled={isSaving || !canManage} className="bg-purple-600 hover:bg-purple-500 text-text font-bold px-8 py-3 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50">
@@ -1399,14 +1399,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
           <div className="glass-panel p-6 rounded-2xl border border-border bg-panel shadow-xl">
               <h3 className="text-text font-bold mb-4 flex items-center gap-2">
-                  <PlusCircle className="text-fuchsia-500 w-5 h-5" />
+                  <PlusCircle className="text-purple-500 w-5 h-5" />
                   Tabela de Preços e Custos (Laboratório)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <input value={configForm.name} onChange={e => setConfigForm({...configForm, name: e.target.value})} placeholder="Serviço / Prótese" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500" />
-                  <input value={configForm.value} onChange={e => setConfigForm({...configForm, value: e.target.value})} placeholder="Valor Venda (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500 font-mono" />
-                  <input value={configForm.cost} onChange={e => setConfigForm({...configForm, cost: e.target.value})} placeholder="Custo Lab (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500 font-mono" />
-                  <button onClick={handleSavePriceItem} disabled={!canManage} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-text font-bold py-3 rounded-xl transition-all shadow-lg shadow-fuchsia-900/20 disabled:opacity-50">Salvador Item</button>
+                  <input value={configForm.name} onChange={e => setConfigForm({...configForm, name: e.target.value})} placeholder="Serviço / Prótese" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-purple-500" />
+                  <input value={configForm.value} onChange={e => setConfigForm({...configForm, value: e.target.value})} placeholder="Valor Venda (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-purple-500 font-mono" />
+                  <input value={configForm.cost} onChange={e => setConfigForm({...configForm, cost: e.target.value})} placeholder="Custo Lab (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-purple-500 font-mono" />
+                  <button onClick={handleSavePriceItem} disabled={!canManage} className="bg-purple-600 hover:bg-purple-500 text-text font-bold py-3 rounded-xl transition-all shadow-lg shadow-purple-900/20 disabled:opacity-50">Salvador Item</button>
               </div>
           </div>
           <div className="glass-panel rounded-2xl border border-border overflow-hidden shadow-2xl">
@@ -1418,7 +1418,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                       {prosthesisList.map(p => (
                           <tr key={p.id} className="hover:bg-panel transition-colors">
                               <td className="p-4 text-sm text-text font-bold">{p.name}</td>
-                              <td className="p-4 text-sm text-emerald-400 text-right font-mono">R$ {p.default_value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                              <td className="p-4 text-sm text-blue-400 text-right font-mono">R$ {p.default_value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                               <td className="p-4 text-sm text-red-400 text-right font-mono">R$ {p.default_cost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                               <td className="p-4 text-center">
                                   {canManage && (
@@ -1442,7 +1442,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       ];
 
       const stages = ['Moldagem', 'Provas', 'Concluido', 'Entregue'];
-      
+
       const filteredOrdersList = orders.filter(o => {
           if (kanbanProsthesisFilter !== 'all') {
               if (o.proteseId !== kanbanProsthesisFilter && o.details !== kanbanProsthesisFilter) return false;
@@ -1475,10 +1475,10 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           placeholder="Buscar por paciente..."
                           value={kanbanPatientFilter}
                           onChange={(e) => setKanbanPatientFilter(e.target.value)}
-                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-8 py-2 outline-none focus:border-indigo-500 transition-colors"
+                          className="w-full bg-panel border border-border rounded-xl text-xs text-text pl-9 pr-8 py-2 outline-none focus:border-blue-500 transition-colors"
                       />
                       {kanbanPatientFilter && (
-                          <button 
+                          <button
                               onClick={() => setKanbanPatientFilter('')}
                               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-text"
                           >
@@ -1491,14 +1491,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
                   {/* Prosthesis Type Filter */}
                   <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                      <div className="size-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
                           <Package className="w-4 h-4" />
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Tipo:</span>
-                      <select 
-                          value={kanbanProsthesisFilter} 
+                      <select
+                          value={kanbanProsthesisFilter}
                           onChange={(e) => setKanbanProsthesisFilter(e.target.value)}
-                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2 outline-none cursor-pointer focus:border-indigo-500 transition-colors"
+                          className="bg-panel border border-border rounded-xl text-xs font-bold text-slate-300 px-3 py-2 outline-none cursor-pointer focus:border-blue-500 transition-colors"
                       >
                           <option value="all">Todos os Tipos</option>
                           {prosthesisList.map(type => (
@@ -1515,8 +1515,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           <DollarSign className="w-4 h-4" />
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden sm:inline">Pagamento:</span>
-                      <select 
-                          value={kanbanPaymentFilter} 
+                      <select
+                          value={kanbanPaymentFilter}
                           onChange={(e) => setKanbanPaymentFilter(e.target.value as any)}
                           className="bg-panel border border-border rounded-xl text-xs font-bold text-amber-400/90 px-3 py-2 outline-none cursor-pointer focus:border-amber-500 transition-colors"
                       >
@@ -1527,8 +1527,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                   </div>
 
                   <div className="h-6 w-px bg-panel/80 hidden sm:block"></div>
-                  
-                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-400/10 px-2.5 py-1 rounded-full">
+
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-400/10 px-2.5 py-1 rounded-full">
                       {filteredOrdersList.length} {filteredOrdersList.length === 1 ? 'Pedido' : 'Pedidos'}
                   </span>
               </div>
@@ -1545,8 +1545,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                               </div>
                               <span className="bg-panel/80 text-text text-[10px] font-bold px-2 py-0.5 rounded-full">{colOrders.length}</span>
                           </div>
-                          
-                          <div 
+
+                          <div
                               className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 scroll-smooth"
                               onScroll={(e) => {
                                   const target = e.currentTarget;
@@ -1570,7 +1570,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                       switch(order.status) {
                                           case 'Moldagem': return { label: 'Em Progresso', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' };
                                           case 'Provas': return { label: 'Provas', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' };
-                                          case 'Concluido': return { label: 'Pronto', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' };
+                                          case 'Concluido': return { label: 'Pronto', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' };
                                           case 'Entregue': return { label: 'Entregue', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' };
                                           default: return { label: order.status, bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' };
                                       }
@@ -1602,7 +1602,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                           </div>
                                           <h5 className="font-bold text-text text-sm mb-1">{order.patientName}</h5>
                                           <p className="text-xs text-slate-400 mb-3 line-clamp-2">{order.details}</p>
-                                          
+
                                           <div className="flex justify-between items-center border-t border-border pt-3">
                                               <div className="flex flex-col">
                                                   <span className="text-[8px] font-bold text-slate-500 uppercase">Prazo</span>
@@ -1610,23 +1610,23 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                               </div>
                                               <div className="flex flex-col items-end">
                                                    <span className="text-[8px] font-bold text-slate-500 uppercase">Valor</span>
-                                                   <span className="text-[10px] font-bold text-emerald-400">R$ {order.saleValue.toLocaleString('pt-BR')}</span>
+                                                   <span className="text-[10px] font-bold text-blue-400">R$ {order.saleValue.toLocaleString('pt-BR')}</span>
                                               </div>
                                           </div>
 
                                           <div className="mt-3 bg-panel p-2 rounded-lg border border-border">
                                               <div className="flex justify-between items-center mb-1">
                                                   <span className="text-[9px] text-slate-400 font-bold uppercase">Pagamento</span>
-                                                  <span className={`text-[9px] font-bold ${remaining <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                  <span className={`text-[9px] font-bold ${remaining <= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
                                                       {remaining <= 0 ? 'Pago' : `Falta R$ ${remaining.toLocaleString('pt-BR')}`}
                                                   </span>
                                               </div>
                                               <div className="w-full h-1.5 bg-panel/80 rounded-full overflow-hidden mb-2">
-                                                  <div className="h-full bg-emerald-500" style={{ width: `${percentPaid}%` }}></div>
+                                                  <div className="h-full bg-blue-500" style={{ width: `${percentPaid}%` }}></div>
                                               </div>
                                               <button
                                                   onClick={() => { setSelectedOrderForPayment(order); setPaymentForm({ amount: '', date: new Date().toISOString().split('T')[0] }); }}
-                                                  className="w-full py-1.5 bg-panel hover:bg-emerald-500/20 hover:text-emerald-400 text-slate-400 text-[10px] font-bold uppercase rounded transition-colors flex items-center justify-center gap-2"
+                                                  className="w-full py-1.5 bg-panel hover:bg-blue-500/20 hover:text-blue-400 text-slate-400 text-[10px] font-bold uppercase rounded transition-colors flex items-center justify-center gap-2"
                                               >
                                                   <CreditCard className="w-3 h-3" /> Gerenciar Pagto
                                               </button>
@@ -1663,8 +1663,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-pink-600/5 blur-[120px] pointer-events-none"></div>
-        
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 blur-[120px] pointer-events-none"></div>
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
@@ -1675,8 +1675,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           {viewMode === 'dashboard' ? 'Dashboard' : viewMode === 'kanban' ? 'Quadro Kanban' : 'Configuração de Lab'}
                        </h1>
                        <p className="text-slate-400 text-sm">
-                          {viewMode === 'dashboard' 
-                             ? 'Controle de produção de próteses e alinhadores.' 
+                          {viewMode === 'dashboard'
+                             ? 'Controle de produção de próteses e alinhadores.'
                              : viewMode === 'kanban'
                                ? 'Gerencie o fluxo de trabalho dos pedidos.'
                                : 'Configurações de laboratórios e preços.'}
@@ -1708,8 +1708,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             onClick={() => setViewMode(tab.id as ViewMode)}
                             className={`
                                 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
-                                ${viewMode === tab.id 
-                                    ? 'bg-panel/80 text-text shadow-lg' 
+                                ${viewMode === tab.id
+                                    ? 'bg-panel/80 text-text shadow-lg'
                                     : 'text-slate-500 opacity-60 hover:opacity-100'}
                             `}
                         >
@@ -1738,14 +1738,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         Tem certeza que deseja excluir permanentemente este trabalho? Esta ação não pode ser desfeita e removerá todos os pagamentos vinculados.
                     </p>
                     <div className="flex gap-3">
-                        <button 
+                        <button
                             onClick={() => setOrderToDelete(null)}
                             disabled={isDeleting}
                             className="flex-1 py-3 rounded-xl glass-button text-text font-bold transition-all disabled:opacity-50"
                         >
                             Cancelar
                         </button>
-                        <button 
+                        <button
                             onClick={() => handleDeleteOrder(orderToDelete)}
                             disabled={isDeleting}
                             className="flex-1 py-3 rounded-xl glass-button bg-red-600/20 border-red-500/30 text-text font-bold transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
@@ -1777,7 +1777,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         </div>
                         {editingOrderId && (
                             <div className="mt-4 flex justify-end">
-                                <button type="button" onClick={() => { setIsModalOpen(false); setSelectedOrderForPayment(orders.find(o => o.id === editingOrderId) || null); setPaymentForm({ amount: '', date: new Date().toISOString().split('T')[0] }); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-bold flex items-center gap-1"><CreditCard className="w-4 h-4" /> Gerenciar Pagamentos</button>
+                                <button type="button" onClick={() => { setIsModalOpen(false); setSelectedOrderForPayment(orders.find(o => o.id === editingOrderId) || null); setPaymentForm({ amount: '', date: new Date().toISOString().split('T')[0] }); }} className="text-blue-400 hover:text-blue-300 text-sm font-bold flex items-center gap-1"><CreditCard className="w-4 h-4" /> Gerenciar Pagamentos</button>
                             </div>
                         )}
                         <div className="mt-4 flex justify-end gap-3 pt-4 border-t border-border">
@@ -1804,13 +1804,13 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         <div className="flex gap-2 items-end bg-panel p-3 rounded-xl border border-border">
                             <div className="flex-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Data Pagto</label>
-                                <input type="date" value={paymentForm.date} onChange={e => setPaymentForm({...paymentForm, date: e.target.value})} className="w-full bg-panel border border-border rounded-lg px-3 py-2 text-text outline-none focus:border-emerald-500 text-sm" />
+                                <input type="date" value={paymentForm.date} onChange={e => setPaymentForm({...paymentForm, date: e.target.value})} className="w-full bg-panel border border-border rounded-lg px-3 py-2 text-text outline-none focus:border-blue-500 text-sm" />
                             </div>
                             <div className="flex-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Valor (R$)</label>
-                                <input type="text" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="w-full bg-panel border border-border rounded-lg px-3 py-2 text-text outline-none focus:border-emerald-500 text-sm font-mono" placeholder="0,00" />
+                                <input type="text" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="w-full bg-panel border border-border rounded-lg px-3 py-2 text-text outline-none focus:border-blue-500 text-sm font-mono" placeholder="0,00" />
                             </div>
-                            <button onClick={handleAddPayment} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-500 text-text rounded-lg px-4 py-2 font-bold text-xs h-[38px] transition-colors">{editingPaymentId ? 'Atualizar' : 'Registrar'}</button>
+                            <button onClick={handleAddPayment} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 text-text rounded-lg px-4 py-2 font-bold text-xs h-[38px] transition-colors">{editingPaymentId ? 'Atualizar' : 'Registrar'}</button>
                         </div>
 
                         <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -1829,10 +1829,10 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 <p className="text-xs text-slate-500 text-center py-4">Nenhum pagamento registrado.</p>
                             )}
                         </div>
-                        
+
                         <div className="pt-4 border-t border-border flex justify-between items-center">
                             <span className="text-xs font-bold text-slate-400 uppercase">Total Pago</span>
-                            <span className="text-lg font-bold text-emerald-400">R$ {(selectedOrderForPayment.payments?.reduce((s, p) => s + p.amount, 0) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <span className="text-lg font-bold text-blue-400">R$ {(selectedOrderForPayment.payments?.reduce((s, p) => s + p.amount, 0) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                         </div>
                     </div>
                 </div>
@@ -1894,7 +1894,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             if (filtered.length === 0) {
                                 return (
                                     <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                                        <CheckCircle className="w-12 h-12 mb-3 text-emerald-500/40" />
+                                        <CheckCircle className="w-12 h-12 mb-3 text-blue-500/40" />
                                         <p className="text-sm font-bold text-slate-400">Nenhum pagamento pendente encontrado</p>
                                         <p className="text-xs text-slate-600 mt-1">Todos os pagamentos pesquisados estão quitados ou nenhum item corresponde à busca.</p>
                                     </div>
@@ -1931,7 +1931,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                         <td className="p-3 text-right font-mono font-medium text-slate-300">
                                                             R$ {order.saleValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                         </td>
-                                                        <td className="p-3 text-right font-mono font-medium text-emerald-400">
+                                                        <td className="p-3 text-right font-mono font-medium text-blue-400">
                                                             R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                         </td>
                                                         <td className="p-3 text-right font-mono font-bold text-amber-400">
@@ -1951,7 +1951,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                                     setSelectedOrderForPayment(order);
                                                                     setPaymentForm({ amount: remaining.toString(), date: new Date().toISOString().split('T')[0] });
                                                                 }}
-                                                                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 mx-auto border border-emerald-500/30"
+                                                                className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 mx-auto border border-blue-500/30"
                                                             >
                                                                 <CreditCard className="w-3 h-3" /> Pagar
                                                             </button>
@@ -1965,7 +1965,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             );
                         })()}
                     </div>
-                    
+
                     {/* Footer */}
                     <div className="p-4 border-t border-border bg-panel/30 flex justify-end">
                         <button
@@ -2004,7 +2004,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             </div>
                             <div className="text-right">
                                 <span className="text-slate-400 block text-[10px] uppercase font-bold">Pagamento do Paciente</span>
-                                <span className={`font-bold ${((selectedOrderForLabPay.payments?.reduce((s, p) => s + p.amount, 0) || 0) >= selectedOrderForLabPay.saleValue - 0.01) ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                <span className={`font-bold ${((selectedOrderForLabPay.payments?.reduce((s, p) => s + p.amount, 0) || 0) >= selectedOrderForLabPay.saleValue - 0.01) ? 'text-blue-400' : 'text-amber-400'}`}>
                                     {((selectedOrderForLabPay.payments?.reduce((s, p) => s + p.amount, 0) || 0) >= selectedOrderForLabPay.saleValue - 0.01) ? 'Quitado ✅' : 'Pendente ⚠️'}
                                 </span>
                             </div>
@@ -2016,7 +2016,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 type="date"
                                 value={labPayForm.paymentDate}
                                 onChange={(e) => setLabPayForm({ ...labPayForm, paymentDate: e.target.value })}
-                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500 font-mono"
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-blue-500 font-mono"
                             />
                         </div>
 
@@ -2025,7 +2025,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                             <select
                                 value={labPayForm.paymentMethod}
                                 onChange={(e) => setLabPayForm({ ...labPayForm, paymentMethod: e.target.value })}
-                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500 font-medium"
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-blue-500 font-medium"
                             >
                                 <option value="PIX">PIX</option>
                                 <option value="Boleto">Boleto</option>
@@ -2043,7 +2043,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 placeholder="Ex: NF #12345 ou Recibo 098"
                                 value={labPayForm.invoiceNumber}
                                 onChange={(e) => setLabPayForm({ ...labPayForm, invoiceNumber: e.target.value })}
-                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-indigo-500"
+                                className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-text outline-none focus:border-blue-500"
                             />
                         </div>
                     </div>
@@ -2057,7 +2057,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         </button>
                         <button
                             onClick={handleSaveLabPayment}
-                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/20 transition-all"
+                            className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-blue-600/20 transition-all"
                         >
                             Salvar Pagamento
                         </button>

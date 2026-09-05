@@ -2,35 +2,35 @@
 
 :root {
   /* Nexus Clean Minimalist Light Palette (Default UI) */
-  --bg: #F5F7F6;
-  --background: #F5F7F6;
-  --bg-subtle: #EEF2F0;
+  --bg: #F7F7F9;
+  --background: #F7F7F9;
+  --bg-subtle: #F1F1F4;
   --surface: #FFFFFF;
   --panel: #FFFFFF;
-  --surface-hover: #F0F4F2;
-  --surface-high: #F0F4F2;
-  --surface-elevated: #E7ECE9;
-  
-  --border: #DFE6E2;
-  --border-subtle: #EAF0ED;
-  --border-hover: #C8D4CE;
+  --surface-hover: #F3F3F6;
+  --surface-high: #F3F3F6;
+  --surface-elevated: #ECECF0;
+
+  --border: #E5E5EA;
+  --border-subtle: #EEEEF2;
+  --border-hover: #D1D1D8;
   --border-focus: rgba(31, 111, 91, 0.28);
 
   /* Nexus Official 4-Color Palette */
-  --primary: #1F6F5B;
-  --primary-hover: #185846;
+  --primary: #4059B2;
+  --primary-hover: #354DA4;
   --primary-dim: rgba(31, 111, 91, 0.09);
   --primary-border: rgba(31, 111, 91, 0.22);
 
-  --secondary: #537267;
+  --secondary: #7C8FE0;
   --secondary-dim: rgba(83, 114, 103, 0.12);
 
-  --accent-sky: #4D7569;
-  --accent-blue: #4D7569;
-  --accent-teal: #2A8069;
-  --accent-mint: #2A8069;
-  
-  --success: #2A8069;
+  --accent-sky: #6670A5;
+  --accent-blue: #6670A5;
+  --accent-teal: #7460A8;
+  --accent-mint: #7460A8;
+
+  --success: #7460A8;
   --success-text: #0D9488;
   --success-bg: #E8FAF8;
   --success-dim: rgba(22, 200, 199, 0.12);
@@ -46,10 +46,10 @@
   --danger-dim: rgba(244, 63, 94, 0.12);
   --danger-border: #FCD4DC;
 
-  --text: #17211D;
-  --text-secondary: #5E6D66;
-  --text-muted: #86938D;
-  --text-dim: #B8C2BD;
+  --text: #202027;
+  --text-secondary: #696974;
+  --text-muted: #85858F;
+  --text-dim: #AEAEB7;
 
   --sidebar-width-expanded: 224px;
   --sidebar-width-collapsed: 60px;
@@ -58,34 +58,34 @@
 
 .dark {
   /* Nexus Midnight Obsidian Dark Palette */
-  --bg: #101714;
-  --background: #101714;
-  --bg-subtle: #151E1A;
-  --surface: #19231F;
-  --panel: #19231F;
-  --surface-hover: #202D28;
-  --surface-high: #202D28;
-  --surface-elevated: #293832;
+  --bg: #0F0F13;
+  --background: #0F0F13;
+  --bg-subtle: #15151A;
+  --surface: #1B1B21;
+  --panel: #1B1B21;
+  --surface-hover: #222229;
+  --surface-high: #222229;
+  --surface-elevated: #2A2A33;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-hover: rgba(255, 255, 255, 0.15);
   --border-focus: rgba(95, 179, 148, 0.38);
 
-  --primary: #537267;
-  --primary-hover: #79C4A8;
+  --primary: #7C8FE0;
+  --primary-hover: #BAC5F5;
   --primary-dim: rgba(99, 181, 150, 0.14);
   --primary-border: rgba(99, 181, 150, 0.3);
 
-  --secondary: #1F6F5B;
+  --secondary: #4059B2;
   --secondary-dim: rgba(83, 71, 206, 0.2);
 
-  --accent-sky: #4D7569;
-  --accent-blue: #4D7569;
-  --accent-teal: #2A8069;
-  --accent-mint: #2A8069;
+  --accent-sky: #6670A5;
+  --accent-blue: #6670A5;
+  --accent-teal: #7460A8;
+  --accent-mint: #7460A8;
 
-  --success: #2A8069;
+  --success: #7460A8;
   --success-text: #2DD4BF;
   --success-bg: rgba(22, 200, 199, 0.15);
   --success-dim: rgba(22, 200, 199, 0.15);
@@ -101,10 +101,10 @@
   --danger-dim: rgba(244, 63, 94, 0.15);
   --danger-border: rgba(244, 63, 94, 0.3);
 
-  --text: #F1F5F3;
-  --text-secondary: #86938D;
-  --text-muted: #5E6D66;
-  --text-dim: #53635C;
+  --text: #F4F4F5;
+  --text-secondary: #85858F;
+  --text-muted: #696974;
+  --text-dim: #62626D;
 }
 
 * {
@@ -114,14 +114,27 @@
 body {
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--bg);
-  background-image: radial-gradient(circle at 85% -10%, rgba(31, 111, 91, 0.055), transparent 32rem);
+  background-image: radial-gradient(circle at 85% -10%, rgba(83, 111, 209, 0.04), transparent 32rem);
   color: var(--text);
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+}
+
+button, a, input, select, textarea {
+  transition-duration: 180ms;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(83, 111, 209, 0.55);
+  outline-offset: 2px;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.985);
 }
 
 /* Tabular Numerals & Monospace */
@@ -157,8 +170,8 @@ body {
 .nexus-card, .fintech-card, .glass-panel, .bezel-outer, .bezel-inner {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 0.875rem;
-  box-shadow: 0 1px 2px rgba(18, 45, 35, 0.025), 0 8px 24px rgba(18, 45, 35, 0.035);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(32, 32, 39, 0.02), 0 8px 24px rgba(32, 32, 39, 0.025);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -227,33 +240,33 @@ body {
 }
 
 .btn-primary {
-  background: #1F6F5B;
+  background: #4059B2;
   color: #ffffff;
-  border: 1px solid #1F6F5B;
+  border: 1px solid #4059B2;
   box-shadow: 0 2px 8px rgba(83, 71, 206, 0.28);
 }
 
 .btn-primary:hover {
-  background: #185846;
-  border-color: #185846;
+  background: #354DA4;
+  border-color: #354DA4;
   box-shadow: 0 4px 12px rgba(83, 71, 206, 0.38);
 }
 
 .dark .btn-primary {
-  background: #537267;
-  color: #101714;
-  border-color: #537267;
+  background: #7C8FE0;
+  color: #0F0F13;
+  border-color: #7C8FE0;
 }
 
 .dark .btn-primary:hover {
-  background: #79C4A8;
-  border-color: #79C4A8;
+  background: #BAC5F5;
+  border-color: #BAC5F5;
 }
 
 .btn-emerald {
-  background: #2A8069;
+  background: #7460A8;
   color: #ffffff;
-  border: 1px solid #2A8069;
+  border: 1px solid #7460A8;
   box-shadow: 0 2px 8px rgba(22, 200, 199, 0.25);
 }
 
@@ -300,14 +313,14 @@ select, option {
 
 select option {
   background-color: #FFFFFF !important;
-  color: #17211D !important;
+  color: #202027 !important;
   padding: 8px 12px;
   font-weight: 500;
 }
 
 .dark select option {
-  background-color: #19231F !important;
-  color: #F1F5F3 !important;
+  background-color: #1B1B21 !important;
+  color: #F4F4F5 !important;
 }
 
 /* Badges & Tags */

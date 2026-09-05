@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
+import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Label, LabelList, LineChart, Line
 } from 'recharts';
@@ -72,7 +72,7 @@ const isOrthoDay = (date: Date) => {
     return true;
 }
 
-const COLORS = ['#d946ef', '#8b5cf6', '#2dd4bf', '#fb923c', '#ef4444', '#3b82f6'];
+const COLORS = ['#8b73be', '#7460a8', '#2dd4bf', '#fb923c', '#ef4444', '#536fd1'];
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 // Config for sub-tabs
@@ -96,12 +96,12 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const visibleTabs = useMemo(() => {
       // Allow all if admin OR if allowedSubTabs is empty (legacy/permissive mode)
       if (userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0) return ORTHO_TABS_CONFIG;
-      
+
       function getActiveTabs() {
           const ALL_TABS = ORTHO_TABS_CONFIG;
           return ALL_TABS.filter(tab => Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permissionId));
       }
-      
+
       const filtered = getActiveTabs();
       return filtered.length > 0 ? filtered : ORTHO_TABS_CONFIG;
   }, [userRole, allowedSubTabs]);
@@ -124,7 +124,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           }
       }
   }, [requestedSubTab, visibleTabs]);
-  
+
   // --- LOCAL STATE ---
   const [patients, setPatients] = useState<OrthoPatient[]>([]);
   const [applianceTypes, setApplianceTypes] = useState<ApplianceType[]>([]);
@@ -163,7 +163,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   };
 
   // States for filters
-  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1)); 
+  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1));
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear().toString());
 
   // Chart Hover State
@@ -173,7 +173,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [newApplianceName, setNewApplianceName] = useState('');
   const [editingApplianceId, setEditingApplianceId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  
+
   const [newFinishReason, setNewFinishReason] = useState('');
   const [dayNotes, setDayNotes] = useState<Record<string, string>>({});
   const [selectedNoteDay, setSelectedNoteDay] = useState('');
@@ -225,9 +225,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const syncAttendanceMonthStatus = (attendance: Record<string, any>, monthKey: string): Record<string, any> => {
       const updated = { ...attendance };
       const monthPrefix = `${monthKey}-`;
-      
+
       const dailyKeys = Object.keys(updated).filter(k => k.startsWith(monthPrefix) && k.length === 10);
-      
+
       let hasPresent = false;
       let hasScheduled = false;
       let hasAbsent = false;
@@ -363,7 +363,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               });
           }
           setPatients(mappedPats);
-          
+
           const { data: apps } = await supabase.from('ortho_appliances').select('*');
           if (apps) {
               setApplianceTypes(apps.map(a => ({
@@ -409,7 +409,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   // --- FILTERED DATA ---
   const filteredPatients = useMemo(() => {
       let result = [...patients];
-      
+
       if (searchTerm) {
           result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
       }
@@ -462,8 +462,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
               }
               if (sortConfig.key === 'name') {
-                  return sortConfig.direction === 'asc' 
-                      ? (a.name || '').localeCompare(b.name || '') 
+                  return sortConfig.direction === 'asc'
+                      ? (a.name || '').localeCompare(b.name || '')
                       : (b.name || '').localeCompare(a.name || '');
               }
               if (sortConfig.key === 'aditivoMsg') {
@@ -493,16 +493,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       const end = p.endDate ? new Date(p.endDate).getTime() : new Date().getTime();
                       return end - start;
                   };
-                  
+
                   const durA = getDurationMs(a);
                   const durB = getDurationMs(b);
-                  
+
                   return sortConfig.direction === 'asc' ? durA - durB : durB - durA;
               }
               return 0;
           });
       }
-      
+
       return result;
   }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, aditivoMsgFilter, aditivoStatusFilter, dueDateFilter, sortConfig, isAdmin]);
 
@@ -516,13 +516,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
   const handleConfirmFinish = async () => {
       if (!selectedPatientToFinish) return;
-      
+
       try {
           const { error } = await supabase.from('ortho_patients').update({
               status: 'Finished',
               end_date: finishDate
           }).eq('id', selectedPatientToFinish);
-          
+
           if (!error) {
               // Optimistic update
               setPatients(prev => prev.map(p => p.id === selectedPatientToFinish ? { ...p, status: 'Finished', endDate: finishDate } : p));
@@ -536,20 +536,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           console.error("Critical error finishing", err);
           toast.error('Erro crítico ao finalizar tratamento.');
       }
-      
+
       setIsFinishModalOpen(false);
       setSelectedPatientToFinish(null);
   };
 
   const handleReactivate = async (id: string) => {
       if (!confirm('Deseja reativar o tratamento deste paciente?')) return;
-      
+
       try {
           const { error } = await supabase.from('ortho_patients').update({
               status: 'Active',
               end_date: null
           }).eq('id', id);
-          
+
           if (!error) {
               // Optimistic update
               setPatients(prev => prev.map(p => p.id === id ? { ...p, status: 'Active', endDate: undefined } : p));
@@ -716,10 +716,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (!patient) return;
 
       const updatedAttendance = { ...patient.attendance, __contract_type: value || null };
-      
+
       // Optimistic update
-      setPatients(prev => prev.map(p => p.id === patientId ? { 
-          ...p, 
+      setPatients(prev => prev.map(p => p.id === patientId ? {
+          ...p,
           contractType: value || undefined,
           attendance: updatedAttendance
       } : p));
@@ -729,7 +729,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               .from('ortho_patients')
               .update({ attendance: updatedAttendance })
               .eq('id', patientId);
-              
+
           if (error) {
               console.error("Error updating contract type", error);
               toast.error("Erro ao salvar tipo de contrato: " + error.message);
@@ -826,7 +826,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
   const handleSaveNote = async () => {
       if (!selectedPatientForNote) return;
-      
+
       const { error } = await supabase.from('ortho_patients')
           .update({ problem_note: noteContent || null }) // Send null if empty to clear
           .eq('id', selectedPatientForNote.id);
@@ -848,7 +848,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const { error } = await supabase.from('ortho_patients')
           .update({ problem_note: null })
           .eq('id', selectedPatientForNote.id);
-      
+
       if (!error) await loadData();
       setIsNoteModalOpen(false);
   };
@@ -881,7 +881,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       };
       const { error } = await supabase.from('ortho_finish_reasons').insert(newReason);
       if (!error) await loadData();
-      else console.error(error); 
+      else console.error(error);
       setNewFinishReason('');
   };
 
@@ -922,7 +922,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (!startDate) return '-';
       const start = new Date(startDate);
       const end = endDate ? new Date(endDate) : new Date();
-      
+
       if (isNaN(start.getTime())) return startDate;
       if (isNaN(end.getTime())) return '-';
 
@@ -931,7 +931,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       end.setHours(0,0,0,0);
 
       let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-      
+
       // If the day of end date is less than day of start date, full month hasn't passed
       if (end.getDate() < start.getDate()) {
           totalMonths--;
@@ -943,10 +943,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       // Calculate the date after full months
       const tempDate = new Date(start);
       tempDate.setMonth(tempDate.getMonth() + totalMonths);
-      
+
       // Calculate remaining days
       const diffTime = Math.abs(end.getTime() - tempDate.getTime());
-      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
       const parts = [];
       if (years > 0) parts.push(`${years}a`);
@@ -956,41 +956,41 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return parts.length > 0 ? parts.join(' ') : '0d';
   };
 
-  const { 
-    activeCount, 
-    estimatedRevenue, 
-    applianceDistribution, 
-    valueDistribution, 
-    attendanceRate, 
-    startedInMonth, 
-    startedNames, 
-    finishedInMonth, 
-    finishedNames, 
+  const {
+    activeCount,
+    estimatedRevenue,
+    applianceDistribution,
+    valueDistribution,
+    attendanceRate,
+    startedInMonth,
+    startedNames,
+    finishedInMonth,
+    finishedNames,
     problemPatients,
     consecutiveAbsentPatients
   } = useMemo(() => {
       const targetMonthKey = `${currentYear}-${selectedMonth.padStart(2, '0')}`;
-      
+
       const activePatients = patients.filter(p => {
           if (!p.startDate) return false;
           const startMonth = p.startDate.substring(0, 7);
-          
+
           // Se iniciou depois do mês selecionado, não estava ativo
           if (startMonth > targetMonthKey) return false;
-          
+
           // Se está ativo atualmente, conta
           if (p.status === 'Active') return true;
-          
+
           // Se foi finalizado/suspenso, verifica a data de fim
           if (p.endDate) {
               const endMonth = p.endDate.substring(0, 7);
               // Conta como ativo se a data de fim for no mês selecionado ou depois
               return endMonth >= targetMonthKey;
           }
-          
+
           return false;
       });
-      
+
       const count = activePatients.length;
       const revenue = activePatients.reduce((acc, t) => acc + (t.maintenanceValue || 0), 0);
 
@@ -1005,7 +1005,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const problemPatients = activePatients.filter(p => p.problemNote && p.problemNote.trim() !== '');
 
       const consecutiveAbsentPatients: any[] = [];
-      
+
       const appDistMap: Record<string, number> = {};
       activePatients.forEach(p => {
           appDistMap[p.applianceType] = (appDistMap[p.applianceType] || 0) + 1;
@@ -1018,14 +1018,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           const key = val.toFixed(2);
           valDistMap[key] = (valDistMap[key] || 0) + 1;
       });
-      
+
       const valDist = Object.entries(valDistMap)
         .map(([valStr, count]) => ({
             name: `R$ ${parseFloat(valStr).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             value: count,
-            rawValue: parseFloat(valStr) 
+            rawValue: parseFloat(valStr)
         }))
-        .sort((a, b) => a.rawValue - b.rawValue); 
+        .sort((a, b) => a.rawValue - b.rawValue);
 
       let present = 0;
       activePatients.forEach(p => {
@@ -1050,7 +1050,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           <div className="space-y-1 mb-2">
             <div className="flex justify-between">
               <span className="text-slate-400 font-bold uppercase text-[9px]">Acumulado:</span>
-              <span className="font-mono text-emerald-400">{data.atual}</span>
+              <span className="font-mono text-blue-400">{data.atual}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400 font-bold uppercase text-[9px]">Meta:</span>
@@ -1059,18 +1059,18 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
             {/* Tendencia removed */}
           </div>
 
-          {((data.presentNames && data.presentNames.length > 0) || 
-             (data.absentNames && data.absentNames.length > 0) || 
+          {((data.presentNames && data.presentNames.length > 0) ||
+             (data.absentNames && data.absentNames.length > 0) ||
              (data.scheduledNames && data.scheduledNames.length > 0)) && (
             <div className="mt-2 pt-2 border-t border-border space-y-3">
               {data.presentNames && data.presentNames.length > 0 && (
                 <div>
-                  <span className="text-emerald-400 font-bold uppercase text-[9px] block mb-1">Presentes ({data.presentNames.length}):</span>
+                  <span className="text-blue-400 font-bold uppercase text-[9px] block mb-1">Presentes ({data.presentNames.length}):</span>
                   <div className="max-h-[80px] overflow-y-auto scrollbar-hide">
                     <ul className="grid grid-cols-1 gap-0.5">
                       {data.presentNames.map((name: string, idx: number) => (
                         <li key={idx} className="text-[10px] text-slate-200 truncate flex items-center gap-1">
-                          <span className="size-1 rounded-full bg-emerald-500"></span>
+                          <span className="size-1 rounded-full bg-blue-500"></span>
                           {name}
                         </li>
                       ))}
@@ -1128,7 +1128,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const orthoPacing = useMemo(() => {
       const monthIndex = parseInt(selectedMonth) - 1;
       const targetMonthKey = `${currentYear}-${selectedMonth.padStart(2, '0')}`;
-      
+
       // Calculate total ortho days in the whole month for the trajectory calculation
       const totalDaysInMonth = new Date(parseInt(currentYear), monthIndex + 1, 0).getDate();
       let totalOrthoDaysInMonth = 0;
@@ -1158,7 +1158,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
       // Trajectory per ortho day
       const trajectoryIncrement = totalOrthoDaysInMonth > 0 ? activePatientsCount / totalOrthoDaysInMonth : 0;
-      
+
       const chartData: Array<{
           day: number;
           meta: number;
@@ -1171,7 +1171,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       let cumulativeMeta = 0;
       let cumulativeActual = 0;
       let lastDayWithData = 0;
-      
+
       // Track which patients are already counted in daily records
       const patientsCountedInDaily = new Set<string>();
       const patientsAlreadySeen = new Set<string>();
@@ -1187,7 +1187,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           const absentNames: string[] = [];
           const scheduledNames: string[] = [];
           const dateKey = `${currentYear}-${String(selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-          
+
           let hasAnyAttendanceRecord = false;
           patients.forEach(p => {
              const status = p.attendance[dateKey];
@@ -1207,13 +1207,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 }
              }
           });
-          
+
           // If we have records, update cumulative and lastDay
           if (hasAnyAttendanceRecord) {
               cumulativeActual += dayActual;
               lastDayWithData = d;
           }
-          
+
           chartData.push({
               day: d,
               meta: Number(cumulativeMeta.toFixed(2)),
@@ -1231,15 +1231,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (undatedPresences.length > 0) {
           const adjustment = undatedPresences.length;
           cumulativeActual += adjustment;
-          
+
           // Use the last day with data as a reference point, or the first day if no data exists
           const referenceDay = lastDayWithData > 0 ? lastDayWithData : 1;
-          
+
           // Update chartData for the reference day onwards to include these undated presences
           for (let i = referenceDay - 1; i < chartData.length; i++) {
               chartData[i].atual += adjustment;
           }
-          
+
           if (lastDayWithData === 0) lastDayWithData = referenceDay;
       }
 
@@ -1260,10 +1260,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const monthlyFlowData = useMemo(() => {
     return MONTHS.map((month, i) => {
         const monthKey = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
-        
+
         let started = 0;
         let finished = 0;
-        
+
         patients.forEach(p => {
              if (p.startDate && p.startDate.startsWith(monthKey)) {
                   started++;
@@ -1274,7 +1274,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
         });
 
         const docInitialCount = docInitialTransactions.filter(tx => tx.date && tx.date.startsWith(monthKey)).length;
-        
+
         return {
             month,
             Iniciou: started,
@@ -1296,16 +1296,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-500 uppercase">Filtrar Período:</span>
                   <div className="flex gap-2">
-                      <select 
-                        value={currentYear} 
+                      <select
+                        value={currentYear}
                         onChange={(e) => setCurrentYear(e.target.value)}
                         className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-1.5 outline-none focus:border-purple-500 font-bold"
                       >
                           <option value="2025">2025</option>
                           <option value="2026">2026</option>
                       </select>
-                      <select 
-                        value={selectedMonth} 
+                      <select
+                        value={selectedMonth}
                         onChange={(e) => setSelectedMonth(e.target.value)}
                         className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-1.5 outline-none focus:border-purple-500 font-bold"
                       >
@@ -1370,18 +1370,18 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </SpotlightCard>
 
               {/* Started In Month */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group border-l-4 border-l-emerald-500 flex flex-col min-h-[240px]" spotlightColor="rgba(16, 185, 129, 0.4)">
+              <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group border-l-4 border-l-blue-500 flex flex-col min-h-[240px]" spotlightColor="rgba(16, 185, 129, 0.4)">
                   <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="material-symbols-outlined text-6xl text-emerald-500">person_add</span>
+                      <span className="material-symbols-outlined text-6xl text-blue-500">person_add</span>
                   </div>
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
                   <div className="flex items-end gap-2 mb-2">
-                      <span className="text-3xl font-display font-bold text-emerald-400">+{startedInMonth}</span>
+                      <span className="text-3xl font-display font-bold text-blue-400">+{startedInMonth}</span>
                   </div>
                   <div className="flex-1 mt-4 overflow-y-auto pr-1 custom-scrollbar max-h-[110px]">
                     <div className="flex flex-col gap-2">
                       {startedNames.map((name, i) => (
-                          <div key={i} className="text-[11px] text-slate-400 truncate hover:text-emerald-400 transition-colors">• {name}</div>
+                          <div key={i} className="text-[11px] text-slate-400 truncate hover:text-blue-400 transition-colors">• {name}</div>
                       ))}
                     </div>
                   </div>
@@ -1412,9 +1412,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="flex items-baseline gap-2">
                           <span className="text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</span>
                           <span className={`text-[10px] font-black uppercase ${
-                              attendanceRate < 85 ? 'text-red-500' : 
-                              attendanceRate <= 90 ? 'text-amber-500' : 
-                              'text-emerald-500'
+                              attendanceRate < 85 ? 'text-red-500' :
+                              attendanceRate <= 90 ? 'text-amber-500' :
+                              'text-blue-500'
                           }`}>
                               {attendanceRate < 85 ? 'Ruim' : attendanceRate <= 90 ? 'Bom' : 'Excelente'}
                           </span>
@@ -1424,16 +1424,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="relative size-14">
                       <svg className="size-full transform -rotate-90">
                           <circle cx="28" cy="28" r="24" stroke="#1e293b" strokeWidth="4" fill="transparent" />
-                          <circle 
-                            cx="28" 
-                            cy="28" 
-                            r="24" 
-                            stroke={attendanceRate < 85 ? '#ef4444' : attendanceRate <= 90 ? '#f59e0b' : '#10b981'} 
-                            strokeWidth="4" 
-                            fill="transparent" 
-                            strokeDasharray="150.7" 
-                            strokeDashoffset={150.7 - (150.7 * attendanceRate) / 100} 
-                            strokeLinecap="round" 
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke={attendanceRate < 85 ? '#ef4444' : attendanceRate <= 90 ? '#f59e0b' : '#536fd1'}
+                            strokeWidth="4"
+                            fill="transparent"
+                            strokeDasharray="150.7"
+                            strokeDashoffset={150.7 - (150.7 * attendanceRate) / 100}
+                            strokeLinecap="round"
                           />
                       </svg>
                   </div>
@@ -1460,14 +1460,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 const isOnPacing = orthoPacing.goalReached;
                 const currentActual = orthoPacing.cumulativeActual;
                 const currentMeta = orthoPacing.chartData.find(d => d.day === orthoPacing.lastDayWithData)?.meta || 0;
-                
+
                 // Calculate days remaining
                 const totalDaysInMonth = new Date(parseInt(currentYear), parseInt(selectedMonth), 0).getDate();
                 let orthoDaysTotal = 0;
                 let orthoDaysPassed = 0;
                 const today = new Date();
                 const isCurrentMonth = today.getFullYear() === parseInt(currentYear) && (today.getMonth() + 1) === parseInt(selectedMonth);
-                
+
                 for (let d = 1; d <= totalDaysInMonth; d++) {
                     const dateObj = new Date(parseInt(currentYear), parseInt(selectedMonth) - 1, d);
                     if (isOrthoDay(dateObj)) {
@@ -1483,11 +1483,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="flex flex-col mb-6">
                           <div className="flex justify-between items-center mb-6">
                               <h4 className="text-text font-bold text-sm">Pacing de Presença Ortodontia</h4>
-                              <div className={`px-2 py-1 rounded text-[10px] font-bold ${isOnPacing ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                              <div className={`px-2 py-1 rounded text-[10px] font-bold ${isOnPacing ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
                                   {isOnPacing ? 'Meta Atingida' : 'Abaixo da Meta'}
                               </div>
                           </div>
-                          
+
                           {/* Summary KPIs */}
                           <div className="grid grid-cols-3 gap-4 mb-6">
                               <div className="bg-panel p-4 rounded-xl border border-border">
@@ -1514,34 +1514,34 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                             <XAxis dataKey="day" stroke="#94a3b8" fontSize={10} />
                             <YAxis stroke="#94a3b8" fontSize={10} />
-                            <RechartsTooltip 
+                            <RechartsTooltip
                               content={<CustomTooltip />}
                             />
                             <Legend verticalAlign="top" height={36} iconType="plainline" formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value}</span>} />
                             <Line type="monotone" dataKey="meta" stroke="#94a3b8" strokeDasharray="5 5" name="Trajetória Padrão Linear" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={800} />
-                            <Line type="monotone" dataKey="atual" stroke="#10b981" name="Acumulado Realizado" strokeWidth={3} dot={false} isAnimationActive={true} animationDuration={800} />
+                            <Line type="monotone" dataKey="atual" stroke="#536fd1" name="Acumulado Realizado" strokeWidth={3} dot={false} isAnimationActive={true} animationDuration={800} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
-                      
+
                       <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
                         <h4 className="text-text font-bold text-sm mb-3">Adicionar Observação</h4>
                         <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                placeholder="Data (AAAA-MM-DD)" 
+                            <input
+                                type="text"
+                                placeholder="Data (AAAA-MM-DD)"
                                 value={selectedNoteDay}
                                 onChange={(e) => setSelectedNoteDay(e.target.value)}
                                 className="bg-slate-900 text-text p-2 rounded text-xs w-32 border border-slate-700"
                             />
-                            <input 
-                                type="text" 
-                                placeholder="Nota..." 
+                            <input
+                                type="text"
+                                placeholder="Nota..."
                                 value={noteText}
                                 onChange={(e) => setNoteText(e.target.value)}
                                 className="bg-slate-900 text-text p-2 rounded text-xs flex-grow border border-slate-700"
                             />
-                            <button 
+                            <button
                                 onClick={() => {
                                     if (selectedNoteDay && noteText) {
                                         setDayNotes(prev => ({...prev, [selectedNoteDay]: noteText}));
@@ -1559,7 +1559,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               })()}
 
               </div>
-          
+
         {/* Espaçamento mantido */}
         <div className="mt-6" />
 
@@ -1574,8 +1574,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <YAxis stroke="#94a3b8" fontSize={12} allowDecimals={false} />
                               <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                               <Legend verticalAlign="top" height={36} iconType="circle" formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value}</span>} />
-                              <Bar dataKey="Iniciou" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                              <Bar dataKey="Finalizou" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                              <Bar dataKey="Iniciou" fill="#536fd1" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                              <Bar dataKey="Finalizou" fill="#536fd1" radius={[4, 4, 0, 0]} maxBarSize={40} />
                               <Bar dataKey="Documentacao" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} name="Doc. Inicial" />
                           </BarChart>
                       </ResponsiveContainer>
@@ -1607,7 +1607,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   {applianceDistribution.map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                   ))}
-                                  <Label 
+                                  <Label
                                     position="center"
                                     content={({ viewBox }: any) => {
                                         const cx = viewBox?.cx || 0;
@@ -1642,28 +1642,28 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           <h3 className="text-lg font-bold text-text">Distribuição Financeira</h3>
                       <div className="text-right">
                           <p className="text-[10px] text-slate-400 uppercase font-bold">Receita Estimada (Ativos)</p>
-                          <p className="text-xl font-bold text-emerald-400">R$ {estimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                          <p className="text-xl font-bold text-blue-400">R$ {estimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                       </div>
                   </div>
                   <div className="flex-1 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={valueDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                              <XAxis 
-                                dataKey="name" 
-                                stroke="#94a3b8" 
-                                fontSize={10} 
+                              <XAxis
+                                dataKey="name"
+                                stroke="#94a3b8"
+                                fontSize={10}
                                 tick={{ fill: '#94a3b8' }}
                                 tickMargin={10}
                               />
-                              <YAxis 
-                                stroke="#94a3b8" 
-                                fontSize={10} 
+                              <YAxis
+                                stroke="#94a3b8"
+                                fontSize={10}
                                 tick={{ fill: '#94a3b8' }}
                                 allowDecimals={false}
                               />
                               <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }} />
-                              <Bar dataKey="value" name="Pacientes" fill="#d946ef" radius={[4, 4, 0, 0]}>
+                              <Bar dataKey="value" name="Pacientes" fill="#8b73be" radius={[4, 4, 0, 0]}>
                                   {valueDistribution.map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                   ))}
@@ -1683,7 +1683,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const monthIndex = parseInt(selectedMonth) - 1; // 0-indexed
       const totalDays = new Date(year, monthIndex + 1, 0).getDate();
       const firstDayOfWeek = new Date(year, monthIndex, 1).getDay(); // 0 = Sun
-      
+
       const todayStr = new Date().toISOString().split('T')[0];
       const monthKeyPrefix = `${currentYear}-${String(selectedMonth).padStart(2, '0')}-`;
 
@@ -1751,20 +1751,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   {/* Month Navigation & Controls */}
                   <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center bg-panel border border-border rounded-xl p-1 gap-1">
-                          <button 
+                          <button
                               onClick={handlePrevMonth}
                               className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
                               title="Mês Anterior"
                           >
                               <ChevronLeft className="w-4 h-4" />
                           </button>
-                          <button 
+                          <button
                               onClick={handleToday}
                               className="px-3 py-1 text-xs font-bold text-slate-300 hover:text-text hover:bg-surface rounded-lg transition-colors"
                           >
                               Hoje
                           </button>
-                          <button 
+                          <button
                               onClick={handleNextMonth}
                               className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
                               title="Próximo Mês"
@@ -1773,7 +1773,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </button>
                       </div>
 
-                      <select 
+                      <select
                           value={selectedMonth}
                           onChange={(e) => setSelectedMonth(e.target.value)}
                           className="bg-panel border border-border rounded-xl px-3 py-2 text-xs font-bold text-text outline-none focus:border-purple-500"
@@ -1783,7 +1783,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           ))}
                       </select>
 
-                      <select 
+                      <select
                           value={currentYear}
                           onChange={(e) => setCurrentYear(e.target.value)}
                           className="bg-panel border border-border rounded-xl px-3 py-2 text-xs font-bold text-text outline-none focus:border-purple-500"
@@ -1800,7 +1800,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="flex items-center gap-2 flex-1 min-w-[240px]">
                       <div className="relative flex-1">
                           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                          <input 
+                          <input
                               type="text"
                               placeholder="Buscar paciente no calendário..."
                               value={calendarSearch}
@@ -1863,10 +1863,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.2)">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Atendidos / Presentes</span>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Atendidos / Presentes</span>
+                          <CheckCircle2 className="w-4 h-4 text-blue-400" />
                       </div>
-                      <span className="text-2xl font-bold font-display text-emerald-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
+                      <span className="text-2xl font-bold font-display text-blue-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
                       <span className="text-[10px] text-slate-400">Presença confirmada</span>
                   </SpotlightCard>
 
@@ -1887,8 +1887,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           const isAug2026OrLater = parseInt(currentYear) > 2026 || (parseInt(currentYear) === 2026 && (parseInt(selectedMonth) - 1) >= 7);
                           const orthoDaysHeader = isAug2026OrLater ? [3, 5, 6] : [1, 3, 6];
                           return ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((dayName, idx) => (
-                              <div 
-                                  key={dayName} 
+                              <div
+                                  key={dayName}
                                   className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl ${
                                       orthoDaysHeader.includes(idx)
                                           ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
@@ -1927,10 +1927,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   onClick={() => setSelectedCalendarDay(dateObj)}
                                   className={`
                                       group border rounded-2xl p-3 min-h-[130px] flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden
-                                      ${isToday 
-                                          ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' 
-                                          : isOrtho 
-                                              ? 'bg-purple-900/10 border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-900/20' 
+                                      ${isToday
+                                          ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                                          : isOrtho
+                                              ? 'bg-purple-900/10 border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-900/20'
                                               : 'bg-surface/60 border-border hover:border-slate-500 hover:bg-panel'}
                                   `}
                               >
@@ -1968,19 +1968,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                           const isAbsent = status === 'Absent';
 
                                           return (
-                                              <div 
+                                              <div
                                                   key={p.id}
                                                   className={`
                                                       text-[10px] font-semibold px-2 py-1 rounded-lg border flex items-center justify-between gap-1 truncate transition-transform hover:scale-[1.02]
-                                                      ${isPresent 
-                                                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
-                                                          : isScheduled 
-                                                              ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' 
+                                                      ${isPresent
+                                                          ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                                                          : isScheduled
+                                                              ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
                                                               : 'bg-rose-500/20 border-rose-500/40 text-rose-300'}
                                                   `}
                                               >
                                                   <span className="truncate">{p.name}</span>
-                                                  {isPresent && <CheckCircle2 className="w-3 h-3 shrink-0 text-emerald-400" />}
+                                                  {isPresent && <CheckCircle2 className="w-3 h-3 shrink-0 text-blue-400" />}
                                                   {isScheduled && <Clock className="w-3 h-3 shrink-0 text-blue-400" />}
                                                   {isAbsent && <XCircle className="w-3 h-3 shrink-0 text-rose-400" />}
                                               </div>
@@ -2023,7 +2023,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const signedCount = active.filter(p => p.aditivoSigned).length;
       const pendingSignedCount = totalActive - signedCount;
       const changedDueDateCount = active.filter(p => p.dueDateChanged).length;
-      
+
       const msgSentPct = totalActive > 0 ? Math.round((msgSentCount / totalActive) * 100) : 0;
       const signedPct = totalActive > 0 ? Math.round((signedCount / totalActive) * 100) : 0;
       const changedDueDatePct = totalActive > 0 ? Math.round((changedDueDateCount / totalActive) * 100) : 0;
@@ -2061,17 +2061,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
-                      <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 material-symbols-outlined text-base">send</span>
+                      <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">send</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-emerald-400 font-mono">{aditivoStats.msgSentCount}</span>
+                          <span className="text-2xl font-black text-blue-400 font-mono">{aditivoStats.msgSentCount}</span>
                           <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
                       </div>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono">{aditivoStats.msgSentPct}%</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-mono">{aditivoStats.msgSentPct}%</span>
                   </div>
                   <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
-                      <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
+                      <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
                   </div>
               </div>
 
@@ -2134,14 +2134,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
           {/* Filters */}
           <div className="flex flex-wrap gap-4 items-center bg-surface p-4 rounded-xl border border-border">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Buscar paciente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-4 py-2 outline-none focus:border-purple-500"
               />
-              <select 
+              <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500"
@@ -2151,7 +2151,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="Finished">Finalizado</option>
                   <option value="Suspended">Suspenso</option>
               </select>
-              <select 
+              <select
                 value={feeFilter === 'All' ? 'All' : feeFilter}
                 onChange={(e) => setFeeFilter(e.target.value === 'All' ? 'All' : Number(e.target.value))}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500"
@@ -2161,7 +2161,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <option key={fee} value={fee}>R$ {fee.toFixed(2)}</option>
                   ))}
               </select>
-              <select 
+              <select
                 value={contractFilter}
                 onChange={(e) => setContractFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500"
@@ -2171,7 +2171,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="Papel">Papel</option>
                   <option value="Empty">Vazio / Sem Contrato</option>
               </select>
-              <select 
+              <select
                 value={aditivoMsgFilter}
                 onChange={(e) => setAditivoMsgFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
@@ -2180,7 +2180,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <option value="Sent">📱 Mensagem Enviada</option>
                   <option value="Pending">⏳ Mensagem Pendente</option>
               </select>
-              <select 
+              <select
                 value={aditivoStatusFilter}
                 onChange={(e) => setAditivoStatusFilter(e.target.value as any)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-3 py-2 outline-none focus:border-purple-500 font-medium"
@@ -2192,7 +2192,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
               {/* Filtro de Vencimento (Visível Apenas para Administrador) */}
               {isAdmin && (
-                  <select 
+                  <select
                     value={dueDateFilter}
                     onChange={(e) => setDueDateFilter(e.target.value as any)}
                     className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg text-sm px-3 py-2 outline-none focus:border-amber-400 font-medium"
@@ -2269,7 +2269,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <table className="w-full text-left border-collapse">
                   <thead>
                       <tr className="border-b border-border bg-panel text-gray-400 text-xs uppercase tracking-wider font-medium">
-                          <th 
+                          <th
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('name')}
                           >
@@ -2283,7 +2283,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           {selectedDate && <th className="p-5 font-semibold text-center">Presença ({selectedDate.toLocaleDateString()})</th>}
                           <th className="p-5 font-semibold">Aparelho</th>
                           <th className="p-5 font-semibold">Contrato Inicial</th>
-                          <th 
+                          <th
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('aditivoMsg')}
                           >
@@ -2294,7 +2294,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('aditivoSigned')}
                           >
@@ -2307,7 +2307,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </th>
                           {/* Coluna Vencimento (Visível Apenas para Administrador) */}
                           {isAdmin && (
-                              <th 
+                              <th
                                 className="p-5 font-semibold text-center cursor-pointer hover:text-text transition-colors group/sort text-amber-400"
                                 onClick={() => toggleSort('dueDateChanged')}
                               >
@@ -2320,7 +2320,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </div>
                               </th>
                           )}
-                          <th 
+                          <th
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('startDate')}
                           >
@@ -2331,7 +2331,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('duration')}
                           >
@@ -2342,7 +2342,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="p-5 font-semibold text-right cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('maintenanceValue')}
                           >
@@ -2360,10 +2360,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <tbody className="text-gray-300 text-sm divide-y divide-white/5">
                       {filteredPatients.map((p) => {
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
-                          
+
                           return (
-                            <tr 
-                                key={p.id} 
+                            <tr
+                                key={p.id}
                                 className={`group transition-colors ${hasProblem ? 'bg-red-500/5 hover:bg-red-500/10 border-l-2 border-l-red-500' : 'hover:bg-panel border-l-2 border-l-transparent'}`}
                             >
                                 <td className="p-5 font-bold text-text relative">
@@ -2375,11 +2375,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 {selectedDate && (
                                     <td className="p-5 text-center">
-                                        <button 
+                                        <button
                                             onClick={() => toggleDailyAttendance(p.id, selectedDate)}
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
-                                                (p.attendance[`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`] || 'None') === 'Present' 
-                                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                                                (p.attendance[`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`] || 'None') === 'Present'
+                                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
                                                 : 'bg-red-500/10 text-red-400 border border-red-500/30'
                                             }`}
                                         >
@@ -2389,7 +2389,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 )}
                                 <td className="p-5 text-purple-400">{p.applianceType}</td>
                                 <td className="p-5">
-                                    <button 
+                                    <button
                                         onClick={() => setEditingPatientId(p.id)}
                                         className="bg-blue-600 text-text px-3 py-1 rounded text-xs block mb-2 shadow-lg"
                                     >
@@ -2411,14 +2411,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         <option value="Papel" className="bg-surface text-amber-400 font-bold">Papel</option>
                                     </select>
                                 </td>
-                                
+
                                 {/* Coluna Msg Aditivo */}
                                 <td className="p-5">
                                     <button
                                         onClick={() => handleToggleAditivoMsg(p.id)}
                                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
                                             p.aditivoMsgSent
-                                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25 hover:border-emerald-500/50'
+                                            ? 'bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25 hover:border-blue-500/50'
                                             : 'bg-panel hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border-border hover:border-amber-500/30'
                                         }`}
                                         title={p.aditivoMsgSent ? `Mensagem enviada${p.aditivoMsgSentAt ? ` em ${p.aditivoMsgSentAt.split('-').reverse().join('/')}` : ''}. Clique para desmarcar.` : 'Clique para marcar como mensagem enviada'}
@@ -2469,7 +2469,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                 : 'bg-panel hover:bg-amber-500/10 text-slate-500 hover:text-amber-300 border-border hover:border-amber-500/30'
                                             }`}
                                             title={
-                                                p.dueDateChanged 
+                                                p.dueDateChanged
                                                 ? `Vencimento alterado${p.dueDay ? ` para: ${p.dueDay}` : ''}${p.dueDateChangedAt ? ` (em ${p.dueDateChangedAt.split('-').reverse().join('/')})` : ''}${p.dueDateNotes ? ` - Obs: ${p.dueDateNotes}` : ''}. Clique para alternar.`
                                                 : 'Vencimento padrão. Clique para marcar como vencimento alterado.'
                                             }
@@ -2492,8 +2492,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
                                 <td className="p-5 text-center">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
-                                        p.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                                        p.status === 'Finished' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                        p.status === 'Active' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                        p.status === 'Finished' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                                         'bg-slate-500/10 text-slate-400 border-slate-500/20'
                                     }`}>
                                         {p.status === 'Active' ? 'Ativo' : p.status === 'Finished' ? 'Finalizado' : 'Suspenso'}
@@ -2501,23 +2501,23 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 <td className="p-5 text-right">
                                     <div className="flex justify-end gap-2 items-center">
-                                        <button 
+                                        <button
                                             onClick={() => setEditingPatient(p)}
                                             className="size-8 flex items-center justify-center rounded-lg bg-panel hover:bg-purple-500 hover:text-white border border-border text-slate-400 transition-all shadow-sm"
                                             title="Editar Informações do Paciente"
                                         >
                                             <span className="material-symbols-outlined text-sm">edit</span>
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => openNoteModal(p)}
                                             className={`size-8 flex items-center justify-center rounded-lg transition-all border ${hasProblem ? 'bg-red-500 text-text border-red-500' : 'bg-panel hover:bg-red-500 hover:text-text border-border text-slate-400'}`}
                                             title="Relatar Problema / Observação"
                                         >
                                             <span className="material-symbols-outlined text-sm">warning</span>
                                         </button>
-                                        
+
                                         {p.status === 'Active' && (
-                                            <button 
+                                            <button
                                                 onClick={() => handleOpenFinishModal(p.id)}
                                                 className="px-3 py-1.5 rounded-lg bg-panel hover:bg-purple-500 hover:text-text border border-border transition-all text-xs font-semibold text-slate-400"
                                             >
@@ -2525,14 +2525,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                             </button>
                                         )}
                                         {(p.status === 'Finished' || p.status === 'Suspended') && (
-                                            <button 
+                                            <button
                                                 onClick={() => handleReactivate(p.id)}
-                                                className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-text border border-emerald-500/20 transition-all text-xs font-bold"
+                                                className="px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-text border border-blue-500/20 transition-all text-xs font-bold"
                                             >
                                                 Reativar
                                             </button>
                                         )}
-                                        <button 
+                                        <button
                                             onClick={() => handleDeletePatient(p.id, p.name)}
                                             className="px-2 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 transition-all text-xs font-bold flex items-center justify-center gap-1"
                                             title="Excluir Paciente Permanentemente"
@@ -2558,7 +2558,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
   const renderGrid = () => {
       const monthKey = `${currentYear}-${selectedMonth.padStart(2, '0')}`;
-      
+
       let activePatients = filteredPatients
           .filter(p => p.status === 'Active')
           .sort((a, b) => a.name.localeCompare(b.name));
@@ -2566,20 +2566,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (gridStatusFilter !== 'all') {
           activePatients = activePatients.filter(p => p.attendance[monthKey] === gridStatusFilter);
       }
-      
+
       return (
           <div className="glass-panel rounded-2xl border border-border overflow-hidden animate-in fade-in duration-500 flex flex-col h-full">
               <div className="p-4 border-b border-border bg-surface flex flex-wrap gap-4 justify-between items-center">
                   <div className="flex items-center gap-4">
                       <h3 className="font-bold text-text text-sm">Grade de Presença - {currentYear}</h3>
                       <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1">
-                          <button 
+                          <button
                             onClick={() => setCurrentYear('2025')}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${currentYear === '2025' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               2025
                           </button>
-                          <button 
+                          <button
                             onClick={() => setCurrentYear('2026')}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${currentYear === '2026' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
@@ -2591,8 +2591,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold text-slate-500 uppercase">Mês de Referência:</span>
-                          <select 
-                            value={selectedMonth} 
+                          <select
+                            value={selectedMonth}
                             onChange={(e) => setSelectedMonth(e.target.value)}
                             className="bg-panel border border-border rounded-lg text-[10px] text-text px-2 py-1 outline-none focus:border-purple-500 font-bold"
                           >
@@ -2601,25 +2601,25 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
 
                       <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1">
-                          <button 
+                          <button
                             onClick={() => setGridStatusFilter('all')}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'all' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Todos
                           </button>
-                          <button 
+                          <button
                             onClick={() => setGridStatusFilter('Scheduled')}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Scheduled' ? 'bg-amber-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Agendados
                           </button>
-                          <button 
+                          <button
                             onClick={() => setGridStatusFilter('Present')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Present' ? 'bg-emerald-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Present' ? 'bg-blue-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Presentes
                           </button>
-                          <button 
+                          <button
                             onClick={() => setGridStatusFilter('Absent')}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Absent' ? 'bg-red-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
@@ -2629,7 +2629,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </div>
 
                   <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-400">
-                      <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-emerald-500"></span> Presente</span>
+                      <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-blue-500"></span> Presente</span>
                       <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500"></span> Agendado</span>
                       <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-red-500"></span> Falta</span>
                   </div>
@@ -2647,7 +2647,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <tbody className="text-gray-300 text-sm divide-y divide-white/5">
                           {activePatients.map((p) => {
                               const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
-                              
+
                               // Check for 3 consecutive absences in the current year is disabled
                               const hasThreeConsecutiveAbsences = false;
 
@@ -2660,7 +2660,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                     {p.name}
                                                     {hasProblem && <span className="text-red-400 font-normal text-[10px]">(Alert)</span>}
                                                     {isAdmin && p.dueDateChanged && (
-                                                        <span 
+                                                        <span
                                                             className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded"
                                                             title={`Vencimento Alterado${p.dueDay ? `: ${p.dueDay}` : ''}${p.dueDateNotes ? ` - ${p.dueDateNotes}` : ''}`}
                                                         >
@@ -2668,7 +2668,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                         </span>
                                                     )}
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
                                                         if (!confirm('Deseja finalizar o tratamento deste paciente e removê-lo da grade?')) return;
@@ -2681,7 +2681,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                         }
                                                     }}
                                                     title="Finalizar e Remover da Grade"
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-panel hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 rounded"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-panel hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 rounded"
                                                 >
                                                     <span className="material-symbols-outlined text-[14px]">check_circle</span>
                                                 </button>
@@ -2697,15 +2697,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     {MONTHS.map((_, idx) => {
                                         const monthKey = `${currentYear}-${String(idx + 1).padStart(2, '0')}`;
                                         const status = p.attendance[monthKey] || 'None';
-                                        
+
                                         let cellClass = "cursor-pointer transition-all duration-200 group/cell";
                                         let content = null;
-                                        
+
                                         if (status === 'Present') {
-                                            cellClass += " bg-emerald-500/20 text-emerald-400";
+                                            cellClass += " bg-blue-500/20 text-blue-400";
                                             // Find the specific day
                                             const monthKeyPrefix = `${currentYear}-${String(idx + 1).padStart(2, '0')}-`;
-                                            const dayKey = Object.keys(p.attendance || {}).find(key => 
+                                            const dayKey = Object.keys(p.attendance || {}).find(key =>
                                                 key.startsWith(monthKeyPrefix) && p.attendance[key] === 'Present'
                                             );
                                             const day = dayKey ? dayKey.split('-')[2] : '';
@@ -2721,24 +2721,24 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         }
 
                                         return (
-                                            <td 
-                                                key={idx} 
+                                            <td
+                                                key={idx}
                                                 className={`p-2 text-center border-l border-border relative ${cellClass}`}
                                             >
-                                                <div 
+                                                <div
                                                     className="w-full h-full flex items-center justify-center min-h-[30px]"
                                                     onClick={() => toggleAttendance(p.id, idx)}
                                                 >
                                                     {content}
                                                 </div>
-                                                
+
                                                 {status !== 'None' && (
                                                     <button
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             const updatedAttendance = { ...p.attendance };
                                                             delete updatedAttendance[monthKey];
-                                                            
+
                                                             // Clear daily records for this month
                                                             const monthPrefix = `${currentYear}-${String(idx + 1).padStart(2, '0')}-`;
                                                             Object.keys(updatedAttendance).forEach(key => {
@@ -2782,9 +2782,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <span className="material-symbols-outlined text-purple-500">settings_suggest</span>
                   Gerenciar Tipos de Aparelho
               </h3>
-              
+
               <div className="flex gap-2 mb-6 p-4 bg-panel rounded-xl border border-border">
-                  <input 
+                  <input
                       value={newApplianceName}
                       onChange={(e) => setNewApplianceName(e.target.value)}
                       placeholder="Novo Tipo de Aparelho..."
@@ -2800,19 +2800,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div key={app.id} className="flex justify-between items-center p-3 bg-panel rounded-lg border border-border group hover:border-purple-500/30 transition-colors">
                           {editingApplianceId === app.id ? (
                               <div className="flex flex-1 gap-2">
-                                  <input 
+                                  <input
                                       value={editingName}
                                       onChange={(e) => setEditingName(e.target.value)}
                                       autoFocus
                                       className="flex-1 bg-panel border border-white/20 rounded px-2 py-1 text-sm text-text focus:border-purple-500 outline-none"
                                   />
-                                  <button onClick={() => handleEditAppliance(app.id, editingName)} className="text-emerald-400 hover:bg-panel/80 p-1 rounded"><span className="material-symbols-outlined text-sm">check</span></button>
+                                  <button onClick={() => handleEditAppliance(app.id, editingName)} className="text-blue-400 hover:bg-panel/80 p-1 rounded"><span className="material-symbols-outlined text-sm">check</span></button>
                                   <button onClick={() => setEditingApplianceId(null)} className="text-red-400 hover:bg-panel/80 p-1 rounded"><span className="material-symbols-outlined text-sm">close</span></button>
                               </div>
                           ) : (
                               <>
                                   <span className="text-sm font-medium text-slate-300">{app.name}</span>
-                                  <button 
+                                  <button
                                       onClick={() => { setEditingApplianceId(app.id); setEditingName(app.name); }}
                                       className="text-slate-500 hover:text-text opacity-0 group-hover:opacity-100 transition-opacity p-1"
                                   >
@@ -2831,9 +2831,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <span className="material-symbols-outlined text-blue-500">flag</span>
                   Motivos de Finalização
               </h3>
-              
+
               <div className="flex gap-2 mb-6 p-4 bg-panel rounded-xl border border-border">
-                  <input 
+                  <input
                       value={newFinishReason}
                       onChange={(e) => setNewFinishReason(e.target.value)}
                       placeholder="Novo Motivo (ex: Alta, Abandono)..."
@@ -2849,7 +2849,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   {finishReasons.map(reason => (
                       <div key={reason.id} className="flex justify-between items-center p-3 bg-panel rounded-lg border border-border group hover:border-blue-500/30 transition-colors">
                           <span className="text-sm font-medium text-slate-300">{reason.name}</span>
-                          <button 
+                          <button
                               onClick={() => handleDeleteFinishReason(reason.id)}
                               className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
                           >
@@ -2874,7 +2874,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
-        
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
@@ -2882,39 +2882,39 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
                    <div>
                        <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
-                          {activeSubTab === 'vision' ? 'Visão Geral Ortodontia' : 
-                           activeSubTab === 'grid' ? 'Grade de Presença' : 
+                          {activeSubTab === 'vision' ? 'Visão Geral Ortodontia' :
+                           activeSubTab === 'grid' ? 'Grade de Presença' :
                            activeSubTab === 'patients' ? 'Gestão de Pacientes' : 'Configurações'}
                        </h1>
                        <p className="text-slate-400 text-xs mt-0.5">
-                          {activeSubTab === 'vision' 
-                              ? 'Acompanhamento de performance, faturamento e fluxo de pacientes.' 
-                              : activeSubTab === 'grid' 
-                              ? 'Controle de mensalidades e presença mensal dos pacientes.' 
-                              : activeSubTab === 'patients' 
-                              ? 'Lista completa de pacientes, contratos e histórico de tratamento.' 
+                          {activeSubTab === 'vision'
+                              ? 'Acompanhamento de performance, faturamento e fluxo de pacientes.'
+                              : activeSubTab === 'grid'
+                              ? 'Controle de mensalidades e presença mensal dos pacientes.'
+                              : activeSubTab === 'patients'
+                              ? 'Lista completa de pacientes, contratos e histórico de tratamento.'
                               : 'Gerencie aparelhos, custos e motivos de finalização.'}
                        </p>
                    </div>
 
                    <div className="flex gap-2 text-xs justify-end items-center">
                       {activeSubTab === 'patients' && (
-                          <button 
+                          <button
                               onClick={() => { setIsNewContractModalOpen(true); }}
                               className="px-3.5 py-1.5 btn btn-primary text-white rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
                           >
                               <LayoutPanelLeft className="w-3.5 h-3.5" /> Novo Paciente
                           </button>
                       )}
-                      
+
                       {activeSubTab === 'patients' && (
                           <div className="relative group">
                               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                              <input 
+                              <input
                                   value={searchTerm}
                                   onChange={(e) => setSearchTerm(e.target.value)}
                                   placeholder="Filtrar paciente..."
-                                  className="bg-panel border border-border rounded-lg pl-9 pr-3 py-1.5 text-text text-xs outline-none focus:border-sky-500 transition-colors"
+                                  className="bg-panel border border-border rounded-lg pl-9 pr-3 py-1.5 text-text text-xs outline-none focus:border-blue-500 transition-colors"
                               />
                           </div>
                       )}
@@ -2929,8 +2929,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             onClick={() => setActiveSubTab(tab.id as OrthoTab)}
                             className={`
                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                ${activeSubTab === tab.id 
-                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+                                ${activeSubTab === tab.id
+                                    ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
                                     : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
                             `}
                         >
@@ -2959,7 +2959,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="p-6 flex flex-col gap-4">
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Nome do Paciente</label>
-                          <input 
+                          <input
                               value={newContractForm.name}
                               onChange={(e) => setNewContractForm({...newContractForm, name: e.target.value})}
                               placeholder="Nome Completo"
@@ -2968,7 +2968,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Tipo de Aparelho</label>
-                          <select 
+                          <select
                               value={newContractForm.applianceType}
                               onChange={(e) => setNewContractForm({...newContractForm, applianceType: e.target.value})}
                               className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-purple-500 outline-none"
@@ -2979,7 +2979,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Contrato</label>
-                          <select 
+                          <select
                               value={newContractForm.contractType}
                               onChange={(e) => setNewContractForm({...newContractForm, contractType: e.target.value as 'Digital' | 'Papel' | ''})}
                               className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-purple-500 outline-none font-bold"
@@ -2992,7 +2992,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="grid grid-cols-2 gap-4">
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Data de Início</label>
-                              <input 
+                              <input
                                   type="date"
                                   value={newContractForm.startDate}
                                   onChange={(e) => setNewContractForm({...newContractForm, startDate: e.target.value})}
@@ -3001,7 +3001,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </div>
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Mensalidade (R$)</label>
-                              <input 
+                              <input
                                   type="number"
                                   value={newContractForm.maintenanceValue}
                                   onChange={(e) => setNewContractForm({...newContractForm, maintenanceValue: e.target.value})}
@@ -3031,7 +3031,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <p className="text-sm text-slate-300">Selecione a data de conclusão do tratamento para arquivar este paciente.</p>
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Data de Finalização</label>
-                          <input 
+                          <input
                               type="date"
                               value={finishDate}
                               onChange={(e) => setFinishDate(e.target.value)}
@@ -3064,7 +3064,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </p>
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Descrição do Problema</label>
-                          <textarea 
+                          <textarea
                               value={noteContent}
                               onChange={(e) => setNoteContent(e.target.value)}
                               placeholder="Descreva o problema (ex: bracket quebrado recorrente, falta injustificada...)"
@@ -3073,7 +3073,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                   </div>
                   <div className="p-6 border-t border-border bg-surface flex justify-between gap-3">
-                      <button onClick={handleResolveNote} className="px-4 py-2 text-sm font-bold text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/10">Resolver / Limpar</button>
+                      <button onClick={handleResolveNote} className="px-4 py-2 text-sm font-bold text-blue-400 hover:text-blue-300 border border-blue-500/20 rounded-lg hover:bg-blue-500/10">Resolver / Limpar</button>
                       <div className="flex gap-2">
                           <button onClick={() => setIsNoteModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button>
                           <button onClick={handleSaveNote} className="px-6 py-2 rounded-lg bg-red-600 text-text font-bold text-sm hover:bg-red-500 shadow-lg">Salvar Alerta</button>
@@ -3092,10 +3092,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <button onClick={() => setEditingPatientId(null)} className="text-slate-400 hover:text-text"><span className="material-symbols-outlined">close</span></button>
                   </div>
                   <div className="p-4">
-                      <OrthodonticsCalendar 
-                        currentYear={currentYear} 
-                        selectedMonth={selectedMonth} 
-                        isOrthoDay={isOrthoDay} 
+                      <OrthodonticsCalendar
+                        currentYear={currentYear}
+                        selectedMonth={selectedMonth}
+                        isOrthoDay={isOrthoDay}
                         onDayClick={(date) => {
                             toggleDailyAttendance(editingPatientId, date);
                             setEditingPatientId(null);
@@ -3115,10 +3115,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <button onClick={() => setGridEditingInfo(null)} className="text-slate-400 hover:text-text"><span className="material-symbols-outlined">close</span></button>
                   </div>
                   <div className="p-4">
-                      <OrthodonticsCalendar 
-                        currentYear={currentYear} 
-                        selectedMonth={(gridEditingInfo.monthIndex + 1).toString()} 
-                        isOrthoDay={isOrthoDay} 
+                      <OrthodonticsCalendar
+                        currentYear={currentYear}
+                        selectedMonth={(gridEditingInfo.monthIndex + 1).toString()}
+                        isOrthoDay={isOrthoDay}
                         onDayClick={(date) => {
                             toggleDailyAttendance(gridEditingInfo.patientId, date);
                             setGridEditingInfo(null);
@@ -3144,8 +3144,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <p className="text-[11px] text-red-400 font-medium">Atenção: Ação Irreversível</p>
                           </div>
                       </div>
-                      <button 
-                          onClick={() => setDeleteModalInfo(null)} 
+                      <button
+                          onClick={() => setDeleteModalInfo(null)}
                           disabled={isDeletingPatient}
                           className="text-slate-400 hover:text-text transition-colors p-1"
                       >
@@ -3169,15 +3169,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   {/* Modal Footer */}
                   <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end gap-3">
-                      <button 
-                          onClick={() => setDeleteModalInfo(null)} 
+                      <button
+                          onClick={() => setDeleteModalInfo(null)}
                           disabled={isDeletingPatient}
                           className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all"
                       >
                           Cancelar
                       </button>
-                      <button 
-                          onClick={confirmDeletePatient} 
+                      <button
+                          onClick={confirmDeletePatient}
                           disabled={isDeletingPatient}
                           className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                       >
@@ -3215,7 +3215,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <p className="text-xs text-slate-400">Gerenciamento de consultas e presença neste dia</p>
                           </div>
                       </div>
-                      <button 
+                      <button
                           onClick={() => { setSelectedCalendarDay(null); setSelectedPatientForSchedule(''); }}
                           className="text-slate-400 hover:text-text p-2 hover:bg-panel rounded-lg transition-colors"
                       >
@@ -3237,7 +3237,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                       </label>
                                   </div>
                                   <div className="flex gap-2">
-                                      <input 
+                                      <input
                                           type="text"
                                           placeholder="Ex: Dra. Ana atende até 16h / Entregar alinhadores..."
                                           defaultValue={note}
@@ -3261,7 +3261,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <UserPlus className="w-4 h-4" /> Agendar / Marcar Presença de Paciente
                           </h4>
                           <div className="flex flex-wrap gap-2">
-                              <select 
+                              <select
                                   value={selectedPatientForSchedule}
                                   onChange={(e) => setSelectedPatientForSchedule(e.target.value)}
                                   className="flex-1 min-w-[200px] bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text outline-none focus:border-purple-500"
@@ -3272,7 +3272,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   ))}
                               </select>
 
-                              <select 
+                              <select
                                   value={newScheduleStatus}
                                   onChange={(e) => setNewScheduleStatus(e.target.value as any)}
                                   className="bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text outline-none focus:border-purple-500"
@@ -3282,7 +3282,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   <option value="Absent">Ausente</option>
                               </select>
 
-                              <button 
+                              <button
                                   onClick={() => {
                                       if (!selectedPatientForSchedule) {
                                           toast.error('Selecione um paciente!');
@@ -3336,21 +3336,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                                               <div className="flex items-center gap-2">
                                                   <div className="flex gap-1 bg-surface p-1 rounded-lg border border-border">
-                                                      <button 
+                                                      <button
                                                           onClick={() => setPatientDailyStatus(p.id, dateKey, 'Scheduled')}
                                                           className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Scheduled' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-text'}`}
                                                           title="Marcar Agendado"
                                                       >
                                                           Agendado
                                                       </button>
-                                                      <button 
+                                                      <button
                                                           onClick={() => setPatientDailyStatus(p.id, dateKey, 'Present')}
-                                                          className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Present' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-text'}`}
+                                                          className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Present' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-text'}`}
                                                           title="Marcar Presente"
                                                       >
                                                           Presente
                                                       </button>
-                                                      <button 
+                                                      <button
                                                           onClick={() => setPatientDailyStatus(p.id, dateKey, 'Absent')}
                                                           className={`px-2 py-1 text-[10px] font-bold rounded ${status === 'Absent' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-text'}`}
                                                           title="Marcar Ausente"
@@ -3359,7 +3359,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                       </button>
                                                   </div>
 
-                                                  <button 
+                                                  <button
                                                       onClick={() => setPatientDailyStatus(p.id, dateKey, 'None')}
                                                       className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                                                       title="Remover do dia"
@@ -3377,7 +3377,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   {/* Modal Footer */}
                   <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end">
-                      <button 
+                      <button
                           onClick={() => { setSelectedCalendarDay(null); setSelectedPatientForSchedule(''); }}
                           className="px-5 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-xs font-bold text-text transition-colors"
                       >
@@ -3404,7 +3404,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="p-6 flex flex-col gap-4">
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Nome do Paciente</label>
-                          <input 
+                          <input
                               type="text"
                               value={editingPatient.name}
                               onChange={(e) => setEditingPatient({ ...editingPatient, name: e.target.value })}
@@ -3415,7 +3415,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Valor da Mensalidade (R$)</label>
-                              <input 
+                              <input
                                   type="number"
                                   value={editingPatient.maintenanceValue}
                                   onChange={(e) => setEditingPatient({ ...editingPatient, maintenanceValue: parseFloat(e.target.value) || 0 })}
@@ -3425,7 +3425,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Tipo de Aparelho</label>
-                              <select 
+                              <select
                                   value={editingPatient.applianceType}
                                   onChange={(e) => setEditingPatient({ ...editingPatient, applianceType: e.target.value })}
                                   className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
@@ -3440,7 +3440,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Data de Início</label>
-                              <input 
+                              <input
                                   type="date"
                                   value={editingPatient.startDate || ''}
                                   onChange={(e) => setEditingPatient({ ...editingPatient, startDate: e.target.value })}
@@ -3450,7 +3450,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase">Status</label>
-                              <select 
+                              <select
                                   value={editingPatient.status}
                                   onChange={(e) => setEditingPatient({ ...editingPatient, status: e.target.value as any })}
                                   className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
@@ -3465,11 +3465,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-panel/50 rounded-xl border border-border">
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1.5">
-                                  <span className="material-symbols-outlined text-sm text-emerald-400">send</span>
+                                  <span className="material-symbols-outlined text-sm text-blue-400">send</span>
                                   Mensagem de Aditivo
                               </label>
                               <label className="flex items-center gap-2 cursor-pointer mt-1">
-                                  <input 
+                                  <input
                                       type="checkbox"
                                       checked={Boolean(editingPatient.aditivoMsgSent)}
                                       onChange={(e) => setEditingPatient({ ...editingPatient, aditivoMsgSent: e.target.checked })}
@@ -3487,7 +3487,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   Aditivo Digital
                               </label>
                               <label className="flex items-center gap-2 cursor-pointer mt-1">
-                                  <input 
+                                  <input
                                       type="checkbox"
                                       checked={Boolean(editingPatient.aditivoSigned)}
                                       onChange={(e) => setEditingPatient({ ...editingPatient, aditivoSigned: e.target.checked })}
@@ -3510,13 +3510,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   </div>
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Somente Administrador</span>
                               </div>
-                              
+
                               <label className="flex items-center gap-2 cursor-pointer">
-                                  <input 
+                                  <input
                                       type="checkbox"
                                       checked={Boolean(editingPatient.dueDateChanged)}
-                                      onChange={(e) => setEditingPatient({ 
-                                          ...editingPatient, 
+                                      onChange={(e) => setEditingPatient({
+                                          ...editingPatient,
                                           dueDateChanged: e.target.checked,
                                           dueDateChangedAt: e.target.checked ? (editingPatient.dueDateChangedAt || new Date().toISOString().split('T')[0]) : undefined
                                       })}
@@ -3531,7 +3531,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-amber-500/20 animate-in fade-in">
                                       <div className="flex flex-col gap-1.5">
                                           <label className="text-[11px] font-semibold text-slate-300">Novo Dia / Data de Vencimento</label>
-                                          <input 
+                                          <input
                                               type="text"
                                               placeholder="Ex: Dia 10 ou 15/09"
                                               value={editingPatient.dueDay || ''}
@@ -3541,7 +3541,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                       </div>
                                       <div className="flex flex-col gap-1.5">
                                           <label className="text-[11px] font-semibold text-slate-300">Motivo / Observação</label>
-                                          <input 
+                                          <input
                                               type="text"
                                               placeholder="Ex: Solicitado pelo paciente"
                                               value={editingPatient.dueDateNotes || ''}
@@ -3556,7 +3556,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Observações / Alerta Clínico</label>
-                          <textarea 
+                          <textarea
                               value={editingPatient.problemNote || ''}
                               onChange={(e) => setEditingPatient({ ...editingPatient, problemNote: e.target.value })}
                               placeholder="Observações ou alertas sobre o tratamento..."

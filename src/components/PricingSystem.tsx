@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { 
-    FileText, 
-    Database, 
-    ClipboardList, 
-    DollarSign, 
-    Users, 
-    Briefcase, 
-    Settings, 
-    BarChart, 
-    Plus, 
-    Trash2, 
+import {
+    FileText,
+    Database,
+    ClipboardList,
+    DollarSign,
+    Users,
+    Briefcase,
+    Settings,
+    BarChart,
+    Plus,
+    Trash2,
     Search,
     Check,
     Edit2,
@@ -354,10 +354,10 @@ const defaultPresets: { keywords: string[]; items: FichaTecnicaItem[] }[] = [
 
 const isMaintenanceService = (name: string) => {
     const n = name.toLowerCase();
-    return n.includes('manutenção') || 
-           n.includes('manutencao') || 
-           n.includes('boleto') || 
-           n.includes('auto ligado') || 
+    return n.includes('manutenção') ||
+           n.includes('manutencao') ||
+           n.includes('boleto') ||
+           n.includes('auto ligado') ||
            n.includes('autoligado');
 };
 
@@ -419,7 +419,7 @@ const repairFichaTecnicas = (existing: Record<string, FichaTecnicaItem[]>, servi
             }
         }
 
-        // Special logic for Contenção: always sync with Prótese if it is missing or different? 
+        // Special logic for Contenção: always sync with Prótese if it is missing or different?
         // Actually, let's only sync if it was empty.
         const isContencao = isContencaoService(service.name);
         if (isContencao && items.length === 0) {
@@ -431,7 +431,7 @@ const repairFichaTecnicas = (existing: Record<string, FichaTecnicaItem[]>, servi
 
         // Filter out Anna (emp-1) from existing procedures as requested
         items = items.filter(item => item.employeeId !== 'emp-1');
-        
+
         repaired[service.id] = items;
     });
 
@@ -442,7 +442,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     const [activeTab, setActiveTab] = useState<PricingTab>('produtos');
     const [isLoadingSupabase, setIsLoadingSupabase] = useState(true);
     const [selectedServiceId, setSelectedServiceId] = useState<string>('');
-    
+
     const [fixedExpenses, setFixedExpenses] = useState<FixedExpenseItem[]>(() => {
         try {
             const saved = localStorage.getItem('fixed_expenses_list');
@@ -475,7 +475,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                     if (settings.third_party_costs) setThirdPartyCosts(settings.third_party_costs);
                     if (settings.fixed_expenses_list) setFixedExpenses(settings.fixed_expenses_list);
                     if (settings.payroll_employees_list) setEmployees(settings.payroll_employees_list);
-                    
+
                     if (settings.payroll_config) {
                         const pc = settings.payroll_config;
                         if (pc.provFerias !== undefined) setProvFerias(pc.provFerias);
@@ -537,7 +537,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
             setIsSavingSupabase(false);
         }
     };
-    
+
     // Formula input states
     const [cHora, setCHora] = useState(150);
     const [time, setTime] = useState(1);
@@ -1012,7 +1012,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
             const data = services.map(service => {
                 const breakdown = getFichaCostBreakdown(service.id);
                 const totalCost = breakdown.cmv + breakdown.labor + (breakdown.thirdParty || 0);
-                
+
                 return {
                     'Procedimento': service.name,
                     'Custo Insumos (CMV) (R$)': breakdown.cmv.toFixed(2),
@@ -1048,22 +1048,22 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
     // Calculate Suggested Clinic Hourly Rate from Payroll (specifically for Dentists)
     const suggestedCHora = useMemo(() => {
-        const dentists = employees.filter(emp => 
-            emp.role?.toLowerCase().includes('dentista') || 
+        const dentists = employees.filter(emp =>
+            emp.role?.toLowerCase().includes('dentista') ||
             emp.role?.toLowerCase().includes('dentist')
         );
-        
+
         const targetGroup = dentists.length > 0 ? dentists : employees;
         if (targetGroup.length === 0) return 150;
 
         const totalCustoMensal = targetGroup.reduce((sum, emp) => {
             return sum + getEmployeeHourlyRate(emp) * (emp.hoursPerMonth || 160);
         }, 0);
-        
+
         const totalHorasMensais = targetGroup.reduce((sum, emp) => {
             return sum + (emp.hoursPerMonth || 160);
         }, 0) || 160;
-        
+
         return totalCustoMensal / totalHorasMensais;
     }, [employees, getEmployeeHourlyRate]);
 
@@ -1084,7 +1084,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 return sum + (item.quantity * pricePerMeasure);
             }
         }, 0);
-        
+
         const thirdPartyCost = externalCosts.reduce((sum, item) => sum + item.cost, 0);
         return itemCost + thirdPartyCost;
     }, [employees, materials, getEmployeeHourlyRate]);
@@ -1104,7 +1104,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
         let cmv = 0;
         let labor = 0;
         let thirdParty = 0;
-        
+
         items.forEach(item => {
             if (item.employeeId) {
                 const emp = employees.find(e => e.id === item.employeeId);
@@ -1150,8 +1150,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     // Scenario Simulation calculations
     const scenarioData = useMemo(() => {
         return services.map((service, index) => {
-            const price = customPracticedPrices[service.id] !== undefined 
-                ? customPracticedPrices[service.id] 
+            const price = customPracticedPrices[service.id] !== undefined
+                ? customPracticedPrices[service.id]
                 : (service.defaultValue || 0);
 
             const quantity = scenarioQuantities[service.id] !== undefined ? scenarioQuantities[service.id] : 0;
@@ -1248,7 +1248,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
         });
 
         const totalMargemContribuicaoPct = totalFaturamento > 0 ? (totalMargemContribuicaoValue / totalFaturamento) * 100 : 0;
-        
+
         const finalData = scenarioData.map(item => {
             const mixPct = totalFaturamento > 0 ? (item.faturamento / totalFaturamento) * 100 : 0;
             const rateioDespesasFixas = totalFaturamento > 0 ? (mixPct / 100) * totalFixedExpenses : 0;
@@ -1288,8 +1288,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     const filteredItems = useMemo(() => {
         if (!searchQuery.trim()) return scenarioTotals.items;
         const q = searchQuery.toLowerCase();
-        return scenarioTotals.items.filter(item => 
-            item.name.toLowerCase().includes(q) || 
+        return scenarioTotals.items.filter(item =>
+            item.name.toLowerCase().includes(q) ||
             item.code.toLowerCase().includes(q)
         );
     }, [scenarioTotals.items, searchQuery]);
@@ -1414,8 +1414,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     };
 
     const handleFichaQuantityChange = (
-        serviceId: string, 
-        identifier: { materialId?: number; employeeId?: string }, 
+        serviceId: string,
+        identifier: { materialId?: number; employeeId?: string },
         qty: number
     ) => {
         setFichaTecnicas(prev => {
@@ -1434,7 +1434,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     };
 
     const handleRemoveFichaItem = (
-        serviceId: string, 
+        serviceId: string,
         identifier: { materialId?: number; employeeId?: string; thirdPartyId?: string }
     ) => {
         if (identifier.thirdPartyId) {
@@ -1476,9 +1476,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
         setThirdPartyCosts(prev => {
             const currentList = prev[serviceId] || [];
-            const updated = currentList.map(item => 
-                item.id === editingThirdPartyId 
-                    ? { ...item, name, cost } 
+            const updated = currentList.map(item =>
+                item.id === editingThirdPartyId
+                    ? { ...item, name, cost }
                     : item
             );
             return syncMaintenanceThirdParty(prev, serviceId, updated);
@@ -1506,7 +1506,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 const existingIdx = currentList.findIndex(item => item.employeeId === empId);
                 let updated;
                 if (existingIdx > -1) {
-                    updated = currentList.map((item, idx) => 
+                    updated = currentList.map((item, idx) =>
                         idx === existingIdx ? { ...item, quantity: item.quantity + qty } : item
                     );
                 } else {
@@ -1558,7 +1558,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 const existingIdx = currentList.findIndex(item => item.materialId === matId);
                 let updated;
                 if (existingIdx > -1) {
-                    updated = currentList.map((item, idx) => 
+                    updated = currentList.map((item, idx) =>
                         idx === existingIdx ? { ...item, quantity: item.quantity + qty } : item
                     );
                 } else {
@@ -1597,8 +1597,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     };
 
     const handleAddEmployee = () => {
-        const nextCodeNum = employees.length > 0 
-            ? Math.max(...employees.map(e => parseInt(e.code) || 0)) + 1 
+        const nextCodeNum = employees.length > 0
+            ? Math.max(...employees.map(e => parseInt(e.code) || 0)) + 1
             : 1;
         const nextCode = nextCodeNum.toString().padStart(4, '0');
         const nextId = 'emp-' + Date.now();
@@ -1642,7 +1642,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     return (
         <div className="flex flex-col gap-6 p-6 animate-in fade-in h-full">
             <h2 className="text-2xl font-bold text-text mb-4">Precificação Inteligente e Automatizada</h2>
-            
+
             <div className="flex flex-wrap gap-2 mb-6 bg-slate-800 p-2 rounded-lg">
                 {tabs.map(tab => (
                     <button
@@ -1650,8 +1650,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         id={`pricing-tab-${tab.id}`}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                            activeTab === tab.id 
-                                ? 'bg-indigo-600 text-text shadow-md shadow-indigo-600/10' 
+                            activeTab === tab.id
+                                ? 'bg-blue-600 text-text shadow-md shadow-blue-600/10'
                                 : 'text-slate-400 hover:text-text hover:bg-slate-700'
                         }`}
                     >
@@ -1682,9 +1682,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <tr key={service.id} className="border-b border-border hover:bg-panel">
                                             <td className="px-4 py-2.5 font-mono text-slate-500">{i + 1}</td>
                                             <td className="px-4 py-2.5 font-semibold text-slate-100">{service.name}</td>
-                                            <td className="px-4 py-2.5 text-right font-mono text-emerald-400 font-bold">
-                                                {service.defaultValue && service.defaultValue > 0 
-                                                    ? `R$ ${service.defaultValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+                                            <td className="px-4 py-2.5 text-right font-mono text-blue-400 font-bold">
+                                                {service.defaultValue && service.defaultValue > 0
+                                                    ? `R$ ${service.defaultValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                                                     : '—'}
                                             </td>
                                         </tr>
@@ -1709,12 +1709,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     <div>
                                         <p className="font-bold text-sm">Seu navegador possui dados antigos salvos localmente</p>
                                         <p className="text-xs text-amber-300/80">
-                                            Existem novos insumos odontológicos pré-cadastrados (total de {initialRawMaterials.length} itens) que estão ocultos. 
+                                            Existem novos insumos odontológicos pré-cadastrados (total de {initialRawMaterials.length} itens) que estão ocultos.
                                             Clique ao lado para carregar a lista completa de insumos e as fichas técnicas atualizadas!
                                         </p>
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={handleRestoreDefaults}
                                     className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-text text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shrink-0"
                                 >
@@ -1732,22 +1732,22 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <div className="relative flex-1 sm:flex-initial">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Buscar matéria prima..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar matéria prima..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="bg-panel border border-border rounded-lg pl-9 pr-4 py-1.5 text-sm text-text focus:outline-none focus:border-indigo-500 w-full sm:w-64"
+                                        className="bg-panel border border-border rounded-lg pl-9 pr-4 py-1.5 text-sm text-text focus:outline-none focus:border-blue-500 w-full sm:w-64"
                                     />
                                 </div>
-                                <button 
+                                <button
                                     onClick={handleAddMaterial}
-                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-text px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-text px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Adicionar
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleRestoreDefaults}
                                     title="Restaurar Insumos e Fichas Técnicas originais"
                                     className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
@@ -1783,63 +1783,63 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <tr key={m.id} className="border-b border-border hover:bg-panel">
                                                 <td className="px-4 py-2 font-mono text-slate-500 text-xs">{m.id}</td>
                                                 <td className="px-4 py-2">
-                                                    <input 
-                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 font-semibold" 
-                                                        value={m.name} 
+                                                    <input
+                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 font-semibold"
+                                                        value={m.name}
                                                         onChange={(e) => handleMaterialChange(m.id, 'name', e.target.value)}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <input 
+                                                    <input
                                                         type="number"
-                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 font-mono text-sm" 
-                                                        value={m.grossWeight} 
+                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 font-mono text-sm"
+                                                        value={m.grossWeight}
                                                         onChange={(e) => handleMaterialChange(m.id, 'grossWeight', Number(e.target.value))}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <input 
+                                                    <input
                                                         type="number"
-                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 font-mono text-sm" 
-                                                        value={m.netWeight} 
+                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 font-mono text-sm"
+                                                        value={m.netWeight}
                                                         onChange={(e) => handleMaterialChange(m.id, 'netWeight', Number(e.target.value))}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <input 
-                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 text-sm" 
-                                                        value={m.uom} 
+                                                    <input
+                                                        className="w-full bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 text-sm"
+                                                        value={m.uom}
                                                         onChange={(e) => handleMaterialChange(m.id, 'uom', e.target.value)}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-1 font-mono text-sm">
                                                         <span className="text-slate-500">R$</span>
-                                                        <input 
+                                                        <input
                                                             type="number"
                                                             step="0.01"
-                                                            className="w-full bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 font-semibold" 
-                                                            value={m.pricePerUom} 
+                                                            className="w-full bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 font-semibold"
+                                                            value={m.pricePerUom}
                                                             onChange={(e) => handleMaterialChange(m.id, 'pricePerUom', Number(e.target.value))}
                                                         />
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2 text-center">
                                                     <div className="flex items-center justify-center gap-1 font-mono text-sm">
-                                                        <input 
+                                                        <input
                                                             type="number"
-                                                            className="w-16 bg-transparent outline-none text-text focus:border-b border-indigo-500/50 py-1 text-center" 
-                                                            value={m.correctionFactor} 
+                                                            className="w-16 bg-transparent outline-none text-text focus:border-b border-blue-500/50 py-1 text-center"
+                                                            value={m.correctionFactor}
                                                             onChange={(e) => handleMaterialChange(m.id, 'correctionFactor', Number(e.target.value))}
                                                         />
                                                         <span className="text-slate-500">%</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-2 font-mono text-indigo-400 font-bold text-sm">
+                                                <td className="px-4 py-2 font-mono text-blue-400 font-bold text-sm">
                                                     R$ {calculatedPricePerMeasure.toFixed(4)} <span className="text-[10px] text-slate-500">/ {m.uom}</span>
                                                 </td>
                                                 <td className="px-4 py-2 text-center">
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDeleteMaterial(m.id)}
                                                         className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
                                                     >
@@ -1871,7 +1871,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 <button
                                     onClick={handleManualSaveFichas}
                                     disabled={isSavingSupabase}
-                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
                                     title="Forçar salvamento das fichas técnicas no Supabase"
                                 >
                                     <Database className="w-3.5 h-3.5" />
@@ -1879,21 +1879,21 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </button>
                                 <button
                                     onClick={handleExportFichaTecnica}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     Exportar Todas
                                 </button>
                                 <div className="w-full sm:w-80">
                                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Selecione o Procedimento</label>
-                                    <select 
-                                        value={selectedFichaServiceId} 
+                                    <select
+                                        value={selectedFichaServiceId}
                                         onChange={(e) => {
                                             setSelectedFichaServiceId(e.target.value);
                                             setNewFichaMatId('');
                                             setNewFichaMatQty('1');
-                                        }} 
-                                        className="w-full bg-slate-800 border border-border rounded-lg p-2.5 text-text text-sm focus:outline-none focus:border-indigo-500"
+                                        }}
+                                        className="w-full bg-slate-800 border border-border rounded-lg p-2.5 text-text text-sm focus:outline-none focus:border-blue-500"
                                     >
                                         <option value="">Ver Todos os Procedimentos (Visão Geral)</option>
                                         {services.map(s => (
@@ -1909,7 +1909,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 const selectedService = services.find(s => s.id === selectedFichaServiceId);
                                 const items = fichaTecnicas[selectedFichaServiceId] || [];
                                 const external = thirdPartyCosts[selectedFichaServiceId] || [];
-                                
+
                                 // Calculate costs with unified list (materials & labor)
                                 const fichaItemsDetails = items.map(item => {
                                     if (item.employeeId) {
@@ -1998,7 +1998,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-xs text-slate-400 block">Custo Total de Ficha</span>
-                                                    <span className="text-2xl font-black text-indigo-400 font-mono">R$ {totalFichaCost.toFixed(2)}</span>
+                                                    <span className="text-2xl font-black text-blue-400 font-mono">R$ {totalFichaCost.toFixed(2)}</span>
                                                 </div>
                                             </div>
 
@@ -2010,8 +2010,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             )}
 
                                             {selectedService?.name.toLowerCase().includes('manutenção') && !selectedService?.name.toLowerCase().includes('85') && (
-                                                <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl p-3 text-xs flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                                <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 rounded-xl p-3 text-xs flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
                                                     <span>Esta ficha técnica está sincronizada com a <strong>Manutenção 85</strong>. Edite a Manutenção 85 para alterar os dados de todas as manutenções simultaneamente.</span>
                                                 </div>
                                             )}
@@ -2033,11 +2033,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <td className="px-4 py-2.5 font-semibold text-slate-100">
                                                                     <div className="flex items-center gap-2">
                                                                         {mc.isLabor ? (
-                                                                            <span className="inline-flex items-center gap-1 bg-indigo-500/15 border border-indigo-500/20 text-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                                                            <span className="inline-flex items-center gap-1 bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                                                                 <Users className="w-2.5 h-2.5" /> Mão de Obra
                                                                             </span>
                                                                         ) : (
-                                                                            <span className="inline-flex items-center gap-1 bg-teal-500/15 border border-teal-500/20 text-teal-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                                                            <span className="inline-flex items-center gap-1 bg-purple-500/15 border border-purple-500/20 text-purple-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                                                                 Insumo
                                                                             </span>
                                                                         )}
@@ -2047,16 +2047,16 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <td className="px-4 py-2.5 text-center">
                                                                     <div className="flex flex-col items-center justify-center gap-0.5">
                                                                         <div className="flex items-center justify-center gap-1.5">
-                                                                            <input 
+                                                                            <input
                                                                                 type="number"
                                                                                 step="any"
                                                                                 value={mc.item.quantity}
                                                                                 onChange={(e) => handleFichaQuantityChange(
-                                                                                    selectedFichaServiceId, 
-                                                                                    mc.isLabor ? { employeeId: String(mc.id) } : { materialId: Number(mc.id) }, 
+                                                                                    selectedFichaServiceId,
+                                                                                    mc.isLabor ? { employeeId: String(mc.id) } : { materialId: Number(mc.id) },
                                                                                     Number(e.target.value)
                                                                                 )}
-                                                                                className="w-16 bg-panel border border-border rounded px-2 py-1 text-center text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                                                className="w-16 bg-panel border border-border rounded px-2 py-1 text-center text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                                             />
                                                                             <span className="text-[10px] text-slate-500 font-medium">{mc.uom}</span>
                                                                         </div>
@@ -2078,9 +2078,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     R$ {mc.cost.toFixed(2)}
                                                                 </td>
                                                                 <td className="px-4 py-2.5 text-center">
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => handleRemoveFichaItem(
-                                                                            selectedFichaServiceId, 
+                                                                            selectedFichaServiceId,
                                                                             mc.isLabor ? { employeeId: String(mc.id) } : { materialId: Number(mc.id) }
                                                                         )}
                                                                         className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
@@ -2090,7 +2090,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 </td>
                                                             </tr>
                                                         ))}
-                                                        
+
                                                         {/* Render Third Party Costs */}
                                                         {thirdPartyDetails.map((tp, idx) => (
                                                             <tr key={`${tp.id}-${idx}`} className="border-b border-border hover:bg-panel">
@@ -2100,11 +2100,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                             Terceirizado
                                                                         </span>
                                                                         {editingThirdPartyId === tp.id ? (
-                                                                            <input 
+                                                                            <input
                                                                                 type="text"
                                                                                 value={editingThirdPartyName}
                                                                                 onChange={(e) => setEditingThirdPartyName(e.target.value)}
-                                                                                className="bg-panel border border-indigo-500/50 rounded px-2 py-1 text-xs text-text focus:outline-none w-full"
+                                                                                className="bg-panel border border-blue-500/50 rounded px-2 py-1 text-xs text-text focus:outline-none w-full"
                                                                             />
                                                                         ) : (
                                                                             <span>{tp.name}</span>
@@ -2118,12 +2118,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     {editingThirdPartyId === tp.id ? (
                                                                         <div className="flex items-center gap-1">
                                                                             <span className="text-slate-500">R$</span>
-                                                                            <input 
+                                                                            <input
                                                                                 type="number"
                                                                                 step="any"
                                                                                 value={editingThirdPartyCost}
                                                                                 onChange={(e) => setEditingThirdPartyCost(e.target.value)}
-                                                                                className="bg-panel border border-indigo-500/50 rounded px-2 py-1 text-xs text-text font-mono focus:outline-none w-20"
+                                                                                className="bg-panel border border-blue-500/50 rounded px-2 py-1 text-xs text-text font-mono focus:outline-none w-20"
                                                                             />
                                                                         </div>
                                                                     ) : (
@@ -2137,14 +2137,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     <div className="flex items-center justify-center gap-1">
                                                                         {editingThirdPartyId === tp.id ? (
                                                                             <>
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => handleUpdateThirdPartyCost(selectedFichaServiceId)}
-                                                                                    className="p-1 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded transition-colors"
+                                                                                    className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
                                                                                     title="Salvar"
                                                                                 >
                                                                                     <Check className="w-3.5 h-3.5" />
                                                                                 </button>
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => setEditingThirdPartyId(null)}
                                                                                     className="p-1 text-slate-400 hover:text-slate-300 hover:bg-panel/80 rounded transition-colors"
                                                                                     title="Cancelar"
@@ -2154,20 +2154,20 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                             </>
                                                                         ) : (
                                                                             <>
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => {
                                                                                         setEditingThirdPartyId(tp.id);
                                                                                         setEditingThirdPartyName(tp.name);
                                                                                         setEditingThirdPartyCost(String(tp.price));
                                                                                     }}
-                                                                                    className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
+                                                                                    className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
                                                                                     title="Editar"
                                                                                 >
                                                                                     <Edit2 className="w-3.5 h-3.5" />
                                                                                 </button>
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => handleRemoveFichaItem(
-                                                                                        selectedFichaServiceId, 
+                                                                                        selectedFichaServiceId,
                                                                                         { thirdPartyId: tp.id }
                                                                                     )}
                                                                                     className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
@@ -2181,7 +2181,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 </td>
                                                             </tr>
                                                         ))}
-                                                        
+
                                                         {fichaItemsDetails.length === 0 && thirdPartyDetails.length === 0 && (
                                                             <tr>
                                                                 <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
@@ -2198,7 +2198,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="space-y-4">
                                             <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
                                                 <h4 className="text-sm font-bold text-text flex items-center gap-2">
-                                                    <Plus className="w-4 h-4 text-indigo-400" />
+                                                    <Plus className="w-4 h-4 text-blue-400" />
                                                     Adicionar Componente
                                                 </h4>
 
@@ -2209,7 +2209,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             setNewFichaItemType('material');
                                                             setNewFichaMatQty('1');
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'material' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'material' ? 'bg-blue-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Insumo
                                                     </button>
@@ -2218,7 +2218,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             setNewFichaItemType('labor');
                                                             setNewFichaMatQty('3.0'); // defaults to 30 mins
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'labor' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'labor' ? 'bg-blue-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Mão de Obra
                                                     </button>
@@ -2226,20 +2226,20 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         onClick={() => {
                                                             setNewFichaItemType('third_party');
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'third_party' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'third_party' ? 'bg-blue-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Terceiros
                                                     </button>
                                                 </div>
-                                                
+
                                                 <div className="space-y-3 pt-1">
                                                     {newFichaItemType === 'material' && (
                                                         <div>
                                                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Insumo / Matéria Prima</label>
-                                                            <select 
-                                                                value={newFichaMatId} 
+                                                            <select
+                                                                value={newFichaMatId}
                                                                 onChange={(e) => setNewFichaMatId(e.target.value)}
-                                                                className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-indigo-500"
+                                                                className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-blue-500"
                                                             >
                                                                 <option value="">Selecione um material...</option>
                                                                 {materials.map(m => (
@@ -2248,14 +2248,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             </select>
                                                         </div>
                                                     )}
-                                                    
+
                                                     {newFichaItemType === 'labor' && (
                                                         <div>
                                                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Profissional / Dentista</label>
-                                                            <select 
-                                                                value={newFichaEmpId} 
+                                                            <select
+                                                                value={newFichaEmpId}
                                                                 onChange={(e) => setNewFichaEmpId(e.target.value)}
-                                                                className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-indigo-500"
+                                                                className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-blue-500"
                                                             >
                                                                 <option value="">Selecione um profissional...</option>
                                                                 {employees.map(e => {
@@ -2274,28 +2274,28 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         <div className="space-y-3">
                                                             <div>
                                                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Nome do Serviço (Lab/Imagem)</label>
-                                                                <input 
+                                                                <input
                                                                     type="text"
                                                                     value={newFichaThirdPartyName}
                                                                     onChange={(e) => setNewFichaThirdPartyName(e.target.value)}
                                                                     placeholder="Ex: Laboratório Prótese"
-                                                                    className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-indigo-500"
+                                                                    className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs focus:outline-none focus:border-blue-500"
                                                                 />
                                                             </div>
                                                             <div>
                                                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Custo Direto (R$)</label>
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={newFichaThirdPartyCost}
                                                                     onChange={(e) => setNewFichaThirdPartyCost(e.target.value)}
                                                                     placeholder="Ex: 150.00"
-                                                                    className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs font-mono focus:outline-none focus:border-indigo-500"
+                                                                    className="w-full bg-panel border border-border rounded-lg p-2.5 text-text text-xs font-mono focus:outline-none focus:border-blue-500"
                                                                 />
                                                             </div>
                                                         </div>
                                                     )}
- 
+
                                                     {newFichaItemType !== 'third_party' && (
                                                         <div>
                                                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -2303,23 +2303,23 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             </label>
                                                             <div className="flex flex-col gap-1.5">
                                                                 <div className="flex gap-2">
-                                                                    <input 
+                                                                    <input
                                                                         type="number"
                                                                         step="any"
-                                                                        value={newFichaMatQty} 
+                                                                        value={newFichaMatQty}
                                                                         onChange={(e) => setNewFichaMatQty(e.target.value)}
-                                                                        placeholder="Ex: 1" 
-                                                                        className="flex-1 bg-panel border border-border rounded-lg px-3 py-1.5 text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                                        placeholder="Ex: 1"
+                                                                        className="flex-1 bg-panel border border-border rounded-lg px-3 py-1.5 text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                                     />
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                                        className="bg-indigo-600 hover:bg-indigo-500 text-text px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                                                                        className="bg-blue-600 hover:bg-blue-500 text-text px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                                                                     >
                                                                         Adicionar
                                                                     </button>
                                                                 </div>
                                                                 {newFichaItemType === 'labor' && (
-                                                                    <span className="text-[10px] text-indigo-300 block mt-0.5 font-medium">
+                                                                    <span className="text-[10px] text-blue-300 block mt-0.5 font-medium">
                                                                         Equivale a {((Number(newFichaMatQty) || 0) * 10).toFixed(0)} minutos de trabalho.
                                                                     </span>
                                                                 )}
@@ -2328,9 +2328,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     )}
 
                                                     {newFichaItemType === 'third_party' && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-text py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                                                            className="w-full bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                                                         >
                                                             Adicionar Serviço Terceirizado
                                                         </button>
@@ -2340,18 +2340,18 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             <div className="bg-surface border border-border rounded-xl p-5 flex flex-col justify-between">
                                                 <div className="space-y-2">
-                                                    <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                                                    <h4 className="text-sm font-bold text-blue-400 flex items-center gap-2">
                                                         <Check className="w-4 h-4" />
                                                         Integração de Custos
                                                     </h4>
                                                     <p className="text-xs text-slate-400 leading-relaxed">
-                                                        Cálculo Total: <strong>R$ {totalFichaCost.toFixed(2)}</strong> e <strong>{totalFichaTime.toFixed(2)}h</strong> de tempo clínico. 
+                                                        Cálculo Total: <strong>R$ {totalFichaCost.toFixed(2)}</strong> e <strong>{totalFichaTime.toFixed(2)}h</strong> de tempo clínico.
                                                         Vincule-os à tabela de precificação para automatizar o cálculo de lucro.
                                                     </p>
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={() => handleSyncFichaCostToService(selectedFichaServiceId, totalFichaCost, totalFichaTime)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-text py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-6 shadow-lg shadow-emerald-900/20"
+                                                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-6 shadow-lg shadow-blue-900/20"
                                                 >
                                                     <Zap className="w-3.5 h-3.5" />
                                                     Vincular à Precificação
@@ -2364,14 +2364,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         ) : (
                             <div className="space-y-6 animate-in fade-in duration-500">
                                 <div className="bg-panel border border-border rounded-2xl overflow-hidden shadow-xl">
-                                    <div className="bg-indigo-600/10 px-4 py-3 border-b border-border flex items-center justify-between">
+                                    <div className="bg-blue-600/10 px-4 py-3 border-b border-border flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <List className="w-4 h-4 text-indigo-400" />
+                                            <List className="w-4 h-4 text-blue-400" />
                                             <span className="text-xs font-bold text-text uppercase tracking-wider">Visão Geral de Todas as Fichas Técnicas</span>
                                         </div>
                                         <span className="text-[10px] text-slate-500 font-medium">Total de {services.length} procedimentos cadastrados</span>
                                     </div>
-                                    
+
                                     <div className="overflow-x-auto custom-scrollbar">
                                         <table className="w-full text-left text-sm text-slate-300">
                                             <thead className="bg-panel text-slate-400 uppercase text-[10px] font-bold">
@@ -2387,15 +2387,15 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     const external = thirdPartyCosts[service.id] || [];
                                                     const breakdown = getFichaCostBreakdown(service.id);
                                                     const total = breakdown.cmv + breakdown.labor + (breakdown.thirdParty || 0);
-                                                    
+
                                                     return (
                                                         <tr key={service.id} className="hover:bg-panel transition-colors divide-x divide-white/5 group">
                                                             <td className="px-4 py-4 align-top">
                                                                 <div className="flex flex-col gap-1">
-                                                                    <span className="font-bold text-text group-hover:text-indigo-400 transition-colors">{service.name}</span>
-                                                                    <button 
+                                                                    <span className="font-bold text-text group-hover:text-blue-400 transition-colors">{service.name}</span>
+                                                                    <button
                                                                         onClick={() => setSelectedFichaServiceId(service.id)}
-                                                                        className="text-[10px] text-indigo-500 hover:text-indigo-400 font-bold uppercase tracking-tighter flex items-center gap-1 mt-1"
+                                                                        className="text-[10px] text-blue-500 hover:text-blue-400 font-bold uppercase tracking-tighter flex items-center gap-1 mt-1"
                                                                     >
                                                                         <Edit className="w-3 h-3" />
                                                                         Editar Composição
@@ -2410,11 +2410,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                             const mat = !isEmployee ? materials.find(m => m.id === item.materialId) : null;
                                                                             const emp = isEmployee ? employees.find(e => e.id === item.employeeId) : null;
                                                                             const label = mat?.name || emp?.name || 'Item não encontrado';
-                                                                            
+
                                                                             return (
                                                                                 <div key={idx} className="bg-slate-800/50 border border-border rounded px-2 py-1 flex items-center gap-1.5">
                                                                                     <span className="text-[10px] text-slate-300 font-medium">{label}</span>
-                                                                                    <span className="text-[10px] text-indigo-400 font-mono font-bold">
+                                                                                    <span className="text-[10px] text-blue-400 font-mono font-bold">
                                                                                         {item.quantity}{item.unit || (isEmployee ? 'min' : 'un')}
                                                                                     </span>
                                                                                 </div>
@@ -2434,7 +2434,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-4 text-right align-top">
-                                                                <span className="font-mono font-bold text-emerald-400 text-sm">
+                                                                <span className="font-mono font-bold text-blue-400 text-sm">
                                                                     R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                 </span>
                                                             </td>
@@ -2464,14 +2464,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <h3 className="text-xl font-bold text-text">Calculadora de Precificação Odontológica</h3>
                             <p className="text-xs text-slate-400 mt-1">Calculadora baseada em custos reais de hora clínica ativa, insumos diretos e margens operacionais</p>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Procedimento / Serviço</label>
-                                    <select 
-                                        className="w-full bg-slate-800 border border-border rounded-lg p-3 text-text text-sm focus:outline-none focus:border-indigo-500" 
-                                        onChange={(e) => handleServiceSelect(e.target.value)} 
+                                    <select
+                                        className="w-full bg-slate-800 border border-border rounded-lg p-3 text-text text-sm focus:outline-none focus:border-blue-500"
+                                        onChange={(e) => handleServiceSelect(e.target.value)}
                                         value={selectedServiceId}
                                     >
                                         <option value="">Selecione o procedimento...</option>
@@ -2481,12 +2481,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <Input 
-                                            label="Custo Hora Clínica (R$)" 
-                                            value={cHora} 
-                                            onChange={(v) => { setCHora(v); updateServiceSetting('cHora', v); }} 
+                                        <Input
+                                            label="Custo Hora Clínica (R$)"
+                                            value={cHora}
+                                            onChange={(v) => { setCHora(v); updateServiceSetting('cHora', v); }}
                                         />
-                                        <button 
+                                        <button
                                             onClick={() => { setCHora(suggestedCHora); updateServiceSetting('cHora', suggestedCHora); }}
                                             className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
                                         >
@@ -2494,48 +2494,48 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             Sugerido pela Folha: R$ {suggestedCHora.toFixed(2)}
                                         </button>
                                     </div>
-                                    <Input 
-                                        label="Tempo de Cadeira (Horas)" 
-                                        value={time} 
-                                        onChange={(v) => { setTime(v); updateServiceSetting('time', v); }} 
+                                    <Input
+                                        label="Tempo de Cadeira (Horas)"
+                                        value={time}
+                                        onChange={(v) => { setTime(v); updateServiceSetting('time', v); }}
                                     />
-                                    <Input 
-                                        label="Custo Insumos Direto (R$)" 
-                                        value={cDireto} 
-                                        onChange={(v) => { setCDireto(v); updateServiceSetting('cDireto', v); }} 
+                                    <Input
+                                        label="Custo Insumos Direto (R$)"
+                                        value={cDireto}
+                                        onChange={(v) => { setCDireto(v); updateServiceSetting('cDireto', v); }}
                                     />
-                                    <Input 
-                                        label="Custo do Laboratório (R$)" 
-                                        value={cLaboratorio} 
-                                        onChange={(v) => { setCLaboratorio(v); updateServiceSetting('cLaboratorio', v); }} 
+                                    <Input
+                                        label="Custo do Laboratório (R$)"
+                                        value={cLaboratorio}
+                                        onChange={(v) => { setCLaboratorio(v); updateServiceSetting('cLaboratorio', v); }}
                                     />
-                                    <Input 
-                                        label="Margem Líquida (%)" 
-                                        value={mLiquida} 
-                                        onChange={(v) => { setMLiquida(v); updateServiceSetting('mLiquida', v); }} 
+                                    <Input
+                                        label="Margem Líquida (%)"
+                                        value={mLiquida}
+                                        onChange={(v) => { setMLiquida(v); updateServiceSetting('mLiquida', v); }}
                                     />
-                                    <Input 
-                                        label="Tributos / Impostos (%)" 
-                                        value={tTributos} 
-                                        onChange={(v) => { setTTributos(v); updateServiceSetting('tTributos', v); }} 
+                                    <Input
+                                        label="Tributos / Impostos (%)"
+                                        value={tTributos}
+                                        onChange={(v) => { setTTributos(v); updateServiceSetting('tTributos', v); }}
                                     />
-                                    <Input 
-                                        label="Taxas de Cartão (%)" 
-                                        value={tFinanceira} 
-                                        onChange={(v) => { setTFinanceira(v); updateServiceSetting('tFinanceira', v); }} 
+                                    <Input
+                                        label="Taxas de Cartão (%)"
+                                        value={tFinanceira}
+                                        onChange={(v) => { setTFinanceira(v); updateServiceSetting('tFinanceira', v); }}
                                     />
-                                    <Input 
-                                        label="Comissões / Dentista (%)" 
-                                        value={cComissao} 
-                                        onChange={(v) => { setCComissao(v); updateServiceSetting('cComissao', v); }} 
+                                    <Input
+                                        label="Comissões / Dentista (%)"
+                                        value={cComissao}
+                                        onChange={(v) => { setCComissao(v); updateServiceSetting('cComissao', v); }}
                                     />
                                     <div className="col-span-2 mt-2 pt-2 border-t border-border">
-                                        <label className="block text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1.5">Preço Praticado Atual (R$)</label>
+                                        <label className="block text-xs font-bold text-blue-400 uppercase tracking-widest mb-1.5">Preço Praticado Atual (R$)</label>
                                         <div className="relative group">
                                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span className="text-emerald-500 font-mono font-bold">R$</span>
+                                                <span className="text-blue-500 font-mono font-bold">R$</span>
                                             </div>
-                                            <input 
+                                            <input
                                                 type="number"
                                                 step="any"
                                                 value={customPracticedPrices[selectedServiceId] !== undefined ? customPracticedPrices[selectedServiceId] : (services.find(s => s.id === selectedServiceId)?.defaultValue || 0)}
@@ -2543,7 +2543,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                                                     handleScenarioPriceChange(selectedServiceId, val);
                                                 }}
-                                                className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-emerald-500 transition-all placeholder-emerald-900"
+                                                className="w-full bg-blue-950/20 border border-blue-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-blue-500 transition-all placeholder-blue-900"
                                                 placeholder="Informe o preço cobrado hoje..."
                                             />
                                         </div>
@@ -2555,17 +2555,17 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             </div>
 
                             <div className="bg-slate-800/80 p-8 rounded-2xl border border-border flex flex-col justify-center items-center gap-5 text-center relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full filter blur-2xl -mr-10 -mt-10"></div>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full filter blur-2xl -mr-10 -mt-10"></div>
                                 <span className="text-xs uppercase font-bold text-slate-400 tracking-widest leading-none">Preço de Venda Sugerido</span>
-                                <span className="text-5xl font-black text-indigo-400 font-mono">
+                                <span className="text-5xl font-black text-blue-400 font-mono">
                                     R$ {price.toFixed(2)}
                                 </span>
 
                                 {selectedServiceId && (() => {
-                                    const currentPracticedPrice = customPracticedPrices[selectedServiceId] !== undefined 
-                                        ? customPracticedPrices[selectedServiceId] 
+                                    const currentPracticedPrice = customPracticedPrices[selectedServiceId] !== undefined
+                                        ? customPracticedPrices[selectedServiceId]
                                         : (services.find(s => s.id === selectedServiceId)?.defaultValue || 0);
-                                    
+
                                     const costNumerator = (cHora * time) + cDireto + cLaboratorio;
                                     const variableRate = (tTributos + tFinanceira + cComissao) / 100;
                                     const practicedDeductions = currentPracticedPrice * variableRate;
@@ -2576,19 +2576,19 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="w-full space-y-3 mt-2 px-4">
                                             {/* KPI CARD: MARGEM REAL PRATICADA */}
                                             {currentPracticedPrice > 0 && (
-                                                <div className="bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-xl p-3.5 shadow-lg relative overflow-hidden text-left">
-                                                    <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2 mb-2">
-                                                        <span className="text-[10px] uppercase font-extrabold text-indigo-300 tracking-wider flex items-center gap-1.5">
-                                                            <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                <div className="bg-gradient-to-br from-blue-950/40 to-slate-900 border border-blue-500/30 rounded-xl p-3.5 shadow-lg relative overflow-hidden text-left">
+                                                    <div className="flex items-center justify-between border-b border-blue-500/20 pb-2 mb-2">
+                                                        <span className="text-[10px] uppercase font-extrabold text-blue-300 tracking-wider flex items-center gap-1.5">
+                                                            <span className="size-2 rounded-full bg-blue-400 animate-pulse"></span>
                                                             Margem Real com Preço Praticado (R$ {currentPracticedPrice.toFixed(2)})
                                                         </span>
                                                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                                                            practicedRealMarginPercent >= mLiquida 
-                                                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                                            practicedRealMarginPercent >= mLiquida
+                                                                ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
                                                                 : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                                                         }`}>
-                                                            {practicedRealMarginPercent >= mLiquida 
-                                                                ? `+${(practicedRealMarginPercent - mLiquida).toFixed(1)}% acima da meta` 
+                                                            {practicedRealMarginPercent >= mLiquida
+                                                                ? `+${(practicedRealMarginPercent - mLiquida).toFixed(1)}% acima da meta`
                                                                 : `${(mLiquida - practicedRealMarginPercent).toFixed(1)}% abaixo da meta`}
                                                         </span>
                                                     </div>
@@ -2596,14 +2596,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <div className="grid grid-cols-2 gap-2 text-center pt-1">
                                                         <div className="bg-panel/60 p-2 rounded-lg border border-border">
                                                             <span className="text-[9px] uppercase font-bold text-slate-400 block">Margem de Lucro Real</span>
-                                                            <span className={`text-lg font-black font-mono ${practicedRealMarginPercent >= mLiquida ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                            <span className={`text-lg font-black font-mono ${practicedRealMarginPercent >= mLiquida ? 'text-blue-400' : 'text-amber-400'}`}>
                                                                 {practicedRealMarginPercent.toFixed(1)}%
                                                             </span>
                                                             <span className="text-[8px] text-slate-500 block">Meta configurada: {mLiquida}%</span>
                                                         </div>
                                                         <div className="bg-panel/60 p-2 rounded-lg border border-border">
                                                             <span className="text-[9px] uppercase font-bold text-slate-400 block">Lucro Líquido Real / Proced.</span>
-                                                            <span className={`text-lg font-black font-mono ${practicedRealProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                            <span className={`text-lg font-black font-mono ${practicedRealProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                                                                 R$ {practicedRealProfit.toFixed(2)}
                                                             </span>
                                                             <span className="text-[8px] text-slate-500 block">Deduções Variáveis: R$ {practicedDeductions.toFixed(2)}</span>
@@ -2616,27 +2616,27 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 <div className="text-left">
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Diferença de Preço (Gap):</span>
                                                     <span className={`text-[9px] font-bold ${
-                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : (price - currentPracticedPrice) < 0 ? 'text-emerald-400' : 'text-blue-400'
+                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : (price - currentPracticedPrice) < 0 ? 'text-blue-400' : 'text-blue-400'
                                                     }`}>
-                                                        {(price - currentPracticedPrice) > 0 
-                                                            ? 'Abaixo do Sugerido (Defasado)' 
-                                                            : (price - currentPracticedPrice) < 0 
-                                                            ? 'Acima do Sugerido (Lucro Extra)' 
+                                                        {(price - currentPracticedPrice) > 0
+                                                            ? 'Abaixo do Sugerido (Defasado)'
+                                                            : (price - currentPracticedPrice) < 0
+                                                            ? 'Acima do Sugerido (Lucro Extra)'
                                                             : 'Exatamente no Preço Sugerido'}
                                                     </span>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className={`text-sm font-mono font-black ${
-                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : 'text-emerald-400'
+                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : 'text-blue-400'
                                                     }`}>
-                                                        {(price - currentPracticedPrice) > 0 
-                                                            ? `-R$ ${(price - currentPracticedPrice).toFixed(2)}` 
-                                                            : (price - currentPracticedPrice) < 0 
-                                                            ? `+R$ ${(currentPracticedPrice - price).toFixed(2)}` 
+                                                        {(price - currentPracticedPrice) > 0
+                                                            ? `-R$ ${(price - currentPracticedPrice).toFixed(2)}`
+                                                            : (price - currentPracticedPrice) < 0
+                                                            ? `+R$ ${(currentPracticedPrice - price).toFixed(2)}`
                                                             : 'R$ 0.00'}
                                                     </span>
                                                     <span className="block text-[9px] text-slate-400 font-mono">
-                                                        {currentPracticedPrice > 0 
+                                                        {currentPracticedPrice > 0
                                                             ? (price - currentPracticedPrice) > 0
                                                                 ? `${(((price / currentPracticedPrice) - 1) * 100).toFixed(1)}% abaixo do ideal`
                                                                 : (price - currentPracticedPrice) < 0
@@ -2652,7 +2652,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <p className="font-extrabold text-slate-200 uppercase tracking-wider text-[11px]">
                                                         📊 Detalhamento Financeiro Comparativo
                                                     </p>
-                                                    <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                                                    <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
                                                         Meta de Lucro: {mLiquida}%
                                                     </span>
                                                 </div>
@@ -2663,8 +2663,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         <thead>
                                                             <tr className="border-b border-border text-slate-400 uppercase text-[9px]">
                                                                 <th className="pb-2 font-bold">Linha de Cálculo</th>
-                                                                <th className="pb-2 text-right text-indigo-300 font-bold">Preço Sugerido</th>
-                                                                <th className="pb-2 text-right text-emerald-400 font-bold">Preço Praticado</th>
+                                                                <th className="pb-2 text-right text-blue-300 font-bold">Preço Sugerido</th>
+                                                                <th className="pb-2 text-right text-blue-400 font-bold">Preço Praticado</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-border/50 text-slate-300">
@@ -2673,10 +2673,10 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <td className="py-1.5 font-bold text-slate-200">
                                                                     (+) Preço de Venda Bruto
                                                                 </td>
-                                                                <td className="py-1.5 text-right font-black text-indigo-400">
+                                                                <td className="py-1.5 text-right font-black text-blue-400">
                                                                     R$ {price.toFixed(2)}
                                                                 </td>
-                                                                <td className="py-1.5 text-right font-black text-emerald-400">
+                                                                <td className="py-1.5 text-right font-black text-blue-400">
                                                                     R$ {currentPracticedPrice.toFixed(2)}
                                                                 </td>
                                                             </tr>
@@ -2728,23 +2728,23 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <td className="py-2 text-slate-100">
                                                                     (=) Lucro Líquido Real (R$)
                                                                 </td>
-                                                                <td className="py-2 text-right text-indigo-300 font-black">
+                                                                <td className="py-2 text-right text-blue-300 font-black">
                                                                     R$ {(price - (price * variableRate) - costNumerator).toFixed(2)}
                                                                 </td>
-                                                                <td className="py-2 text-right text-emerald-400 font-black">
+                                                                <td className="py-2 text-right text-blue-400 font-black">
                                                                     R$ {practicedRealProfit.toFixed(2)}
                                                                 </td>
                                                             </tr>
 
                                                             {/* Margem Líquida % */}
-                                                            <tr className="bg-indigo-500/10 font-bold">
-                                                                <td className="py-2 text-indigo-300">
+                                                            <tr className="bg-blue-500/10 font-bold">
+                                                                <td className="py-2 text-blue-300">
                                                                     (=) Margem Líquida Real (%)
                                                                 </td>
-                                                                <td className="py-2 text-right text-indigo-300 font-black">
+                                                                <td className="py-2 text-right text-blue-300 font-black">
                                                                     {mLiquida.toFixed(1)}% <span className="text-[8px] text-slate-400 font-normal">(Meta)</span>
                                                                 </td>
-                                                                <td className={`py-2 text-right font-black ${practicedRealMarginPercent >= mLiquida ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                                <td className={`py-2 text-right font-black ${practicedRealMarginPercent >= mLiquida ? 'text-blue-400' : 'text-amber-400'}`}>
                                                                     {practicedRealMarginPercent.toFixed(1)}%
                                                                 </td>
                                                             </tr>
@@ -2753,16 +2753,16 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
 
                                                 {/* Clarifying Legend Box */}
-                                                <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-lg p-2.5 text-[9.5px] text-slate-300 space-y-1 text-left">
-                                                    <p className="font-bold text-indigo-300 flex items-center gap-1">
+                                                <div className="bg-blue-950/20 border border-blue-500/20 rounded-lg p-2.5 text-[9.5px] text-slate-300 space-y-1 text-left">
+                                                    <p className="font-bold text-blue-300 flex items-center gap-1">
                                                         💡 O que estes números mostram?
                                                     </p>
                                                     <p>
-                                                        • <strong className="text-white">Preço Sugerido (R$ {price.toFixed(2)}):</strong> É o valor exato calculado pela fórmula da folha para garantir a sua meta de <strong className="text-emerald-400">{mLiquida}% de margem líquida</strong>.
+                                                        • <strong className="text-white">Preço Sugerido (R$ {price.toFixed(2)}):</strong> É o valor exato calculado pela fórmula da folha para garantir a sua meta de <strong className="text-blue-400">{mLiquida}% de margem líquida</strong>.
                                                     </p>
                                                     {currentPracticedPrice > 0 && (
                                                         <p>
-                                                            • <strong className="text-white">Preço Praticado (R$ {currentPracticedPrice.toFixed(2)}):</strong> Como seu preço atual é maior que o sugerido, você ganha <strong className="text-emerald-400">R$ {(practicedRealProfit - (price - (price * variableRate) - costNumerator)).toFixed(2)} a mais de lucro por procedimento</strong>, elevando sua margem real para <strong className="text-emerald-400">{practicedRealMarginPercent.toFixed(1)}%</strong>!
+                                                            • <strong className="text-white">Preço Praticado (R$ {currentPracticedPrice.toFixed(2)}):</strong> Como seu preço atual é maior que o sugerido, você ganha <strong className="text-blue-400">R$ {(practicedRealProfit - (price - (price * variableRate) - costNumerator)).toFixed(2)} a mais de lucro por procedimento</strong>, elevando sua margem real para <strong className="text-blue-400">{practicedRealMarginPercent.toFixed(1)}%</strong>!
                                                         </p>
                                                     )}
                                                 </div>
@@ -2786,26 +2786,26 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                         {/* Two Columns Grid */}
                         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
-                            
+
                             {/* Left Column: Encargos (1 part) */}
                             <div className="xl:col-span-1 space-y-4">
-                                
+
                                 {/* Encargos Trabalhistas Card */}
                                 <div className="bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-xl">
-                                    <h4 className="text-sm font-extrabold text-indigo-400 uppercase tracking-widest border-b border-border pb-2">
+                                    <h4 className="text-sm font-extrabold text-blue-400 uppercase tracking-widest border-b border-border pb-2">
                                         Encargos Trabalhistas
                                     </h4>
-                                    
+
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Provisão de Férias + 1/3:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={provFerias} 
-                                                    onChange={e => setProvFerias(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={provFerias}
+                                                    onChange={e => setProvFerias(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2813,12 +2813,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Provisão 13º Salário:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={prov13Salario} 
-                                                    onChange={e => setProv13Salario(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={prov13Salario}
+                                                    onChange={e => setProv13Salario(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2826,20 +2826,20 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Previsão 13º s/ Férias:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={prov13Ferias} 
-                                                    onChange={e => setProv13Ferias(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={prov13Ferias}
+                                                    onChange={e => setProv13Ferias(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex justify-between items-center text-xs font-bold pt-2 border-t border-border">
                                             <span className="text-text uppercase text-[10px] tracking-wider">Total Trabalhistas:</span>
-                                            <span className="text-indigo-400 font-mono text-sm">
+                                            <span className="text-blue-400 font-mono text-sm">
                                                 {(provFerias + prov13Salario + prov13Ferias).toFixed(2)}%
                                             </span>
                                         </div>
@@ -2848,20 +2848,20 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Encargos Sociais Card */}
                                 <div className="bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-xl">
-                                    <h4 className="text-sm font-extrabold text-indigo-400 uppercase tracking-widest border-b border-border pb-2">
+                                    <h4 className="text-sm font-extrabold text-blue-400 uppercase tracking-widest border-b border-border pb-2">
                                         Encargos Sociais
                                     </h4>
-                                    
+
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">INSS:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={inss} 
-                                                    onChange={e => setInss(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={inss}
+                                                    onChange={e => setInss(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2869,12 +2869,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">SAT/RAT:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={satRat} 
-                                                    onChange={e => setSatRat(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={satRat}
+                                                    onChange={e => setSatRat(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2882,12 +2882,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Salário Educação:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={salarioEducacao} 
-                                                    onChange={e => setSalarioEducacao(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={salarioEducacao}
+                                                    onChange={e => setSalarioEducacao(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2895,12 +2895,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Sistemas (Sebrae, etc):</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={incraSebrae} 
-                                                    onChange={e => setIncraSebrae(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={incraSebrae}
+                                                    onChange={e => setIncraSebrae(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2908,12 +2908,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">FGTS:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={fgts} 
-                                                    onChange={e => setFgts(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={fgts}
+                                                    onChange={e => setFgts(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2921,12 +2921,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="flex justify-between items-center text-xs">
                                             <span className="text-slate-400">Rescisão Contratual:</span>
                                             <div className="flex items-center gap-1">
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    value={fgtsRescisao} 
-                                                    onChange={e => setFgtsRescisao(Number(e.target.value))} 
-                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-indigo-500"
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={fgtsRescisao}
+                                                    onChange={e => setFgtsRescisao(Number(e.target.value))}
+                                                    className="w-16 bg-panel border border-border rounded px-1.5 py-1 text-right text-text font-mono text-xs focus:outline-none focus:border-blue-500"
                                                 />
                                                 <span className="text-slate-500">%</span>
                                             </div>
@@ -2934,7 +2934,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                         <div className="flex justify-between items-center text-xs font-bold pt-2 border-t border-border">
                                             <span className="text-text uppercase text-[10px] tracking-wider">Total Sociais:</span>
-                                            <span className="text-indigo-400 font-mono text-sm">
+                                            <span className="text-blue-400 font-mono text-sm">
                                                 {(inss + satRat + salarioEducacao + incraSebrae + fgts + fgtsRescisao).toFixed(2)}%
                                             </span>
                                         </div>
@@ -2942,9 +2942,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
 
                                 {/* Sum of Charges */}
-                                <div className="bg-indigo-950/30 border border-indigo-500/20 rounded-2xl p-5 flex justify-between items-center shadow-lg">
+                                <div className="bg-blue-950/30 border border-blue-500/20 rounded-2xl p-5 flex justify-between items-center shadow-lg">
                                     <span className="text-xs font-extrabold text-text uppercase tracking-wider">Total Geral de Encargos:</span>
-                                    <span className="text-xl font-black text-indigo-400 font-mono">
+                                    <span className="text-xl font-black text-blue-400 font-mono">
                                         {(provFerias + prov13Salario + prov13Ferias + inss + satRat + salarioEducacao + incraSebrae + fgts + fgtsRescisao).toFixed(2)}%
                                     </span>
                                 </div>
@@ -2952,7 +2952,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                             {/* Right Column: Employees list (3 parts) */}
                             <div className="xl:col-span-3 space-y-6">
-                                
+
                                 {/* Metrics Cards Banner */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-panel p-5 border border-border rounded-2xl shadow-md">
                                     <div className="p-4 bg-panel rounded-2xl border border-border">
@@ -2963,7 +2963,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     </div>
                                     <div className="p-4 bg-panel rounded-2xl border border-border">
                                         <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Salário Base Total</span>
-                                        <span className="text-2xl font-black text-text font-mono mt-2 block text-indigo-400">
+                                        <span className="text-2xl font-black text-text font-mono mt-2 block text-blue-400">
                                             R$ {employees.reduce((sum, e) => sum + e.salary, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
@@ -2980,7 +2980,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     </div>
                                     <div className="p-4 bg-panel rounded-2xl border border-border">
                                         <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Custo Folha Geral</span>
-                                        <span className="text-2xl font-black text-emerald-400 font-mono mt-2 block">
+                                        <span className="text-2xl font-black text-blue-400 font-mono mt-2 block">
                                             R$ {employees.reduce((sum, e) => {
                                                 const totalTrab = e.contractType === 'CLT' ? (provFerias + prov13Salario + prov13Ferias) / 100 : 0;
                                                 const totalSoc = e.contractType === 'CLT' ? (inss + satRat + salarioEducacao + incraSebrae + fgts + fgtsRescisao) / 100 : 0;
@@ -3010,14 +3010,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <th className="px-4 py-3 w-28 text-right">Conv. Médico (R$)</th>
                                                     <th className="px-4 py-3 w-36 font-black text-text text-right">Total Custo (R$)</th>
                                                     <th className="px-4 py-3 w-24 text-center">Horas/Mês</th>
-                                                    <th className="px-4 py-3 w-32 font-bold text-indigo-300 text-right">Valor por Hora (R$)</th>
+                                                    <th className="px-4 py-3 w-32 font-bold text-blue-300 text-right">Valor por Hora (R$)</th>
                                                     <th className="px-4 py-3 w-16 text-center">Remover</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-white/5 font-medium">
                                                 {employees.map((emp) => {
                                                     const isClt = emp.contractType === 'CLT';
-                                                    
+
                                                     const totalTrabPct = provFerias + prov13Salario + prov13Ferias;
                                                     const totalSocPct = inss + satRat + salarioEducacao + incraSebrae + fgts + fgtsRescisao;
 
@@ -3031,7 +3031,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         <tr key={emp.id} className="hover:bg-panel transition-all text-slate-200">
                                                             <td className="px-4 py-3 text-center font-mono text-slate-500 text-xs">{emp.code}</td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="text"
                                                                     value={emp.name}
                                                                     onChange={e => handleEmployeeChange(emp.id, 'name', e.target.value)}
@@ -3039,10 +3039,10 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <select 
+                                                                <select
                                                                     value={emp.contractType}
                                                                     onChange={e => handleEmployeeChange(emp.id, 'contractType', e.target.value as any)}
-                                                                    className="w-full bg-slate-800 border border-border rounded px-2 py-1 text-text text-xs outline-none focus:border-indigo-500 [&>option]:bg-surface"
+                                                                    className="w-full bg-slate-800 border border-border rounded px-2 py-1 text-text text-xs outline-none focus:border-blue-500 [&>option]:bg-surface"
                                                                 >
                                                                     <option value="PJ">PJ</option>
                                                                     <option value="CLT">CLT</option>
@@ -3051,7 +3051,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 </select>
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={emp.salary || ''}
@@ -3061,7 +3061,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="text"
                                                                     value={emp.sector}
                                                                     onChange={e => handleEmployeeChange(emp.id, 'sector', e.target.value)}
@@ -3069,7 +3069,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="text"
                                                                     value={emp.role}
                                                                     onChange={e => handleEmployeeChange(emp.id, 'role', e.target.value)}
@@ -3083,7 +3083,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 R$ {calculatedTrab.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={emp.valeTransporte || ''}
@@ -3093,7 +3093,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={emp.valeRefeicao || ''}
@@ -3103,7 +3103,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 />
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={emp.convenioMedico || ''}
@@ -3116,7 +3116,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 R$ {totalCusto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <input 
+                                                                <input
                                                                     type="number"
                                                                     step="any"
                                                                     value={emp.hoursPerMonth || ''}
@@ -3125,11 +3125,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     className="w-full bg-transparent focus:bg-panel border border-transparent focus:border-border rounded px-2 py-1 text-text text-center font-mono text-xs outline-none"
                                                                 />
                                                             </td>
-                                                            <td className="px-4 py-3 font-mono text-xs font-black text-indigo-300 text-right">
+                                                            <td className="px-4 py-3 font-mono text-xs font-black text-blue-300 text-right">
                                                                 R$ {valorHora.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                             </td>
                                                             <td className="px-4 py-3 text-center">
-                                                                <button 
+                                                                <button
                                                                     onClick={() => handleDeleteEmployee(emp.id)}
                                                                     className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                                                                 >
@@ -3155,9 +3155,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     <span className="text-[11px] text-slate-400 leading-relaxed max-w-md">
                                         💡 <strong>Dica de Cálculo:</strong> Mantenha a carga horária e os salários corretos para que o valor por hora de cada colaborador reflita o custo operacional exato na aba <strong>Tabela de Precificação</strong>.
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={handleAddEmployee}
-                                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-text px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-indigo-600/15"
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-text px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-blue-600/15"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Adicionar Colaborador
@@ -3178,21 +3178,21 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                <button 
+                                <button
                                     onClick={handleAddFixedExpense}
-                                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-indigo-600/15"
+                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-blue-600/15"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     Adicionar Item
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleResetFixedExpenses}
                                     className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
                                     Padrão do Print
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleClearAllFixedExpenses}
                                     className="flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/10 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
                                 >
@@ -3234,37 +3234,37 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     const isHighlight = item.isHighlighted;
                                     const isPayroll = item.id === '1';
                                     return (
-                                        <div 
-                                            key={item.id} 
+                                        <div
+                                            key={item.id}
                                             className={`grid grid-cols-12 items-center py-1.5 px-4 text-xs transition-colors group ${
                                                 isPayroll
-                                                    ? 'bg-indigo-950/20 hover:bg-indigo-950/30 border-l-4 border-indigo-500 text-indigo-300 font-medium'
-                                                    : isHighlight 
-                                                        ? 'bg-emerald-950/20 hover:bg-emerald-950/30 border-l-4 border-emerald-500/40 text-emerald-300' 
+                                                    ? 'bg-blue-950/20 hover:bg-blue-950/30 border-l-4 border-blue-500 text-blue-300 font-medium'
+                                                    : isHighlight
+                                                        ? 'bg-blue-950/20 hover:bg-blue-950/30 border-l-4 border-blue-500/40 text-blue-300'
                                                         : 'hover:bg-panel text-slate-200'
                                             }`}
                                         >
                                             {/* Description field */}
                                             <div className="col-span-8 pr-3 pl-1 flex items-center gap-2">
                                                 {isPayroll ? (
-                                                    <RefreshCw className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                                    <RefreshCw className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                                                 ) : isHighlight ? (
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
                                                 ) : null}
-                                                <input 
+                                                <input
                                                     type="text"
                                                     value={item.description}
                                                     onChange={e => handleFixedExpenseChange(item.id, 'description', e.target.value)}
                                                     disabled={isPayroll}
                                                     className={`w-full bg-transparent border border-transparent rounded px-2 py-1 outline-none ${
-                                                        isPayroll 
-                                                            ? 'text-indigo-200 font-bold cursor-default select-none' 
+                                                        isPayroll
+                                                            ? 'text-blue-200 font-bold cursor-default select-none'
                                                             : 'text-slate-100 focus:bg-panel focus:border-border hover:border-border focus:text-text'
                                                     }`}
                                                     placeholder="Descreva a despesa..."
                                                 />
                                                 {isPayroll && (
-                                                    <span className="bg-indigo-500/20 text-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-95 shrink-0 select-none border border-indigo-500/15" title="Sincronizado automaticamente da Folha de Pagamento">
+                                                    <span className="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-95 shrink-0 select-none border border-blue-500/15" title="Sincronizado automaticamente da Folha de Pagamento">
                                                         Auto Sinc
                                                     </span>
                                                 )}
@@ -3272,8 +3272,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             {/* Value field */}
                                             <div className="col-span-3 flex items-center gap-1 font-mono">
-                                                <span className={`${isPayroll ? 'text-indigo-400/80' : 'text-slate-500'} shrink-0 select-none`}>R$</span>
-                                                <input 
+                                                <span className={`${isPayroll ? 'text-blue-400/80' : 'text-slate-500'} shrink-0 select-none`}>R$</span>
+                                                <input
                                                     type="number"
                                                     step="any"
                                                     value={item.value === null ? '' : item.value}
@@ -3284,9 +3284,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     disabled={isPayroll}
                                                     placeholder="--"
                                                     className={`w-full bg-transparent text-right border border-transparent rounded px-2 py-1 outline-none font-semibold ${
-                                                        isPayroll 
-                                                            ? 'text-indigo-300 cursor-default select-none' 
-                                                            : 'text-text focus:bg-panel focus:border-border focus:text-indigo-300'
+                                                        isPayroll
+                                                            ? 'text-blue-300 cursor-default select-none'
+                                                            : 'text-text focus:bg-panel focus:border-border focus:text-blue-300'
                                                     }`}
                                                 />
                                             </div>
@@ -3294,7 +3294,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             {/* Delete button */}
                                             <div className="col-span-1 text-center">
                                                 {!isPayroll && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleDeleteFixedExpense(item.id)}
                                                         className="text-slate-600 hover:text-red-400 hover:bg-red-500/10 p-1 rounded transition-colors"
                                                         title="Remover Despesa"
@@ -3316,7 +3316,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         </div>
 
                         {/* Extra Tip Card */}
-                        <div className="max-w-xl mx-auto bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-4 text-xs text-slate-300 flex items-start gap-3">
+                        <div className="max-w-xl mx-auto bg-blue-950/20 border border-blue-500/20 rounded-2xl p-4 text-xs text-slate-300 flex items-start gap-3">
                             <span className="text-base select-none shrink-0 mt-0.5">💡</span>
                             <div>
                                 <p className="font-bold text-text mb-0.5">Informação de Integração:</p>
@@ -3340,26 +3340,26 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
-                                <button 
+                                <button
                                     onClick={handleRestoreScenarioQuantitiesPattern}
-                                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                     title="Preencher com volumes de vendas reais do print de referência"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
                                     Padrão do Print
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleClearScenarioQuantities}
                                     className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Zerar Quantidades
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleResetScenarioPricesToDefaults}
                                     className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                 >
-                                    <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
+                                    <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
                                     Resetar Preços
                                 </button>
                             </div>
@@ -3368,7 +3368,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         {/* Search and Filters */}
                         <div className="flex items-center gap-2 max-w-md bg-panel border border-border rounded-xl px-3 py-2">
                             <Search className="w-4 h-4 text-slate-500 shrink-0" />
-                            <input 
+                            <input
                                 type="text"
                                 placeholder="Buscar procedimento para simular..."
                                 value={searchQuery}
@@ -3376,7 +3376,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 className="w-full bg-transparent text-xs text-text placeholder-slate-500 focus:outline-none"
                             />
                             {searchQuery && (
-                                <button 
+                                <button
                                     onClick={() => setSearchQuery('')}
                                     className="text-xs text-slate-400 hover:text-text"
                                 >
@@ -3406,9 +3406,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
 
                                 {/* Faturamento */}
-                                <div className="p-3 bg-indigo-950/10">
-                                    <span className="block text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Faturamento Previsto</span>
-                                    <span className="block text-[9px] text-indigo-400/80 font-medium italic">Origem: Tab Precificação / Cenários</span>
+                                <div className="p-3 bg-blue-950/10">
+                                    <span className="block text-[10px] text-blue-300 font-bold uppercase tracking-wider">Faturamento Previsto</span>
+                                    <span className="block text-[9px] text-blue-400/80 font-medium italic">Origem: Tab Precificação / Cenários</span>
                                     <span className="block text-sm font-mono font-bold text-text mt-1">
                                         R$ {scenarioTotals.totalFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
@@ -3438,12 +3438,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
 
                                 {/* Margem de Contribuição */}
-                                <div className="p-3 bg-emerald-950/10">
-                                    <span className="block text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Margem de Contribuição</span>
-                                    <span className="block text-sm font-mono font-bold text-emerald-400 mt-1">
+                                <div className="p-3 bg-blue-950/10">
+                                    <span className="block text-[10px] text-blue-400 font-bold uppercase tracking-wider">Margem de Contribuição</span>
+                                    <span className="block text-sm font-mono font-bold text-blue-400 mt-1">
                                         R$ {scenarioTotals.totalMargemContribuicaoValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
-                                    <span className="block text-[10px] font-mono font-bold text-emerald-300">
+                                    <span className="block text-[10px] font-mono font-bold text-blue-300">
                                         {scenarioTotals.totalMargemContribuicaoPct.toFixed(1)}%
                                     </span>
                                 </div>
@@ -3461,14 +3461,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
 
                                 {/* Margem de Lucro */}
-                                <div className={`p-3 ${scenarioTotals.totalProfitValue >= 0 ? 'bg-emerald-950/20' : 'bg-red-950/20'}`}>
-                                    <span className={`block text-[10px] font-bold uppercase tracking-wider ${scenarioTotals.totalProfitValue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <div className={`p-3 ${scenarioTotals.totalProfitValue >= 0 ? 'bg-blue-950/20' : 'bg-red-950/20'}`}>
+                                    <span className={`block text-[10px] font-bold uppercase tracking-wider ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                                         Margem de Lucro
                                     </span>
-                                    <span className={`block text-sm font-mono font-black mt-1 ${scenarioTotals.totalProfitValue >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                                    <span className={`block text-sm font-mono font-black mt-1 ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-300' : 'text-red-300'}`}>
                                         R$ {scenarioTotals.totalProfitValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
-                                    <span className={`block text-[10px] font-mono font-bold ${scenarioTotals.totalProfitValue >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <span className={`block text-[10px] font-mono font-bold ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                                         {scenarioTotals.totalProfitPct.toFixed(1)}%
                                     </span>
                                 </div>
@@ -3483,13 +3483,13 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <tr className="bg-surface text-text text-[11px] font-bold tracking-wider select-none divide-x divide-white/10">
                                             <th className="py-2.5 px-3 text-center w-16">Código</th>
                                             <th className="py-2.5 px-4 text-left w-72">Produtos / Serviços</th>
-                                            <th className="py-2.5 px-3 text-right w-36 text-emerald-300">Preço Sugerido (Meta)</th>
+                                            <th className="py-2.5 px-3 text-right w-36 text-blue-300">Preço Sugerido (Meta)</th>
                                             <th className="py-2.5 px-3 text-right w-36 bg-surface">Preço Praticado Atual</th>
                                             <th className="py-2.5 px-3 text-right w-32">Previsão de Vendas</th>
                                             <th className="py-2.5 px-3 text-right w-36 bg-surface">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Faturamento Previsto
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Receita total prevista baseada no preço e quantidade
                                                     </div>
@@ -3498,7 +3498,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Custos Variáveis
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Soma de custos diretos (materiais/mão de obra) e custos laboratoriais da Ficha Técnica
                                                     </div>
@@ -3507,7 +3507,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Impostos s/ Vendas
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Percentual de impostos aplicado sobre o faturamento
                                                     </div>
@@ -3516,7 +3516,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Taxa Cartão
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Taxa financeira de cartão aplicada sobre o faturamento
                                                     </div>
@@ -3525,7 +3525,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Taxa Aplicativo
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Taxa do aplicativo sobre o faturamento
                                                     </div>
@@ -3534,25 +3534,25 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Comissão Vendas
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Comissão de vendas sobre o faturamento
                                                     </div>
                                                 </div>
                                             </th>
-                                            <th className="py-2.5 px-3 text-right w-36 bg-emerald-950/20">
+                                            <th className="py-2.5 px-3 text-right w-36 bg-blue-950/20">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Margem Contribuição (R$)
-                                                    <HelpCircle className="w-3 h-3 text-emerald-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Faturamento - Custos Variáveis - Impostos - Taxas - Comissão
                                                     </div>
                                                 </div>
                                             </th>
-                                            <th className="py-2.5 px-3 text-center w-24 bg-emerald-950/10">
+                                            <th className="py-2.5 px-3 text-center w-24 bg-blue-950/10">
                                                 <div className="group relative flex items-center justify-center gap-1">
                                                     Margem Contrib. (%)
-                                                    <HelpCircle className="w-3 h-3 text-emerald-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Margem de Contribuição / Faturamento
                                                     </div>
@@ -3561,7 +3561,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-32">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Rateio Despesas Fixas
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Rateio das despesas fixas baseado na participação deste serviço no faturamento total
                                                     </div>
@@ -3570,7 +3570,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-right w-36">
                                                 <div className="group relative flex items-center justify-end gap-1">
                                                     Margem Lucro (R$)
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Margem de Contribuição - Rateio das Despesas Fixas
                                                     </div>
@@ -3579,7 +3579,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-center w-24">
                                                 <div className="group relative flex items-center justify-center gap-1">
                                                     Margem Lucro (%)
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Margem de Lucro / Faturamento
                                                     </div>
@@ -3588,7 +3588,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-center w-24">
                                                 <div className="group relative flex items-center justify-center gap-1">
                                                     Mark-up Mult.
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Preço de Venda / Custo Variável Unitário
                                                     </div>
@@ -3597,7 +3597,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <th className="py-2.5 px-3 text-center w-20">
                                                 <div className="group relative flex items-center justify-center gap-1">
                                                     % do Mix
-                                                    <HelpCircle className="w-3 h-3 text-indigo-400" />
+                                                    <HelpCircle className="w-3 h-3 text-blue-400" />
                                                     <div className="absolute hidden group-hover:block bg-slate-900 text-text text-[10px] p-2 rounded z-[100] w-48 top-full mt-2 right-0 shadow-lg border border-border whitespace-normal">
                                                         Participação deste serviço no Faturamento Total
                                                     </div>
@@ -3610,11 +3610,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             const hasVolume = item.quantity > 0;
                                             const isNegativeProfit = item.margemLucroValue < 0;
                                             return (
-                                                <tr 
-                                                    key={item.id} 
+                                                <tr
+                                                    key={item.id}
                                                     className={`hover:bg-panel transition-colors divide-x divide-white/5 ${
-                                                        hasVolume 
-                                                            ? 'bg-indigo-950/10 text-slate-100 font-medium' 
+                                                        hasVolume
+                                                            ? 'bg-blue-950/10 text-slate-100 font-medium'
                                                             : 'text-slate-400'
                                                     }`}
                                                 >
@@ -3629,15 +3629,15 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     </td>
 
                                                     {/* Preço Sugerido (Calculado) */}
-                                                    <td className="py-2 px-3 text-right font-mono font-bold text-emerald-400/90">
+                                                    <td className="py-2 px-3 text-right font-mono font-bold text-blue-400/90">
                                                         R$ {item.suggestedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
 
                                                     {/* Preço de Vendas Praticado (Editable) */}
                                                     <td className="py-1 px-2 text-right bg-surface">
-                                                        <div className="flex items-center justify-end gap-1 bg-panel border border-border hover:border-indigo-500/30 focus-within:border-indigo-500 rounded px-1.5 py-1">
+                                                        <div className="flex items-center justify-end gap-1 bg-panel border border-border hover:border-blue-500/30 focus-within:border-blue-500 rounded px-1.5 py-1">
                                                             <span className="text-slate-500 select-none text-[10px]">R$</span>
-                                                            <input 
+                                                            <input
                                                                 type="number"
                                                                 step="any"
                                                                 value={customPracticedPrices[item.id] !== undefined ? customPracticedPrices[item.id] : item.price}
@@ -3652,8 +3652,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                     {/* Previsão de Vendas (Editable) */}
                                                     <td className="py-1 px-2 text-right">
-                                                        <div className="flex items-center justify-end bg-panel border border-border hover:border-indigo-500/30 focus-within:border-indigo-500 rounded px-1.5 py-1">
-                                                            <input 
+                                                        <div className="flex items-center justify-end bg-panel border border-border hover:border-blue-500/30 focus-within:border-blue-500 rounded px-1.5 py-1">
+                                                            <input
                                                                 type="number"
                                                                 step="any"
                                                                 value={scenarioQuantities[item.id] !== undefined && scenarioQuantities[item.id] !== 0 ? scenarioQuantities[item.id] : ''}
@@ -3662,7 +3662,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                                                                     handleScenarioQuantityChange(item.id, val);
                                                                 }}
-                                                                className="w-full bg-transparent border-none text-right font-mono font-bold text-indigo-300 outline-none placeholder-slate-600"
+                                                                className="w-full bg-transparent border-none text-right font-mono font-bold text-blue-300 outline-none placeholder-slate-600"
                                                             />
                                                         </div>
                                                     </td>
@@ -3696,12 +3696,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     </td>
 
                                                     {/* Margem Contribuição (R$) */}
-                                                    <td className="py-2 px-3 text-right font-mono font-bold text-emerald-400 bg-emerald-950/5">
+                                                    <td className="py-2 px-3 text-right font-mono font-bold text-blue-400 bg-blue-950/5">
                                                         {item.faturamento > 0 ? `R$ ${item.margemContribuicaoValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'R$ -'}
                                                     </td>
 
                                                     {/* Margem Contribuição (%) */}
-                                                    <td className="py-2 px-3 text-center font-mono font-bold text-emerald-300 bg-emerald-950/10">
+                                                    <td className="py-2 px-3 text-center font-mono font-bold text-blue-300 bg-blue-950/10">
                                                         {item.faturamento > 0 ? `${item.margemContribuicaoPct.toFixed(1)}%` : '0,0%'}
                                                     </td>
 
@@ -3712,22 +3712,22 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                     {/* Margem Lucro (R$) */}
                                                     <td className={`py-2 px-3 text-right font-mono font-bold ${
-                                                        item.faturamento === 0 
-                                                            ? 'text-slate-500' 
-                                                            : isNegativeProfit 
-                                                                ? 'text-red-400 bg-red-950/5' 
-                                                                : 'text-emerald-400 bg-emerald-950/5'
+                                                        item.faturamento === 0
+                                                            ? 'text-slate-500'
+                                                            : isNegativeProfit
+                                                                ? 'text-red-400 bg-red-950/5'
+                                                                : 'text-blue-400 bg-blue-950/5'
                                                     }`}>
                                                         {item.faturamento > 0 ? `R$ ${item.margemLucroValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'R$ -'}
                                                     </td>
 
                                                     {/* Margem Lucro (%) */}
                                                     <td className={`py-2 px-3 text-center font-mono font-bold ${
-                                                        item.faturamento === 0 
-                                                            ? 'text-slate-500' 
-                                                            : isNegativeProfit 
-                                                                ? 'text-red-400/90' 
-                                                                : 'text-emerald-400/90'
+                                                        item.faturamento === 0
+                                                            ? 'text-slate-500'
+                                                            : isNegativeProfit
+                                                                ? 'text-red-400/90'
+                                                                : 'text-blue-400/90'
                                                     }`}>
                                                         {item.faturamento > 0 ? `${item.margemLucroPct.toFixed(1)}%` : '0,0%'}
                                                     </td>
@@ -3758,7 +3758,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         </div>
 
                         {/* Extra Guidance Banner */}
-                        <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-4 text-xs text-slate-300 flex items-start gap-3">
+                        <div className="bg-blue-950/20 border border-blue-500/20 rounded-2xl p-4 text-xs text-slate-300 flex items-start gap-3">
                             <span className="text-base select-none shrink-0 mt-0.5">💡</span>
                             <div>
                                 <p className="font-bold text-text mb-0.5">Dinâmica de Cálculo:</p>
@@ -3774,21 +3774,21 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                     <div className="p-6 space-y-6 animate-in fade-in duration-300">
                         {/* Sub Tab Switcher */}
                         <div className="flex gap-2 p-1 bg-slate-900 border border-border rounded-xl max-w-lg">
-                            <button 
+                            <button
                                 onClick={() => setRelatoriosSubTab('dre_gerencial')}
                                 className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                                    relatoriosSubTab === 'dre_gerencial' 
-                                        ? 'bg-surface text-text shadow-lg border border-border' 
+                                    relatoriosSubTab === 'dre_gerencial'
+                                        ? 'bg-surface text-text shadow-lg border border-border'
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
                                 }`}
                             >
                                 DRE Simulado & PE Geral
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setRelatoriosSubTab('analise_produto')}
                                 className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                                    relatoriosSubTab === 'analise_produto' 
-                                        ? 'bg-surface text-text shadow-lg border border-border' 
+                                    relatoriosSubTab === 'analise_produto'
+                                        ? 'bg-surface text-text shadow-lg border border-border'
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
                                 }`}
                             >
@@ -3806,7 +3806,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     <p className="text-xs text-slate-500 font-medium">Demonstração de Resultado & Ponto de Equilíbrio Econômico</p>
                                 </div>
                                 <div className="text-right sm:text-right">
-                                    <span className="text-[10px] font-mono bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100 font-bold">
+                                    <span className="text-[10px] font-mono bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100 font-bold">
                                         SIMULAÇÃO ATIVA
                                     </span>
                                 </div>
@@ -3832,7 +3832,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             {/* Margem Contribuição */}
                                             <div className="bg-white border border-slate-200 px-4 py-3 rounded-lg shadow-xs flex flex-col justify-center">
                                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Margem Contribuição Média</span>
-                                                <span className="font-mono text-emerald-600 text-sm font-black mt-1">
+                                                <span className="font-mono text-blue-600 text-sm font-black mt-1">
                                                     {scenarioTotals.totalMargemContribuicaoPct.toFixed(1)}%
                                                 </span>
                                             </div>
@@ -3875,8 +3875,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="min-w-[760px] space-y-4">
                                             {/* 1. Ponto de Equilíbrio */}
                                             {(() => {
-                                                const peValue = scenarioTotals.totalMargemContribuicaoPct > 0 
-                                                    ? (totalFixedExpenses / (scenarioTotals.totalMargemContribuicaoPct / 100)) 
+                                                const peValue = scenarioTotals.totalMargemContribuicaoPct > 0
+                                                    ? (totalFixedExpenses / (scenarioTotals.totalMargemContribuicaoPct / 100))
                                                     : 0;
                                                 return (
                                                     <div className="grid grid-cols-[1.5fr,auto,2fr,auto,2fr,auto,1.5fr,2.5fr] gap-2 items-center bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs">
@@ -3912,8 +3912,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             {/* 2. Ponto de Equilíbrio Econômico */}
                                             {(() => {
-                                                const peeValue = scenarioTotals.totalMargemContribuicaoPct > 0 
-                                                    ? ((totalFixedExpenses + desiredProfit) / (scenarioTotals.totalMargemContribuicaoPct / 100)) 
+                                                const peeValue = scenarioTotals.totalMargemContribuicaoPct > 0
+                                                    ? ((totalFixedExpenses + desiredProfit) / (scenarioTotals.totalMargemContribuicaoPct / 100))
                                                     : 0;
                                                 return (
                                                     <div className="grid grid-cols-[1.5fr,auto,2fr,auto,2fr,auto,1.5fr,2.5fr] gap-2 items-center bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs">
@@ -3940,7 +3940,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         <div className="bg-surface text-text font-mono font-black text-xs text-center py-2.5 px-3 rounded-lg shadow-sm min-w-[120px]">
                                                             R$ {peeValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </div>
-                                                        <div className="bg-surface text-text font-semibold p-3 text-[10px] leading-tight flex items-center justify-center rounded-lg shadow-xs h-full border border-emerald-600">
+                                                        <div className="bg-surface text-text font-semibold p-3 text-[10px] leading-tight flex items-center justify-center rounded-lg shadow-xs h-full border border-blue-600">
                                                             Esse é o valor que sua empresa precisa vender para obter o lucro desejado.
                                                         </div>
                                                     </div>
@@ -3949,8 +3949,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             {/* 3. Ticket Médio */}
                                             {(() => {
-                                                const tmValue = scenarioTotals.totalQty > 0 
-                                                    ? (scenarioTotals.totalFaturamento / scenarioTotals.totalQty) 
+                                                const tmValue = scenarioTotals.totalQty > 0
+                                                    ? (scenarioTotals.totalFaturamento / scenarioTotals.totalQty)
                                                     : 0;
                                                 return (
                                                     <div className="grid grid-cols-[1.5fr,auto,2fr,auto,2fr,auto,1.5fr,2.5fr] gap-2 items-center bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-xs">
@@ -4064,11 +4064,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             {(() => {
                                                 const mContribPct = scenarioTotals.totalMargemContribuicaoPct;
                                                 return (
-                                                    <div className="flex justify-between px-4 py-2.5 bg-emerald-50 font-bold text-emerald-900 border-t border-slate-200">
+                                                    <div className="flex justify-between px-4 py-2.5 bg-blue-50 font-bold text-blue-900 border-t border-slate-200">
                                                         <span>(=) Margem de Contribuição</span>
                                                         <div className="flex justify-between w-40 font-mono">
                                                             <span className="text-right flex-1">R$ {scenarioTotals.totalMargemContribuicaoValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                                            <span className="text-right w-12 text-emerald-700">{mContribPct.toFixed(1)}%</span>
+                                                            <span className="text-right w-12 text-blue-700">{mContribPct.toFixed(1)}%</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -4098,12 +4098,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 const profitPct = scenarioTotals.totalFaturamento > 0 ? (profitVal / scenarioTotals.totalFaturamento) * 100 : 0;
                                                 const isNegative = profitVal < 0;
                                                 return (
-                                                    <div className={`flex justify-between px-4 py-3 border-t-2 border-slate-300 font-extrabold text-sm ${isNegative ? 'bg-red-50 text-red-900' : 'bg-emerald-100 text-emerald-900'}`}>
+                                                    <div className={`flex justify-between px-4 py-3 border-t-2 border-slate-300 font-extrabold text-sm ${isNegative ? 'bg-red-50 text-red-900' : 'bg-blue-100 text-blue-900'}`}>
                                                         <span>(=) Lucro Operacional</span>
                                                         <div className="flex justify-between w-40 font-mono">
                                                             <span className="text-right flex-1">
-                                                                {isNegative 
-                                                                    ? `R$ (${Math.abs(profitVal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})` 
+                                                                {isNegative
+                                                                    ? `R$ (${Math.abs(profitVal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`
                                                                     : `R$ ${profitVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                                                             </span>
                                                             <span className="text-right w-12">
@@ -4131,7 +4131,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             Sua empresa está com PREJUÍZO. Analise sua estrutura de preços, negocie preços melhores com fornecedores e reduza suas despesas fixas.
                                                         </p>
                                                     ) : (
-                                                        <p className="text-emerald-700">
+                                                        <p className="text-blue-700">
                                                             <span className="font-extrabold uppercase block mb-1">🎉 PARABÉNS!</span>
                                                             Sua empresa está com LUCRO OPERACIONAL POSITIVO. Mantenha o controle de custos e busque aumentar o volume para potencializar seus ganhos!
                                                         </p>
@@ -4167,7 +4167,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     tFinanceira: 3,
                                     cComissao: 10
                                 };
-                                
+
                                 // CMV and Labor split
                                 let cmvValue = breakdown.cmv + (settings.cLaboratorio || 0);
                                 let laborValue = breakdown.labor;
@@ -4258,17 +4258,17 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 });
 
                                 const renderSpreadsheetRow = (
-                                    label: string, 
-                                    value: number, 
-                                    pct: number, 
-                                    isHeader: boolean = false, 
+                                    label: string,
+                                    value: number,
+                                    pct: number,
+                                    isHeader: boolean = false,
                                     indent: boolean = false,
                                     textRed: boolean = false
                                 ) => {
-                                    const bgClass = isHeader 
-                                        ? 'bg-surface text-text font-extrabold' 
+                                    const bgClass = isHeader
+                                        ? 'bg-surface text-text font-extrabold'
                                         : 'bg-white hover:bg-slate-50 border-b border-slate-200 text-slate-800 font-semibold';
-                                    
+
                                     return (
                                         <tr className={`text-[11px] transition-colors ${bgClass}`}>
                                             <td className={`py-1.5 px-3 ${indent ? 'pl-6 font-normal text-slate-500' : ''}`}>
@@ -4337,12 +4337,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Produtos/Serviços</span>
                                                     <div className="relative">
                                                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder="Buscar..." 
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Buscar..."
                                                             value={analiseSearchQuery}
                                                             onChange={(e) => setAnaliseSearchQuery(e.target.value)}
-                                                            className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-semibold"
+                                                            className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold"
                                                         />
                                                     </div>
                                                     <div className="flex-1 overflow-y-auto space-y-1 pr-1 scrollbar-thin">
@@ -4353,13 +4353,13 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     key={s.id}
                                                                     onClick={() => setSelectedAnaliseServiceId(s.id)}
                                                                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center justify-between ${
-                                                                        isSelected 
-                                                                            ? 'bg-surface text-text font-bold shadow' 
+                                                                        isSelected
+                                                                            ? 'bg-surface text-text font-bold shadow'
                                                                             : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-xs'
                                                                     }`}
                                                                 >
                                                                     <span className="truncate">{s.name}</span>
-                                                                    {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ml-2"></span>}
+                                                                    {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 ml-2"></span>}
                                                                 </button>
                                                             );
                                                         })}
@@ -4380,7 +4380,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             {renderSpreadsheetRow("CMV", practicedCMV, (practicedCMV / practicedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Custo Mão de Obra Direta", practicedLabor, (practicedLabor / practicedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Frete", 0, 0, false, true)}
-                                                            
+
                                                             {renderSpreadsheetRow("Despesas Variáveis", practicedDespesasVariaveis, (practicedDespesasVariaveis / practicedPrice) * 100, true)}
                                                             {renderSpreadsheetRow("Impostos", practicedTaxes, (practicedTaxes / practicedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Taxa da Máquina", practicedCardFee, (practicedCardFee / practicedPrice) * 100, false, true)}
@@ -4397,15 +4397,15 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                 {/* Left Summary badges */}
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                                                    <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-rose-50 border-rose-200'}`}>
                                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro %</span>
-                                                        <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                        <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-blue-700' : 'text-rose-600'}`}>
                                                             {practicedMargemLucro >= 0 ? '+' : ''}{((practicedMargemLucro / practicedPrice) * 100).toFixed(1)}%
                                                         </span>
                                                     </div>
-                                                    <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                                                    <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-rose-50 border-rose-200'}`}>
                                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro R$</span>
-                                                        <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                                        <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-blue-700' : 'text-rose-600'}`}>
                                                             {practicedMargemLucro < 0 ? `-` : ''}R$ {Math.abs(practicedMargemLucro).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
                                                     </div>
@@ -4452,8 +4452,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <div className="flex items-center gap-1 bg-surface px-3 py-1.5 text-text justify-between">
                                                         <span className="text-xs font-black tracking-wider uppercase">LUCRO DESEJADO %:</span>
                                                         <div className="flex items-center bg-panel/80 border border-white/20 rounded px-1.5 py-0.5 w-20">
-                                                            <input 
-                                                                type="number" 
+                                                            <input
+                                                                type="number"
                                                                 min="0"
                                                                 max="95"
                                                                 value={analiseDesiredProfitPct}
@@ -4470,7 +4470,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             {renderSpreadsheetRow("CMV", suggestedCMV, (suggestedCMV / suggestedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Custo Mão de Obra Direta", suggestedLabor, (suggestedLabor / suggestedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Frete", 0, 0, false, true)}
-                                                            
+
                                                             {renderSpreadsheetRow("Despesas Variáveis", suggestedDespesasVariaveis, (suggestedDespesasVariaveis / suggestedPrice) * 100, true)}
                                                             {renderSpreadsheetRow("Impostos", suggestedTaxes, (suggestedTaxes / suggestedPrice) * 100, false, true)}
                                                             {renderSpreadsheetRow("Taxa da Máquina", suggestedCardFee, (suggestedCardFee / suggestedPrice) * 100, false, true)}
@@ -4487,15 +4487,15 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                 {/* Right Summary badges */}
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-center text-center">
+                                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-center text-center">
                                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro %</span>
-                                                        <span className="text-base font-black font-mono text-emerald-700 mt-0.5">
+                                                        <span className="text-base font-black font-mono text-blue-700 mt-0.5">
                                                             +{analiseDesiredProfitPct.toFixed(1)}%
                                                         </span>
                                                     </div>
-                                                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-center text-center">
+                                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-center text-center">
                                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro R$</span>
-                                                        <span className="text-base font-black font-mono text-emerald-700 mt-0.5">
+                                                        <span className="text-base font-black font-mono text-blue-700 mt-0.5">
                                                             R$ {suggestedMargemLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
                                                     </div>
@@ -4549,12 +4549,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 const Input: React.FC<{label: string, value: number, onChange: (val: number) => void}> = ({label, value, onChange}) => (
     <div className="space-y-1">
         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</label>
-        <input 
-            type="number" 
+        <input
+            type="number"
             step="any"
-            value={value} 
-            onChange={(e) => onChange(Number(e.target.value))} 
-            className="w-full bg-panel border border-border rounded-lg px-4 py-2 text-text font-semibold text-sm focus:outline-none focus:border-indigo-500 font-mono" 
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="w-full bg-panel border border-border rounded-lg px-4 py-2 text-text font-semibold text-sm focus:outline-none focus:border-blue-500 font-mono"
         />
     </div>
 );

@@ -1,30 +1,30 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
-  Sliders, 
-  Plus, 
-  Trash2, 
-  Sparkles, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Lock, 
-  HelpCircle, 
-  Award, 
-  Percent, 
-  Calculator, 
-  History, 
-  Copy, 
-  Download, 
-  RefreshCw, 
-  Target, 
-  Zap, 
-  BarChart3, 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Sliders,
+  Plus,
+  Trash2,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldCheck,
+  Lock,
+  HelpCircle,
+  Award,
+  Percent,
+  Calculator,
+  History,
+  Copy,
+  Download,
+  RefreshCw,
+  Target,
+  Zap,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
   Layers,
   ChevronRight,
   Info,
@@ -34,19 +34,19 @@ import {
   UserCheck,
   Stethoscope
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  Legend, 
-  BarChart, 
-  Bar, 
-  Cell, 
-  AreaChart, 
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  BarChart,
+  Bar,
+  Cell,
+  AreaChart,
   Area,
   ComposedChart
 } from 'recharts';
@@ -115,7 +115,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
       { minRevenue: 55000, maxRevenue: 60000, percentage: 3.0, label: '55k a 60k (3%)' },
       { minRevenue: 60000, percentage: 5.0, label: 'A partir de 60k (5%)' }
     ],
-    color: '#3b82f6' // Azul
+    color: '#536fd1' // Azul
   },
   {
     id: 'team_tiered_70k_80k',
@@ -135,7 +135,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
       { minRevenue: 70000, maxRevenue: 80000, percentage: 2.0, label: '70k a 80k (2% cada)' },
       { minRevenue: 80000, percentage: 3.0, label: 'Acima de 80k (3% cada)' }
     ],
-    color: '#10b981' // Verde Esmeralda
+    color: '#536fd1' // Verde Esmeralda
   },
   {
     id: 'dentists_custom_comm_reception',
@@ -157,7 +157,7 @@ const DEFAULT_SCENARIOS: ScenarioRule[] = [
     d2Pct: 1.0,
     commercialPct: 1.0,
     receptionPct: 0.5,
-    color: '#06b6d4' // Ciano
+    color: '#7460a8' // Ciano
   }
 ];
 
@@ -201,7 +201,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Estados Gerais de Simulação
   const [activeTab, setActiveTab] = useState<'simulator' | 'comparison' | 'historical' | 'settings'>('simulator');
   const [selectedHistoricalMonth, setSelectedHistoricalMonth] = useState<string | null>(null);
-  
+
   // Meta de Lucro Desejado dos Sócios na Operação
   const [targetDesiredProfit, setTargetDesiredProfit] = useState<number>(() => {
     try {
@@ -247,7 +247,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     receptionPct: 0.5,
     bonusFixedAmount: 0,
     bonusTriggerAmount: 0,
-    color: '#06b6d4'
+    color: '#7460a8'
   });
 
   // Histórico Real da Clínica (Calculado a partir das Transactions)
@@ -286,10 +286,10 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       return mockMonths.map(item => {
         const commEligible = item.revenue - item.ortho;
         const realOrthoPct = item.revenue > 0 ? (item.ortho / item.revenue) * 100 : 0;
-        return { 
-          ...item, 
-          commEligible, 
-          orthoPct: realOrthoPct.toFixed(0) 
+        return {
+          ...item,
+          commEligible,
+          orthoPct: realOrthoPct.toFixed(0)
         };
       });
     }
@@ -303,14 +303,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       const [year, month] = mKey.split('-');
       const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
       const label = `${monthNames[parseInt(month, 10) - 1]}/${year.slice(2)}`;
-      
-      return { 
-        month: mKey, 
-        label, 
-        revenue, 
-        ortho, 
-        commEligible, 
-        orthoPct: realOrthoPct.toFixed(0) 
+
+      return {
+        month: mKey,
+        label,
+        revenue,
+        ortho,
+        commEligible,
+        orthoPct: realOrthoPct.toFixed(0)
       };
     });
   }, [transactions]);
@@ -320,7 +320,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     const rev = m.revenue;
     const orthoP = parseFloat(m.orthoPct) || 25;
     setSelectedHistoricalMonth(m.label);
-    
+
     setScenarios(prev => prev.map(sc => ({
       ...sc,
       customRevenue: rev,
@@ -339,14 +339,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
   // Função para calcular a comissão por pessoa e custo total da clínica
   const calculateCommission = (
-    rule: ScenarioRule, 
-    totalRevenue: number = rule.customRevenue || 80000, 
+    rule: ScenarioRule,
+    totalRevenue: number = rule.customRevenue || 80000,
     orthoPct: number = rule.customOrthoPct !== undefined ? rule.customOrthoPct : 25
-  ): { 
-    amountPerPerson: number; 
-    totalClinicAmount: number; 
-    effectivePct: number; 
-    baseRevenueUsed: number; 
+  ): {
+    amountPerPerson: number;
+    totalClinicAmount: number;
+    effectivePct: number;
+    baseRevenueUsed: number;
     activeTierLabel?: string;
     peopleCount: number;
     breakdownDetails?: { label: string; amount: number; pct: string; detail?: string; baseAmount?: number }[];
@@ -390,30 +390,30 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         activeTierLabel: `D1: 1% • D2: 1% • Com.: 1% • Recep.: 0.5%`,
         peopleCount: 4,
         breakdownDetails: [
-          { 
-            label: `Dentista 1 (${(d1Pct * 100).toFixed(1)}% Orto + Clínico)`, 
-            amount: d1Cost, 
+          {
+            label: `Dentista 1 (${(d1Pct * 100).toFixed(1)}% Orto + Clínico)`,
+            amount: d1Cost,
             pct: `${(d1Pct * 100).toFixed(1)}%`,
             baseAmount: d1TotalSales,
             detail: `Orto: R$ ${orthoRevenue.toLocaleString('pt-BR')} + Clínico: R$ ${d1Clinical.toLocaleString('pt-BR')}`
           },
-          { 
-            label: `Dentista 2 (${(d2Pct * 100).toFixed(1)}% Clínico)`, 
-            amount: d2Cost, 
+          {
+            label: `Dentista 2 (${(d2Pct * 100).toFixed(1)}% Clínico)`,
+            amount: d2Cost,
             pct: `${(d2Pct * 100).toFixed(1)}%`,
             baseAmount: d2TotalSales,
             detail: `Clínico Indicado: R$ ${d2Clinical.toLocaleString('pt-BR')}`
           },
-          { 
-            label: `Comercial (${(commPct * 100).toFixed(1)}% de Tudo que Vender)`, 
-            amount: commercialCost, 
+          {
+            label: `Comercial (${(commPct * 100).toFixed(1)}% de Tudo que Vender)`,
+            amount: commercialCost,
             pct: `${(commPct * 100).toFixed(1)}%`,
             baseAmount: commSales,
             detail: `Vendido pelo Comercial: R$ ${commSales.toLocaleString('pt-BR')}`
           },
-          { 
-            label: `Recepção (${(recPct * 100).toFixed(1)}% Total)`, 
-            amount: receptionCost, 
+          {
+            label: `Recepção (${(recPct * 100).toFixed(1)}% Total)`,
+            amount: receptionCost,
             pct: `${(recPct * 100).toFixed(1)}%`,
             baseAmount: totalRevenue,
             detail: `Faturamento Total: R$ ${totalRevenue.toLocaleString('pt-BR')}`
@@ -426,7 +426,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
     if (rule.isCurrent) {
       let commPct = 0;
       let activeTierLabel = 'Abaixo de R$ 45.000 (0%)';
-      
+
       if (commercialEligible >= 60000) {
         commPct = 0.05; // 5%
         activeTierLabel = '≥ R$ 60.000 (5%)';
@@ -546,16 +546,16 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       const orthoRev = rev * (orthoP / 100);
       const commEligible = rev - orthoRev;
 
-      const { 
-        amountPerPerson, 
-        totalClinicAmount, 
-        effectivePct: commPct, 
-        baseRevenueUsed, 
-        activeTierLabel, 
+      const {
+        amountPerPerson,
+        totalClinicAmount,
+        effectivePct: commPct,
+        baseRevenueUsed,
+        activeTierLabel,
         peopleCount,
         breakdownDetails
       } = calculateCommission(scenario, rev, orthoP);
-      
+
       const taxesAndFees = rev * (taxesAndFeesPct / 100);
       const directMaterials = rev * (directMaterialsPct / 100);
       const totalVariableCosts = taxesAndFees + directMaterials + totalClinicAmount;
@@ -670,7 +670,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       receptionPct: 0.5,
       bonusFixedAmount: 0,
       bonusTriggerAmount: 0,
-      color: '#06b6d4'
+      color: '#7460a8'
     });
     setIsModalOpen(true);
   };
@@ -719,7 +719,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
   // Copiar parecer executivo
   const handleCopySummary = () => {
     let report = `📊 PARECER DE VIABILIDADE & COMISSIONAMENTO\n\n`;
-    
+
     simulationResults.forEach(res => {
       report += `🔹 ${res.scenario.name}\n`;
       report += `   - Faturamento Testado: R$ ${res.rev.toLocaleString('pt-BR')} (Orto: ${res.orthoP}% | Base Comercial: R$ ${res.commEligible.toLocaleString('pt-BR')})\n`;
@@ -751,13 +751,13 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       {/* HEADER EXECUTIVO & NAVEGAÇÃO INTERNA */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 glass-panel p-6 rounded-2xl border border-border">
         <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <div className="size-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
             <Calculator className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-text font-display">Viabilidade Financeira & Comissionamento</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Exclusivo Sócios
               </span>
             </div>
@@ -769,16 +769,16 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
         {/* Botões de Ação do Topo */}
         <div className="flex flex-wrap items-center gap-2">
-          <button 
+          <button
             onClick={handleCopySummary}
             className="px-4 py-2.5 rounded-xl bg-surface hover:bg-panel border border-border text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95"
             title="Copiar resumo para enviar no WhatsApp da diretoria"
           >
-            <Copy className="w-3.5 h-3.5 text-indigo-400" /> Copiar Parecer
+            <Copy className="w-3.5 h-3.5 text-blue-400" /> Copiar Parecer
           </button>
-          <button 
+          <button
             onClick={handleOpenNewScenario}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/25 active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/25 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Criar Novo Cenário
           </button>
@@ -790,8 +790,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         <button
           onClick={() => setActiveTab('simulator')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'simulator' 
-              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+            activeTab === 'simulator'
+              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
@@ -800,8 +800,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         <button
           onClick={() => setActiveTab('comparison')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'comparison' 
-              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+            activeTab === 'comparison'
+              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
@@ -810,8 +810,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         <button
           onClick={() => setActiveTab('historical')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'historical' 
-              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+            activeTab === 'historical'
+              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
@@ -820,8 +820,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         <button
           onClick={() => setActiveTab('settings')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'settings' 
-              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
+            activeTab === 'settings'
+              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
@@ -866,9 +866,9 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Custos Fixos</label>
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-mono font-bold text-slate-200">R$</span>
-                  <input 
-                    type="number" 
-                    value={fixedExpenses} 
+                  <input
+                    type="number"
+                    value={fixedExpenses}
                     onChange={(e) => setFixedExpenses(Math.max(0, parseFloat(e.target.value) || 0))}
                     className="w-20 bg-surface border border-border rounded px-1.5 py-0.5 text-xs font-mono font-bold text-text outline-none"
                   />
@@ -878,10 +878,10 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="flex flex-col">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Impostos/Taxas</label>
                 <div className="flex items-center gap-1">
-                  <input 
-                    type="number" 
-                    step="0.5" 
-                    value={taxesAndFeesPct} 
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={taxesAndFeesPct}
                     onChange={(e) => setTaxesAndFeesPct(Math.max(0, parseFloat(e.target.value) || 0))}
                     className="w-14 bg-surface border border-border rounded px-1.5 py-0.5 text-xs font-mono font-bold text-text outline-none"
                   />
@@ -892,10 +892,10 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="flex flex-col">
                 <label className="text-[9px] font-bold text-slate-400 uppercase">Insumos/Lab</label>
                 <div className="flex items-center gap-1">
-                  <input 
-                    type="number" 
-                    step="0.5" 
-                    value={directMaterialsPct} 
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={directMaterialsPct}
                     onChange={(e) => setDirectMaterialsPct(Math.max(0, parseFloat(e.target.value) || 0))}
                     className="w-14 bg-surface border border-border rounded px-1.5 py-0.5 text-xs font-mono font-bold text-text outline-none"
                   />
@@ -907,34 +907,34 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
           {/* CARDS COMPARATIVOS EXECUTIVOS LADO A LADO */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-            {simulationResults.map(({ 
-              scenario, 
-              rev, 
-              orthoP, 
-              orthoRev, 
-              commEligible, 
-              amountPerPerson, 
-              totalClinicAmount, 
-              commPct, 
-              peopleCount, 
-              baseRevenueUsed, 
-              activeTierLabel, 
+            {simulationResults.map(({
+              scenario,
+              rev,
+              orthoP,
+              orthoRev,
+              commEligible,
+              amountPerPerson,
+              totalClinicAmount,
+              commPct,
+              peopleCount,
+              baseRevenueUsed,
+              activeTierLabel,
               breakdownDetails,
-              netProfit, 
-              netMarginPct, 
-              costDiff, 
+              netProfit,
+              netMarginPct,
+              costDiff,
               currentNetProfit,
-              requiredExtraSales, 
-              requiredGrowthPct 
+              requiredExtraSales,
+              requiredGrowthPct
             }) => {
               const isBase = scenario.isCurrent;
 
               return (
                 <div key={scenario.id} className="bezel-outer h-full">
-                  <SpotlightCard 
+                  <SpotlightCard
                     className={`bezel-inner rounded-[calc(1.25rem-0.375rem)] p-3.5 flex flex-col justify-between h-full transition-all duration-300 relative shadow-md ${
-                      isBase 
-                        ? 'border-sky-500/50 bg-sky-950/15 ring-1 ring-sky-500/20' 
+                      isBase
+                        ? 'border-blue-500/50 bg-blue-950/15 ring-1 ring-blue-500/20'
                         : 'border-white/[0.08] bg-surface/90 hover:border-slate-500/40'
                     }`}
                     spotlightColor={scenario.color + '15'}
@@ -961,7 +961,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           {scenario.description}
                         </p>
                       </div>
-                      
+
                       {!isBase && (
                         <button
                           onClick={() => handleEditScenario(scenario)}
@@ -976,7 +976,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     {/* 2. ENTRADAS DE FATURAMENTO E VENDAS */}
                     <div className="flex flex-col gap-2.5 bg-panel/60 p-3.5 rounded-2xl border border-border/60">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> 1. Faturamento & Base de Vendas
+                        <DollarSign className="w-3.5 h-3.5 text-blue-400" /> 1. Faturamento & Base de Vendas
                       </span>
 
                       <div className="grid grid-cols-2 gap-2">
@@ -985,12 +985,12 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           <span className="text-[9px] font-bold text-slate-400 uppercase">Faturamento Total</span>
                           <div className="flex items-center gap-1 mt-0.5">
                             <span className="text-xs font-bold text-slate-400 font-mono">R$</span>
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               step="5000"
                               value={rev}
                               onChange={(e) => handleUpdateScenarioField(scenario.id, 'customRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
-                              className="w-full bg-transparent text-sm font-black font-mono text-emerald-400 outline-none"
+                              className="w-full bg-transparent text-sm font-black font-mono text-blue-400 outline-none"
                             />
                           </div>
                         </div>
@@ -1002,8 +1002,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                             <span className="text-[9px] font-mono text-amber-400 font-bold">R$ {(orthoRev / 1000).toFixed(0)}k</span>
                           </div>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               min={0}
                               max={100}
                               value={orthoP}
@@ -1018,22 +1018,22 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                       {/* Se for a regra de Dentistas + Comercial + Recepção */}
                       {scenario.ruleType === 'dentists_2_comm_reception' && (
                         <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
-                          <span className="text-[9px] font-black uppercase text-cyan-400 tracking-wider flex items-center gap-1">
+                          <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider flex items-center gap-1">
                             <Stethoscope className="w-3 h-3" /> Produção Individual Indicada
                           </span>
-                          
+
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             {/* Dentista 1 Clínico */}
-                            <div className="bg-surface p-2 rounded-xl border border-cyan-500/30 flex flex-col">
+                            <div className="bg-surface p-2 rounded-xl border border-purple-500/30 flex flex-col">
                               <span className="text-[9px] font-bold text-slate-300 uppercase">Clínico Dentista 1 (1%)</span>
                               <div className="flex items-center gap-1 mt-0.5">
                                 <span className="text-[10px] font-bold text-slate-400 font-mono">R$</span>
-                                <input 
-                                  type="number" 
+                                <input
+                                  type="number"
                                   step="1000"
                                   value={scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)}
                                   onChange={(e) => handleUpdateScenarioField(scenario.id, 'd1ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-full bg-transparent text-xs font-black font-mono text-cyan-300 outline-none"
+                                  className="w-full bg-transparent text-xs font-black font-mono text-purple-300 outline-none"
                                 />
                               </div>
                               <span className="text-[8px] text-slate-400 font-mono mt-0.5">
@@ -1042,16 +1042,16 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                             </div>
 
                             {/* Dentista 2 Clínico */}
-                            <div className="bg-surface p-2 rounded-xl border border-cyan-500/30 flex flex-col">
+                            <div className="bg-surface p-2 rounded-xl border border-purple-500/30 flex flex-col">
                               <span className="text-[9px] font-bold text-slate-300 uppercase">Clínico Dentista 2 (1%)</span>
                               <div className="flex items-center gap-1 mt-0.5">
                                 <span className="text-[10px] font-bold text-slate-400 font-mono">R$</span>
-                                <input 
-                                  type="number" 
+                                <input
+                                  type="number"
                                   step="1000"
                                   value={scenario.d2ClinicalRevenue !== undefined ? scenario.d2ClinicalRevenue : Math.max(0, commEligible - (scenario.d1ClinicalRevenue !== undefined ? scenario.d1ClinicalRevenue : (commEligible / 2)))}
                                   onChange={(e) => handleUpdateScenarioField(scenario.id, 'd2ClinicalRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
-                                  className="w-full bg-transparent text-xs font-black font-mono text-cyan-300 outline-none"
+                                  className="w-full bg-transparent text-xs font-black font-mono text-purple-300 outline-none"
                                 />
                               </div>
                               <span className="text-[8px] text-slate-400 font-mono mt-0.5">
@@ -1064,8 +1064,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                               <span className="text-[9px] font-bold text-amber-300 uppercase">Vendas Comercial (1%)</span>
                               <div className="flex items-center gap-1 mt-0.5">
                                 <span className="text-[10px] font-bold text-slate-400 font-mono">R$</span>
-                                <input 
-                                  type="number" 
+                                <input
+                                  type="number"
                                   step="1000"
                                   value={scenario.commercialSalesRevenue !== undefined ? scenario.commercialSalesRevenue : commEligible}
                                   onChange={(e) => handleUpdateScenarioField(scenario.id, 'commercialSalesRevenue', Math.max(0, parseFloat(e.target.value) || 0))}
@@ -1081,7 +1081,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           {/* Recepção 0.5% */}
                           <div className="bg-surface/80 px-2.5 py-1.5 rounded-lg border border-border flex justify-between items-center text-[9px]">
                             <span className="text-slate-300 font-medium">Recepção: <strong>0,5%</strong> sobre o Faturamento Total</span>
-                            <span className="text-emerald-400 font-mono font-bold">Base: R$ {rev.toLocaleString('pt-BR')}</span>
+                            <span className="text-blue-400 font-mono font-bold">Base: R$ {rev.toLocaleString('pt-BR')}</span>
                           </div>
                         </div>
                       )}
@@ -1093,7 +1093,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         <span className="flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5 text-purple-400" /> 2. Quem Recebe Quanto
                         </span>
-                        <span className="text-[9px] text-indigo-400 font-bold font-mono">
+                        <span className="text-[9px] text-blue-400 font-bold font-mono">
                           {scenario.ruleType === 'tiered' ? activeTierLabel : `${peopleCount} ${peopleCount > 1 ? 'pessoas' : 'pessoa'}`}
                         </span>
                       </span>
@@ -1109,7 +1109,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                                   <span className="text-[9px] text-slate-400 font-mono">{b.detail}</span>
                                 )}
                               </div>
-                              <span className="text-xs font-black font-mono text-emerald-400">
+                              <span className="text-xs font-black font-mono text-blue-400">
                                 R$ {b.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -1120,7 +1120,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                               <span className="text-xs font-bold text-slate-200">Valor pago a CADA colaborador</span>
                               <span className="text-[9px] text-slate-400">({peopleCount} pessoas recebem esse valor)</span>
                             </div>
-                            <span className="text-sm font-black font-mono text-emerald-400">
+                            <span className="text-sm font-black font-mono text-blue-400">
                               R$ {amountPerPerson.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
@@ -1145,12 +1145,12 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">
                           Lucro Líquido dos Sócios
                         </span>
-                        <span className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                           R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                       <span className={`text-xs font-black font-mono px-3 py-1.5 rounded-xl border ${
-                        netMarginPct >= 20 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' :
+                        netMarginPct >= 20 ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' :
                         netMarginPct >= 10 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-red-500/15 text-red-400 border-red-500/30'
                       }`}>
                         {netMarginPct.toFixed(1)}% margem
@@ -1174,13 +1174,13 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                             Quanto deseja ter de Lucro Líquido no mês?
                           </label>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-black font-mono text-emerald-400">R$</span>
-                            <input 
+                            <span className="text-xs font-black font-mono text-blue-400">R$</span>
+                            <input
                               type="number"
                               step="2000"
                               value={targetDesiredProfit}
                               onChange={(e) => setTargetDesiredProfit(Math.max(0, parseFloat(e.target.value) || 0))}
-                              className="w-full bg-transparent text-sm font-black font-mono text-emerald-400 outline-none"
+                              className="w-full bg-transparent text-sm font-black font-mono text-blue-400 outline-none"
                               placeholder="Ex: 35000"
                             />
                           </div>
@@ -1191,17 +1191,17 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           const netContributionMarginPct = Math.max(10, 100 - (taxesAndFeesPct + directMaterialsPct + commPct));
                           const netContributionMarginRate = netContributionMarginPct / 100;
                           const requiredTotalGrossRevenue = (fixedExpenses + targetDesiredProfit) / netContributionMarginRate;
-                          
+
                           return (
                             <div className="flex flex-col gap-2">
                               <div className="bg-surface/90 p-2.5 rounded-xl border border-blue-500/20 flex flex-col gap-1">
                                 <div className="flex justify-between items-baseline">
                                   <span className="text-[9px] font-bold text-slate-400 uppercase">Faturamento Alvo Necessário</span>
-                                  <span className="text-sm font-black font-mono text-emerald-400">
+                                  <span className="text-sm font-black font-mono text-blue-400">
                                     R$ {requiredTotalGrossRevenue.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} / mês
                                   </span>
                                 </div>
-                                
+
                                 <div className="text-[9px] text-slate-400 flex flex-col gap-0.5 border-t border-border/50 pt-1.5 font-mono">
                                   <div className="flex justify-between">
                                     <span>• Custos Fixos:</span>
@@ -1209,7 +1209,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                                   </div>
                                   <div className="flex justify-between">
                                     <span>• Lucro Desejado:</span>
-                                    <strong className="text-emerald-400">R$ {targetDesiredProfit.toLocaleString('pt-BR')}</strong>
+                                    <strong className="text-blue-400">R$ {targetDesiredProfit.toLocaleString('pt-BR')}</strong>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>• Custos Variáveis (Impostos + Insumos + Com.):</span>
@@ -1217,7 +1217,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                                   </div>
                                   <div className="flex justify-between border-t border-border/40 pt-0.5 text-slate-300 font-bold">
                                     <span>• Margem de Contribuição Líquida:</span>
-                                    <strong className="text-indigo-300">{netContributionMarginPct.toFixed(1)}%</strong>
+                                    <strong className="text-blue-300">{netContributionMarginPct.toFixed(1)}%</strong>
                                   </div>
                                 </div>
                               </div>
@@ -1230,10 +1230,10 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         })()}
                       </div>
                     ) : costDiff > 0 ? (
-                      <div className="bg-indigo-500/10 p-3.5 rounded-2xl border border-indigo-500/30 flex flex-col gap-2.5">
+                      <div className="bg-blue-500/10 p-3.5 rounded-2xl border border-blue-500/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-indigo-300">
-                            <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                          <div className="flex items-center gap-1.5 text-blue-300">
+                            <Zap className="w-4 h-4 text-blue-400 flex-shrink-0" />
                             <span className="text-xs font-black uppercase tracking-wider">Meta para se Pagar</span>
                           </div>
                           <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -1241,16 +1241,16 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           </span>
                         </div>
 
-                        <div className="bg-surface/90 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col gap-1">
+                        <div className="bg-surface/90 p-2.5 rounded-xl border border-blue-500/30 flex flex-col gap-1">
                           <div className="flex justify-between items-baseline">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Faturamento Necessário</span>
-                            <span className="text-sm font-black font-mono text-emerald-400">
+                            <span className="text-sm font-black font-mono text-blue-400">
                               R$ {(rev + requiredExtraSales).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                             </span>
                           </div>
                           <div className="flex justify-between items-center text-[10px] text-slate-400 border-t border-border/40 pt-1 mt-0.5">
                             <span>Aumento de vendas necessário:</span>
-                            <strong className="text-indigo-300 font-mono">
+                            <strong className="text-blue-300 font-mono">
                               +R$ {requiredExtraSales.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} (+{requiredGrowthPct.toFixed(1)}%)
                             </strong>
                           </div>
@@ -1261,25 +1261,25 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </p>
                       </div>
                     ) : (
-                      <div className="bg-emerald-500/10 p-3.5 rounded-2xl border border-emerald-500/30 flex flex-col gap-2.5">
+                      <div className="bg-blue-500/10 p-3.5 rounded-2xl border border-blue-500/30 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-emerald-400">
+                          <div className="flex items-center gap-1.5 text-blue-400">
                             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                             <span className="text-xs font-black uppercase tracking-wider">Economia Imediata</span>
                           </div>
-                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30">
                             -R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                           </span>
                         </div>
 
-                        <div className="bg-surface/90 p-2.5 rounded-xl border border-emerald-500/30 flex justify-between items-center text-xs">
+                        <div className="bg-surface/90 p-2.5 rounded-xl border border-blue-500/30 flex justify-between items-center text-xs">
                           <span className="text-slate-300 font-medium">Economia no mês:</span>
-                          <strong className="text-emerald-400 font-mono text-sm">
+                          <strong className="text-blue-400 font-mono text-sm">
                             +R$ {Math.abs(costDiff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} a mais no lucro
                           </strong>
                         </div>
 
-                        <p className="text-[10px] text-emerald-300 leading-tight">
+                        <p className="text-[10px] text-blue-300 leading-tight">
                           ✅ Esse modelo é mais econômico que o atual no faturamento de R$ {rev.toLocaleString('pt-BR')}.
                         </p>
                       </div>
@@ -1295,7 +1295,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
           <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
             <div>
               <h3 className="text-base font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-indigo-400" /> Custo Total de Comissões por Nível de Faturamento
+                <TrendingUp className="w-4 h-4 text-blue-400" /> Custo Total de Comissões por Nível de Faturamento
               </h3>
               <p className="text-[11px] text-slate-400">
                 Curva de comparação entre o Modelo Atual, Proposta 1, Proposta 2 e Proposta 3 (2 Dentistas).
@@ -1308,21 +1308,21 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="revenueLabel" stroke="#94a3b8" fontSize={11} tickMargin={10} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `R$ ${(v / 1000).toFixed(1)}k`} />
-                  <RechartsTooltip 
+                  <RechartsTooltip
                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                     formatter={(val: number, name: string) => {
                       const sc = scenarios.find(s => `comm_${s.id}` === name);
                       return [`R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, sc?.name || name];
                     }}
                   />
-                  <Legend 
+                  <Legend
                     formatter={(val) => {
                       const sc = scenarios.find(s => `comm_${s.id}` === val);
                       return <span className="text-xs font-bold text-slate-300">{sc?.name || val}</span>;
-                    }} 
+                    }}
                   />
                   {scenarios.map(sc => (
-                    <Line 
+                    <Line
                       key={sc.id}
                       type="monotone"
                       dataKey={`comm_${sc.id}`}
@@ -1348,7 +1348,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             <div className="p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-base font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-400" /> Tabela Comparativa de Comissões e Lucro Líquido
+                  <Layers className="w-4 h-4 text-blue-400" /> Tabela Comparativa de Comissões e Lucro Líquido
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Comparativo de custo total da clínica e lucro líquido dos sócios em vários patamares de faturamento.
@@ -1393,14 +1393,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </td>
                         <td className="p-4 text-slate-400 text-[11px]">
                           {sc.ruleType === 'dentists_2_comm_reception' ? (
-                            <span className="text-cyan-400 font-bold">Dent.1 c/ Orto | Dent.2 s/ Orto</span>
+                            <span className="text-purple-400 font-bold">Dent.1 c/ Orto | Dent.2 s/ Orto</span>
                           ) : sc.excludeOrtho ? (
                             <span className="text-amber-400 font-bold">Sem Orto</span>
                           ) : (
-                            <span className="text-emerald-400 font-bold">Total</span>
+                            <span className="text-blue-400 font-bold">Total</span>
                           )}
                         </td>
-                        
+
                         {testValues.map(v => {
                           const { totalClinicAmount } = calculateCommission(sc, v, orthoP);
                           const taxes = v * (taxesAndFeesPct / 100);
@@ -1411,7 +1411,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                           return (
                             <td key={v} className="p-4 text-right font-mono">
                               <div className="font-bold text-text">R$ {totalClinicAmount.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</div>
-                              <div className={`text-[10px] mt-0.5 ${netMargin >= 18 ? 'text-emerald-400' : netMargin >= 10 ? 'text-amber-400' : 'text-red-400'}`}>
+                              <div className={`text-[10px] mt-0.5 ${netMargin >= 18 ? 'text-blue-400' : netMargin >= 10 ? 'text-amber-400' : 'text-red-400'}`}>
                                 Lucro: {netMargin.toFixed(0)}% (R$ {(netProfit / 1000).toFixed(1)}k)
                               </div>
                             </td>
@@ -1451,7 +1451,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     <th className="p-4 pl-6">Mês</th>
                     <th className="p-4 text-right">Faturamento Total</th>
                     <th className="p-4 text-right text-amber-400">Ortodontia (Isento)</th>
-                    <th className="p-4 text-right text-indigo-300">Base Comercial</th>
+                    <th className="p-4 text-right text-blue-300">Base Comercial</th>
                     {scenarios.map(sc => (
                       <th key={sc.id} className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -1470,7 +1470,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     return (
                       <tr key={row.month} className="hover:bg-panel/40 transition-colors">
                         <td className="p-4 pl-6 font-bold text-text">{row.label}</td>
-                        <td className="p-4 text-right font-mono font-black text-emerald-400">
+                        <td className="p-4 text-right font-mono font-black text-blue-400">
                           R$ {row.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="p-4 text-right font-mono text-amber-300">
@@ -1489,7 +1489,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                                 R$ {comm.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </div>
                               {!sc.isCurrent && (
-                                <div className={`text-[10px] ${diff <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                <div className={`text-[10px] ${diff <= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
                                   {diff <= 0 ? '-' : '+'}R$ {Math.abs(diff).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                                 </div>
                               )}
@@ -1502,7 +1502,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                               handleApplyHistoricalMonthToAll(row);
                               setActiveTab('simulator');
                             }}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[10px] font-bold uppercase transition-all"
+                            className="px-2.5 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-[10px] font-bold uppercase transition-all"
                           >
                             Simular
                           </button>
@@ -1539,7 +1539,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                 </button>
                 <button
                   onClick={handleOpenNewScenario}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all"
                 >
                   <Plus className="w-4 h-4" /> Novo Cenário
                 </button>
@@ -1548,8 +1548,8 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {scenarios.map(sc => (
-                <div 
-                  key={sc.id} 
+                <div
+                  key={sc.id}
                   className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 bg-panel/40 ${
                     sc.isCurrent ? 'border-blue-500/40' : 'border-border'
                   }`}
@@ -1566,14 +1566,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         </span>
                       ) : (
                         <div className="flex gap-1">
-                          <button 
-                            onClick={() => handleEditScenario(sc)} 
+                          <button
+                            onClick={() => handleEditScenario(sc)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-surface transition-colors"
                           >
                             <Sliders className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteScenario(sc.id)} 
+                          <button
+                            onClick={() => handleDeleteScenario(sc.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-surface transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1589,17 +1589,17 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                         👥 {sc.targetGroup} ({sc.beneficiariesCount || 1} { (sc.beneficiariesCount || 1) > 1 ? 'pessoas' : 'pessoa' })
                       </span>
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
-                        sc.ruleType === 'dentists_2_comm_reception' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
-                        sc.excludeOrtho ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        sc.ruleType === 'dentists_2_comm_reception' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                        sc.excludeOrtho ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                       }`}>
                         {sc.ruleType === 'dentists_2_comm_reception' ? '🦷 2 Dentistas (1 c/ Orto + 1 s/ Orto)' : sc.excludeOrtho ? '🚫 Isenta Ortodontia' : '🌐 Faturamento Total'}
                       </span>
                       {sc.tiers && sc.tiers.length > 0 ? (
-                        <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-indigo-400 border border-border">
+                        <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-blue-400 border border-border">
                           📊 {sc.tiers.length} Faixas Escalonadas
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-indigo-400 border border-border">
+                        <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-bold text-blue-400 border border-border">
                           📈 {sc.percentage}%
                         </span>
                       )}
@@ -1626,29 +1626,29 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             <div className="p-6 flex flex-col gap-4 overflow-y-auto max-h-[75vh] custom-scrollbar">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Nome do Cenário</label>
-                <input 
-                  type="text" 
-                  value={formScenario.name} 
+                <input
+                  type="text"
+                  value={formScenario.name}
                   onChange={(e) => setFormScenario({ ...formScenario, name: e.target.value })}
                   placeholder="Ex: Time Todo 1% cada (4 pessoas)"
-                  className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-sm text-text outline-none focus:border-indigo-500 font-bold"
+                  className="w-full bg-panel border border-border rounded-xl px-4 py-2.5 text-sm text-text outline-none focus:border-blue-500 font-bold"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Descrição Explicativa</label>
-                <textarea 
-                  value={formScenario.description} 
+                <textarea
+                  value={formScenario.description}
                   onChange={(e) => setFormScenario({ ...formScenario, description: e.target.value })}
                   placeholder="Explique como essa regra funciona..."
-                  className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-xs text-text outline-none focus:border-indigo-500 h-16 resize-none"
+                  className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-xs text-text outline-none focus:border-blue-500 h-16 resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Público / Grupo</label>
-                  <select 
+                  <select
                     value={formScenario.targetGroup}
                     onChange={(e: any) => setFormScenario({ ...formScenario, targetGroup: e.target.value })}
                     className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text outline-none"
@@ -1663,14 +1663,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Quantas Pessoas Receberão?</label>
-                  <input 
-                    type="number" 
-                    min={1} 
+                  <input
+                    type="number"
+                    min={1}
                     max={30}
                     value={formScenario.beneficiariesCount || 1}
                     onChange={(e) => setFormScenario({ ...formScenario, beneficiariesCount: Math.max(1, parseInt(e.target.value) || 1) })}
                     placeholder="Ex: 4"
-                    className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold font-mono outline-none focus:border-indigo-500"
+                    className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold font-mono outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -1678,7 +1678,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo de Regra</label>
-                  <select 
+                  <select
                     value={formScenario.ruleType}
                     onChange={(e: any) => setFormScenario({ ...formScenario, ruleType: e.target.value })}
                     className="w-full bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text outline-none"
@@ -1692,39 +1692,39 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Percentual Base (%)</label>
-                  <input 
-                    type="number" 
-                    step="0.1" 
+                  <input
+                    type="number"
+                    step="0.1"
                     value={formScenario.percentage}
                     onChange={(e) => setFormScenario({ ...formScenario, percentage: parseFloat(e.target.value) || 0 })}
                     placeholder="Ex: 1.0"
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               {formScenario.ruleType === 'dentists_2_comm_reception' && (
-                <div className="grid grid-cols-2 gap-4 p-3 bg-panel/70 rounded-xl border border-cyan-500/30">
+                <div className="grid grid-cols-2 gap-4 p-3 bg-panel/70 rounded-xl border border-purple-500/30">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-cyan-400 uppercase">Procedimentos D1 (R$)</label>
-                    <input 
-                      type="number" 
-                      step="1000" 
+                    <label className="text-[10px] font-bold text-purple-400 uppercase">Procedimentos D1 (R$)</label>
+                    <input
+                      type="number"
+                      step="1000"
                       value={formScenario.d1ClinicalRevenue || 25000}
                       onChange={(e) => setFormScenario({ ...formScenario, d1ClinicalRevenue: parseFloat(e.target.value) || 0 })}
                       placeholder="Ex: 25000"
-                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-cyan-500"
+                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-purple-500"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-cyan-400 uppercase">Procedimentos D2 (R$)</label>
-                    <input 
-                      type="number" 
-                      step="1000" 
+                    <label className="text-[10px] font-bold text-purple-400 uppercase">Procedimentos D2 (R$)</label>
+                    <input
+                      type="number"
+                      step="1000"
                       value={formScenario.d2ClinicalRevenue || 35000}
                       onChange={(e) => setFormScenario({ ...formScenario, d2ClinicalRevenue: parseFloat(e.target.value) || 0 })}
                       placeholder="Ex: 35000"
-                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-cyan-500"
+                      className="w-full bg-panel border border-border rounded-xl px-3 py-2 text-xs text-text font-mono font-bold outline-none focus:border-purple-500"
                     />
                   </div>
                 </div>
@@ -1733,25 +1733,25 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               {formScenario.ruleType === 'trigger' && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase">Gatilho Mínimo (R$)</label>
-                  <input 
-                    type="number" 
-                    step="5000" 
+                  <input
+                    type="number"
+                    step="5000"
                     value={formScenario.triggerAmount}
                     onChange={(e) => setFormScenario({ ...formScenario, triggerAmount: parseFloat(e.target.value) || 0 })}
                     placeholder="Ex: 70000"
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-indigo-500"
+                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-sm text-text font-mono font-bold outline-none focus:border-blue-500"
                   />
                 </div>
               )}
 
               {/* OPÇÃO DE EXCLUIR ORTODONTIA */}
               <div className="flex items-center gap-2 p-3 bg-panel rounded-xl border border-border">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="modalExcludeOrtho"
                   checked={formScenario.excludeOrtho}
                   onChange={(e) => setFormScenario({ ...formScenario, excludeOrtho: e.target.checked })}
-                  className="rounded border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-slate-700 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="modalExcludeOrtho" className="text-xs text-slate-300 font-medium cursor-pointer">
                   <strong>Não contabilizar Ortodontia</strong> (pacientes/procedimentos de ortodontia isentos da base).
@@ -1761,7 +1761,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Cor do Cenário nos Gráficos</label>
                 <div className="flex gap-2">
-                  {['#3b82f6', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899', '#e11d48'].map(color => (
+                  {['#536fd1', '#536fd1', '#f59e0b', '#7460a8', '#7460a8', '#ec4899', '#e11d48'].map(color => (
                     <button
                       key={color}
                       type="button"
@@ -1775,15 +1775,15 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
             </div>
 
             <div className="p-6 border-t border-border flex justify-end gap-3 bg-surface">
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="px-5 py-2 text-xs font-bold text-slate-400 hover:text-white"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleSaveScenario}
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all active:scale-95"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all active:scale-95"
               >
                 Salvar Cenário
               </button>
