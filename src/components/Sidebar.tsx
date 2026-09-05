@@ -18,7 +18,6 @@ import {
   Check,
   PanelLeftClose,
   PanelLeft,
-  LayoutDashboard,
   DollarSign,
   Calendar,
   FlaskConical,
@@ -69,16 +68,6 @@ const MENU_STRUCTURE: MenuItem[] = [
     icon: KanbanSquare,
     group: 'main',
     subItems: []
-  },
-  {
-    id: Tab.DASHBOARD,
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    group: 'main',
-    subItems: [
-      { id: 'geral', label: 'Visão Geral' },
-      { id: 'commercial', label: 'Comercial' }
-    ]
   },
   {
     id: Tab.FINANCIAL,

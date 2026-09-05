@@ -9,7 +9,6 @@ import {
   Users, 
   ChevronRight,
   Sparkles,
-  LayoutDashboard,
   DollarSign,
   Calendar,
   FlaskConical,
@@ -42,11 +41,6 @@ const TAB_CONFIG: Record<Tab, { label: string; icon: React.ElementType; descript
     label: 'CRM Clinica Experts',
     icon: KanbanSquare,
     description: 'Funis sincronizados e exportacao para WhatsApp'
-  },
-  [Tab.DASHBOARD]: {
-    label: 'Dashboard Executivo', 
-    icon: LayoutDashboard, 
-    description: 'Métricas gerais e performance comercial' 
   },
   [Tab.FINANCIAL]: { 
     label: 'Gestão Financeira', 

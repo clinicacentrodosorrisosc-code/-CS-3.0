@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
 import { Financial } from './components/Financial';
 import { Orthodontics } from './components/Orthodontics';
 import { LabWork } from './components/LabWork';
@@ -44,8 +43,8 @@ const TabContainer = ({ children }: { children: React.ReactNode }) => {
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
-  const activeTabRef = useRef<Tab>(Tab.DASHBOARD);
+  const [activeTab, setActiveTab] = useState<Tab>(Tab.CRM);
+  const activeTabRef = useRef<Tab>(Tab.CRM);
   
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -138,11 +137,11 @@ const App: React.FC = () => {
       
       if (!profileData) {
         const defaultRole = currentUser.user_metadata?.role || 'user';
-        let defaultTabs: string[] = [Tab.DASHBOARD];
+        let defaultTabs: string[] = [Tab.CRM];
         if (defaultRole === 'admin') {
           defaultTabs = Object.values(Tab);
         } else if (defaultRole === 'reception') {
-          defaultTabs = [Tab.DASHBOARD, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
+          defaultTabs = [Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
         }
         
         const newProfile = {
@@ -189,6 +188,7 @@ const App: React.FC = () => {
         console.warn("Could not parse tabs");
       }
       if (!Array.isArray(tabs)) tabs = [];
+      tabs = tabs.filter(tab => tab !== 'Dashboard');
 
       // Ensure initial roles have required tabs
 
@@ -213,7 +213,7 @@ const App: React.FC = () => {
           }
       } else if (role === 'reception') {
           if (permissionsNeverSet) {
-              tabs = [Tab.DASHBOARD, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
+              tabs = [Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
           }
           const mandatoryReceptionSubs = ['lab_kanban'];
           
@@ -234,19 +234,13 @@ const App: React.FC = () => {
       } else {
 
           if (permissionsNeverSet) {
-              tabs = [Tab.DASHBOARD]; 
+              tabs = [Tab.CRM]; 
           }
       }
       
 
       // Admin permissions check completed
-
-
-
-
-      if (tabs.length === 0) {
-          tabs.push(Tab.DASHBOARD);
-      }
+      if (!tabs.includes(Tab.CRM)) tabs.unshift(Tab.CRM);
       
       setAllowedTabs(tabs);
       setAllowedSubTabs(subTabs);
@@ -488,12 +482,6 @@ const App: React.FC = () => {
 
         <div className="flex-1 min-h-0 relative overflow-hidden">
           <AnimatePresence mode="wait">
-            {activeTab === Tab.DASHBOARD && (
-              <TabContainer key="dashboard">
-                <Dashboard userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
-              </TabContainer>
-            )}
-
             {activeTab === Tab.CRM && (
               <TabContainer key="crm">
                 <ClinicaExpertsCRM />
