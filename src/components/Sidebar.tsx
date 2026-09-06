@@ -326,8 +326,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={`
                 group relative flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 w-full text-left
                 ${isActive
-                  ? 'bg-[#536FD1]/[0.08] text-[#4059B2] dark:bg-[#7C8FE0]/10 dark:text-[#AAB7F4] font-semibold'
-                  : 'text-[#696974] hover:text-[#202027] hover:bg-[#F4F4F6] dark:text-[#92929D] dark:hover:text-white dark:hover:bg-white/[0.04] font-medium'}
+                  ? 'bg-[#1F6F5B]/10 text-[#1F6F5B] dark:bg-[#63B596]/15 dark:text-[#63B596] border border-[#1F6F5B]/20 dark:border-[#63B596]/30 shadow-sm font-bold'
+                  : 'text-[#5E6D66] hover:text-[#17211D] hover:bg-[#F0F4F2] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] border border-transparent font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
             >
@@ -335,8 +335,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className={`
                   w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
                   ${isActive
-                    ? 'text-[#4059B2] dark:text-[#AAB7F4]'
-                    : 'text-[#777782] group-hover:text-[#202027] dark:text-[#92929D] dark:group-hover:text-white'}
+                    ? 'bg-[#1F6F5B]/15 text-[#1F6F5B] dark:bg-[#63B596]/20 dark:text-[#63B596] shadow-inner'
+                    : 'text-[#5E6D66] group-hover:text-[#17211D] dark:text-slate-400 dark:group-hover:text-slate-200 group-hover:bg-white/40 dark:group-hover:bg-white/[0.04]'}
                 `}>
                   <IconComponent className="w-4 h-4" />
                 </div>
@@ -350,14 +350,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {isExpanded && hasSubItems && (
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[#536FD1] dark:text-[#AAB7F4]' : ''}`}
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[#1F6F5B] dark:text-[#63B596]' : ''}`}
                 />
               )}
 
               {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-[#7460A8]"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-[#1F6F5B] dark:bg-[#63B596]"
                 />
               )}
             </button>
@@ -384,8 +384,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className={`
                       w-full text-left py-1.5 px-2.5 text-[11px] rounded-lg transition-all flex items-center justify-between
                       ${requestedSubTab === subItem.id
-                        ? 'text-[#4059B2] dark:text-[#AAB7F4] font-semibold bg-[#536FD1]/[0.07] dark:bg-[#7C8FE0]/10'
-                        : 'text-[#696974] hover:text-[#202027] hover:bg-[#F4F4F6] dark:text-[#92929D] dark:hover:text-white dark:hover:bg-white/[0.03]'}
+                        ? 'text-[#1F6F5B] dark:text-[#63B596] font-bold bg-[#1F6F5B]/10 dark:bg-[#63B596]/10'
+                        : 'text-[#5E6D66] hover:text-[#17211D] hover:bg-[#F0F4F2] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.03]'}
                     `}
                   >
                     <span>{subItem.label}</span>
@@ -417,7 +417,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <motion.aside
         initial={false}
         animate={{
-          width: isExpanded ? 224 : 60
+          width: isExpanded ? 260 : 72
         }}
         transition={{
           type: 'spring',
@@ -427,7 +427,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }}
         className={`
           flex flex-col shrink-0 lg:h-screen fixed lg:sticky top-0 z-40
-          bg-[#FCFCFD] dark:bg-[#141419] border-b lg:border-b-0 lg:border-r border-[#E6E6EB] dark:border-white/[0.07]
+          bg-white dark:bg-[#151E1A] border-b lg:border-b-0 lg:border-r border-[#DFE6E2] dark:border-white/[0.08]
           transition-colors duration-200
           ${isMobileMenuOpen ? 'h-[92vh] w-full rounded-b-3xl shadow-2xl z-50' : 'h-auto'}
         `}
@@ -435,8 +435,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Top Branding & Expand/Collapse Trigger */}
         <div className="h-[60px] px-3.5 flex items-center justify-between border-b border-[#DFE6E2] dark:border-white/[0.06] select-none">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#536FD1] p-[1px] shrink-0">
-              <div className="w-full h-full bg-white dark:bg-[#141419] rounded-[7px] flex items-center justify-center font-semibold text-[#4059B2] dark:text-[#AAB7F4] text-xs">
+            <div className="w-9 h-9 rounded-xl bg-[#1F6F5B] p-[1px] shadow-md shadow-[#1F6F5B]/20 shrink-0">
+              <div className="w-full h-full bg-white dark:bg-[#0B0F17] rounded-[11px] flex items-center justify-center font-black text-[#1F6F5B] dark:text-[#63B596] text-sm">
                 CS
               </div>
             </div>
@@ -451,7 +451,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="text-xs font-bold text-[#17211D] dark:text-slate-100 tracking-tight truncate leading-tight">
                   Centro do Sorriso
                 </span>
-                <span className="text-[9px] text-[#7460A8] dark:text-[#A99BD0] font-medium tracking-wide">
+                <span className="text-[10px] text-[#1F6F5B] dark:text-[#63B596] font-bold tracking-wide">
                   Nexus Odonto Pro
                 </span>
               </motion.div>
@@ -493,17 +493,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Profile & Footer Section */}
-        <div className="p-2 border-t border-[#E6E6EB] dark:border-white/[0.06] flex flex-col gap-1.5 bg-[#F8F8FA]/70 dark:bg-[#111115]/70">
+        <div className="p-2 border-t border-[#DFE6E2] dark:border-white/[0.06] flex flex-col gap-1.5 bg-[#F5F7F6]/60 dark:bg-[#0C120F]/60">
           <div
             onClick={() => setIsProfileCardOpen(true)}
             className={`
-              flex items-center gap-2.5 p-2 rounded-lg hover:bg-[#F1F1F4] dark:hover:bg-white/[0.05] transition-all cursor-pointer group
+              flex items-center gap-2.5 p-2 rounded-xl bg-white dark:bg-white/[0.03] hover:bg-[#F0EFFE] dark:hover:bg-white/[0.06] border border-[#DFE6E2] dark:border-white/[0.06] transition-all cursor-pointer group shadow-sm
               ${!isExpanded ? 'justify-center p-2' : 'justify-between'}
             `}
             title="Abrir Perfil"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#7460A8] flex items-center justify-center text-white font-semibold text-xs shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1F6F5B] to-[#63B596] flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                 {userRole.slice(0, 2).toUpperCase()}
               </div>
 
@@ -546,7 +546,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             transition={{ duration: 0.15 }}
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
-            className="fixed left-[64px] top-16 w-52 rounded-xl bg-white dark:bg-[#19191F] border border-[#E6E6EB] dark:border-white/10 shadow-xl p-3 z-50 hidden lg:flex flex-col gap-1"
+            className="fixed left-[76px] top-16 w-56 rounded-2xl bg-white dark:bg-[#151E1A] border border-[#DFE6E2] dark:border-white/10 shadow-2xl p-3 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
