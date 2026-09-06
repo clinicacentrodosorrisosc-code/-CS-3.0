@@ -17,7 +17,7 @@ import { motion } from 'motion/react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
 import { DateRangePicker } from './ui/date-range-picker';
-import { SelectMenu } from './ui/select-menu';
+import { MultiSelectMenu, SelectMenu } from './ui/select-menu';
 import { SpotlightCard } from './ui/spotlight-card';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
@@ -1460,70 +1460,17 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <SelectMenu value={txFilters.professional} onChange={value => setTxFilters({...txFilters, professional: value})} options={[{ value: 'all', label: 'Todos' }, ...professionals.map(p => ({ value: p.name, label: p.name }))]} searchPlaceholder="Buscar profissional..." />
                     </div>
 
-                    <div className="flex flex-col gap-0.5">
+                                        <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Forma Pagto</label>
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsPaymentMethodFilterOpen(!isPaymentMethodFilterOpen)}
-                                className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none flex items-center justify-between hover:bg-panel transition-colors h-7"
-                            >
-                                <span className="truncate max-w-[80px]">
-                                    {txFilters.paymentMethods.length === 0 ? 'Todas' : 
-                                     txFilters.paymentMethods.length === 1 ? txFilters.paymentMethods[0] : 
-                                     `${txFilters.paymentMethods.length} Selecionadas`}
-                                </span>
-                                <ChevronDown className={`w-2.5 h-2.5 text-slate-400 transition-transform ${isPaymentMethodFilterOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {isPaymentMethodFilterOpen && (
-                                <>
-                                    <div 
-                                        className="fixed inset-0 z-[60]" 
-                                        onClick={() => setIsPaymentMethodFilterOpen(false)}
-                                    />
-                                    <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-border rounded-xl shadow-2xl z-[70] py-2 animate-in fade-in zoom-in-95 duration-150">
-                                        <div className="px-2 pb-1 mb-1 border-b border-border flex justify-between items-center">
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase">Selecionar</span>
-                                            {txFilters.paymentMethods.length > 0 && (
-                                                <button 
-                                                    onClick={() => setTxFilters({...txFilters, paymentMethods: []})}
-                                                    className="text-[9px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
-                                                >
-                                                    Limpar
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="max-h-48 overflow-y-auto scrollbar-hide">
-                                            {paymentMethods.map(pm => {
-                                                const isSelected = txFilters.paymentMethods.includes(pm.name);
-                                                return (
-                                                    <button
-                                                        key={pm.id}
-                                                        onClick={() => {
-                                                            const newMethods = isSelected
-                                                                ? txFilters.paymentMethods.filter(m => m !== pm.name)
-                                                                : [...txFilters.paymentMethods, pm.name];
-                                                            setTxFilters({...txFilters, paymentMethods: newMethods});
-                                                        }}
-                                                        className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-panel transition-colors text-left"
-                                                    >
-                                                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-white/20'}`}>
-                                                            {isSelected && <Check className="w-2.5 h-2.5 text-text" />}
-                                                        </div>
-                                                        <span className={`text-[10px] font-medium transition-colors ${isSelected ? 'text-text' : 'text-slate-400'}`}>
-                                                            {pm.name}
-                                                        </span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                        <MultiSelectMenu
+                            values={txFilters.paymentMethods}
+                            onChange={paymentMethods => setTxFilters({...txFilters, paymentMethods})}
+                            options={paymentMethods.map(pm => ({ value: pm.name, label: pm.name }))}
+                            placeholder="Todas"
+                            searchPlaceholder="Buscar forma..."
+                        />
                     </div>
-
-                    <div className="flex flex-col gap-0.5">
+<div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Recebimento</label>
                         <SelectMenu value={txFilters.status} onChange={value => setTxFilters({...txFilters, status: value})} options={[{ value: 'all', label: 'Todos' }, { value: 'Paid', label: 'Recebido' }, { value: 'Pending', label: 'Pendente' }]} />
                     </div>
