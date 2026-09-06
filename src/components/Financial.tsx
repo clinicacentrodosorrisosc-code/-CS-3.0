@@ -17,6 +17,7 @@ import { motion } from 'motion/react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
 import { DateRangePicker } from './ui/date-range-picker';
+import { SelectMenu } from './ui/select-menu';
 import { SpotlightCard } from './ui/spotlight-card';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
@@ -1446,43 +1447,17 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Categoria</label>
-                        <div className="relative">
-                            <select value={txFilters.category} onChange={e => setTxFilters({...txFilters, category: e.target.value, procedure: 'all'})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todas</option>
-                                {incomeCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.category} onChange={value => setTxFilters({...txFilters, category: value, procedure: 'all'})} options={[{ value: 'all', label: 'Todas' }, ...incomeCategories.map(c => ({ value: c.name, label: c.name }))]} searchPlaceholder="Buscar categoria..." />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Procedimento</label>
-                        <div className="relative">
-                            <select value={txFilters.procedure} onChange={e => setTxFilters({...txFilters, procedure: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todos</option>
-                                {txFilters.category !== 'all' ? (
-                                    incomeCategories.find(c => c.name === txFilters.category)?.subcategories.map(s => (
-                                        <option key={s.id} value={s.name}>{s.name}</option>
-                                    ))
-                                ) : (
-                                    Array.from(new Set(incomeCategories.flatMap(c => c.subcategories.map(s => s.name)))).sort().map(name => (
-                                        <option key={name} value={name}>{name}</option>
-                                    ))
-                                )}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.procedure} onChange={value => setTxFilters({...txFilters, procedure: value})} options={[{ value: 'all', label: 'Todos' }, ...(txFilters.category !== 'all' ? (incomeCategories.find(c => c.name === txFilters.category)?.subcategories || []).map(s => ({ value: s.name, label: s.name })) : Array.from(new Set(incomeCategories.flatMap(c => c.subcategories.map(s => s.name)))).sort().map(name => ({ value: name, label: name })))]} searchPlaceholder="Buscar procedimento..." />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Profissional</label>
-                        <div className="relative">
-                            <select value={txFilters.professional} onChange={e => setTxFilters({...txFilters, professional: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todos</option>
-                                {professionals.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.professional} onChange={value => setTxFilters({...txFilters, professional: value})} options={[{ value: 'all', label: 'Todos' }, ...professionals.map(p => ({ value: p.name, label: p.name }))]} searchPlaceholder="Buscar profissional..." />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
@@ -1550,51 +1525,22 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Recebimento</label>
-                        <div className="relative">
-                            <select value={txFilters.status} onChange={e => setTxFilters({...txFilters, status: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todos</option>
-                                <option value="Paid">Recebido</option>
-                                <option value="Pending">Pendente</option>
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.status} onChange={value => setTxFilters({...txFilters, status: value})} options={[{ value: 'all', label: 'Todos' }, { value: 'Paid', label: 'Recebido' }, { value: 'Pending', label: 'Pendente' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Auditoria</label>
-                        <div className="relative">
-                            <select value={txFilters.auditStatus} onChange={e => setTxFilters({...txFilters, auditStatus: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todas</option>
-                                <option value="verified">Verificado</option>
-                                <option value="error">Divergência</option>
-                                <option value="pending">Pendente</option>
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.auditStatus} onChange={value => setTxFilters({...txFilters, auditStatus: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'verified', label: 'Verificado' }, { value: 'error', label: 'Divergência' }, { value: 'pending', label: 'Pendente' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Nota Fiscal</label>
-                        <div className="relative">
-                            <select value={txFilters.hasNF} onChange={e => setTxFilters({...txFilters, hasNF: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todas</option>
-                                <option value="true">Emitida</option>
-                                <option value="false">Não Emitida</option>
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.hasNF} onChange={value => setTxFilters({...txFilters, hasNF: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'true', label: 'Emitida' }, { value: 'false', label: 'Não Emitida' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Tipo</label>
-                        <div className="relative">
-                            <select value={txFilters.isPartial} onChange={e => setTxFilters({...txFilters, isPartial: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todos</option>
-                                <option value="false">Integral</option>
-                                <option value="true">Parcial</option>
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
+                        <SelectMenu value={txFilters.isPartial} onChange={value => setTxFilters({...txFilters, isPartial: value})} options={[{ value: 'all', label: 'Todos' }, { value: 'false', label: 'Integral' }, { value: 'true', label: 'Parcial' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
