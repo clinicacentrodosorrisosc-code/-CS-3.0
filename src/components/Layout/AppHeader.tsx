@@ -18,7 +18,7 @@ interface AppHeaderProps {
 }
 
 const TAB_LABELS: Record<Tab, string> = {
-  [Tab.CRM]: 'CRM Clinica Experts',
+  [Tab.DASHBOARD]: 'Dashboard',
   [Tab.FINANCIAL]: 'Financeiro',
   [Tab.ORTHODONTICS]: 'Ortodontia',
   [Tab.LABWORK]: 'Laboratorio e Protese',

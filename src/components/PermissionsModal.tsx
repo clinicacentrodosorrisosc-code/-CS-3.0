@@ -38,6 +38,9 @@ interface PermissionsModalProps {
 
 // Configuration of available sub-tabs structure
 const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?: string }[]> = {
+  [Tab.DASHBOARD]: [
+    { id: 'dash_financial', label: 'Visao financeira' },
+  ],
   [Tab.FINANCIAL]: [
     { id: 'financial_overview', label: 'Visão Geral' },
     { id: 'financial_transactions', label: 'Receitas' },
@@ -77,7 +80,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
     description: 'Acesso irrestrito a todas as abas e ferramentas.',
     role: 'admin',
     tabs: [
-      Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS,
+      Tab.DASHBOARD, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS,
       Tab.SUPPORT, Tab.PASSWORDS, Tab.RESPONSIBILITIES, Tab.BIBLIOTECA, Tab.TASKS
     ],
     subTabs: [
@@ -93,7 +96,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
     description: 'Agenda, pacientes, receitas, laboratório, reuniões e senhas.',
     role: 'reception',
     tabs: [
-      Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS,
+      Tab.DASHBOARD, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS,
       Tab.SUPPORT, Tab.PASSWORDS, Tab.TASKS
     ],
     subTabs: [
@@ -118,10 +121,10 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
   sales: {
     name: 'Comercial & Vendas',
     icon: '💼',
-    description: 'CRM, receitas, campanhas, atas e tarefas.',
+    description: 'Dashboard, receitas, campanhas, atas e tarefas.',
     role: 'user',
     tabs: [
-      Tab.CRM, Tab.FINANCIAL, Tab.MEETINGS, Tab.TASKS
+      Tab.DASHBOARD, Tab.FINANCIAL, Tab.MEETINGS, Tab.TASKS
     ],
     subTabs: [
       'dash_financial', 'financial_overview', 'financial_transactions',
@@ -131,15 +134,15 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
   basic: {
     name: 'Acesso Básico',
     icon: '🔒',
-    description: 'Apenas visualização do CRM.',
+    description: 'Apenas visualização do dashboard inicial.',
     role: 'user',
-    tabs: [Tab.CRM],
+    tabs: [Tab.DASHBOARD],
     subTabs: ['dash_financial']
   }
 };
 
 const ALL_AVAILABLE_TABS = [
-  Tab.CRM, 
+  Tab.DASHBOARD,
   Tab.FINANCIAL, 
   Tab.ORTHODONTICS, 
   Tab.LABWORK, 
@@ -181,7 +184,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [newFullName, setNewFullName] = useState('');
   const [newRole, setNewRole] = useState<'admin' | 'reception' | 'user'>('user');
-  const [newSelectedTabs, setNewSelectedTabs] = useState<string[]>([Tab.CRM]);
+  const [newSelectedTabs, setNewSelectedTabs] = useState<string[]>([Tab.DASHBOARD]);
   const [newSelectedSubTabs, setNewSelectedSubTabs] = useState<string[]>(['dash_financial']);
   const [creatingUser, setCreatingUser] = useState(false);
   const [activePreset, setActivePreset] = useState<string>('basic');
@@ -325,7 +328,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   };
 
   const toggleAllTabsForUser = async (userId: string, grantAll: boolean) => {
-    const newTabs = grantAll ? [...ALL_AVAILABLE_TABS] : [Tab.CRM];
+    const newTabs = grantAll ? [...ALL_AVAILABLE_TABS] : [Tab.DASHBOARD];
     
     setProfiles(prev => prev.map(p => p.id === userId ? { ...p, allowed_tabs: newTabs } : p));
 
@@ -484,7 +487,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       setNewPassword('');
       setNewFullName('');
       setNewRole('user');
-      setNewSelectedTabs([Tab.CRM]);
+      setNewSelectedTabs([Tab.DASHBOARD]);
       setNewSelectedSubTabs(['dash_financial']);
       setShowCreateForm(false);
       
@@ -814,10 +817,10 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   <span className="text-slate-600">•</span>
                   <button
                     type="button"
-                    onClick={() => setNewSelectedTabs([Tab.CRM])}
+                    onClick={() => setNewSelectedTabs([Tab.DASHBOARD])}
                     className="text-[10px] font-bold text-slate-400 hover:underline cursor-pointer"
                   >
-                    Apenas CRM
+                    Apenas Dashboard
                   </button>
                 </div>
               </div>

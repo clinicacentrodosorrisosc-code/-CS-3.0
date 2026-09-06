@@ -1,5 +1,6 @@
 
 export enum Tab {
+  DASHBOARD = 'Dashboard',
   FINANCIAL = 'Financeiro',
   ORTHODONTICS = 'Ortodontia',
   LABWORK = 'Laboratório',
