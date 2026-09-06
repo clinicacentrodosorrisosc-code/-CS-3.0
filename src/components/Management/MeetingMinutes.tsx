@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FilePlus, Trash2, FolderOpen, X, FileText,
+import { 
+  FilePlus, Trash2, FolderOpen, X, FileText, 
   Calendar, CheckCircle2, Circle, Search, Loader2
 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
@@ -139,7 +139,7 @@ export const MeetingMinutes: React.FC = () => {
     const meeting = meetings.find(m => m.id === meetingId);
     if (!meeting) return;
 
-    const updatedItems = meeting.actionItems.map(i =>
+    const updatedItems = meeting.actionItems.map(i => 
       i.id === itemId ? { ...i, done: !i.done } : i
     );
 
@@ -152,7 +152,7 @@ export const MeetingMinutes: React.FC = () => {
     }
   };
 
-  const filteredMeetings = meetings.filter(m =>
+  const filteredMeetings = meetings.filter(m => 
     m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.participants.some(p => p.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -163,7 +163,7 @@ export const MeetingMinutes: React.FC = () => {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-panel/60 border border-border p-4 rounded-2xl backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
             <FileText className="w-5 h-5" />
           </div>
           <div>
@@ -180,13 +180,13 @@ export const MeetingMinutes: React.FC = () => {
               placeholder="Buscar por pauta ou participante..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-panel border border-border text-xs text-text placeholder:text-slate-500 outline-none focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-panel border border-border text-xs text-text placeholder:text-slate-500 outline-none focus:border-indigo-500"
             />
           </div>
 
           <button
             onClick={() => { setFormData(emptyForm); setIsModalOpen(true); }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/30 flex items-center gap-1.5 transition-all shrink-0"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all shrink-0"
           >
             <FilePlus className="w-4 h-4" />
             <span>Nova Ata</span>
@@ -197,7 +197,7 @@ export const MeetingMinutes: React.FC = () => {
       {/* Loading Indicator or Grid of Meetings */}
       {loading ? (
         <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-2">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+          <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
           <p className="text-xs">Carregando atas de reuniões...</p>
         </div>
       ) : (
@@ -217,12 +217,12 @@ export const MeetingMinutes: React.FC = () => {
               <div
                 key={meeting.id}
                 onClick={() => setViewingMeeting(meeting)}
-                className="bg-panel border border-border hover:border-blue-500/40 p-5 rounded-2xl space-y-4 cursor-pointer transition-all hover:-translate-y-1 shadow-sm flex flex-col justify-between"
+                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 cursor-pointer transition-all hover:-translate-y-1 shadow-sm flex flex-col justify-between"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
                     <span className="flex items-center gap-1 font-mono">
-                      <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                      <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                       {meeting.date.split('-').reverse().join('/')}
                     </span>
                     <button
@@ -248,8 +248,8 @@ export const MeetingMinutes: React.FC = () => {
                     <span className="font-bold text-text">{completedActions}/{totalActions} concluídas</span>
                   </div>
                   <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all"
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -267,7 +267,7 @@ export const MeetingMinutes: React.FC = () => {
           <div className="bg-surface border border-border rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono text-blue-400 uppercase font-bold">
+                <span className="text-[10px] font-mono text-indigo-400 uppercase font-bold">
                   {viewingMeeting.date.split('-').reverse().join('/')}
                 </span>
                 <h3 className="text-lg font-black text-text">{viewingMeeting.title}</h3>
@@ -302,13 +302,13 @@ export const MeetingMinutes: React.FC = () => {
                 <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tarefas & Plano de Ação:</h5>
                 <div className="space-y-2">
                   {viewingMeeting.actionItems.map((act) => (
-                    <div
+                    <div 
                       key={act.id}
                       onClick={() => toggleActionItem(viewingMeeting.id, act.id)}
-                      className="flex items-center justify-between p-3 rounded-xl bg-panel border border-border hover:border-blue-500/40 cursor-pointer transition-all"
+                      className="flex items-center justify-between p-3 rounded-xl bg-panel border border-border hover:border-indigo-500/40 cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-2.5 text-xs">
-                        {act.done ? <CheckCircle2 className="w-4 h-4 text-blue-400" /> : <Circle className="w-4 h-4 text-slate-500" />}
+                        {act.done ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Circle className="w-4 h-4 text-slate-500" />}
                         <span className={act.done ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}>
                           {act.task}
                         </span>
@@ -325,7 +325,7 @@ export const MeetingMinutes: React.FC = () => {
             <div className="p-4 border-t border-border flex justify-end bg-panel/40">
               <button
                 onClick={() => setViewingMeeting(null)}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
               >
                 Fechar Visualização
               </button>
@@ -354,7 +354,7 @@ export const MeetingMinutes: React.FC = () => {
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Ex: Alinhamento Semanal de Vendas"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -363,7 +363,7 @@ export const MeetingMinutes: React.FC = () => {
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -375,7 +375,7 @@ export const MeetingMinutes: React.FC = () => {
                   value={formData.participants}
                   onChange={(e) => setFormData(prev => ({ ...prev, participants: e.target.value }))}
                   placeholder="Dr. Roberto, Dra. Camila, Juliana (Recepção)..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -385,7 +385,7 @@ export const MeetingMinutes: React.FC = () => {
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                   placeholder="Descreva os temas debatidos, decisões estratégicas e conclusões..."
-                  className="w-full h-28 p-3 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500 resize-none"
+                  className="w-full h-28 p-3 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500 resize-none"
                 />
               </div>
 
@@ -410,7 +410,7 @@ export const MeetingMinutes: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleAddActionItem}
-                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                   >
                     + Adicionar
                   </button>
@@ -419,7 +419,7 @@ export const MeetingMinutes: React.FC = () => {
                 <div className="space-y-1.5 mt-2">
                   {formData.actionItems.map((act) => (
                     <div key={act.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-950 border border-white/5 text-xs">
-                      <span>• {act.task} (<strong className="text-blue-400">{act.owner}</strong>)</span>
+                      <span>• {act.task} (<strong className="text-indigo-400">{act.owner}</strong>)</span>
                       <button onClick={() => handleRemoveActionItem(act.id)} className="text-rose-400 p-1">
                         ✕
                       </button>
@@ -438,7 +438,7 @@ export const MeetingMinutes: React.FC = () => {
               </button>
               <button
                 onClick={handleSaveMeeting}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30"
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30"
               >
                 Salvar Ata
               </button>

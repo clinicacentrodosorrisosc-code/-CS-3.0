@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
-import {
-  KeyRound, Plus, Trash2, Edit2, Eye, EyeOff, Copy, Check,
+import { 
+  KeyRound, Plus, Trash2, Edit2, Eye, EyeOff, Copy, Check, 
   Search, X, ExternalLink, ShieldCheck, RefreshCw, Sparkles
 } from 'lucide-react';
 
@@ -242,7 +242,7 @@ export const PasswordVault: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto p-6 md:p-8 custom-scrollbar">
       <div className="max-w-6xl w-full mx-auto space-y-6">
-
+        
         {/* Top Controls & Stats */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/60 border border-border p-4 md:p-6 rounded-3xl backdrop-blur-sm">
           <div>
@@ -301,7 +301,7 @@ export const PasswordVault: React.FC = () => {
                 }}
                 className="px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all"
               >
-                {copiedId === 'gen_pwd' ? <Check className="w-4 h-4 text-blue-300" /> : <Copy className="w-4 h-4" />}
+                {copiedId === 'gen_pwd' ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
                 <span>Copiar</span>
               </button>
             </div>
@@ -439,7 +439,7 @@ export const PasswordVault: React.FC = () => {
                       href={pwd.url.startsWith('http') ? pwd.url : `https://${pwd.url}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 mb-3"
+                      className="inline-flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 mb-3"
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span className="truncate max-w-[200px]">{pwd.url}</span>
@@ -458,7 +458,7 @@ export const PasswordVault: React.FC = () => {
                             className="p-1 text-slate-500 hover:text-text rounded"
                             title="Copiar Usuário"
                           >
-                            {copiedId === pwd.id + '_user' ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedId === pwd.id + '_user' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
                       </div>
@@ -483,7 +483,7 @@ export const PasswordVault: React.FC = () => {
                             className="p-1 text-slate-500 hover:text-text"
                             title="Copiar Senha"
                           >
-                            {copiedId === pwd.id + '_pwd' ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedId === pwd.id + '_pwd' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
                       </div>

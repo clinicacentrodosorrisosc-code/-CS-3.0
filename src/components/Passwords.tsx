@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Lock, KeyRound, FileText, Building2, Target, ShieldCheck,
+import { 
+  Lock, KeyRound, FileText, Building2, Target, ShieldCheck, 
   Unlock
 } from 'lucide-react';
 import { NotionWorkspace } from './Vault/NotionWorkspace';
@@ -18,8 +18,8 @@ type VaultTab = 'docs' | 'passwords' | 'banking' | 'projects';
 
 const MASTER_PASSWORD = 'priscilamuitobrava';
 
-export const Passwords: React.FC<PasswordsProps> = ({
-  requestedSubTab
+export const Passwords: React.FC<PasswordsProps> = ({ 
+  requestedSubTab 
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
@@ -74,7 +74,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
     return (
       <div className="flex-1 flex flex-col items-center justify-center h-full bg-transparent font-sans p-4">
         <div className="glass-panel p-8 md:p-10 rounded-3xl border border-rose-500/20 max-w-md w-full flex flex-col items-center gap-6 shadow-2xl animate-in fade-in zoom-in duration-500 relative overflow-hidden">
-
+          
           <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="w-16 h-16 rounded-3xl bg-rose-500/20 flex items-center justify-center border border-rose-500/30 text-rose-400 shadow-inner">
@@ -90,11 +90,11 @@ export const Passwords: React.FC<PasswordsProps> = ({
               Ambiente confidencial protegido com criptografia contendo Documentos Notion, Senhas da Operação, Dados Bancários e Metas Estratégicas.
             </p>
           </div>
-
+          
           <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
             <div className="space-y-1">
-              <input
-                type="password"
+              <input 
+                type="password" 
                 value={passwordInput}
                 onChange={e => setPasswordInput(e.target.value)}
                 placeholder="Insira a senha mestra..."
@@ -104,8 +104,8 @@ export const Passwords: React.FC<PasswordsProps> = ({
               {error && <p className="text-rose-400 text-xs font-bold text-center mt-1">{error}</p>}
             </div>
 
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-900/40 transition-all active:scale-98 flex items-center justify-center gap-2"
             >
               <Unlock className="w-4 h-4" />
@@ -114,7 +114,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
           </form>
 
           <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider pt-2 border-t border-border/60 w-full justify-center">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>Sessão Protegida de Alta Segurança</span>
           </div>
 
@@ -125,10 +125,10 @@ export const Passwords: React.FC<PasswordsProps> = ({
 
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
-
+      
       {/* Top Bar Navigation */}
       <div className="px-6 py-4 border-b border-border bg-surface/50 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 z-20">
-
+        
         {/* Title & Badge */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
@@ -147,7 +147,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
 
         {/* Sub-Tabs Nav Pill & Lock Button */}
         <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
-
+          
           <div className="flex items-center p-1 bg-panel border border-border rounded-2xl">
             <button
               onClick={() => setSelectedSubTab('docs')}

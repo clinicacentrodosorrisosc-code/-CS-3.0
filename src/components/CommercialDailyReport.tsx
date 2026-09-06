@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
-import {
-    Calendar,
-    Save,
-    History,
-    AlertCircle,
+import { 
+    Calendar, 
+    Save, 
+    History, 
+    AlertCircle, 
     CheckCircle2,
     TrendingUp,
     Users,
@@ -30,12 +30,12 @@ import {
     Image
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
-import {
+import { 
     ResponsiveContainer,
     Cell,
     AreaChart, Area,
-    XAxis, YAxis, CartesianGrid,
-    Tooltip, Legend,
+    XAxis, YAxis, CartesianGrid, 
+    Tooltip, Legend, 
     LineChart, Line,
     PieChart, Pie,
     BarChart, Bar,
@@ -274,10 +274,10 @@ export const CommercialDailyReport: React.FC = () => {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                return {
-                    ...defaultState,
-                    ...parsed,
-                    objections: Array.isArray(parsed.objections) ? parsed.objections : []
+                return { 
+                    ...defaultState, 
+                    ...parsed, 
+                    objections: Array.isArray(parsed.objections) ? parsed.objections : [] 
                 };
             } catch (e) {
                 console.error("Error parsing draft:", e);
@@ -302,7 +302,7 @@ export const CommercialDailyReport: React.FC = () => {
                 .select('value')
                 .eq('key', 'daily_goals')
                 .maybeSingle();
-
+            
             if (data?.value) {
                 setDailyGoals(data.value as DailyGoals);
             }
@@ -317,7 +317,7 @@ export const CommercialDailyReport: React.FC = () => {
             const { error } = await supabase
                 .from('commercial_settings')
                 .upsert({ key: 'daily_goals', value: dailyGoals }, { onConflict: 'key' });
-
+            
             if (error) throw error;
             setMessage({ type: 'success', text: 'Metas atualizadas com sucesso!' });
             setShowSettings(false);
@@ -344,7 +344,7 @@ export const CommercialDailyReport: React.FC = () => {
 
             if (data) {
                 const { answers: parsedAnswers } = deserializePayload(data.main_challenges || '', data.opportunities || '');
-
+                
                 // Merge data from structured columns if available (priority to parsed JSON for completeness)
                 const mergedAnswers = {
                     ...parsedAnswers,
@@ -480,12 +480,12 @@ export const CommercialDailyReport: React.FC = () => {
         setAnswers(prev => {
             const m_sum = (prev.m_recurrent_leads_count || 0) + (prev.m_reactivation_leads_count || 0) + (prev.m_new_leads_count || 0);
             const t_sum = (prev.t_recurrent_leads_count || 0) + (prev.t_reactivation_leads_count || 0) + (prev.t_new_leads_count || 0);
-
+            
             const m_resp_sum = (prev.m_new_leads_responses_count || 0);
             const t_resp_sum = (prev.t_new_leads_responses_count || 0);
 
             if (
-                prev.m_contacts_count !== m_sum ||
+                prev.m_contacts_count !== m_sum || 
                 prev.t_contacts_count !== t_sum ||
                 prev.m_responses_count !== m_resp_sum ||
                 prev.t_responses_count !== t_resp_sum
@@ -520,7 +520,7 @@ export const CommercialDailyReport: React.FC = () => {
         return history.map(report => {
             let parsed: any = {};
             let cleanedChallenges = report.main_challenges || '';
-
+            
             if (report.raw_answers) {
                 parsed = report.raw_answers;
             } else {
@@ -687,7 +687,7 @@ export const CommercialDailyReport: React.FC = () => {
 
             setMessage({ type: 'success', text: 'Relatório diário comercial excluído com sucesso!' });
             notifyDataChange(['commercial_daily_reports', 'daily_evaluations']);
-
+            
             // Reset form
             setAnswers({
                 q1_arrival: '',
@@ -744,7 +744,7 @@ export const CommercialDailyReport: React.FC = () => {
     const handleExportImage = async () => {
         const node = document.getElementById('dashboard-export-area');
         if (!node) return;
-
+        
         setExportingImage(true);
         setTimeout(async () => {
             try {
@@ -827,18 +827,18 @@ export const CommercialDailyReport: React.FC = () => {
         let totalPostSales = 0;
         let totalReactivations = 0;
         let totalOrthoStarts = 0;
-
+        
         let mTotalContacts = 0;
         let mTotalResponses = 0;
         let mTotalAppointments = 0;
-
+        
         let tTotalContacts = 0;
         let tTotalResponses = 0;
         let tTotalAppointments = 0;
 
         const objectionsList: string[] = [];
         const objectionsMap: Record<string, number> = {};
-
+        
         const ratingsMap = { ruim: 0, regular: 0, bom: 0, otimo: 0 };
         const arrivalMap = { sim_pontual: 0, sim_atraso: 0, nao_pontual: 0, nao_atraso: 0 };
 
@@ -877,7 +877,7 @@ export const CommercialDailyReport: React.FC = () => {
             totalPostSales += ans.q8_post_sales_count || 0;
             totalReactivations += ans.q9_reactivations_count || 0;
             totalOrthoStarts += ans.ortho_starts || 0;
-
+            
             mTotalContacts += ans.m_contacts_count || 0;
             mTotalResponses += ans.m_responses_count || 0;
             mTotalAppointments += (ans.m_future_appointments_count || 0) + (ans.m_new_presential_appointments_count || 0);
@@ -949,7 +949,7 @@ export const CommercialDailyReport: React.FC = () => {
             totalPostSales,
             totalReactivations,
             totalOrthoStarts,
-
+            
             mTotalContacts,
             mTotalResponses,
             mTotalAppointments,
@@ -1001,9 +1001,9 @@ export const CommercialDailyReport: React.FC = () => {
 
     const funnelData = useMemo(() => {
         return [
-            { name: 'Novos Contatos', value: kpiMetrics.totalContacts, color: '#536fd1' },
+            { name: 'Novos Contatos', value: kpiMetrics.totalContacts, color: '#3b82f6' },
             { name: 'Novos Agendados', value: kpiMetrics.totalAppointments, color: '#a855f7' },
-            { name: 'Compareceram', value: kpiMetrics.totalAttended, color: '#536fd1' },
+            { name: 'Compareceram', value: kpiMetrics.totalAttended, color: '#10b981' },
             { name: 'Remarcados', value: kpiMetrics.totalRescheduled, color: '#f59e0b' },
             { name: 'Faltas No-Show', value: kpiMetrics.totalNoShow, color: '#94a3b8' },
             { name: 'Cancelados', value: kpiMetrics.totalCancelled, color: '#ef4444' }
@@ -1016,7 +1016,7 @@ export const CommercialDailyReport: React.FC = () => {
 
     const arrivalPieData = useMemo(() => {
         return [
-            { name: 'Organizado e Pontual', value: kpiMetrics.arrivalMap.sim_pontual, color: '#536fd1' },
+            { name: 'Organizado e Pontual', value: kpiMetrics.arrivalMap.sim_pontual, color: '#10b981' },
             { name: 'Organizado, c/ Atraso', value: kpiMetrics.arrivalMap.sim_atraso, color: '#f59e0b' },
             { name: 'Desordenado, Pontual', value: kpiMetrics.arrivalMap.nao_pontual, color: '#f97316' },
             { name: 'Desordenado e Atrasado', value: kpiMetrics.arrivalMap.nao_atraso, color: '#ef4444' }
@@ -1025,8 +1025,8 @@ export const CommercialDailyReport: React.FC = () => {
 
     const ratingPieData = useMemo(() => {
         return [
-            { name: 'Ótimo', value: kpiMetrics.ratingsMap.otimo, color: '#536fd1' },
-            { name: 'Bom', value: kpiMetrics.ratingsMap.bom, color: '#536fd1' },
+            { name: 'Ótimo', value: kpiMetrics.ratingsMap.otimo, color: '#10b981' },
+            { name: 'Bom', value: kpiMetrics.ratingsMap.bom, color: '#6366f1' },
             { name: 'Mais ou Menos', value: kpiMetrics.ratingsMap.regular, color: '#f59e0b' },
             { name: 'Ruim', value: kpiMetrics.ratingsMap.ruim, color: '#ef4444' }
         ].filter(item => item.value > 0);
@@ -1037,28 +1037,28 @@ export const CommercialDailyReport: React.FC = () => {
             {/* Header Area */}
             <div className="glass-panel p-6 rounded-3xl border border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                     <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 inline-block">
+                     <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 inline-block">
                          Relatório & KPIs
                      </span>
                      <h3 className="text-2xl font-black text-text flex items-center gap-2 tracking-tight">
-                         <TrendingUp className="text-blue-400 w-7 h-7" />
+                         <TrendingUp className="text-indigo-400 w-7 h-7" />
                          Relatório de Performance Comercial
                      </h3>
                      <p className="text-sm text-slate-400 mt-1">Acompanhamento das 10 diretrizes diárias comerciais e painel de análise comercial.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <button
+                    <button 
                          onClick={() => setShowSettings(!showSettings)}
-                         className={`p-3 rounded-2xl border transition-all ${showSettings ? 'bg-blue-500/20 border-blue-500/40 text-blue-400' : 'bg-panel border-border text-slate-400 hover:text-text hover:bg-panel/80'}`}
+                         className={`p-3 rounded-2xl border transition-all ${showSettings ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400' : 'bg-panel border-border text-slate-400 hover:text-text hover:bg-panel/80'}`}
                          title="Configurar Metas Diárias"
                     >
                          <Settings className={`w-5 h-5 ${showSettings ? 'animate-spin-slow' : ''}`} />
                     </button>
                     {activeTab === 'form' && (
                          <div className="flex items-center gap-2 bg-panel p-2 rounded-2xl border border-border">
-                             <Calendar className="text-blue-400 w-4 h-4 ml-1" />
-                             <input
-                                 type="date"
+                             <Calendar className="text-indigo-400 w-4 h-4 ml-1" />
+                             <input 
+                                 type="date" 
                                  value={reportDate}
                                  onChange={(e) => setReportDate(e.target.value)}
                                  className="bg-transparent border-none text-text text-xs outline-none cursor-pointer pr-3 font-semibold"
@@ -1070,33 +1070,33 @@ export const CommercialDailyReport: React.FC = () => {
 
             {/* Config Metas Panel */}
             {showSettings && (
-                <div className="glass-panel p-6 rounded-3xl border border-blue-500/20 bg-blue-500/5 animate-in slide-in-from-top-4 duration-300">
+                <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 bg-indigo-500/5 animate-in slide-in-from-top-4 duration-300">
                     <div className="flex items-center gap-2 mb-4">
-                        <Target className="text-blue-400 w-5 h-5" />
+                        <Target className="text-indigo-400 w-5 h-5" />
                         <h4 className="text-sm font-bold text-text uppercase tracking-wider">Definição de Referências Diárias</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs font-semibold text-slate-400">Meta Diária de Contatos / Prospecções</label>
-                            <input
-                                type="number"
+                            <input 
+                                type="number" 
                                 value={dailyGoals.leads}
                                 onChange={(e) => setDailyGoals({...dailyGoals, leads: Number(e.target.value)})}
-                                className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold"
+                                className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold"
                             />
                         </div>
                         <div className="flex flex-col gap-2">
                             <label className="text-xs font-semibold text-slate-400">Meta Diária de Vendas / Contratos (R$)</label>
-                            <input
-                                type="number"
+                            <input 
+                                type="number" 
                                 value={dailyGoals.contracts}
                                 onChange={(e) => setDailyGoals({...dailyGoals, contracts: Number(e.target.value)})}
-                                className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold"
+                                className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold"
                             />
                         </div>
                     </div>
                     <div className="flex justify-end mt-4">
-                        <button
+                        <button 
                             onClick={saveGoals}
                             className="px-5 py-2.5 glass-button glass-button-primary text-text rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
                         >
@@ -1109,7 +1109,7 @@ export const CommercialDailyReport: React.FC = () => {
             {/* Notification messages */}
             {message && (
                 <div className={`p-4 rounded-2xl border flex items-center gap-3 animate-in zoom-in duration-300 ${
-                    message.type === 'success' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
+                    message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
                 }`}>
                     {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                     <span className="text-sm font-semibold">{message.text}</span>
@@ -1118,14 +1118,14 @@ export const CommercialDailyReport: React.FC = () => {
 
             {/* Navigation Tabs (Report vs KPIs) */}
             <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-border w-full md:w-fit self-center">
-                <button
+                <button 
                     onClick={() => setActiveTab('form')}
                     className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
                 >
                     <FileText className="w-4 h-4" />
                     Preencher Relatório Diário
                 </button>
-                <button
+                <button 
                     onClick={() => {
                         setActiveTab('dashboard');
                         loadHistory();
@@ -1141,7 +1141,7 @@ export const CommercialDailyReport: React.FC = () => {
             {activeTab === 'form' ? (
                 /* SECTION 1: FORMULÁRIO COMAS 10 DIRETRIZES */
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
+                    
                     {/* Shift Selector */}
                     <div className="lg:col-span-12 flex gap-2 p-1 bg-panel rounded-xl border border-border shrink-0 w-fit mb-4">
                         {(['Manhã', 'Tarde'] as const).map(s => (
@@ -1155,16 +1155,16 @@ export const CommercialDailyReport: React.FC = () => {
                     <div className="lg:col-span-8 flex flex-col gap-6">
                         {loading ? (
                             <div className="glass-panel p-20 flex flex-col items-center justify-center text-slate-400">
-                                <Activity className="w-10 h-10 animate-spin text-blue-400 mb-4" />
+                                <Activity className="w-10 h-10 animate-spin text-indigo-400 mb-4" />
                                 <span className="text-sm font-semibold">Buscando dados do dia...</span>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-6">
-
+                                
                                 {/* CARD Q1: CHEGADA */}
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                                      <div className="flex items-center gap-2 border-b border-border pb-3">
-                                          <div className="bg-blue-500/10 p-2 rounded-xl text-blue-400">
+                                          <div className="bg-indigo-500/10 p-2 rounded-xl text-indigo-400">
                                               <Clock className="w-4 h-4" />
                                           </div>
                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">1. Como você chegou na empresa hoje?</h4>
@@ -1181,13 +1181,13 @@ export const CommercialDailyReport: React.FC = () => {
                                                   type="button"
                                                   onClick={() => setAnswers({...answers, q1_arrival: opt.value as any})}
                                                   className={`p-3.5 text-left rounded-xl text-xs font-bold border transition-all flex items-center justify-between ${
-                                                      answers.q1_arrival === opt.value
-                                                          ? 'bg-blue-600/20 border-blue-500 text-text shadow-md'
+                                                      answers.q1_arrival === opt.value 
+                                                          ? 'bg-indigo-600/20 border-indigo-500 text-text shadow-md' 
                                                           : 'bg-panel border-border text-slate-400 hover:text-text hover:border-border hover:bg-panel'
                                                   }`}
                                               >
                                                   <span>{opt.label}</span>
-                                                  <div className={`w-3.1 h-3 flex items-center justify-center rounded-full border ${answers.q1_arrival === opt.value ? 'border-blue-400 bg-blue-500' : 'border-slate-600'}`}>
+                                                  <div className={`w-3.1 h-3 flex items-center justify-center rounded-full border ${answers.q1_arrival === opt.value ? 'border-indigo-400 bg-indigo-500' : 'border-slate-600'}`}>
                                                       {answers.q1_arrival === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                                   </div>
                                               </button>
@@ -1220,12 +1220,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.m_new_leads_count || ''}
                                                         onChange={(e) => setAnswers({...answers, m_new_leads_count: Number(e.target.value)})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -1244,23 +1244,23 @@ export const CommercialDailyReport: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.m_recurrent_leads_count || ''}
                                                         onChange={(e) => setAnswers({...answers, m_recurrent_leads_count: Number(e.target.value)})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-xs font-bold text-slate-400 font-sans pl-1">↳ Total de Respostas (Leads + Recorrentes)</label>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.m_new_leads_responses_count || ''}
                                                         onChange={(e) => setAnswers({...answers, m_new_leads_responses_count: Number(e.target.value), m_recurrent_responses_count: 0})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-2.5 text-slate-200 focus:border-blue-500 outline-none text-xs font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-2.5 text-slate-200 focus:border-indigo-500 outline-none text-xs font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -1278,12 +1278,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     min="0"
                                                     value={answers.m_future_appointments_count || ''}
                                                     onChange={(e) => setAnswers({...answers, m_future_appointments_count: Number(e.target.value)})}
-                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
@@ -1300,56 +1300,56 @@ export const CommercialDailyReport: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     min="0"
                                                     value={answers.m_new_presential_appointments_count || ''}
                                                     onChange={(e) => setAnswers({...answers, m_new_presential_appointments_count: Number(e.target.value)})}
-                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
 
                                             {/* Question 1 (Calculated) */}
-                                            <div className="flex flex-col gap-1.5 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10">
+                                            <div className="flex flex-col gap-1.5 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <label className="text-xs font-bold text-blue-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
+                                                    <label className="text-xs font-bold text-indigo-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
-                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
                                                         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     readOnly
                                                     disabled
                                                     value={answers.m_contacts_count || 0}
-                                                    className="bg-panel border border-blue-500/15 rounded-xl px-4 py-3 text-blue-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-indigo-500/15 rounded-xl px-4 py-3 text-indigo-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
 
                                             {/* Question 2 (Calculated) */}
-                                            <div className="flex flex-col gap-1.5 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10">
+                                            <div className="flex flex-col gap-1.5 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <label className="text-xs font-bold text-blue-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
+                                                    <label className="text-xs font-bold text-indigo-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
-                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
                                                         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática das respostas (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     readOnly
                                                     disabled
                                                     value={answers.m_responses_count || 0}
-                                                    className="bg-panel border border-blue-500/15 rounded-xl px-4 py-3 text-blue-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-indigo-500/15 rounded-xl px-4 py-3 text-indigo-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
@@ -1359,7 +1359,7 @@ export const CommercialDailyReport: React.FC = () => {
                                     {/* PERÍODO DA TARDE */}
                                     <div className="glass-panel p-6 rounded-3xl border border-border space-y-5">
                                         <div className="flex items-center gap-2 border-b border-border pb-3">
-                                            <div className="bg-blue-500/10 p-2 rounded-xl text-blue-400">
+                                            <div className="bg-indigo-500/10 p-2 rounded-xl text-indigo-400">
                                                 <Sunset className="w-4 h-4" />
                                             </div>
                                             <h4 className="text-xs font-black uppercase tracking-widest text-slate-300 font-sans">Período da Tarde 🌇</h4>
@@ -1379,12 +1379,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.t_new_leads_count || ''}
                                                         onChange={(e) => setAnswers({...answers, t_new_leads_count: Number(e.target.value)})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -1403,23 +1403,23 @@ export const CommercialDailyReport: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.t_recurrent_leads_count || ''}
                                                         onChange={(e) => setAnswers({...answers, t_recurrent_leads_count: Number(e.target.value)})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-xs font-bold text-slate-400 font-sans pl-1">↳ Total de Respostas (Leads + Recorrentes)</label>
-                                                    <input
+                                                    <input 
                                                         type="number"
                                                         min="0"
                                                         value={answers.t_new_leads_responses_count || ''}
                                                         onChange={(e) => setAnswers({...answers, t_new_leads_responses_count: Number(e.target.value), t_recurrent_responses_count: 0})}
-                                                        className="bg-panel border border-border rounded-xl px-4 py-2.5 text-slate-200 focus:border-blue-500 outline-none text-xs font-bold w-full font-mono"
+                                                        className="bg-panel border border-border rounded-xl px-4 py-2.5 text-slate-200 focus:border-indigo-500 outline-none text-xs font-bold w-full font-mono"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -1437,12 +1437,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     min="0"
                                                     value={answers.t_future_appointments_count || ''}
                                                     onChange={(e) => setAnswers({...answers, t_future_appointments_count: Number(e.target.value)})}
-                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
@@ -1459,56 +1459,56 @@ export const CommercialDailyReport: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     min="0"
                                                     value={answers.t_new_presential_appointments_count || ''}
                                                     onChange={(e) => setAnswers({...answers, t_new_presential_appointments_count: Number(e.target.value)})}
-                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
 
                                             {/* Question 1 (Calculated) */}
-                                            <div className="flex flex-col gap-1.5 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10">
+                                            <div className="flex flex-col gap-1.5 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <label className="text-xs font-bold text-blue-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
+                                                    <label className="text-xs font-bold text-indigo-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
-                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
                                                         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     readOnly
                                                     disabled
                                                     value={answers.t_contacts_count || 0}
-                                                    className="bg-panel border border-blue-500/15 rounded-xl px-4 py-3 text-blue-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-indigo-500/15 rounded-xl px-4 py-3 text-indigo-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
 
                                             {/* Question 2 (Calculated) */}
-                                            <div className="flex flex-col gap-1.5 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10">
+                                            <div className="flex flex-col gap-1.5 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
                                                 <div className="flex items-center gap-1.5">
-                                                    <label className="text-xs font-bold text-blue-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
+                                                    <label className="text-xs font-bold text-indigo-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
-                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
                                                         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática das respostas (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     readOnly
                                                     disabled
                                                     value={answers.t_responses_count || 0}
-                                                    className="bg-panel border border-blue-500/15 rounded-xl px-4 py-3 text-blue-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-indigo-500/15 rounded-xl px-4 py-3 text-indigo-200 cursor-not-allowed outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                             </div>
@@ -1526,46 +1526,46 @@ export const CommercialDailyReport: React.FC = () => {
                                           </div>
                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">2. Resultados e Controle da Agenda de Hoje</h4>
                                      </div>
-
+                                     
                                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                           <div className="flex flex-col gap-1.5">
                                                <div className="flex items-center gap-1.5">
-                                                   <label className="text-xs font-bold text-blue-300 font-sans">Agendamentos na agenda para hoje</label>
+                                                   <label className="text-xs font-bold text-indigo-300 font-sans">Agendamentos na agenda para hoje</label>
                                                    <div className="group relative inline-block">
-                                                       <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-blue-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-indigo-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Total de pacientes que já tinham agenda agendada marcados para comparecer no dia de hoje.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
                                                    </div>
                                                </div>
-                                               <input
+                                               <input 
                                                    type="number"
                                                    min="0"
                                                    value={answers.q5_scheduled_for_today_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_scheduled_for_today_count: Number(e.target.value)})}
-                                                   className="bg-blue-950/10 border border-blue-500/20 hover:border-blue-500/40 rounded-xl px-4 py-3 text-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-indigo-950/10 border border-indigo-500/20 hover:border-indigo-500/40 rounded-xl px-4 py-3 text-indigo-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
                                                    placeholder="0"
                                                />
                                           </div>
 
                                           <div className="flex flex-col gap-1.5">
                                                <div className="flex items-center gap-1.5">
-                                                   <label className="text-xs font-bold text-blue-400 font-sans">Quantos compareceram?</label>
+                                                   <label className="text-xs font-bold text-emerald-400 font-sans">Quantos compareceram?</label>
                                                    <div className="group relative inline-block">
-                                                       <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-blue-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-emerald-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Quantos pacientes agendados compareceram no dia de hoje.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
                                                    </div>
                                                </div>
-                                               <input
+                                               <input 
                                                    type="number"
                                                    min="0"
                                                    value={answers.q5_attended_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_attended_count: Number(e.target.value)})}
-                                                   className="bg-blue-950/10 border border-blue-500/20 hover:border-blue-500/40 rounded-xl px-4 py-3 text-blue-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-emerald-950/10 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl px-4 py-3 text-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1581,7 +1581,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                        </div>
                                                    </div>
                                                </div>
-                                               <input
+                                               <input 
                                                    type="number"
                                                    min="0"
                                                    value={answers.q5_rescheduled_count || ''}
@@ -1602,7 +1602,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                        </div>
                                                    </div>
                                                </div>
-                                               <input
+                                               <input 
                                                    type="number"
                                                    min="0"
                                                    value={answers.q5_no_show_count || ''}
@@ -1623,7 +1623,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                        </div>
                                                    </div>
                                                </div>
-                                               <input
+                                               <input 
                                                    type="number"
                                                    min="0"
                                                    value={answers.q5_cancelled_count || ''}
@@ -1648,7 +1648,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                   </div>
                                               </div>
                                           </div>
-
+                                          
                                           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                                               {[
                                                   { value: 'Hoje', label: 'Hoje 📅' },
@@ -1703,12 +1703,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                <label className="text-xs font-bold text-slate-400 font-mono">Valor vendido hoje (R$)</label>
                                                <div className="relative">
                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">R$</span>
-                                                   <input
+                                                   <input 
                                                        type="number"
                                                        step="0.01"
                                                        value={answers.q7_value_sold || ''}
                                                        onChange={(e) => setAnswers({...answers, q7_value_sold: Number(e.target.value)})}
-                                                       className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold"
+                                                       className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold"
                                                        placeholder="0,00"
                                                    />
                                                </div>
@@ -1717,12 +1717,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                <label className="text-xs font-bold text-slate-400 font-mono">Valor recebido hoje (R$)</label>
                                                <div className="relative">
                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">R$</span>
-                                                   <input
+                                                   <input 
                                                        type="number"
                                                        step="0.01"
                                                        value={answers.q7_value_received || ''}
                                                        onChange={(e) => setAnswers({...answers, q7_value_received: Number(e.target.value)})}
-                                                       className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold"
+                                                       className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold"
                                                        placeholder="0,00"
                                                    />
                                                </div>
@@ -1742,12 +1742,12 @@ export const CommercialDailyReport: React.FC = () => {
                                       <div className="grid grid-cols-1 gap-4">
                                            <div className="flex flex-col gap-1.5">
                                                 <label className="text-xs font-bold text-slate-400 font-sans">Quantos pacientes de ortodontia iniciaram hoje?</label>
-                                                <input
+                                                <input 
                                                     type="number"
                                                     min="0"
                                                     value={answers.ortho_starts || ''}
                                                     onChange={(e) => setAnswers({...answers, ortho_starts: Number(e.target.value)})}
-                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none text-sm font-bold w-full font-mono"
+                                                    className="bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none text-sm font-bold w-full font-mono"
                                                     placeholder="0"
                                                 />
                                            </div>
@@ -1766,16 +1766,16 @@ export const CommercialDailyReport: React.FC = () => {
                                           {[
                                               { value: 'ruim', label: 'Ruim 🔴', color: 'hover:bg-red-500/5 active:bg-red-500/10' },
                                               { value: 'regular', label: 'Regular 🟡', color: 'hover:bg-amber-500/5 active:bg-amber-500/10' },
-                                              { value: 'bom', label: 'Bom 🟢', color: 'hover:bg-blue-500/5 active:bg-blue-500/10' },
-                                              { value: 'otimo', label: 'Ótimo 🌟', color: 'hover:bg-blue-500/5 active:bg-blue-500/10' }
+                                              { value: 'bom', label: 'Bom 🟢', color: 'hover:bg-indigo-500/5 active:bg-indigo-500/10' },
+                                              { value: 'otimo', label: 'Ótimo 🌟', color: 'hover:bg-emerald-500/5 active:bg-emerald-500/10' }
                                           ].map((opt) => (
                                               <button
                                                   key={opt.value}
                                                   type="button"
                                                   onClick={() => setAnswers({...answers, q10_day_rating: opt.value as any})}
                                                   className={`py-3 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                                                      answers.q10_day_rating === opt.value
-                                                          ? 'bg-blue-600/20 border-blue-500 text-text font-black scale-102 shadow-md'
+                                                      answers.q10_day_rating === opt.value 
+                                                          ? 'bg-indigo-600/20 border-indigo-500 text-text font-black scale-102 shadow-md' 
                                                           : 'bg-panel border-border text-slate-400 hover:text-text'
                                                   }`}
                                               >
@@ -1785,11 +1785,11 @@ export const CommercialDailyReport: React.FC = () => {
                                      </div>
                                      <div className="flex flex-col gap-1.5 mt-2">
                                           <label className="text-xs font-bold text-slate-400">Explique por que classificou assim:</label>
-                                          <textarea
+                                          <textarea 
                                               value={answers.q10_explanation}
                                               onChange={(e) => setAnswers({...answers, q10_explanation: e.target.value})}
                                               placeholder="Detalhe os motivos principais, o humor da equipe, se houve cancelamento em massa, etc..."
-                                              className="w-full bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-blue-500 outline-none min-h-[100px] resize-none text-xs leading-relaxed"
+                                              className="w-full bg-panel border border-border rounded-xl px-4 py-3 text-text focus:border-indigo-500 outline-none min-h-[100px] resize-none text-xs leading-relaxed"
                                           />
                                      </div>
                                 </div>
@@ -1835,7 +1835,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           onClick={() => {
                                               setAnswers({...answers, objections: [...answers.objections, { type: '', reason: '' }]});
                                           }}
-                                          className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-bold"
+                                          className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-bold"
                                       >
                                           <Plus className="w-4 h-4" /> Adicionar Objeção
                                       </button>
@@ -1843,10 +1843,10 @@ export const CommercialDailyReport: React.FC = () => {
 
                                                                  {/* Save / Delete actions */}
                                  <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                                     <button
+                                     <button 
                                           onClick={handleSave}
                                           disabled={saving || loading}
-                                          className="flex-1 py-4.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-text rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-blue-600/15 disabled:opacity-50 hover:shadow-blue-600/25 text-sm"
+                                          className="flex-1 py-4.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-text rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-indigo-600/15 disabled:opacity-50 hover:shadow-indigo-600/25 text-sm"
                                      >
                                           {saving ? 'Gravando dados...' : (
                                                <>
@@ -1855,11 +1855,11 @@ export const CommercialDailyReport: React.FC = () => {
                                                </>
                                           )}
                                      </button>
-                                     <button
+                                     <button 
                                           type="button"
                                           onClick={handleShareWhatsApp}
                                           disabled={saving || loading}
-                                          className="flex-1 py-4.5 bg-blue-600/20 hover:bg-blue-600/30 active:scale-[0.98] text-blue-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-blue-500/30 transition-all text-sm shadow-lg shadow-blue-600/10"
+                                          className="flex-1 py-4.5 bg-green-600/20 hover:bg-green-600/30 active:scale-[0.98] text-green-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-green-500/30 transition-all text-sm shadow-lg shadow-green-600/10"
                                      >
                                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
@@ -1869,7 +1869,7 @@ export const CommercialDailyReport: React.FC = () => {
 
 
                                      {history.some(r => r.report_date && r.report_date.substring(0, 10) === reportDate.substring(0, 10)) && (
-                                         <button
+                                         <button 
                                               type="button"
                                               onClick={() => setShowDeleteConfirm(true)}
                                               disabled={saving || loading}
@@ -1889,7 +1889,7 @@ export const CommercialDailyReport: React.FC = () => {
                     <div className="lg:col-span-4 space-y-6">
                         {/* Guideline card */}
                         <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
-                             <div className="flex items-center gap-2 text-blue-400">
+                             <div className="flex items-center gap-2 text-indigo-400">
                                  <Award className="w-5 h-5" />
                                  <h4 className="text-sm font-black uppercase tracking-wider">Comprometimento Diário</h4>
                              </div>
@@ -1923,25 +1923,25 @@ export const CommercialDailyReport: React.FC = () => {
                                               'otimo': '🌟 Ótimo'
                                           };
                                           return (
-                                              <div
+                                              <div 
                                                    key={log.id}
-                                                   className="p-3 bg-panel border border-border rounded-xl hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer flex flex-col gap-2 group relative"
+                                                   className="p-3 bg-panel border border-border rounded-xl hover:border-indigo-500/40 hover:bg-white/[0.02] transition-all cursor-pointer flex flex-col gap-2 group relative"
                                               >
                                                    <div className="flex justify-between items-center text-[10px]" onClick={() => setReportDate(log.report_date)}>
-                                                       <span className="font-bold text-slate-300 group-hover:text-blue-400 transition-colors">
+                                                       <span className="font-bold text-slate-300 group-hover:text-indigo-400 transition-colors">
                                                            {parseSafeDate(log.report_date).toLocaleDateString('pt-BR')}
                                                        </span>
-                                                       <span className="font-bold text-[9px] text-blue-400">
+                                                       <span className="font-bold text-[9px] text-indigo-400">
                                                            {ratingMap[log.answers.q10_day_rating] || 'Sem nota'}
                                                        </span>
                                                    </div>
                                                    <div className="grid grid-cols-2 gap-1 text-[10px]" onClick={() => setReportDate(log.report_date)}>
                                                        <div className="text-slate-500">Contatados: <span className="font-bold text-text">{log.answers.q2_contacts_count}</span></div>
-                                                       <div className="text-purple-500">Agendados: <span className="font-bold text-text">{log.answers.q5_appointments_count}</span></div>
-                                                       <div className="text-slate-500 text-right col-span-2">Venda: <span className="font-bold text-blue-400">{formatCurrency(log.answers.q7_value_sold)}</span></div>
-                                                       <div className="text-slate-500 text-right col-span-2">Recebido: <span className="font-bold text-blue-400">{formatCurrency(log.answers.q7_value_received)}</span></div>
+                                                       <div className="text-teal-500">Agendados: <span className="font-bold text-text">{log.answers.q5_appointments_count}</span></div>
+                                                       <div className="text-slate-500 text-right col-span-2">Venda: <span className="font-bold text-emerald-400">{formatCurrency(log.answers.q7_value_sold)}</span></div>
+                                                       <div className="text-slate-500 text-right col-span-2">Recebido: <span className="font-bold text-emerald-400">{formatCurrency(log.answers.q7_value_received)}</span></div>
                                                     </div>
-
+                                                    
                                                     {/* Always Visible Delete Shortcut */}
                                                     <button
                                                         type="button"
@@ -1983,7 +1983,7 @@ export const CommercialDailyReport: React.FC = () => {
                                     onClick={() => setDateRange(range.id as any)}
                                     className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
                                         dateRange === range.id
-                                            ? 'bg-blue-600 border-blue-500 text-text shadow-lg shadow-blue-500/20'
+                                            ? 'bg-indigo-600 border-indigo-500 text-text shadow-lg shadow-indigo-500/20'
                                             : 'bg-panel border-border text-slate-400 hover:text-slate-200'
                                     }`}
                                 >
@@ -1999,7 +1999,7 @@ export const CommercialDailyReport: React.FC = () => {
                                         type="date"
                                         value={customStartDate}
                                         onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-blue-500"
+                                        className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-indigo-500"
                                     />
                                 </div>
                                 <span className="text-slate-600">a</span>
@@ -2008,7 +2008,7 @@ export const CommercialDailyReport: React.FC = () => {
                                         type="date"
                                         value={customEndDate}
                                         onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-blue-500"
+                                        className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-indigo-500"
                                     />
                                 </div>
                             </div>
@@ -2021,7 +2021,7 @@ export const CommercialDailyReport: React.FC = () => {
                              <button
                                  onClick={handleExportImage}
                                  disabled={exportingImage}
-                                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-text rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-blue-500/20 cursor-pointer"
+                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-text rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20 cursor-pointer"
                              >
                                  <Image className="w-3.5 h-3.5" />
                                  Exportar Imagem
@@ -2039,32 +2039,32 @@ export const CommercialDailyReport: React.FC = () => {
                         </div>
                     ) : (
                         <div id="dashboard-export-area" className={`space-y-6 ${exportingImage ? 'w-[1200px] max-w-[1200px] p-8 bg-surface rounded-[24px]' : ''}`}>
-
+                            
                             {/* KPI Grid Header Cards */}
                             <div className={`grid gap-4 ${exportingImage ? 'grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-
+                                
                                 {/* Card 1: Efetividade da Agenda (Mini Dashboard) */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-[12px] text-blue-400 uppercase font-black tracking-widest block mb-1 font-mono">Efetividade da Agenda</h3>
+                                            <h3 className="text-[12px] text-emerald-400 uppercase font-black tracking-widest block mb-1 font-mono">Efetividade da Agenda</h3>
                                             <p className="text-[10px] text-slate-400 font-medium max-w-[280px] leading-relaxed mt-1">
                                                 Monitora a retenção real da agenda: compara o volume de pacientes que compareceram (efetividade macro) contra as perdas (remarcações, faltas e cancelamentos).
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
                                                 <span className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">Efetividade Macro</span>
                                             </div>
-                                            <TrendingUp className="w-5 h-5 text-blue-400" />
+                                            <TrendingUp className="w-5 h-5 text-emerald-400" />
                                         </div>
                                     </div>
-
+                                    
                                     <div className="mt-5">
                                         <div className="flex justify-between items-end mb-2">
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] text-blue-400 font-bold uppercase tracking-tight">Comparecimentos</span>
+                                                <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-tight">Comparecimentos</span>
                                                 <span className="text-sm font-black text-text">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
                                             </div>
                                             <div className="flex flex-col items-end">
@@ -2073,7 +2073,7 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-800">
-                                            <div style={{ width: `${kpiMetrics.attendanceRate}%` }} className="bg-blue-400 h-full" title="Compareceram"></div>
+                                            <div style={{ width: `${kpiMetrics.attendanceRate}%` }} className="bg-emerald-400 h-full" title="Compareceram"></div>
                                             <div style={{ width: `${kpiMetrics.rescheduledRate}%` }} className="bg-amber-400 h-full" title="Remarcaram"></div>
                                             <div style={{ width: `${kpiMetrics.noShowRate}%` }} className="bg-rose-400 h-full" title="Faltaram"></div>
                                             <div style={{ width: `${kpiMetrics.cancelledRate}%` }} className="bg-slate-400 h-full" title="Cancelaram"></div>
@@ -2088,10 +2088,10 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] text-blue-400 font-bold uppercase tracking-tight mb-1">Compareceram</span>
+                                            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-tight mb-1">Compareceram</span>
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-lg font-black text-blue-400">{kpiMetrics.totalAttended}</span>
-                                                <span className="text-[10px] text-blue-400/50 font-medium">{kpiMetrics.attendanceRate.toFixed(0)}%</span>
+                                                <span className="text-lg font-black text-emerald-400">{kpiMetrics.totalAttended}</span>
+                                                <span className="text-[10px] text-emerald-400/50 font-medium">{kpiMetrics.attendanceRate.toFixed(0)}%</span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col">
@@ -2116,8 +2116,8 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="sm:col-span-2 flex flex-col justify-end pt-2">
-                                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                                                <span className="text-[10px] text-blue-300 font-bold">
+                                            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                                <span className="text-[10px] text-emerald-300 font-bold">
                                                     A cada 10 agendados, {((kpiMetrics.totalAttended / (kpiMetrics.totalScheduled || 1)) * 10).toFixed(2)} comparecem.
                                                 </span>
                                             </div>
@@ -2126,27 +2126,27 @@ export const CommercialDailyReport: React.FC = () => {
                                 </div>
 
                                 {/* Card 2: Performance Financeira */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-[12px] text-blue-400 uppercase font-black tracking-widest block mb-1 font-mono">Performance Financeira</h3>
+                                            <h3 className="text-[12px] text-emerald-400 uppercase font-black tracking-widest block mb-1 font-mono">Performance Financeira</h3>
                                             <p className="text-[10px] text-slate-400 font-medium max-w-[280px] leading-relaxed mt-1">
                                                 Monitora o volume financeiro gerado, relacionando o total vendido em contratos com o valor que já foi recebido em caixa.
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">{kpiMetrics.recPercent.toFixed(1)}%</span>
+                                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">{kpiMetrics.recPercent.toFixed(1)}%</span>
                                                 <span className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">Tx. Recebimento</span>
                                             </div>
-                                            <DollarSign className="w-5 h-5 text-blue-400" />
+                                            <DollarSign className="w-5 h-5 text-emerald-400" />
                                         </div>
                                     </div>
-
+                                    
                                     <div className="mt-5">
                                         <div className="flex justify-between items-end mb-2">
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] text-blue-400 font-bold uppercase tracking-tight">Valor Recebido</span>
+                                                <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-tight">Valor Recebido</span>
                                                 <span className="text-sm font-black text-text">{formatCurrency(kpiMetrics.totalReceived)}</span>
                                             </div>
                                             <div className="flex flex-col items-end">
@@ -2155,7 +2155,7 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-800">
-                                            <div style={{ width: `${kpiMetrics.recPercent}%` }} className="bg-blue-400 h-full" title="Recebido"></div>
+                                            <div style={{ width: `${kpiMetrics.recPercent}%` }} className="bg-emerald-400 h-full" title="Recebido"></div>
                                             <div style={{ width: `${100 - kpiMetrics.recPercent}%` }} className="bg-slate-700 h-full" title="A Receber"></div>
                                         </div>
                                     </div>
@@ -2168,9 +2168,9 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] text-blue-400 font-bold uppercase tracking-tight mb-1">Total Recebido</span>
+                                            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-tight mb-1">Total Recebido</span>
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-lg font-black text-blue-400">{formatCurrency(kpiMetrics.totalReceived)}</span>
+                                                <span className="text-lg font-black text-emerald-400">{formatCurrency(kpiMetrics.totalReceived)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -2208,28 +2208,28 @@ export const CommercialDailyReport: React.FC = () => {
                                      </div>
                                  </div>
 
-
+                                
 
                                 {/* Card 5: Comparativo de Períodos */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-purple-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-violet-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-[12px] text-purple-400 uppercase font-black tracking-widest block mb-1 font-mono">Desempenho por Turno</h3>
+                                            <h3 className="text-[12px] text-violet-400 uppercase font-black tracking-widest block mb-1 font-mono">Desempenho por Turno</h3>
                                             <p className="text-[10px] text-slate-400 font-medium max-w-[280px] leading-relaxed mt-1">
                                                 Compara o engajamento e a conversão de agendamentos entre os períodos da Manhã e da Tarde.
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[10px] font-black text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-black text-violet-400 bg-violet-400/10 px-2 py-0.5 rounded-full">
                                                     {kpiMetrics.mTotalAppointments > kpiMetrics.tTotalAppointments ? 'Manhã Vence' : kpiMetrics.tTotalAppointments > kpiMetrics.mTotalAppointments ? 'Tarde Vence' : 'Empate'}
                                                 </span>
                                                 <span className="text-[8px] text-slate-500 font-bold uppercase mt-0.5">Destaque</span>
                                             </div>
-                                            <TrendingUp className="w-5 h-5 text-purple-400" />
+                                            <TrendingUp className="w-5 h-5 text-violet-400" />
                                         </div>
                                     </div>
-
+                                    
                                     <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4">
                                         {/* Manhã */}
                                         <div className="flex flex-col p-3 rounded-2xl bg-panel border border-border">
@@ -2240,33 +2240,33 @@ export const CommercialDailyReport: React.FC = () => {
                                             </div>
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase">Respostas</span>
-                                                <span className="text-[11px] font-black text-blue-400">{kpiMetrics.mTotalResponses}</span>
+                                                <span className="text-[11px] font-black text-emerald-400">{kpiMetrics.mTotalResponses}</span>
                                             </div>
                                             <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
-                                                <span className="text-[9px] text-purple-400 font-bold uppercase">Agendamentos</span>
-                                                <span className="text-sm font-black text-purple-400">{kpiMetrics.mTotalAppointments}</span>
+                                                <span className="text-[9px] text-violet-400 font-bold uppercase">Agendamentos</span>
+                                                <span className="text-sm font-black text-violet-400">{kpiMetrics.mTotalAppointments}</span>
                                             </div>
                                         </div>
-
+                                        
                                         {/* Tarde */}
                                         <div className="flex flex-col p-3 rounded-2xl bg-panel border border-border">
-                                            <span className="text-[10px] text-blue-400 font-bold uppercase tracking-tight mb-2 text-center border-b border-border pb-2">🌇 Tarde</span>
+                                            <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-tight mb-2 text-center border-b border-border pb-2">🌇 Tarde</span>
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase">Contatos</span>
                                                 <span className="text-[11px] font-black text-text">{kpiMetrics.tTotalContacts}</span>
                                             </div>
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase">Respostas</span>
-                                                <span className="text-[11px] font-black text-blue-400">{kpiMetrics.tTotalResponses}</span>
+                                                <span className="text-[11px] font-black text-emerald-400">{kpiMetrics.tTotalResponses}</span>
                                             </div>
                                             <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
-                                                <span className="text-[9px] text-purple-400 font-bold uppercase">Agendamentos</span>
-                                                <span className="text-sm font-black text-purple-400">{kpiMetrics.tTotalAppointments}</span>
+                                                <span className="text-[9px] text-violet-400 font-bold uppercase">Agendamentos</span>
+                                                <span className="text-sm font-black text-violet-400">{kpiMetrics.tTotalAppointments}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
+                                 
                                  {/* Objections Panel */}
                                  {kpiMetrics.objectionsList.length > 0 && (
                                     <div className="glass-panel p-6 rounded-3xl border border-border col-span-1 lg:col-span-4">
@@ -2292,7 +2292,7 @@ export const CommercialDailyReport: React.FC = () => {
 
                             {/* Main Charts Row */}
                             <div className={`grid gap-6 ${exportingImage ? 'grid-cols-2' : 'grid-cols-1 lg:grid-cols-2'}`}>
-
+                                
                                 {/* Chart 1: Conversão Comercial Funnel */}
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col justify-between">
                                      <div className="flex items-center justify-between border-b border-border pb-2">
@@ -2323,7 +2323,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                </BarChart>
                                           </ResponsiveContainer>
                                      </div>
-
+                                     
                                      <div className={`grid gap-2 text-center ${exportingImage ? 'grid-cols-7' : 'grid-cols-2 sm:grid-cols-4 md:grid-cols-7'}`}>
                                              <div className="p-2 bg-slate-900/40 rounded-xl border border-border">
                                                   <span className="text-[8px] text-slate-500 uppercase font-black block">Novos Contatos</span>
@@ -2335,7 +2335,7 @@ export const CommercialDailyReport: React.FC = () => {
                                               </div>
                                               <div className="p-2 bg-slate-900/40 rounded-xl border border-border">
                                                    <span className="text-[8px] text-slate-500 uppercase font-black block">Compareceram</span>
-                                                   <span className="text-xs font-bold text-blue-400">{kpiMetrics.totalAttended} ({((kpiMetrics.totalAttended / kpiMetrics.totalAgendaOutcomes) * 100).toFixed(1)}%)</span>
+                                                   <span className="text-xs font-bold text-emerald-400">{kpiMetrics.totalAttended} ({((kpiMetrics.totalAttended / kpiMetrics.totalAgendaOutcomes) * 100).toFixed(1)}%)</span>
                                               </div>
                                              <div className="p-2 bg-slate-900/40 rounded-xl border border-border">
                                                   <span className="text-[8px] text-slate-500 uppercase font-black block">Remarcados</span>
@@ -2351,19 +2351,19 @@ export const CommercialDailyReport: React.FC = () => {
                                              </div>
                                              <div className="p-2 bg-slate-900/40 rounded-xl border border-border">
                                                   <span className="text-[8px] text-slate-500 uppercase font-black block">Conv. Geral</span>
-                                                  <span className="text-xs font-bold text-blue-400">
+                                                  <span className="text-xs font-bold text-indigo-400">
                                                        {((kpiMetrics.totalAppointments / (kpiMetrics.totalContacts || 1)) * 100).toFixed(1)}%
                                                   </span>
                                              </div>
                                         </div>
-
+                                       
                                        <div className="bg-slate-900/40 p-4 border border-border rounded-2xl flex flex-col gap-1.5 mt-2">
                                             <div className="flex justify-between items-center text-[11px] font-bold text-slate-400">
                                                  <span className="flex items-center gap-1.5">
                                                       <Activity className="w-3.5 h-3.5 text-blue-400" />
                                                       Conversão Geral de Leads
                                                  </span>
-                                                 <span className="text-blue-400">{((kpiMetrics.totalAppointments / (kpiMetrics.totalContacts || 1)) * 100).toFixed(1)}%</span>
+                                                 <span className="text-indigo-400">{((kpiMetrics.totalAppointments / (kpiMetrics.totalContacts || 1)) * 100).toFixed(1)}%</span>
                                             </div>
                                             <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
                                                   Este funil ilustra a eficiência de conversão da equipe comercial: de {kpiMetrics.totalContacts} novos contatos realizados, {kpiMetrics.totalAppointments} agendamentos foram consolidados. Dos previstos para a agenda, {kpiMetrics.totalAttended} compareceram ({((kpiMetrics.totalAttended / kpiMetrics.totalAgendaOutcomes) * 100).toFixed(1)}%), {kpiMetrics.totalRescheduled} remarcaram ({((kpiMetrics.totalRescheduled / kpiMetrics.totalAgendaOutcomes) * 100).toFixed(1)}%) e {kpiMetrics.totalNoShow} faltaram / cancelaram ({((kpiMetrics.totalNoShow / kpiMetrics.totalAgendaOutcomes) * 100).toFixed(1)}% no-show).
@@ -2375,7 +2375,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                                      <div className="flex items-center justify-between border-b border-border pb-2">
                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                               <LucideLineChart className="w-4 h-4 text-blue-400" />
+                                               <LucideLineChart className="w-4 h-4 text-emerald-400" />
                                                Comportamento Financeiro (Evolução de Fluxo)
                                           </h4>
                                      </div>
@@ -2384,25 +2384,25 @@ export const CommercialDailyReport: React.FC = () => {
                                                <AreaChart data={financialChartData}>
                                                     <defs>
                                                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                                              <stop offset="5%" stopColor="#536fd1" stopOpacity={0.2}/>
-                                                              <stop offset="95%" stopColor="#536fd1" stopOpacity={0}/>
+                                                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                                                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                                                          </linearGradient>
                                                          <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
-                                                              <stop offset="5%" stopColor="#536fd1" stopOpacity={0.2}/>
-                                                              <stop offset="95%" stopColor="#536fd1" stopOpacity={0}/>
+                                                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
+                                                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                                                          </linearGradient>
                                                     </defs>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                                                     <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} />
                                                     <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} />
-                                                    <Tooltip
+                                                    <Tooltip 
                                                          contentStyle={{ background: 'rgba(15,23,42,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                                          labelStyle={{ color: '#fff', fontSize: '11px', fontWeight: 'bold' }}
                                                          itemStyle={{ fontSize: '11px' }}
                                                     />
                                                     <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                                                    <Area name="Vendido (R$)" type="monotone" dataKey="Vendido" stroke="#536fd1" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                                                    <Area name="Recebido (R$)" type="monotone" dataKey="Recebido" stroke="#536fd1" fillOpacity={1} fill="url(#colorReceived)" strokeWidth={2} />
+                                                    <Area name="Vendido (R$)" type="monotone" dataKey="Vendido" stroke="#10b981" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
+                                                    <Area name="Recebido (R$)" type="monotone" dataKey="Recebido" stroke="#6366f1" fillOpacity={1} fill="url(#colorReceived)" strokeWidth={2} />
                                                </AreaChart>
                                           </ResponsiveContainer>
                                      </div>
@@ -2422,7 +2422,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                                                      <XAxis type="number" stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} />
                                                      <YAxis dataKey="name" type="category" stroke="rgba(255,255,255,0.3)" fontSize={10} tickLine={false} width={100} />
-                                                     <Tooltip
+                                                     <Tooltip 
                                                           contentStyle={{ background: "rgba(15,23,42,0.95)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "12px" }}
                                                           labelStyle={{ color: "#fff", fontSize: "11px", fontWeight: "bold" }}
                                                           itemStyle={{ fontSize: "11px" }}
@@ -2444,32 +2444,32 @@ export const CommercialDailyReport: React.FC = () => {
                                                <Activity className="w-4 h-4 text-purple-400" />
                                                Métricas de Atendimento e Comparecimento
                                           </h4>
-
+                                          
                                           {/* Metric Visibility Toggles */}
                                           <div className="flex flex-wrap gap-2">
                                                {[
-                                                    { id: 'Contatos', color: '#536fd1', label: 'Contatos' },
+                                                    { id: 'Contatos', color: '#3b82f6', label: 'Contatos' },
                                                     { id: 'Resgates', color: '#60a5fa', label: 'Resgates' },
                                                     { id: 'Agendamentos', color: '#a855f7', label: 'Agendamentos' },
-                                                    { id: 'Agenda', color: '#536fd1', label: 'Agenda' },
-                                                    { id: 'Compareceram', color: '#536fd1', label: 'Compareceram' },
+                                                    { id: 'Agenda', color: '#6366f1', label: 'Agenda' },
+                                                    { id: 'Compareceram', color: '#10b981', label: 'Compareceram' },
                                                      { id: 'Faltaram', color: '#94a3b8', label: 'Faltas' },
-                                                      { id: 'OrtoInicios', color: '#536fd1', label: 'Orto' },
+                                                      { id: 'OrtoInicios', color: '#3b82f6', label: 'Orto' },
                                                       { id: 'Remarcados', color: '#f59e0b', label: 'Remarc' },
                                                      { id: 'Cancelados', color: '#ef4444', label: 'Cancelados' }
                                                ].map(metric => {
                                                     const isVisible = visibleActivityLines.includes(metric.id);
                                                     return (
-                                                         <button
+                                                         <button 
                                                               key={metric.id}
                                                               onClick={() => {
-                                                                   setVisibleActivityLines(prev =>
+                                                                   setVisibleActivityLines(prev => 
                                                                         isVisible ? prev.filter(id => id !== metric.id) : [...prev, metric.id]
                                                                    );
                                                               }}
                                                               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight transition-all border ${
-                                                                   isVisible
-                                                                        ? 'bg-panel border-border text-text shadow-sm'
+                                                                   isVisible 
+                                                                        ? 'bg-panel border-border text-text shadow-sm' 
                                                                         : 'bg-panel border-border text-slate-500 opacity-60'
                                                               }`}
                                                          >
@@ -2493,12 +2493,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                          itemStyle={{ fontSize: '11px' }}
                                                     />
                                                     <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                                                    {visibleActivityLines.includes('Contatos') && <Line name="Contatos" type="monotone" dataKey="Contatos" stroke="#536fd1" strokeWidth={2.5} dot={{ r: 3 }} />}
+                                                    {visibleActivityLines.includes('Contatos') && <Line name="Contatos" type="monotone" dataKey="Contatos" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3 }} />}
                                                     {visibleActivityLines.includes('Resgates') && <Line name="Contatos Resgate" type="monotone" dataKey="Resgates" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 3 }} />}
                                                     {visibleActivityLines.includes('Agendamentos') && <Line name="Novos Agendados" type="monotone" dataKey="Agendamentos" stroke="#a855f7" strokeWidth={2.5} dot={{ r: 3 }} />}
-                                                    {visibleActivityLines.includes('Agenda') && <Line name="Agenda p/ Hoje" type="monotone" dataKey="Agenda" stroke="#536fd1" strokeWidth={2.5} dot={{ r: 3 }} />}
-                                                    {visibleActivityLines.includes('Compareceram') && <Line name="Compareceram" type="monotone" dataKey="Compareceram" stroke="#536fd1" strokeWidth={2.5} dot={{ r: 3 }} />}
-                                                    {visibleActivityLines.includes('OrtoInicios') && <Line name="Orto Inícios" type="monotone" dataKey="OrtoInicios" stroke="#536fd1" strokeWidth={2.5} dot={{ r: 3 }} />}
+                                                    {visibleActivityLines.includes('Agenda') && <Line name="Agenda p/ Hoje" type="monotone" dataKey="Agenda" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }} />}
+                                                    {visibleActivityLines.includes('Compareceram') && <Line name="Compareceram" type="monotone" dataKey="Compareceram" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />}
+                                                    {visibleActivityLines.includes('OrtoInicios') && <Line name="Orto Inícios" type="monotone" dataKey="OrtoInicios" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3 }} />}
                                                     {visibleActivityLines.includes('Faltaram') && <Line name="Faltaram" type="monotone" dataKey="Faltaram" stroke="#94a3b8" strokeWidth={2.5} dot={{ r: 3 }} />}
                                                     {visibleActivityLines.includes('Remarcados') && <Line name="Remarcados" type="monotone" dataKey="Remarcados" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />}
                                                     {visibleActivityLines.includes('Cancelados') && <Line name="Cancelados" type="monotone" dataKey="Cancelados" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} />}
@@ -2509,7 +2509,7 @@ export const CommercialDailyReport: React.FC = () => {
                             </div>
                                 {/* Row 4: Distribuição de Avaliações & Pontualidade */}
                                  <div className={`grid gap-6 ${exportingImage ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
-
+                                      
                                       {/* Card Clima Diário */}
                                       <div className={`glass-panel p-6 rounded-3xl border border-border flex items-center gap-6 justify-between animate-fade-in ${exportingImage ? 'flex-row' : 'flex-col md:flex-row'}`}>
                                            <div className="space-y-4 flex-1 w-full">
@@ -2526,12 +2526,12 @@ export const CommercialDailyReport: React.FC = () => {
                                                      return (
                                                           <div className="space-y-1.5 text-[11px] font-bold">
                                                                <div className="flex items-center gap-2 justify-between">
-                                                                    <span className="text-blue-400 font-bold">🌟 Ótimo:</span>
-                                                                    <span className="text-text font-bold">{kpiMetrics.ratingsMap.otimo} dias <span className="text-blue-400/80 font-mono font-medium">({pct(kpiMetrics.ratingsMap.otimo)}%)</span></span>
+                                                                    <span className="text-emerald-400 font-bold">🌟 Ótimo:</span>
+                                                                    <span className="text-text font-bold">{kpiMetrics.ratingsMap.otimo} dias <span className="text-emerald-400/80 font-mono font-medium">({pct(kpiMetrics.ratingsMap.otimo)}%)</span></span>
                                                                </div>
                                                                <div className="flex items-center gap-2 justify-between">
-                                                                    <span className="text-blue-400 font-bold">🟢 Bom:</span>
-                                                                    <span className="text-text font-bold">{kpiMetrics.ratingsMap.bom} dias <span className="text-blue-400/85 font-mono font-medium">({pct(kpiMetrics.ratingsMap.bom)}%)</span></span>
+                                                                    <span className="text-indigo-400 font-bold">🟢 Bom:</span>
+                                                                    <span className="text-text font-bold">{kpiMetrics.ratingsMap.bom} dias <span className="text-indigo-400/85 font-mono font-medium">({pct(kpiMetrics.ratingsMap.bom)}%)</span></span>
                                                                </div>
                                                                <div className="flex items-center gap-2 justify-between">
                                                                     <span className="text-amber-400 font-bold">🟡 Regular:</span>
@@ -2576,7 +2576,7 @@ export const CommercialDailyReport: React.FC = () => {
                                            <div className="space-y-4 flex-1 w-full">
                                                 <div>
                                                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 border-b border-border pb-2">
-                                                          <Clock className="w-4 h-4 text-purple-400" />
+                                                          <Clock className="w-4 h-4 text-violet-400" />
                                                           Organização & Pontualidade
                                                      </h4>
                                                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-semibold">Postura no início da jornada.</p>
@@ -2587,8 +2587,8 @@ export const CommercialDailyReport: React.FC = () => {
                                                      return (
                                                           <div className="space-y-1.5 text-[11px] font-bold">
                                                                <div className="flex items-center gap-2 justify-between">
-                                                                    <span className="text-blue-400 font-bold font-semibold">✅ Sim, pontual:</span>
-                                                                    <span className="text-text font-bold">{kpiMetrics.arrivalMap.sim_pontual} dias <span className="text-blue-400/80 font-mono font-medium">({pct(kpiMetrics.arrivalMap.sim_pontual)}%)</span></span>
+                                                                    <span className="text-emerald-400 font-bold font-semibold">✅ Sim, pontual:</span>
+                                                                    <span className="text-text font-bold">{kpiMetrics.arrivalMap.sim_pontual} dias <span className="text-emerald-400/80 font-mono font-medium">({pct(kpiMetrics.arrivalMap.sim_pontual)}%)</span></span>
                                                                </div>
                                                                <div className="flex items-center gap-2 justify-between">
                                                                     <span className="text-amber-400 font-bold font-semibold">⏱️ Pontual c/ atraso:</span>
@@ -2633,16 +2633,16 @@ export const CommercialDailyReport: React.FC = () => {
                                       </div>
 
                                  </div>
-
+                                 
 
                             {/* Row 3: Histórico de Diárias e Feedbacks Qualitativos */}
                             <div className={`grid gap-6 ${exportingImage ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-12'}`}>
-
+                                
                                 {/* Box 1: Histórico das Diárias Preenchidas no Período */}
                                 <div className={`glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col ${exportingImage ? 'h-auto' : 'lg:col-span-8 h-[400px]'}`}>
                                      <div className="flex items-center justify-between border-b border-border pb-2">
                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                               <History className="w-4 h-4 text-blue-400" />
+                                               <History className="w-4 h-4 text-indigo-400" />
                                                Histórico das Diárias Preenchidas no Período
                                           </h4>
                                           <span className="text-[10px] text-slate-500 font-bold font-mono">
@@ -2680,8 +2680,8 @@ export const CommercialDailyReport: React.FC = () => {
                                                          const ratingColor: Record<string, string> = {
                                                              ruim: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
                                                              regular: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-                                                             bom: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-                                                             otimo: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+                                                             bom: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+                                                             otimo: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                                                          };
                                                          return (
                                                              <tr key={report.id} className="hover:bg-white/[0.02] transition-colors">
@@ -2702,7 +2702,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                                  <td className="py-2.5 px-3 text-right font-mono text-slate-300 font-semibold">
                                                                      {report.answers.q5_attended_count}
                                                                  </td>
-                                                                 <td className="py-2.5 px-3 text-right font-mono text-blue-400 font-bold">
+                                                                 <td className="py-2.5 px-3 text-right font-mono text-emerald-400 font-bold">
                                                                      {formatCurrency(report.answers.q7_value_sold)}
                                                                  </td>
                                                                  <td className="py-2.5 px-3">
@@ -2714,7 +2714,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                                                  setActiveTab('form');
                                                                              }}
                                                                              title="Visualizar/Editar"
-                                                                             className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                                                                             className="p-1 text-slate-400 hover:text-indigo-400 transition-colors"
                                                                          >
                                                                              <Eye className="w-4 h-4" />
                                                                          </button>
@@ -2759,13 +2759,13 @@ export const CommercialDailyReport: React.FC = () => {
                                                         const ratingColor: Record<string, string> = {
                                                              ruim: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
                                                              regular: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                                                             bom: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                                             otimo: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                             bom: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+                                                             otimo: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                                         };
                                                         return (
                                                              <div key={i} className="p-3 bg-panel border border-border rounded-xl space-y-1.5">
                                                                   <div className="flex justify-between items-center">
-                                                                       <span className="text-[10px] font-extrabold text-blue-400 font-mono">
+                                                                       <span className="text-[10px] font-extrabold text-indigo-400 font-mono">
                                                                             📅 {parseSafeDate(r.report_date).toLocaleDateString('pt-BR')}
                                                                        </span>
                                                                        <span className={`text-[9.5px] px-2 py-0.5 rounded-full border font-bold capitalize ${ratingColor[r.answers.q10_day_rating] || 'border-slate-500 text-slate-400'}`}>
@@ -2808,7 +2808,7 @@ export const CommercialDailyReport: React.FC = () => {
                             </p>
                             <div className="bg-panel border border-border rounded-2xl p-4 flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-400">Data Selecionada</span>
-                                <span className="text-sm font-black text-blue-400 font-mono">
+                                <span className="text-sm font-black text-indigo-400 font-mono">
                                     {parseSafeDate(reportDate).toLocaleDateString('pt-BR')}
                                 </span>
                             </div>
@@ -2843,8 +2843,8 @@ export const CommercialDailyReport: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/20 dark:bg-black/60 backdrop-blur-2xl">
                     <div className="flex flex-col items-center gap-4 text-center max-w-sm">
                         <div className="relative flex items-center justify-center">
-                            <div className="w-16 h-16 rounded-full border-4 border-blue-500/20 border-t-blue-400 animate-spin" />
-                            <Image className="w-6 h-6 text-blue-400 absolute animate-pulse" />
+                            <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-400 animate-spin" />
+                            <Image className="w-6 h-6 text-indigo-400 absolute animate-pulse" />
                         </div>
                         <div>
                             <h3 className="text-base font-black text-text uppercase tracking-wider">Processando Painel</h3>

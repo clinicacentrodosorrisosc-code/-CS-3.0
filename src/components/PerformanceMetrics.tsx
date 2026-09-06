@@ -141,7 +141,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
     const today = new Date();
     const isThisMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
     const currentActiveDay = isThisMonth ? today.getDate() : daysInMonthCount;
-
+    
     const activeDayMetric = dailyMetrics[currentActiveDay - 1];
     let pacingStatus: 'ahead' | 'warning' | 'behind' = 'ahead';
     if (activeDayMetric) {
@@ -176,7 +176,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   const getPointColor = (diff: number) => {
     if (diff < -3000) return '#ef4444'; // Vermelho: atraso superior a R$ 3.000
     if (diff < 0) return '#f59e0b'; // Amarelo: abaixo da meta, atraso até R$ 3.000
-    return '#536fd1'; // Verde: em cima ou acima da trajetória
+    return '#10b981'; // Verde: em cima ou acima da trajetória
   };
 
   // Custom active dot on hover (clean & subtle)
@@ -206,8 +206,8 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
 
     let statusBadge = {
       text: 'No Ritmo / Adiantado',
-      bg: 'bg-blue-500/15 border-blue-500/30 text-blue-400',
-      color: '#536fd1',
+      bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+      color: '#10b981',
       icon: '🟢'
     };
 
@@ -254,7 +254,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <div className="pt-2 border-t border-white/5 flex items-center justify-between">
             <span className="text-[11px] text-slate-400">Diferença de Pacing:</span>
             <span className={`font-mono font-bold text-xs ${
-              diff >= 0 ? 'text-blue-400' : diff >= -3000 ? 'text-amber-400' : 'text-rose-400'
+              diff >= 0 ? 'text-emerald-400' : diff >= -3000 ? 'text-amber-400' : 'text-rose-400'
             }`}>
               {diff >= 0 ? '+' : ''}{formatBRL(diff)}
             </span>
@@ -289,7 +289,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             onClick={() => setActiveTab('cumulative')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
               activeTab === 'cumulative'
-                ? 'bg-gradient-to-r from-blue-500 to-[#D63FA3] text-text shadow-md'
+                ? 'bg-gradient-to-r from-indigo-500 to-[#D63FA3] text-text shadow-md'
                 : 'text-slate-400 hover:text-text hover:bg-panel'
             }`}
           >
@@ -300,7 +300,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             onClick={() => setActiveTab('daily')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
               activeTab === 'daily'
-                ? 'bg-[#4059B2] text-white shadow-sm'
+                ? 'bg-[#5347CE] text-white shadow-sm'
                 : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white hover:bg-[#F4F6FB] dark:hover:bg-white/[0.04]'
             }`}
           >
@@ -317,7 +317,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
             <TrendingUp className={`w-4 h-4 ${
               summary.pacingStatus === 'ahead'
-                ? 'text-[#7460A8]'
+                ? 'text-[#16C8C7]'
                 : summary.pacingStatus === 'warning'
                 ? 'text-amber-500'
                 : 'text-rose-500'
@@ -327,7 +327,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <div className="flex justify-between items-baseline mb-1">
               <h4 className={`text-base font-black ${
                 summary.pacingStatus === 'ahead'
-                  ? 'text-[#7460A8] dark:text-[#2DD4BF]'
+                  ? 'text-[#16C8C7] dark:text-[#2DD4BF]'
                   : summary.pacingStatus === 'warning'
                   ? 'text-amber-500'
                   : 'text-rose-500'
@@ -344,15 +344,15 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             </div>
             {/* Visual indicator of the pacing status */}
             <div className="w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-1.5 rounded-full overflow-hidden">
-                <div
+                <div 
                   className={`h-full rounded-full ${
                     summary.pacingStatus === 'ahead'
-                      ? 'bg-[#7460A8]'
+                      ? 'bg-[#16C8C7]'
                       : summary.pacingStatus === 'warning'
                       ? 'bg-amber-500'
                       : 'bg-rose-500'
                   }`}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%' }} 
                 />
             </div>
           </div>
@@ -368,8 +368,8 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <div className="my-2">
             <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{summary.progressPerc.toFixed(1)}%</h4>
             <div className="w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-1.5 rounded-full mt-2 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#4059B2] to-[#7460A8] rounded-full"
+              <div 
+                className="h-full bg-gradient-to-r from-[#5347CE] to-[#16C8C7] rounded-full" 
                 style={{ width: `${Math.min(summary.progressPerc, 100)}%` }}
               />
             </div>
@@ -383,12 +383,12 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         <div id="kpi-card-average" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Média por Dia Ativo</span>
-            <DollarSign className="text-[#4059B2] dark:text-[#7460A8] w-4 h-4" />
+            <DollarSign className="text-[#5347CE] dark:text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
             <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{formatBRL(summary.avgDailyRev)}</h4>
             <p className="text-[10px] text-[#64748B] dark:text-slate-400 font-bold mt-1">
-              Meta ideal: <span className="text-[#4059B2] dark:text-[#7460A8] font-mono">{formatBRL(staticDailyTarget)}</span>
+              Meta ideal: <span className="text-[#5347CE] dark:text-[#887CFD] font-mono">{formatBRL(staticDailyTarget)}</span>
             </p>
           </div>
           <span className="text-[9px] text-[#94A3B8] font-bold">Exclui dias sem receita</span>
@@ -398,14 +398,14 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         <div id="kpi-card-days" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Dias Acima da Meta</span>
-            <Calendar className="text-[#7460A8] w-4 h-4" />
+            <Calendar className="text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
             <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">
               {summary.workDaysWithSalesMet} <span className="text-xs text-[#94A3B8] font-bold">de {summary.totalWorkDays} dias</span>
             </h4>
             <div className="flex items-center gap-1.5 mt-2">
-              <span className="text-[10px] bg-[#4059B2]/10 text-[#4059B2] dark:text-[#7460A8] border border-[#4059B2]/20 px-2 py-0.5 rounded-full font-mono font-bold">
+              <span className="text-[10px] bg-[#5347CE]/10 text-[#5347CE] dark:text-[#887CFD] border border-[#5347CE]/20 px-2 py-0.5 rounded-full font-mono font-bold">
                 {((summary.workDaysWithSalesMet / Math.max(1, summary.totalWorkDays)) * 100).toFixed(0)}% de aproveitamento
               </span>
             </div>
@@ -424,16 +424,16 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Contraste diário entre a receita realizada e o alvo padrão</p>
               </div>
               <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase font-mono">
-                <div className="flex items-center gap-1.5 text-blue-400">
-                  <div className="w-3 h-3 bg-blue-500/20 border border-blue-400 rounded-sm" />
+                <div className="flex items-center gap-1.5 text-indigo-400">
+                  <div className="w-3 h-3 bg-indigo-500/20 border border-indigo-400 rounded-sm" />
                   <span>Realizado</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#D63FA3]">
                   <div className="w-4 h-0.5 bg-surface" />
                   <span>Meta Diária Padrão</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-purple-400">
-                  <div className="w-4 h-0.5 border-t border-dashed border-purple-400" />
+                <div className="flex items-center gap-1.5 text-cyan-400">
+                  <div className="w-4 h-0.5 border-t border-dashed border-cyan-400" />
                   <span>Meta Dinâmica Recalculada</span>
                 </div>
               </div>
@@ -443,16 +443,16 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={dailyMetrics} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }}
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} 
                   />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }} 
                     tickFormatter={(val) => `R$${(val/1000).toFixed(0)}k`}
                   />
                   <RechartsTooltip
@@ -467,33 +467,33 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                     }}
                     labelFormatter={(label) => `Dia ${label}`}
                   />
-                  <Bar
-                    name="Realizado"
-                    dataKey="actual"
-                    fill="url(#barRevenueGrad)"
-                    radius={[4, 4, 0, 0]}
+                  <Bar 
+                    name="Realizado" 
+                    dataKey="actual" 
+                    fill="url(#barRevenueGrad)" 
+                    radius={[4, 4, 0, 0]} 
                     maxBarSize={32}
                   />
-                  <Line
-                    name="Meta Diária"
-                    type="monotone"
-                    dataKey="target"
-                    stroke="#D63FA3"
-                    strokeWidth={2}
+                  <Line 
+                    name="Meta Diária" 
+                    type="monotone" 
+                    dataKey="target" 
+                    stroke="#D63FA3" 
+                    strokeWidth={2} 
                     dot={false}
                   />
-                  <Line
-                    name="Meta Dinâmica"
-                    type="monotone"
-                    dataKey="dynamicTarget"
-                    stroke="#22d3ee"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 4"
+                  <Line 
+                    name="Meta Dinâmica" 
+                    type="monotone" 
+                    dataKey="dynamicTarget" 
+                    stroke="#22d3ee" 
+                    strokeWidth={1.5} 
+                    strokeDasharray="4 4" 
                     dot={false}
                   />
                   <defs>
                     <linearGradient id="barRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#536fd1" stopOpacity={0.8}/>
+                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
                       <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
@@ -509,8 +509,8 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Acompanhe se a clínica está no compasso para atingir o faturamento mensal total</p>
               </div>
               <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase font-mono">
-                <div className="flex items-center gap-1.5 text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">
-                  <div className="w-3 h-1 rounded-full bg-blue-500" />
+                <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                  <div className="w-3 h-1 rounded-full bg-emerald-500" />
                   <span>≥ Trajetória (No Ritmo)</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
@@ -552,36 +552,36 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }}
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} 
                   />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }} 
                     tickFormatter={(val) => `R$${(val/1000).toFixed(0)}k`}
                   />
                   <RechartsTooltip content={<PacingCustomTooltip />} />
-                  <Area
-                    name="Acumulado Realizado"
-                    type="monotone"
-                    dataKey="cumulativeActual"
-                    fill="url(#pacingAreaGrad)"
-                    stroke="url(#pacingStrokeGrad)"
+                  <Area 
+                    name="Acumulado Realizado" 
+                    type="monotone" 
+                    dataKey="cumulativeActual" 
+                    fill="url(#pacingAreaGrad)" 
+                    stroke="url(#pacingStrokeGrad)" 
                     strokeWidth={2.5}
                     dot={false}
                     activeDot={<PacingActiveDot />}
                   />
-                  <Line
-                    name="Meta Acumulada"
-                    type="monotone"
-                    dataKey="cumulativeTarget"
-                    stroke="#94a3b8"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 4"
+                  <Line 
+                    name="Meta Acumulada" 
+                    type="monotone" 
+                    dataKey="cumulativeTarget" 
+                    stroke="#94a3b8" 
+                    strokeWidth={1.5} 
+                    strokeDasharray="4 4" 
                     dot={false}
                   />
                 </ComposedChart>
@@ -591,10 +591,10 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         )}
       </div>
 
-      <div id="pacing-helpful-context" className="flex items-start gap-2.5 p-3.5 bg-blue-500/5 border border-blue-500/10 rounded-xl text-xs text-blue-300">
-        <HelpCircle className="w-4.5 h-4.5 text-blue-400 shrink-0 mt-0.5" />
+      <div id="pacing-helpful-context" className="flex items-start gap-2.5 p-3.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-xs text-indigo-300">
+        <HelpCircle className="w-4.5 h-4.5 text-indigo-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Como interpretar o Pacing:</strong> O ritmo acumulado analisa se o faturamento diário está alinhado com a trajetória linear ideal até a meta de <span className="text-text font-bold">{formatBRL(Number(currentGoals.revenue) || 0)}</span>. Pontos e trechos em <strong className="text-blue-400">Verde</strong> indicam faturamento igual ou superior à meta projetada; em <strong className="text-amber-400">Amarelo</strong> quando abaixo da curva com atraso de até R$ 3.000; e em <strong className="text-rose-400">Vermelho</strong> quando o atraso acumulado ultrapassar R$ 3.000.
+          <strong>Como interpretar o Pacing:</strong> O ritmo acumulado analisa se o faturamento diário está alinhado com a trajetória linear ideal até a meta de <span className="text-text font-bold">{formatBRL(Number(currentGoals.revenue) || 0)}</span>. Pontos e trechos em <strong className="text-emerald-400">Verde</strong> indicam faturamento igual ou superior à meta projetada; em <strong className="text-amber-400">Amarelo</strong> quando abaixo da curva com atraso de até R$ 3.000; e em <strong className="text-rose-400">Vermelho</strong> quando o atraso acumulado ultrapassar R$ 3.000.
         </p>
       </div>
     </section>

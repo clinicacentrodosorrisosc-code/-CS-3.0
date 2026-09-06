@@ -15,7 +15,7 @@ export const Support: React.FC<SupportProps> = () => {
     const [filterStatus, setFilterStatus] = useState<'Todas' | 'Aberto' | 'Resolvido'>('Todas');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+    
     // New Ticket Form
     const [formData, setFormData] = useState({
         title: '',
@@ -81,7 +81,7 @@ export const Support: React.FC<SupportProps> = () => {
         };
 
         const { error } = await supabase.from('support_tickets').insert(newTicket);
-
+        
         if (!error) {
             await loadData();
             notifyDataChange('support_tickets');
@@ -104,13 +104,13 @@ export const Support: React.FC<SupportProps> = () => {
 
     const deleteTicket = async (e: React.MouseEvent, id: string) => {
         e.preventDefault();
-        e.stopPropagation();
-
+        e.stopPropagation(); 
+        
         if(!window.confirm("Tem certeza que deseja excluir este chamado permanentemente?")) return;
-
+        
         try {
             const { error } = await supabase.from('support_tickets').delete().eq('id', id);
-
+            
             if (error) {
                 throw error;
             }
@@ -147,7 +147,7 @@ export const Support: React.FC<SupportProps> = () => {
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
-
+               
                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                    <div>
                        <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
@@ -168,7 +168,7 @@ export const Support: React.FC<SupportProps> = () => {
                                <span className="text-xl font-bold text-red-400">{stats.critical}</span>
                            </div>
                        </div>
-                       <button
+                       <button 
                            onClick={() => setIsModalOpen(true)}
                            className="btn btn-primary h-fit self-center py-3"
                        >
@@ -186,7 +186,7 @@ export const Support: React.FC<SupportProps> = () => {
                             <div className="flex-1">
                                 <h3 className="text-lg font-bold text-text mb-1">Problema Detectado</h3>
                                 <p className="text-slate-300 text-sm leading-relaxed">{errorMessage}</p>
-                                <button
+                                <button 
                                     onClick={() => loadData()}
                                     className="mt-4 btn btn-ghost text-xs"
                                 >
@@ -203,8 +203,8 @@ export const Support: React.FC<SupportProps> = () => {
                         key={status}
                         onClick={() => setFilterStatus(status as any)}
                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                            filterStatus === status
-                            ? 'bg-purple-600 text-white shadow-md'
+                            filterStatus === status 
+                            ? 'bg-purple-600 text-white shadow-md' 
                             : 'btn-ghost'
                         }`}
                     >
@@ -244,7 +244,7 @@ export const Support: React.FC<SupportProps> = () => {
                     let priorityColor = 'text-slate-400 bg-slate-500/10 border-slate-500/20';
                     if (ticket.priority === 'Alta') priorityColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
                     if (ticket.priority === 'Critica') priorityColor = 'text-red-400 bg-red-500/10 border-red-500/20';
-                    if (ticket.priority === 'Baixa') priorityColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                    if (ticket.priority === 'Baixa') priorityColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
 
                     return (
                         <div key={ticket.id} className={`card p-5 flex flex-col transition-all hover:-translate-y-1 ${isResolved ? 'opacity-70 hover:opacity-100' : ''}`}>
@@ -254,9 +254,9 @@ export const Support: React.FC<SupportProps> = () => {
                                 </span>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] text-slate-500 font-mono">{safeFormatDate(ticket.createdAt)}</span>
-                                    <button
+                                    <button 
                                         type="button"
-                                        onClick={(e) => deleteTicket(e, ticket.id)}
+                                        onClick={(e) => deleteTicket(e, ticket.id)} 
                                         className="size-6 flex items-center justify-center text-slate-500 hover:text-red-400 rounded transition-colors z-20 cursor-pointer"
                                         title="Excluir Chamado"
                                     >
@@ -264,18 +264,18 @@ export const Support: React.FC<SupportProps> = () => {
                                     </button>
                                 </div>
                             </div>
-
+                            
                             <h3 className="text-lg font-bold text-text mb-1 line-clamp-1">{ticket.title}</h3>
                             <div className="text-xs text-purple-400 mb-3 flex items-center gap-1 font-semibold">
                                 <Tag className="w-3.5 h-3.5" /> {ticket.category}
                             </div>
-
+                            
                             <p className="text-sm text-slate-300 leading-relaxed line-clamp-3 mb-6 flex-1">
                                 {ticket.description}
                             </p>
 
                             <div className="mt-auto pt-4 border-t border-border flex justify-between items-center">
-                                <span className={`text-xs font-bold flex items-center gap-1 ${isResolved ? 'text-blue-400' : ticket.status === 'Em Andamento' ? 'text-blue-400' : 'text-slate-400'}`}>
+                                <span className={`text-xs font-bold flex items-center gap-1 ${isResolved ? 'text-emerald-400' : ticket.status === 'Em Andamento' ? 'text-blue-400' : 'text-slate-400'}`}>
                                     {isResolved ? <CheckCircle className="w-4 h-4" /> : ticket.status === 'Em Andamento' ? <Clock className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                                     {ticket.status}
                                 </span>
@@ -288,7 +288,7 @@ export const Support: React.FC<SupportProps> = () => {
                                                     Iniciar
                                                 </button>
                                             )}
-                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-bold rounded-xl transition-all">
+                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-bold rounded-xl transition-all">
                                                 Resolver
                                             </button>
                                         </>
@@ -319,7 +319,7 @@ export const Support: React.FC<SupportProps> = () => {
                         <div className="p-4 flex flex-col gap-4">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase">Assunto</label>
-                                <input
+                                <input 
                                     value={formData.title}
                                     onChange={e => setFormData({...formData, title: e.target.value})}
                                     placeholder="Ex: Impressora travada / Falta de Luvas"
@@ -329,7 +329,7 @@ export const Support: React.FC<SupportProps> = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase">Categoria</label>
-                                    <select
+                                    <select 
                                         value={formData.category}
                                         onChange={e => setFormData({...formData, category: e.target.value})}
                                         className="input"
@@ -342,7 +342,7 @@ export const Support: React.FC<SupportProps> = () => {
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase">Prioridade</label>
-                                    <select
+                                    <select 
                                         value={formData.priority}
                                         onChange={e => setFormData({...formData, priority: e.target.value})}
                                         className="input"
@@ -356,7 +356,7 @@ export const Support: React.FC<SupportProps> = () => {
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-bold text-slate-400 uppercase">Descrição Detalhada</label>
-                                <textarea
+                                <textarea 
                                     value={formData.description}
                                     onChange={e => setFormData({...formData, description: e.target.value})}
                                     placeholder="Descreva o problema ou solicitação..."

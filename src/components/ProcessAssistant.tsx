@@ -103,14 +103,14 @@ export const ProcessAssistant: React.FC = () => {
 
     return (
         <div className="flex flex-col h-[500px] glass-panel rounded-3xl border border-border overflow-hidden">
-            <div className="p-6 border-b border-border bg-gradient-to-r from-blue-500/10 to-transparent flex items-center justify-between">
+            <div className="p-6 border-b border-border bg-gradient-to-r from-indigo-500/10 to-transparent flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
+                    <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
                         <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-text">IA de Processos</h3>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest leading-none mt-1">Assistente de Treinamento</p>
+                        <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest leading-none mt-1">Assistente de Treinamento</p>
                     </div>
                 </div>
             </div>
@@ -119,12 +119,12 @@ export const ProcessAssistant: React.FC = () => {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                            <div className={`shrink-0 size-8 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-blue-600' : 'bg-panel/80'}`}>
-                                {msg.role === 'user' ? <User className="w-4 h-4 text-text" /> : <Bot className="w-4 h-4 text-blue-400" />}
+                            <div className={`shrink-0 size-8 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-indigo-600' : 'bg-panel/80'}`}>
+                                {msg.role === 'user' ? <User className="w-4 h-4 text-text" /> : <Bot className="w-4 h-4 text-indigo-400" />}
                             </div>
                             <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                                msg.role === 'user'
-                                ? 'bg-blue-600 text-text rounded-tr-none'
+                                msg.role === 'user' 
+                                ? 'bg-indigo-600 text-text rounded-tr-none' 
                                 : 'bg-panel text-slate-300 border border-border rounded-tl-none'
                             }`}>
                                 <div className="markdown-body text-inherit">
@@ -138,10 +138,10 @@ export const ProcessAssistant: React.FC = () => {
                     <div className="flex justify-start">
                         <div className="flex gap-3 max-w-[85%]">
                             <div className="shrink-0 size-8 rounded-full bg-panel/80 flex items-center justify-center">
-                                <Bot className="w-4 h-4 text-blue-400" />
+                                <Bot className="w-4 h-4 text-indigo-400" />
                             </div>
                             <div className="bg-panel p-4 rounded-2xl flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                                <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
                                 <span className="text-xs text-slate-500 italic">Analisando processos...</span>
                             </div>
                         </div>
@@ -151,17 +151,17 @@ export const ProcessAssistant: React.FC = () => {
 
             <div className="p-6 border-t border-border bg-panel">
                 <div className="relative">
-                    <input
+                    <input 
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Ex: Como funciona o fechamento mensal?"
-                        className="w-full bg-panel border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text placeholder:text-slate-600 focus:border-blue-500 outline-none transition-all"
+                        className="w-full bg-panel border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
                     />
-                    <button
+                    <button 
                         onClick={handleSendMessage}
                         disabled={isTyping || !input.trim()}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-blue-600 hover:bg-blue-500 text-text rounded-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
                         <Send className="w-4 h-4" />
                     </button>

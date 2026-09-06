@@ -20,13 +20,13 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
 
     const calculation = useMemo(() => {
         const laborCost = hourlyRate * estimatedTime;
-        const matCost = selectedService ? selectedService.defaultValue : materialCost;
+        const matCost = selectedService ? selectedService.defaultValue : materialCost; 
         const productsCost = selectedProducts.reduce((sum, p) => sum + p.cost, 0);
         const fixedCostPerUnit = monthlyVolume > 0 ? fixedCosts / monthlyVolume : fixedCosts;
-        const totalCost = laborCost + matCost + productsCost + fixedCostPerUnit;
+        const totalCost = laborCost + matCost + productsCost + fixedCostPerUnit; 
         const basePrice = totalCost / (1 - (desiredMargin + taxRate) / 100);
         const profit = basePrice - totalCost;
-
+        
         return {
             totalCost,
             basePrice,
@@ -43,9 +43,9 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
     return (
         <div className="flex flex-col gap-6 p-6 animate-in fade-in">
             <h3 className="text-xl font-bold text-text flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-blue-400" /> Calculadora de Precificação Robusta
+                <Calculator className="w-5 h-5 text-indigo-400" /> Calculadora de Precificação Robusta
             </h3>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="glass-panel p-6 rounded-2xl border border-border bg-surface space-y-4">
                     <div className="space-y-2">
@@ -67,7 +67,7 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                                     await supabase.from('products').insert({ id: 'prod_' + Date.now(), name, cost });
                                     toast.success("Produto adicionado!");
                                 }
-                            }} className="bg-blue-600 p-1.5 rounded-lg text-text"><Plus className="w-4 h-4" /></button>
+                            }} className="bg-emerald-600 p-1.5 rounded-lg text-text"><Plus className="w-4 h-4" /></button>
                         </div>
                     </div>
                     <div className="space-y-2">
@@ -76,7 +76,7 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                             {products.map(p => (
                                 <div key={p.id} className="flex justify-between items-center bg-panel p-3 rounded-lg border border-border">
                                     <div className='flex items-center gap-2'>
-                                        <input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleProduct(p.id)} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-transparent border-white/20"/>
+                                        <input type="checkbox" checked={selectedProductIds.includes(p.id)} onChange={() => toggleProduct(p.id)} className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-transparent border-white/20"/>
                                         <span className="text-sm text-slate-300">{p.name}</span>
                                     </div>
                                     <span className="text-xs font-mono text-slate-500">R$ {p.cost.toFixed(2)}</span>
@@ -111,8 +111,8 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Margem de Lucro Desejada (%)</label>
                         <input type="number" value={desiredMargin} onChange={(e) => setDesiredMargin(Number(e.target.value))} className="w-full bg-panel border border-border rounded-lg px-4 py-2 text-text" />
                     </div>
-
-                    <div className="mt-8 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 space-y-2">
+                    
+                    <div className="mt-8 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 space-y-2">
                         <div className="flex justify-between text-sm text-slate-400">
                             <span>Custo Fixo/Unit:</span>
                             <span>R$ {calculation.fixedCostPerUnit.toFixed(2)}</span>
@@ -121,13 +121,13 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                             <span>Custo Variável:</span>
                             <span>R$ {(calculation.totalCost - calculation.fixedCostPerUnit).toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-sm text-slate-200 font-bold border-t border-blue-500/20 pt-2">
+                        <div className="flex justify-between text-sm text-slate-200 font-bold border-t border-indigo-500/20 pt-2">
                             <span>Custo Total:</span>
                             <span>R$ {calculation.totalCost.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-lg pt-4">
                             <span className="text-slate-200 font-bold">Preço Sugerido:</span>
-                            <span className="font-black text-blue-400 text-2xl">R$ {calculation.basePrice.toFixed(2)}</span>
+                            <span className="font-black text-indigo-400 text-2xl">R$ {calculation.basePrice.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

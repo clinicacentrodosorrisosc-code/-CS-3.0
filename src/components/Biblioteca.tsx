@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
+import { 
   Plus, Search, Trash2, ExternalLink, Folder, ArrowLeft, BookOpen
 } from 'lucide-react';
 import { SpotlightCard } from './ui/spotlight-card';
@@ -37,7 +37,7 @@ export const Biblioteca: React.FC = () => {
       { id: '3', title: 'Manual de Equipamentos', url: 'https://example.com', category: 'Clínica', emoji: '🏥' }
     ];
   });
-
+  
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -85,7 +85,7 @@ export const Biblioteca: React.FC = () => {
   // Filtrar links
   const filteredLinks = useMemo(() => {
     return links.filter(link => {
-      const matchesSearch = (link.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = (link.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                             (link.category || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'Todos' || link.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -96,27 +96,27 @@ export const Biblioteca: React.FC = () => {
     <div className="flex-1 flex flex-col w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
         <div className="w-full h-full max-w-7xl mx-auto relative z-10">
-
+          
           {selectedLink ? (
             /* ================= DETAILED VIEW / EDITOR ================= */
             <div className="w-full mx-auto py-4 flex flex-col min-h-full animate-in fade-in duration-300">
-
+              
               {/* Back to Library Header */}
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
-                <button
+                <button 
                   onClick={() => setSelectedPreviewId(null)}
                   className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-text transition-all glass-button px-4 py-2 rounded-xl"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Voltar para Biblioteca
                 </button>
-
+                
                 {selectedLink.url && (
-                  <a
-                    href={selectedLink.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-all glass-button bg-blue-500/10 border-blue-500/20 px-4 py-2 rounded-xl"
+                  <a 
+                    href={selectedLink.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-all glass-button bg-emerald-500/10 border-emerald-500/20 px-4 py-2 rounded-xl"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Abrir link original
@@ -127,23 +127,23 @@ export const Biblioteca: React.FC = () => {
               {/* Document Header */}
               <div className="mb-6 group relative">
                 {/* Title Input */}
-                <input
-                  type="text"
-                  value={selectedLink.title}
+                <input 
+                  type="text" 
+                  value={selectedLink.title} 
                   onChange={e => updateCurrentPage({ title: e.target.value })}
                   placeholder="Documento sem título"
                   className="text-4xl md:text-5xl font-bold text-text bg-transparent outline-none w-full placeholder-white/20 block resize-none leading-tight"
                 />
               </div>
-
+              
               {/* Properties */}
               <div className="flex flex-col gap-2 mb-10 w-full max-w-xl border-b border-border pb-6">
                 <div className="flex items-center group/prop">
                   <div className="w-32 flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    <Folder className="w-4 h-4 text-blue-400" />
+                    <Folder className="w-4 h-4 text-indigo-400" />
                     <span>Categoria</span>
                   </div>
-                  <input
+                  <input 
                     className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-white/20 text-text outline-none text-sm transition-colors py-1.5 px-2 rounded-lg hover:bg-panel focus:bg-panel"
                     value={selectedLink.category}
                     onChange={e => updateCurrentPage({ category: e.target.value })}
@@ -152,10 +152,10 @@ export const Biblioteca: React.FC = () => {
                 </div>
                 <div className="flex items-center group/prop">
                   <div className="w-32 flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    <ExternalLink className="w-4 h-4 text-blue-400" />
+                    <ExternalLink className="w-4 h-4 text-emerald-400" />
                     <span>URL / Link</span>
                   </div>
-                  <input
+                  <input 
                     className="flex-1 bg-transparent border-b border-transparent hover:border-border focus:border-white/20 text-blue-400 outline-none text-sm transition-colors py-1.5 px-2 rounded-lg hover:bg-panel focus:bg-panel font-mono"
                     value={selectedLink.url}
                     onChange={e => updateCurrentPage({ url: e.target.value })}
@@ -184,7 +184,7 @@ export const Biblioteca: React.FC = () => {
           ) : (
             /* ================= MAIN GALLERY VIEW ================= */
             <div className="space-y-8 animate-in fade-in duration-300">
-
+              
               {/* Header Title section */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
                 <div>
@@ -197,7 +197,7 @@ export const Biblioteca: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2 text-sm justify-end">
-                  <button
+                  <button 
                     onClick={() => handleAddPage()}
                     className="px-6 py-2 glass-button glass-button-primary text-text rounded-xl font-bold shadow-lg transition-all flex items-center gap-2"
                   >
@@ -217,8 +217,8 @@ export const Biblioteca: React.FC = () => {
                         onClick={() => setSelectedCategory(cat)}
                         className={`
                           px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
-                          ${selectedCategory === cat
-                            ? 'bg-panel/80 text-text shadow-lg'
+                          ${selectedCategory === cat 
+                            ? 'bg-panel/80 text-text shadow-lg' 
                             : 'text-slate-500 opacity-60 hover:opacity-100'}
                         `}
                       >
@@ -235,7 +235,7 @@ export const Biblioteca: React.FC = () => {
                       placeholder="Pesquisar manuais..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full bg-panel hover:bg-panel/80 focus:bg-panel/80 border border-border rounded-xl py-2 pl-9 pr-4 text-xs text-text outline-none focus:border-blue-500/50 transition-all"
+                      className="w-full bg-panel hover:bg-panel/80 focus:bg-panel/80 border border-border rounded-xl py-2 pl-9 pr-4 text-xs text-text outline-none focus:border-indigo-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -269,7 +269,7 @@ export const Biblioteca: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 pt-4 border-t border-border">
-                        <Folder className="w-3.5 h-3.5 text-blue-400" />
+                        <Folder className="w-3.5 h-3.5 text-indigo-400" />
                         <span>{link.category || 'Geral'}</span>
                       </div>
                     </SpotlightCard>

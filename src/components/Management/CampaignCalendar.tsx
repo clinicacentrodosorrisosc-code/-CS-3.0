@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
+import { 
   Megaphone, Loader2
 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
@@ -165,14 +165,14 @@ export const CampaignCalendar: React.FC = () => {
     <div className="space-y-6">
       {/* Current Active Campaign Highlight Banner */}
       {activeMonthCampaign && (
-        <div className="bg-gradient-to-r from-blue-900/40 via-purple-900/30 to-panel border border-blue-500/40 p-6 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
-          <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-panel border border-indigo-500/40 p-6 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl">
+          <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+          
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-extrabold uppercase tracking-wider animate-pulse flex items-center gap-1.5 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold uppercase tracking-wider animate-pulse flex items-center gap-1.5 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   Campanha Ativa do Mês ({MONTHS[activeMonthCampaign.monthIndex]})
                 </span>
               </div>
@@ -185,20 +185,20 @@ export const CampaignCalendar: React.FC = () => {
             <div className="flex items-center gap-4 bg-slate-950/60 p-4 rounded-2xl border border-white/10">
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase block">Meta de Faturamento</span>
-                <span className="text-lg font-black text-blue-400 font-mono">
+                <span className="text-lg font-black text-emerald-400 font-mono">
                   {(activeMonthCampaign.targetRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
               <div className="h-8 w-px bg-white/10" />
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase block">Orçamento Marketing</span>
-                <span className="text-lg font-black text-blue-400 font-mono">
+                <span className="text-lg font-black text-indigo-400 font-mono">
                   {(activeMonthCampaign.budget || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
               <button
                 onClick={() => openModal(activeMonthCampaign.monthIndex)}
-                className="ml-2 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/30"
+                className="ml-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30"
               >
                 Editar
               </button>
@@ -219,7 +219,7 @@ export const CampaignCalendar: React.FC = () => {
 
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-2">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
             <p className="text-xs">Carregando calendário anual de campanhas...</p>
           </div>
         ) : (
@@ -229,8 +229,8 @@ export const CampaignCalendar: React.FC = () => {
             const isCurrentMonth = new Date().getMonth() === idx;
 
             let statusBadge = 'bg-slate-800 text-slate-400';
-            if (camp?.status === 'Active') statusBadge = 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
-            if (camp?.status === 'Planned') statusBadge = 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+            if (camp?.status === 'Active') statusBadge = 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            if (camp?.status === 'Planned') statusBadge = 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
             if (camp?.status === 'Completed') statusBadge = 'bg-slate-800/80 text-slate-500';
 
             return (
@@ -238,14 +238,14 @@ export const CampaignCalendar: React.FC = () => {
                 key={idx}
                 onClick={() => openModal(idx)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between min-h-[160px] ${
-                  isCurrentMonth
-                    ? 'bg-blue-950/20 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                  isCurrentMonth 
+                    ? 'bg-indigo-950/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10' 
                     : 'bg-panel border-border hover:border-white/20'
                 }`}
               >
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className={`text-xs font-extrabold uppercase font-mono ${isCurrentMonth ? 'text-blue-400' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-extrabold uppercase font-mono ${isCurrentMonth ? 'text-indigo-400' : 'text-slate-400'}`}>
                       {monthName} {isCurrentMonth && '• Mês Atual'}
                     </span>
                     <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${statusBadge}`}>
@@ -255,7 +255,7 @@ export const CampaignCalendar: React.FC = () => {
 
                   {camp ? (
                     <div className="space-y-1.5">
-                      <h4 className="text-xs font-bold text-text line-clamp-2 leading-snug group-hover:text-blue-300 transition-colors">
+                      <h4 className="text-xs font-bold text-text line-clamp-2 leading-snug group-hover:text-indigo-300 transition-colors">
                         {camp.title}
                       </h4>
                       <p className="text-[11px] text-slate-400 line-clamp-2">
@@ -272,7 +272,7 @@ export const CampaignCalendar: React.FC = () => {
                 {camp && (
                   <div className="pt-2 mt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
                     <span className="text-slate-500">Meta:</span>
-                    <span className="font-bold text-blue-400">
+                    <span className="font-bold text-emerald-400">
                       {(camp.targetRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export const CampaignCalendar: React.FC = () => {
                   value={form.title || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Ex: Mês dos Pais & Reabilitação Oral"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -318,7 +318,7 @@ export const CampaignCalendar: React.FC = () => {
                   value={form.objective || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, objective: e.target.value }))}
                   placeholder="Descreva o público-alvo, procedimentos incentivados e condições comerciais..."
-                  className="w-full h-24 p-3 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500 resize-none"
+                  className="w-full h-24 p-3 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500 resize-none"
                 />
               </div>
 
@@ -328,7 +328,7 @@ export const CampaignCalendar: React.FC = () => {
                   <select
                     value={form.status || 'Planned'}
                     onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value as any }))}
-                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text outline-none focus:border-indigo-500"
                   >
                     <option value="Planned">Planejada</option>
                     <option value="Active">Ativa</option>
@@ -342,7 +342,7 @@ export const CampaignCalendar: React.FC = () => {
                     type="number"
                     value={form.targetRevenue || ''}
                     onChange={(e) => setForm(prev => ({ ...prev, targetRevenue: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text font-mono outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text font-mono outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -352,7 +352,7 @@ export const CampaignCalendar: React.FC = () => {
                     type="number"
                     value={form.budget || ''}
                     onChange={(e) => setForm(prev => ({ ...prev, budget: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text font-mono outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-xl bg-panel border border-border text-xs text-text font-mono outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -367,7 +367,7 @@ export const CampaignCalendar: React.FC = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30"
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30"
               >
                 Salvar Campanha
               </button>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Plus, Search, Trash2, Edit3, Save, Star, Pin,
-  CheckSquare, Square,
-  Heading1, Heading2, Heading3, List, Quote,
+import { 
+  Plus, Search, Trash2, Edit3, Save, Star, Pin, 
+  CheckSquare, Square, 
+  Heading1, Heading2, Heading3, List, Quote, 
   Sparkles, Folder, Tag, Download, Copy, Check,
   X, ChevronRight
 } from 'lucide-react';
@@ -22,18 +22,18 @@ export interface NotionPage {
 }
 
 const EMOJI_PRESETS = [
-  '📑', '🏛️', '🎯', '💰', '🛡️', '💼', '🔒', '🔑', '📊', '📈',
-  '🚀', '⭐', '💡', '🤝', '⚖️', '🏥', '🦷', '💎', '🔥', '📌',
+  '📑', '🏛️', '🎯', '💰', '🛡️', '💼', '🔒', '🔑', '📊', '📈', 
+  '🚀', '⭐', '💡', '🤝', '⚖️', '🏥', '🦷', '💎', '🔥', '📌', 
   '📋', '🛠️', '📱', '🌐', '👥', '🏆', '🎁', '⚡', '🧠', '✨'
 ];
 
 const COVER_GRADIENTS = [
   { id: 'rose', label: 'Rubi Gestão', css: 'from-rose-950/80 via-purple-950/40 to-slate-950/80 border-rose-500/30' },
-  { id: 'indigo', label: 'Índigo Executivo', css: 'from-blue-950/80 via-blue-950/40 to-slate-950/80 border-blue-500/30' },
-  { id: 'emerald', label: 'Esmeralda Prosperidade', css: 'from-blue-950/80 via-purple-950/40 to-slate-950/80 border-blue-500/30' },
+  { id: 'indigo', label: 'Índigo Executivo', css: 'from-indigo-950/80 via-blue-950/40 to-slate-950/80 border-indigo-500/30' },
+  { id: 'emerald', label: 'Esmeralda Prosperidade', css: 'from-emerald-950/80 via-teal-950/40 to-slate-950/80 border-emerald-500/30' },
   { id: 'amber', label: 'Ouro Estratégico', css: 'from-amber-950/80 via-orange-950/40 to-slate-950/80 border-amber-500/30' },
   { id: 'slate', label: 'Grafite Minimalista', css: 'from-slate-900 via-slate-950 to-slate-950 border-slate-700/40' },
-  { id: 'cyan', label: 'Ciano Inovação', css: 'from-purple-950/80 via-blue-950/40 to-slate-950/80 border-purple-500/30' }
+  { id: 'cyan', label: 'Ciano Inovação', css: 'from-cyan-950/80 via-sky-950/40 to-slate-950/80 border-cyan-500/30' }
 ];
 
 const CATEGORIES = [
@@ -131,7 +131,7 @@ export const NotionWorkspace: React.FC = () => {
         p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.content.toLowerCase().includes(searchQuery.toLowerCase());
-
+      
       const matchCat = selectedCategoryFilter === 'Todas' || p.category === selectedCategoryFilter;
       return matchSearch && matchCat;
     });
@@ -193,7 +193,7 @@ export const NotionWorkspace: React.FC = () => {
   const confirmDeletePage = () => {
     if (!pageToDelete) return;
     const remaining = pages.filter(p => p.id !== pageToDelete.id);
-
+    
     if (remaining.length === 0) {
       const fallbackPage: NotionPage = {
         id: 'page_' + Date.now(),
@@ -215,7 +215,7 @@ export const NotionWorkspace: React.FC = () => {
         setSelectedPageId(remaining[0].id);
       }
     }
-
+    
     setPageToDelete(null);
     setIsEditing(false);
   };
@@ -416,14 +416,14 @@ export const NotionWorkspace: React.FC = () => {
         const isChecked = line.startsWith('- [x] ') || line.startsWith('- [X] ');
         const itemText = line.replace(/^- \[[ xX]\] /, '');
         elements.push(
-          <div
-            key={`todo_${idx}`}
+          <div 
+            key={`todo_${idx}`} 
             onClick={() => handleToggleChecklistItem(itemText)}
             className="flex items-start gap-3 my-1.5 py-1 px-2 rounded-lg hover:bg-surface/60 transition-colors cursor-pointer group select-none"
           >
             <button className="mt-0.5 text-slate-400 group-hover:text-rose-400 transition-colors">
               {isChecked ? (
-                <CheckSquare className="w-4 h-4 text-blue-400" />
+                <CheckSquare className="w-4 h-4 text-emerald-400" />
               ) : (
                 <Square className="w-4 h-4 text-slate-500" />
               )}
@@ -473,10 +473,10 @@ export const NotionWorkspace: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row h-full w-full bg-transparent overflow-hidden">
-
+      
       {/* ================= LEFT SIDEBAR (NOTION STYLE) ================= */}
       <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-border bg-surface/40 flex flex-col h-full overflow-hidden">
-
+        
         {/* Sidebar Header & Search */}
         <div className="p-4 border-b border-border flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -522,8 +522,8 @@ export const NotionWorkspace: React.FC = () => {
                 key={cat}
                 onClick={() => setSelectedCategoryFilter(cat)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all ${
-                  selectedCategoryFilter === cat
-                    ? 'bg-rose-600/30 text-rose-300 border border-rose-500/40'
+                  selectedCategoryFilter === cat 
+                    ? 'bg-rose-600/30 text-rose-300 border border-rose-500/40' 
                     : 'text-slate-400 hover:text-slate-200 bg-panel border border-border/60'
                 }`}
               >
@@ -535,7 +535,7 @@ export const NotionWorkspace: React.FC = () => {
 
         {/* Pages List Navigation */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
-
+          
           {/* Pinned / Favorites Section */}
           {pinnedPages.length > 0 && (
             <div>
@@ -647,7 +647,7 @@ export const NotionWorkspace: React.FC = () => {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {activePage ? (
           <div className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar">
-
+            
             {/* Top Cover Banner */}
             <div className={`w-full h-32 md:h-40 bg-gradient-to-r ${activePage.coverGradient || COVER_GRADIENTS[0].css} relative border-b border-border flex items-end p-6 transition-all`}>
               <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -666,7 +666,7 @@ export const NotionWorkspace: React.FC = () => {
                       className="px-3 py-1.5 rounded-lg bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
                       title="Copiar Conteúdo"
                     >
-                      {copiedNotification ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedNotification ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedNotification ? 'Copiado!' : 'Copiar'}</span>
                     </button>
                     <button
@@ -679,8 +679,8 @@ export const NotionWorkspace: React.FC = () => {
                     <button
                       onClick={() => handleTogglePin(activePage.id)}
                       className={`p-1.5 rounded-lg backdrop-blur-md border transition-all ${
-                        activePage.isPinned
-                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                        activePage.isPinned 
+                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' 
                           : 'bg-black/40 border-white/10 text-slate-300 hover:text-white'
                       }`}
                       title={activePage.isPinned ? 'Desafixar' : 'Fixar nos favoritos'}
@@ -709,7 +709,7 @@ export const NotionWorkspace: React.FC = () => {
 
             {/* Document Header & Emoji Icon */}
             <div className="px-6 md:px-12 pt-0 pb-6 max-w-5xl w-full mx-auto relative -mt-10 flex-1 flex flex-col">
-
+              
               <div className="flex items-end justify-between gap-4 mb-4">
                 {/* Emoji Selector */}
                 <div className="relative">
@@ -811,11 +811,11 @@ export const NotionWorkspace: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                      <Tag className="w-3.5 h-3.5 text-blue-400" />
+                      <Tag className="w-3.5 h-3.5 text-indigo-400" />
                       <span className="text-xs font-bold text-slate-400">Tags:</span>
                       <div className="flex flex-wrap items-center gap-1.5 flex-1">
                         {editTags.map(tag => (
-                          <span key={tag} className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold flex items-center gap-1">
+                          <span key={tag} className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold flex items-center gap-1">
                             {tag}
                             <button onClick={() => handleRemoveTag(tag)} className="hover:text-rose-400"><X className="w-2.5 h-2.5" /></button>
                           </span>
@@ -861,7 +861,7 @@ export const NotionWorkspace: React.FC = () => {
                       onClick={() => insertBlock('- [ ] Nova Ação / Tarefa')}
                       className="px-2.5 py-1 rounded-lg bg-panel hover:bg-panel/80 border border-border text-slate-300 text-xs font-bold flex items-center gap-1"
                     >
-                      <CheckSquare className="w-3.5 h-3.5 text-blue-400" /> To-Do
+                      <CheckSquare className="w-3.5 h-3.5 text-emerald-400" /> To-Do
                     </button>
                     <button
                       type="button"
@@ -907,7 +907,7 @@ export const NotionWorkspace: React.FC = () => {
                     <h1 className="text-3xl md:text-4xl font-extrabold text-text tracking-tight mb-2 flex items-center gap-3">
                       {activePage.title}
                     </h1>
-
+                    
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                       <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 font-bold">
                         {activePage.category}
@@ -1024,11 +1024,11 @@ export const NotionWorkspace: React.FC = () => {
               <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-3xl mb-4 shadow-inner">
                 {pageToDelete.emoji || '🗑️'}
               </div>
-
+              
               <h3 className="text-base font-extrabold text-text mb-1">
                 Excluir Documento?
               </h3>
-
+              
               <div className="my-2 px-3 py-1.5 bg-rose-950/40 rounded-xl border border-rose-500/30 max-w-full">
                 <p className="text-xs text-rose-300 font-bold truncate">
                   "{pageToDelete.title}"

@@ -48,7 +48,7 @@ export const ChatWidget: React.FC<{ currentUserId: string; currentUserName: stri
                             {messages.map(m => (
                                 <div key={m.id} className={`flex flex-col ${m.senderId === currentUserId ? 'items-end' : 'items-start'}`}>
                                     <span className="text-[10px] text-slate-500 mb-0.5 font-bold uppercase tracking-tight">{m.senderName}</span>
-                                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm ${m.senderId === currentUserId ? 'glass-button bg-blue-500/20 text-text rounded-tr-none' : 'glass-button bg-panel text-slate-200 rounded-tl-none'}`}>
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm ${m.senderId === currentUserId ? 'glass-button bg-indigo-500/20 text-text rounded-tr-none' : 'glass-button bg-panel text-slate-200 rounded-tl-none'}`}>
                                         {m.content}
                                     </div>
                                 </div>
@@ -56,18 +56,18 @@ export const ChatWidget: React.FC<{ currentUserId: string; currentUserName: stri
                             <div ref={messagesEndRef} />
                         </div>
                         <div className="p-4 border-t border-border bg-black/20 dark:bg-black/60 backdrop-blur-2xl flex gap-2">
-                            <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 bg-panel border border-border rounded-xl px-4 py-2.5 text-text outline-none focus:border-blue-500/50 transition-colors text-sm" placeholder="Sua mensagem..." />
-                            <button onClick={handleSend} className="glass-button bg-blue-500/30 p-2.5 rounded-xl text-text hover:text-blue-300 transition-all shadow-lg active:scale-90"><Send className="w-5 h-5" /></button>
+                            <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 bg-panel border border-border rounded-xl px-4 py-2.5 text-text outline-none focus:border-indigo-500/50 transition-colors text-sm" placeholder="Sua mensagem..." />
+                            <button onClick={handleSend} className="glass-button bg-indigo-500/30 p-2.5 rounded-xl text-text hover:text-indigo-300 transition-all shadow-lg active:scale-90"><Send className="w-5 h-5" /></button>
                         </div>
                     </motion.div>
                 ) : (
-                    <motion.button
+                    <motion.button 
                         whileHover={{ scale: 1.1, y: -5 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => setIsOpen(true)}
+                        onClick={() => setIsOpen(true)} 
                         className="w-16 h-16 rounded-full glass-button flex items-center justify-center text-text shadow-2xl group transition-all duration-500"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         <MessageSquare className="w-7 h-7 relative z-10 drop-shadow-lg" />
                     </motion.button>
                 )}

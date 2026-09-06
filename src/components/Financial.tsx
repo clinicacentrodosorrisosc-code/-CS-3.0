@@ -3,14 +3,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Transaction, Account, Service } from '../types';
 import { PricingSystem } from './PricingSystem';
 import { FinancialViability } from './FinancialViability';
-import {
+import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
 } from 'recharts';
-import {
-  Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit,
+import { 
+  Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit, 
   Wallet, ShieldCheck, TrendingUp,
-  Building2, ChevronDown, ChevronUp, Trash2, Banknote, Users, Factory, CreditCard,
+  Building2, ChevronDown, ChevronUp, Trash2, Banknote, Users, Factory, CreditCard, 
   Percent, List, Plus, Minus, Receipt, Upload, X, Download, Check
 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -29,7 +29,7 @@ type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing' | 'viability'
 interface SubCategory {
     id: string;
     name: string;
-    defaultValue?: number;
+    defaultValue?: number; 
 }
 
 interface IncomeCategory {
@@ -43,7 +43,7 @@ interface ExpenseCategory {
     id: string;
     name: string;
     type: 'fixed' | 'variable';
-    subcategories: SubCategory[];
+    subcategories: SubCategory[]; 
 }
 
 interface Professional {
@@ -65,8 +65,8 @@ interface Supplier {
 interface PaymentMethod {
     id: string;
     name: string;
-    daysToReceive: number;
-    defaultAccountId?: string;
+    daysToReceive: number; 
+    defaultAccountId?: string; 
 }
 
 interface CardFeeConfig {
@@ -81,7 +81,7 @@ interface LocalAccount extends Account {
 }
 
 interface LocalTransaction extends Transaction {
-    settlementDate?: string;
+    settlementDate?: string; 
     relatedTransferId?: string;
     procedure?: string;
     reconciliationStatus?: 'verified' | 'error' | 'pending';
@@ -96,7 +96,7 @@ interface LocalTransaction extends Transaction {
     isPartial?: boolean;
 }
 
-const COLORS = ['#4059B2', '#7460A8', '#536FD1', '#7460A8', '#6F86D8', '#818CF8'];
+const COLORS = ['#5347CE', '#887CFD', '#4896FE', '#16C8C7', '#38BDF8', '#818CF8'];
 
 const ALL_TABS_CONFIG = [
   { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
@@ -176,7 +176,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [newSupplier, setNewSupplier] = useState('');
   const [newProfessional, setNewProfessional] = useState('');
   const [newSalesTeam, setNewSalesTeam] = useState('');
-  const [newSalesTeamColor, setNewSalesTeamColor] = useState('#7460a8');
+  const [newSalesTeamColor, setNewSalesTeamColor] = useState('#8b5cf6');
   const [newPaymentMethod, setNewPaymentMethod] = useState('');
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
   const [expandedExpId, setExpandedExpId] = useState<string | null>(null);
@@ -187,7 +187,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'income' | 'expense'>('income');
   const [isSaving, setIsSaving] = useState(false);
-
+  
   // Bulk States
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkChangeCatOpen, setIsBulkChangeCatOpen] = useState(false);
@@ -255,7 +255,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   // Account Statement Modal
   const [selectedAccountForStatement, setSelectedAccountForStatement] = useState<LocalAccount | null>(null);
-
+  
   // Account Creation Modal
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [newAccount, setNewAccount] = useState({ name: '', bank: '', initialBalance: '' });
@@ -269,7 +269,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           bank: newAccount.bank,
           initial_balance: parseFloat(newAccount.initialBalance.replace(',', '.')) || 0,
           type: 'checking',
-          color: '#536fd1'
+          color: '#3b82f6'
       });
       if (!error) {
           await fetchAllData();
@@ -292,11 +292,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const confirmPayment = async (tx: LocalTransaction) => {
       if (!tempPaymentDate) return toast.error('Informe a data do pagamento.');
-      const { error } = await supabase.from('transactions').update({
-          status: 'Paid',
-          settlement_date: tempPaymentDate
+      const { error } = await supabase.from('transactions').update({ 
+          status: 'Paid', 
+          settlement_date: tempPaymentDate 
       }).eq('id', tx.id);
-
+      
       if (!error) {
           setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'Paid', settlementDate: tempPaymentDate } : t));
           setPayingTxId(null);
@@ -308,7 +308,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const bulkDeleteExpenses = async () => {
       if (selectedExpenses.length === 0) return;
-
+      
       const { error } = await supabase.from('transactions').delete().in('id', selectedExpenses);
       if (!error) {
           setTransactions(prev => prev.filter(t => !selectedExpenses.includes(t.id)));
@@ -323,7 +323,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const bulkDeleteIncomes = async () => {
       if (selectedIncomes.length === 0) return;
-
+      
       const { error } = await supabase.from('transactions').delete().in('id', selectedIncomes);
       if (!error) {
           setTransactions(prev => prev.filter(t => !selectedIncomes.includes(t.id)));
@@ -338,12 +338,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const bulkChangeCategoryIncomes = async (newCategory: string) => {
       if (selectedIncomes.length === 0) return;
-
+      
       const { error } = await supabase
           .from('transactions')
           .update({ category: newCategory })
           .in('id', selectedIncomes);
-
+          
       if (!error) {
           setTransactions(prev => prev.map(t => selectedIncomes.includes(t.id) ? { ...t, category: newCategory } : t));
           setSelectedIncomes([]);
@@ -357,12 +357,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const bulkChangeCategoryExpenses = async (newCategory: string) => {
       if (selectedExpenses.length === 0) return;
-
+      
       const { error } = await supabase
           .from('transactions')
           .update({ category: newCategory })
           .in('id', selectedExpenses);
-
+          
       if (!error) {
           setTransactions(prev => prev.map(t => selectedExpenses.includes(t.id) ? { ...t, category: newCategory } : t));
           setSelectedExpenses([]);
@@ -377,11 +377,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const togglePaymentStatus = async (tx: LocalTransaction) => {
       if (tx.status === 'Paid') {
           if (!confirm('Marcar como pendente (A Pagar)?')) return;
-          const { error } = await supabase.from('transactions').update({
-              status: 'Pending',
-              settlement_date: null
+          const { error } = await supabase.from('transactions').update({ 
+              status: 'Pending', 
+              settlement_date: null 
           }).eq('id', tx.id);
-
+          
           if (!error) {
               setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'Pending', settlementDate: undefined } : t));
           }
@@ -396,11 +396,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const initialTxFilters = {
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-    category: 'all',
-    status: 'all',
-    paymentMethods: [] as string[],
-    professional: 'all',
-    procedure: 'all',
+    category: 'all', 
+    status: 'all', 
+    paymentMethods: [] as string[], 
+    professional: 'all', 
+    procedure: 'all', 
     auditStatus: 'all',
     hasNF: 'all',
     isPartial: 'all',
@@ -408,7 +408,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   };
 
   const [txFilters, setTxFilters] = useState(initialTxFilters);
-
+  
   const [expFilters, setExpFilters] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
@@ -435,10 +435,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       return t.date >= overviewFilters.start && t.date <= overviewFilters.end;
     });
 
-    const errorCount = transactions.filter(t =>
-        t.type === 'income' &&
-        t.reconciliationStatus === 'error' &&
-        t.date >= overviewFilters.start &&
+    const errorCount = transactions.filter(t => 
+        t.type === 'income' && 
+        t.reconciliationStatus === 'error' && 
+        t.date >= overviewFilters.start && 
         t.date <= overviewFilters.end
     ).length;
 
@@ -521,7 +521,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           const mmText = d.toLocaleString('pt-BR', { month: 'short' });
           const key = `${y}-${m}`;
           const monthStr = `${mmText}/${String(y).substring(2)}`;
-
+          
           let revenue = 0;
           if (y === 2025 && data2025Map[key]) {
              revenue += data2025Map[key];
@@ -559,7 +559,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     let count = 0;
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
+    
     while (d <= lastDay) {
         const dayOfWeek = d.getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -579,7 +579,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
     const remainingDays = calculateRemainingWorkDays();
     const needed = Math.max(0, monthlyRevenueGoal - currentMonthRealized);
-
+    
     return remainingDays > 0 ? needed / remainingDays : 0;
   }, [transactions, monthlyRevenueGoal]);
 
@@ -590,10 +590,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           if (user && user.email) setUserEmail(user.email);
 
           let allTxs: any[] = [];
-
+          
           const { count } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
           const totalCount = count || 0;
-
+          
           if (totalCount > 0) {
               const fetchPromises = [];
               const pageSize = 1000;
@@ -611,8 +611,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           if (txData) {
               setTransactions(txData.map(t => ({
                   id: t.id, date: t.date, description: t.description, category: t.category,
-                  type: t.type, amount: t.amount, status: t.status, payment_method: t.payment_method,
-                  paymentMethod: t.payment_method,
+                  type: t.type, amount: t.amount, status: t.status, payment_method: t.payment_method, 
+                  paymentMethod: t.payment_method, 
                   professional: t.professional,
                   installments: t.installments, accountId: t.account_id, reconciliationStatus: t.reconciliation_status,
                   invoiceEmitted: t.invoice_emitted, observation: t.observation, procedure: t.procedure,
@@ -620,14 +620,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   appliedFeeRate: t.applied_fee_rate,
                   explicitFeeAmount: t.explicit_fee_amount,
                   cardBrand: t.card_brand,
-                  externalId: t.external_id,
+                  externalId: t.external_id, 
                   source: t.source,
                   settlementDate: t.settlement_date,
                   supplier: t.supplier,
                   salesTeam: t.sales_team
               })));
           }
-
+          
           const currentKey = new Date().toISOString().slice(0, 7);
           const { data: goalData } = await supabase.from('dashboard_configs').select('revenue_goal').eq('month_key', currentKey).maybeSingle();
           if (goalData) setMonthlyRevenueGoal(Number(goalData.revenue_goal));
@@ -651,19 +651,19 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchAllData();
+  useEffect(() => { 
+    fetchAllData(); 
   }, []);
 
   useRealtimeSubscription([
-    'transactions',
-    'accounts',
-    'card_fees',
-    'income_categories',
-    'expense_categories',
-    'professionals',
-    'suppliers',
-    'sales_teams',
+    'transactions', 
+    'accounts', 
+    'card_fees', 
+    'income_categories', 
+    'expense_categories', 
+    'professionals', 
+    'suppliers', 
+    'sales_teams', 
     'payment_methods'
   ], () => {
     fetchAllData();
@@ -672,23 +672,23 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const handleSaveTransaction = async () => {
       try {
           const amountVal = parseFloat((formData.amount || '0').toString().replace(',', '.'));
-
+          
           // Validação de Campos Obrigatórios
           if (!formData.date) return toast.error('Selecione a data do lançamento.');
           if (!formData.description?.trim()) return toast.error(modalType === 'income' ? 'Informe o nome do paciente.' : 'Informe a descrição da despesa.');
           if (!formData.category) return toast.error('Selecione uma categoria.');
-
+          
           const currentCategoryObj = (modalType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === formData.category);
           const hasSubcategories = currentCategoryObj && currentCategoryObj.subcategories && currentCategoryObj.subcategories.length > 0;
           if (hasSubcategories && !formData.procedure) return toast.error('Selecione um sub-categoria / procedimento.');
-
+          
           if (isNaN(amountVal) || amountVal <= 0) return toast.error('Informe um valor válido maior que zero.');
           if (!formData.accountId) return toast.error('Selecione a conta de destino/origem.');
           if (!formData.paymentMethod) return toast.error('Selecione a forma de pagamento.');
 
           if (modalType === 'income') {
               if (!formData.professional) return toast.error('Selecione o profissional responsável.');
-
+              
               const method = (formData.paymentMethod || '').toLowerCase();
               const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
               if (isCard && !formData.cardBrand) {
@@ -697,12 +697,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           }
 
           setIsSaving(true);
-
+          
           const transactionsToInsert = [];
           const baseDate = new Date(formData.date);
           // Fix timezone offset issue when parsing YYYY-MM-DD
           baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
-
+          
           let baseSettlementDate = null;
           if (formData.settlementDate) {
               baseSettlementDate = new Date(formData.settlementDate);
@@ -718,7 +718,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           for (let i = 0; i < recurrenceCount; i++) {
               const currentTxDate = new Date(baseDate);
               currentTxDate.setMonth(currentTxDate.getMonth() + i);
-
+              
               let currentSettlementDate = null;
               if (baseSettlementDate) {
                   const tempSettlement = new Date(baseSettlementDate);
@@ -729,18 +729,18 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
               const isRestrictedProcedure = formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial';
 
               transactionsToInsert.push({
-                  id: (i === 0 && formData.id) ? formData.id : 'tx_' + safeGenerateId(),
-                  description: recurrenceCount > 1 ? `${formData.description} (${i + 1}/${recurrenceCount})` : formData.description,
-                  amount: amountVal,
+                  id: (i === 0 && formData.id) ? formData.id : 'tx_' + safeGenerateId(), 
+                  description: recurrenceCount > 1 ? `${formData.description} (${i + 1}/${recurrenceCount})` : formData.description, 
+                  amount: amountVal, 
                   category: formData.category,
-                  procedure: formData.procedure,
-                  date: currentTxDate.toISOString().split('T')[0],
-                  type: modalType,
+                  procedure: formData.procedure, 
+                  date: currentTxDate.toISOString().split('T')[0], 
+                  type: modalType, 
                   status: formData.status,
-                  payment_method: formData.paymentMethod,
-                  account_id: formData.accountId,
+                  payment_method: formData.paymentMethod, 
+                  account_id: formData.accountId, 
                   professional: formData.professional,
-                  installments: formData.installments,
+                  installments: formData.installments, 
                   observation: formData.observation,
                   is_partial: formData.isPartial,
                   card_brand: formData.cardBrand,
@@ -751,14 +751,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           }
 
           const { error } = await supabase.from('transactions').upsert(transactionsToInsert);
-          if (!error) {
+          if (!error) { 
               playCashRegisterSound();
-              await fetchAllData();
+              await fetchAllData(); 
               notifyDataChange(['transactions', 'accounts']);
               setIsModalOpen(false);
               toast.success('Lançamento salvo com sucesso!');
-          } else {
-              toast.error('Erro ao salvar no banco de dados: ' + error.message);
+          } else { 
+              toast.error('Erro ao salvar no banco de dados: ' + error.message); 
           }
       } catch (err: any) {
           console.error("Erro no handleSaveTransaction:", err);
@@ -771,7 +771,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const openBulkModal = (type: 'income' | 'expense' = 'income') => {
     const defaultAcc = accountsList[0]?.id || '';
     setBulkRows([{
-        date: today, description: '', amount: '', category: (type === 'income' ? incomeCategories : expenseCategories)[0]?.name || '',
+        date: today, description: '', amount: '', category: (type === 'income' ? incomeCategories : expenseCategories)[0]?.name || '', 
         procedure: '', type: type, status: 'Paid', paymentMethod: 'Dinheiro', professional: '', salesTeam: '', accountId: defaultAcc
     }]);
     setPastedData('');
@@ -791,7 +791,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const handleBulkChange = (index: number, field: string, value: any) => {
     const newRows = [...bulkRows];
     newRows[index] = { ...newRows[index], [field]: value };
-
+    
     // Auto-update procedural details if category changes
     if (field === 'category') {
         newRows[index].procedure = '';
@@ -803,20 +803,20 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             newRows[index].salesTeam = '';
         }
     }
-
+    
     setBulkRows(newRows);
   };
 
   // --- LOGICA DE BUSCA INTELIGENTE PARA IMPORTAÇÃO ---
-
+  
   const findBestMatch = (input: string, list: {name: string}[]) => {
       if (!input) return '';
       const search = input.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
+      
       // 1. Busca Exata (sem acentos)
       let match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === search);
       if (match) return match.name;
-
+      
       // 2. Busca por Início do texto
       match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(search));
       if (match) return match.name;
@@ -855,13 +855,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           const cols = line.split(separator);
           const importedType = cols[4]?.toLowerCase().includes('desp') ? 'expense' : 'income';
           const importedCatText = cols[2]?.trim() || '';
-
+          
           // Mapeia Categoria
           const matchedCatName = findBestMatch(importedCatText, importedType === 'income' ? incomeCategories : expenseCategories);
-
+          
           // Mapeia Profissional
           const matchedProf = findBestMatch(cols[7]?.trim() || '', professionals);
-
+          
           // Mapeia Forma de Pagamento
           const matchedPayment = findBestMatch(cols[6]?.trim() || '', paymentMethods);
 
@@ -934,11 +934,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     });
 
     const { error } = await supabase.from('transactions').insert(toInsert);
-    if (!error) {
+    if (!error) { 
         playCashRegisterSound();
-        await fetchAllData();
+        await fetchAllData(); 
         notifyDataChange(['transactions', 'accounts']);
-        setIsBulkModalOpen(false);
+        setIsBulkModalOpen(false); 
         toast.success('Processamento concluído com sucesso!');
     }
     else toast.error("Erro ao salvar: " + error.message);
@@ -1028,12 +1028,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const categories = modalType === 'income' ? incomeCategories : expenseCategories;
     const currentCat = categories.find(c => c.name === formData.category);
     const sub = currentCat?.subcategories.find((s: any) => s.name === subName);
-
+    
     const isRestrictedProcedure = subName === 'Panorâmica' || subName === 'Documentação Inicial';
-
-    setFormData(prev => ({
-        ...prev,
-        procedure: subName,
+    
+    setFormData(prev => ({ 
+        ...prev, 
+        procedure: subName, 
         amount: (sub && 'defaultValue' in sub && sub.defaultValue) ? sub.defaultValue.toString() : prev.amount,
         salesTeam: isRestrictedProcedure ? '' : prev.salesTeam
     }));
@@ -1041,9 +1041,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const handlePaymentMethodChange = (pmName: string) => {
     const method = paymentMethods.find(m => m.name === pmName);
-    setFormData(prev => ({
-        ...prev,
-        paymentMethod: pmName,
+    setFormData(prev => ({ 
+        ...prev, 
+        paymentMethod: pmName, 
         accountId: method?.defaultAccountId || prev.accountId,
         installments: (pmName.toLowerCase().includes('cartão') || pmName.toLowerCase().includes('crédito')) ? prev.installments : 1
     }));
@@ -1052,11 +1052,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const getEffectiveFee = (tx: LocalTransaction) => {
       if (tx.explicitFeeAmount !== undefined && tx.explicitFeeAmount !== null && tx.explicitFeeAmount !== 0) return tx.explicitFeeAmount;
       const method = (tx.paymentMethod || '').toLowerCase();
-
+      
       if (method === 'financiamento dentalcred') {
           return (tx.amount * 6.59) / 100;
       }
-
+      
       const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
       if (isCard && cardFees.length > 0) {
           const feeConfig = cardFees.find(f => f && f.brand === tx.cardBrand) || cardFees[0];
@@ -1154,8 +1154,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(16, 185, 129, 0.3)">
-                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Receita Prevista</span>
-                      <h3 className="text-2xl font-black text-blue-400">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Receita Prevista</span>
+                      <h3 className="text-2xl font-black text-emerald-400">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                   </SpotlightCard>
                   <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(239, 68, 68, 0.3)">
                       <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Despesas Previstas</span>
@@ -1180,7 +1180,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                       </div>
                       <button
                           onClick={handleExportBudget}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
                       >
                           <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
                       </button>
@@ -1253,8 +1253,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   {/* Projected Incomes Table */}
                   <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
                       <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
-                          <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest">Receitas Orçadas ({projectedIncomes.length})</h4>
-                          <span className="text-xs font-bold text-blue-300">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Receitas Orçadas ({projectedIncomes.length})</h4>
+                          <span className="text-xs font-bold text-emerald-300">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse">
@@ -1274,7 +1274,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                           <tr key={item.id} className="hover:bg-panel transition-colors">
                                               <td className="p-3 font-medium text-text">{item.category}</td>
                                               <td className="p-3 text-slate-300">{item.description}</td>
-                                              <td className="p-3 text-right font-bold text-blue-400 font-mono">
+                                              <td className="p-3 text-right font-bold text-emerald-400 font-mono">
                                                   <input
                                                       type="number"
                                                       step="0.01"
@@ -1283,7 +1283,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                           const val = parseFloat(e.target.value) || 0;
                                                           setBudgetItems(prev => prev.map(i => i.id === item.id ? { ...i, projectedAmount: val } : i));
                                                       }}
-                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-blue-500 text-right w-24 outline-none font-mono"
+                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-emerald-500 text-right w-24 outline-none font-mono"
                                                   />
                                               </td>
                                               <td className="p-3 text-center">
@@ -1357,7 +1357,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const isMyProfile = userEmail === 'clinica.centrodosorrisosc@gmail.com' || userRole === 'admin';
     const filtered = transactions.filter(t => {
         if (t.type !== 'income') return false;
-
+        
         // Debugging filter
         const matches = (
          (txFilters.category === 'all' || t.category === txFilters.category) &&
@@ -1371,11 +1371,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
          (!txFilters.search || (t.description || '').toLowerCase().includes((txFilters.search || '').toLowerCase())) &&
          (t.date >= txFilters.start && t.date <= txFilters.end)
         );
-
+        
         if (!matches) {
             // commented out to avoid performance issues
         }
-
+        
         return matches;
     }).sort((a, b) => b.date.localeCompare(a.date));
     const totalRevenue = filtered.reduce((acc, curr) => acc + curr.amount, 0);
@@ -1425,7 +1425,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <Filter className="text-blue-400 w-3 h-3" /> Filtros
                     </h3>
                     <div className="flex gap-2">
-                        <button onClick={() => handleExport(filtered)} className="text-[9px] font-bold text-blue-500 hover:text-blue-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10 flex items-center gap-1">
+                        <button onClick={() => handleExport(filtered)} className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1">
                             <Download className="w-3 h-3" /> Exportar
                         </button>
                         <button onClick={() => setTxFilters(initialTxFilters)} className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel">
@@ -1433,17 +1433,17 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </button>
                     </div>
                 </div>
-
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
-                        <DateRangePicker
-                            value={{ start: txFilters.start, end: txFilters.end }}
-                            onChange={(range) => setTxFilters({...txFilters, start: range.start, end: range.end})}
+                        <DateRangePicker 
+                            value={{ start: txFilters.start, end: txFilters.end }} 
+                            onChange={(range) => setTxFilters({...txFilters, start: range.start, end: range.end})} 
                             className="h-7"
                         />
                     </div>
-
+                    
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Categoria</label>
                         <div className="relative">
@@ -1488,13 +1488,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Forma Pagto</label>
                         <div className="relative">
-                            <button
+                            <button 
                                 onClick={() => setIsPaymentMethodFilterOpen(!isPaymentMethodFilterOpen)}
                                 className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none flex items-center justify-between hover:bg-panel transition-colors h-7"
                             >
                                 <span className="truncate max-w-[80px]">
-                                    {txFilters.paymentMethods.length === 0 ? 'Todas' :
-                                     txFilters.paymentMethods.length === 1 ? txFilters.paymentMethods[0] :
+                                    {txFilters.paymentMethods.length === 0 ? 'Todas' : 
+                                     txFilters.paymentMethods.length === 1 ? txFilters.paymentMethods[0] : 
                                      `${txFilters.paymentMethods.length} Selecionadas`}
                                 </span>
                                 <ChevronDown className={`w-2.5 h-2.5 text-slate-400 transition-transform ${isPaymentMethodFilterOpen ? 'rotate-180' : ''}`} />
@@ -1502,15 +1502,15 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                             {isPaymentMethodFilterOpen && (
                                 <>
-                                    <div
-                                        className="fixed inset-0 z-[60]"
+                                    <div 
+                                        className="fixed inset-0 z-[60]" 
                                         onClick={() => setIsPaymentMethodFilterOpen(false)}
                                     />
                                     <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-border rounded-xl shadow-2xl z-[70] py-2 animate-in fade-in zoom-in-95 duration-150">
                                         <div className="px-2 pb-1 mb-1 border-b border-border flex justify-between items-center">
                                             <span className="text-[9px] font-bold text-slate-500 uppercase">Selecionar</span>
                                             {txFilters.paymentMethods.length > 0 && (
-                                                <button
+                                                <button 
                                                     onClick={() => setTxFilters({...txFilters, paymentMethods: []})}
                                                     className="text-[9px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
                                                 >
@@ -1605,42 +1605,42 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                 <div className="flex gap-4 justify-end border-t border-border pt-2 mt-0.5">
                     {selectedIncomes.length > 0 && (
-                        <div className="flex gap-4 items-center bg-blue-500/10 px-3 py-1 rounded border border-blue-500/20 mr-auto animate-in fade-in slide-in-from-left-2 duration-200">
-                            <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedIncomes.length})</span>
+                        <div className="flex gap-4 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 mr-auto animate-in fade-in slide-in-from-left-2 duration-200">
+                            <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedIncomes.length})</span>
                             <div className="flex gap-3">
                                 <div className="flex flex-col items-end">
                                     <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">Bruto</span>
-                                    <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-[10px] text-emerald-300 font-bold">R$ {selectedIncomesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex flex-col items-end border-l border-border pl-3">
                                     <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0">Líquido</span>
                                     <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesNetSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
-
+                            
                             <div className="relative border-l border-border pl-3 flex items-center">
-                                <button
+                                <button 
                                     onClick={() => {
                                         setIsBulkChangeCatOpen(false);
                                         setIsBulkDeleteConfirmOpen(false);
                                         setActiveBulkActionTab(activeBulkActionTab === 'income' ? null : 'income');
-                                    }}
-                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/10"
+                                    }} 
+                                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
                                 >
                                     Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                                 </button>
-
+                                
                                 {activeBulkActionTab === 'income' && (
                                     <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                                         {!isBulkDeleteConfirmOpen && !isBulkChangeCatOpen && (
                                             <>
-                                                <button
+                                                <button 
                                                     onClick={() => setIsBulkChangeCatOpen(true)}
                                                     className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
                                                 >
-                                                    <Edit className="w-3 h-3 text-blue-400" /> Alterar Categoria
+                                                    <Edit className="w-3 h-3 text-indigo-400" /> Alterar Categoria
                                                 </button>
-                                                <button
+                                                <button 
                                                     onClick={() => setIsBulkDeleteConfirmOpen(true)}
                                                     className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
                                                 >
@@ -1648,18 +1648,18 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 </button>
                                             </>
                                         )}
-
+                                        
                                         {isBulkDeleteConfirmOpen && (
                                             <div className="p-2 flex flex-col gap-1.5">
                                                 <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
                                                 <div className="flex gap-1">
-                                                    <button
+                                                    <button 
                                                         onClick={bulkDeleteIncomes}
                                                         className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
                                                     >
                                                         Sim
                                                     </button>
-                                                    <button
+                                                    <button 
                                                         onClick={() => setIsBulkDeleteConfirmOpen(false)}
                                                         className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
                                                     >
@@ -1668,7 +1668,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 </div>
                                             </div>
                                         )}
-
+                                        
                                         {isBulkChangeCatOpen && (
                                             <div className="p-2 flex flex-col gap-1.5">
                                                 <span className="text-[8px] font-extrabold text-text uppercase mb-1">Selecionar Categoria:</span>
@@ -1683,7 +1683,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <button
+                                                <button 
                                                     onClick={() => setIsBulkChangeCatOpen(false)}
                                                     className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
                                                 >
@@ -1702,7 +1702,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">Receita</span>
-                        <span className="text-[10px] text-blue-400 font-bold">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-[10px] text-emerald-400 font-bold">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">Total NF</span>
@@ -1711,7 +1711,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 </div>
             </div>
             {errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1"><AlertTriangle className="text-red-500 w-3 h-3" /><span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Atenção: {errorCount} lançamentos com erro na auditoria.</span></div>)}
-            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">Líquido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-blue-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'Clínica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#7460a8' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-blue-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-blue-500 border-blue-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / Divergência"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
+            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">Líquido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'Clínica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#8b5cf6' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-emerald-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / Divergência"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
                 </div>
             )}
         </div>
@@ -1724,7 +1724,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         if (!expFilters.statuses.includes(t.status)) return false;
         if (expFilters.category !== 'all' && t.category !== expFilters.category) return false;
         if (expFilters.search && !(t.description || '').toLowerCase().includes((expFilters.search || '').toLowerCase())) return false;
-
+        
         const effectiveDate = (t.status === 'Paid' && t.settlementDate) ? t.settlementDate : t.date;
         return effectiveDate >= expFilters.start && effectiveDate <= expFilters.end;
     }).sort((a, b) => {
@@ -1746,8 +1746,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <h3 className="text-2xl font-black text-text">R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </SpotlightCard>
                 <SpotlightCard className="glass-panel p-4 rounded-2xl flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.4)">
-                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Total Pago</span>
-                    <h3 className="text-2xl font-black text-blue-400">R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
+                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Total Pago</span>
+                    <h3 className="text-2xl font-black text-emerald-400">R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                 </SpotlightCard>
                 <SpotlightCard className="glass-panel p-4 rounded-2xl flex flex-col gap-1" spotlightColor="rgba(239, 68, 68, 0.4)">
                     <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Total Pendente</span>
@@ -1763,26 +1763,26 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         Limpar Filtros
                     </button>
                 </div>
-
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
-                        <DateRangePicker
-                            value={{ start: expFilters.start, end: expFilters.end }}
-                            onChange={(range) => setExpFilters({...expFilters, start: range.start, end: range.end})}
+                        <DateRangePicker 
+                            value={{ start: expFilters.start, end: expFilters.end }} 
+                            onChange={(range) => setExpFilters({...expFilters, start: range.start, end: range.end})} 
                             className="h-7"
                         />
                     </div>
-
+                    
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Status</label>
                         <div className="flex bg-surface rounded-lg border border-border p-0.5 h-[28px]">
-                            <button
-                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Paid') ? prev.statuses.filter(s => s !== 'Paid') : [...prev.statuses, 'Paid'] }))}
-                                className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes('Paid') ? 'bg-blue-500/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+                            <button 
+                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Paid') ? prev.statuses.filter(s => s !== 'Paid') : [...prev.statuses, 'Paid'] }))} 
+                                className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes('Paid') ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                             >Pago</button>
-                            <button
-                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Pending') ? prev.statuses.filter(s => s !== 'Pending') : [...prev.statuses, 'Pending'] }))}
+                            <button 
+                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Pending') ? prev.statuses.filter(s => s !== 'Pending') : [...prev.statuses, 'Pending'] }))} 
                                 className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes('Pending') ? 'bg-red-500/20 text-red-400' : 'text-slate-500 hover:text-slate-300'}`}
                             >Pendente</button>
                         </div>
@@ -1814,30 +1814,30 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             <span className="text-[10px] text-red-300 font-bold">R$ {selectedExpensesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                     </div>
-
+                    
                     <div className="relative border-l border-border pl-3 flex items-center">
-                        <button
+                        <button 
                             onClick={() => {
                                 setIsBulkChangeCatExpensesOpen(false);
                                 setIsBulkDeleteExpensesConfirmOpen(false);
                                 setActiveBulkActionTab(activeBulkActionTab === 'expense' ? null : 'expense');
-                            }}
+                            }} 
                             className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
                         >
                             Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                         </button>
-
+                        
                         {activeBulkActionTab === 'expense' && (
                             <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                                 {!isBulkDeleteExpensesConfirmOpen && !isBulkChangeCatExpensesOpen && (
                                     <>
-                                        <button
+                                        <button 
                                             onClick={() => setIsBulkChangeCatExpensesOpen(true)}
                                             className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
                                         >
-                                            <Edit className="w-3 h-3 text-blue-400" /> Alterar Categoria
+                                            <Edit className="w-3 h-3 text-indigo-400" /> Alterar Categoria
                                         </button>
-                                        <button
+                                        <button 
                                             onClick={() => setIsBulkDeleteExpensesConfirmOpen(true)}
                                             className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
                                         >
@@ -1845,18 +1845,18 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         </button>
                                     </>
                                 )}
-
+                                
                                 {isBulkDeleteExpensesConfirmOpen && (
                                     <div className="p-2 flex flex-col gap-1.5">
                                         <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
                                         <div className="flex gap-1">
-                                            <button
+                                            <button 
                                                 onClick={bulkDeleteExpenses}
                                                 className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
                                             >
                                                 Sim
                                             </button>
-                                            <button
+                                            <button 
                                                 onClick={() => setIsBulkDeleteExpensesConfirmOpen(false)}
                                                 className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
                                             >
@@ -1865,7 +1865,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         </div>
                                     </div>
                                 )}
-
+                                
                                 {isBulkChangeCatExpensesOpen && (
                                     <div className="p-2 flex flex-col gap-1.5">
                                         <span className="text-[8px] font-extrabold text-text uppercase mb-1">Selecionar Categoria:</span>
@@ -1880,7 +1880,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 </button>
                                             ))}
                                         </div>
-                                        <button
+                                        <button 
                                             onClick={() => setIsBulkChangeCatExpensesOpen(false)}
                                             className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
                                         >
@@ -1901,12 +1901,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 {payingTxId === tx.id ? (
                     <div className="flex items-center justify-center gap-2 animate-in fade-in">
                         <input type="date" value={tempPaymentDate} onChange={e => setTempPaymentDate(e.target.value)} className="bg-panel border border-border rounded px-2 py-1 text-[10px] text-text outline-none w-24" />
-                        <button onClick={() => confirmPayment(tx)} className="text-blue-400 hover:text-blue-300"><CheckCircle className="w-4 h-4" /></button>
+                        <button onClick={() => confirmPayment(tx)} className="text-emerald-400 hover:text-emerald-300"><CheckCircle className="w-4 h-4" /></button>
                         <button onClick={() => setPayingTxId(null)} className="text-red-400 hover:text-red-300"><X className="w-4 h-4" /></button>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center">
-                        <button onClick={() => { if (tx.status === 'Pending') { setPayingTxId(tx.id); setTempPaymentDate(today); } else { togglePaymentStatus(tx); } }} className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition-all ${tx.status === 'Paid' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'}`}>{tx.status === 'Paid' ? 'Pago' : 'A Pagar'}</button>
+                        <button onClick={() => { if (tx.status === 'Pending') { setPayingTxId(tx.id); setTempPaymentDate(today); } else { togglePaymentStatus(tx); } }} className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition-all ${tx.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'}`}>{tx.status === 'Paid' ? 'Pago' : 'A Pagar'}</button>
                         {tx.status === 'Paid' && tx.settlementDate && (<span className="text-[9px] text-slate-500 mt-1 font-mono">{tx.settlementDate.split('-').reverse().join('/')}</span>)}
                     </div>
                 )}
@@ -1927,16 +1927,16 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         const d = new Date(currentMonthDate);
         d.setMonth(d.getMonth() - i);
         const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-
+        
         const monthTxs = transactions.filter(t => {
             if (t.status !== 'Paid') return false;
             const effectiveDate = t.settlementDate || t.date;
             return effectiveDate?.startsWith(mKey);
         });
-
+        
         const income = monthTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
         const expense = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-
+        
         monthlyData.push({ month: d.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase(), income, expense });
     }
 
@@ -1976,7 +1976,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         const diff = current - prev;
         const percent = (diff / prev) * 100;
         return (
-            <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${diff >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+            <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 <TrendingUp className="w-3 h-3" />
                 {diff >= 0 ? '+' : ''}{percent.toFixed(1)}% vs mês anterior
             </span>
@@ -1987,8 +1987,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         <div className="flex flex-col gap-6 animate-in fade-in h-full p-4 text-text relative overflow-hidden">
             {/* Decorative background glows */}
             <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
-
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full pointer-events-none" />
+            
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-panel border border-primary text-primary flex items-center justify-center shadow-lg shadow-primary/10">
@@ -2004,10 +2004,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <input type="month" value={selectedDreMonth} onChange={e => setSelectedDreMonth(e.target.value)} className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                 </div>
             </div>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-                <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total Entradas</p>
+                <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+                    <p className="text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total Entradas</p>
                     <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">R$ {currentData.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <div className="mt-2">{getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}</div>
                 </div>
@@ -2043,12 +2043,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" />
                         <XAxis dataKey="month" fontSize={10} axisLine={false} tickLine={false} stroke="#64748b" dy={10} />
                         <YAxis axisLine={false} tickLine={false} fontSize={10} stroke="#64748b" />
-                        <RechartsTooltip
+                        <RechartsTooltip 
                             cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                             contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}
                             itemStyle={{ color: '#fff', fontSize: '12px' }}
                         />
-                        <Bar dataKey="income" fill="#536fd1" radius={[4, 4, 0, 0]} barSize={24} />
+                        <Bar dataKey="income" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
                         <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={24} />
                     </BarChart>
                 </ResponsiveContainer>
@@ -2058,20 +2058,20 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
                         <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
-                            <Plus className="w-4 h-4 text-blue-500" /> Receitas Detalhadas
+                            <Plus className="w-4 h-4 text-emerald-500" /> Receitas Detalhadas
                         </h3>
                         <div className="flex flex-col gap-5">
                             {currentData.incomeByCategory.map(cat => (
                                 <div key={cat.name} className="flex flex-col gap-1.5">
                                     <div className="flex justify-between items-center">
                                         <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">{cat.name}</span>
-                                        <span className="text-blue-400 font-black text-sm">R$ {cat.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                        <span className="text-emerald-400 font-black text-sm">R$ {cat.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
-                                        <motion.div
+                                        <motion.div 
                                             initial={{ width: 0 }}
                                             animate={{ width: `${(cat.amount / currentData.totalRevenue) * 100}%` }}
-                                            className="h-full bg-blue-500"
+                                            className="h-full bg-emerald-500"
                                         />
                                     </div>
                                 </div>
@@ -2092,7 +2092,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         <span className="text-rose-400 font-black text-sm">R$ {cat.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
-                                        <motion.div
+                                        <motion.div 
                                             initial={{ width: 0 }}
                                             animate={{ width: `${(cat.amount / currentData.totalExpense) * 100}%` }}
                                             className="h-full bg-rose-500"
@@ -2109,11 +2109,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <ShieldCheck className="w-24 h-24 text-text" />
                     </div>
-
+                    
                     <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
-                        <TrendingUp className="w-4 h-4 text-blue-400" /> Saúde Financeira
+                        <TrendingUp className="w-4 h-4 text-indigo-400" /> Saúde Financeira
                     </h3>
-
+                    
                     <div className="flex flex-col gap-8 relative z-10">
                         <div>
                             <div className="flex justify-between items-end mb-2">
@@ -2121,10 +2121,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <p className="text-2xl font-black text-text">{(currentData.totalRevenue > 0 ? (currentData.result / currentData.totalRevenue * 100).toFixed(1) : 0)}%</p>
                             </div>
                             <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
-                                <motion.div
+                                <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.result / currentData.totalRevenue * 100) : 0))}%` }}
-                                    className={`h-full rounded-full ${currentData.result > 0 ? 'bg-blue-500' : 'bg-rose-500'}`}
+                                    className={`h-full rounded-full ${currentData.result > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
                                 />
                             </div>
                         </div>
@@ -2135,7 +2135,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <p className="text-2xl font-black text-text">{(currentData.totalRevenue > 0 ? (currentData.totalExpense / currentData.totalRevenue * 100).toFixed(1) : 0)}%</p>
                             </div>
                             <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
-                                <motion.div
+                                <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.totalExpense / currentData.totalRevenue * 100) : 0))}%` }}
                                     className="h-full bg-primary rounded-full"
@@ -2143,16 +2143,16 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             </div>
                         </div>
 
-                        <div className="bg-blue-600/10 p-5 rounded-2xl border border-blue-500/20 shadow-inner group hover:bg-blue-600/15 transition-colors">
+                        <div className="bg-indigo-600/10 p-5 rounded-2xl border border-indigo-500/20 shadow-inner group hover:bg-indigo-600/15 transition-colors">
                             <div className="flex items-center gap-2 mb-3">
-                                <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
                                 </div>
-                                <p className="text-[10px] text-blue-300 font-black uppercase tracking-widest">Recomendação Estratégica</p>
+                                <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">Recomendação Estratégica</p>
                             </div>
                             <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                                {currentData.result > 0
-                                    ? "Sua clínica apresenta uma taxa de lucro saudável. Este é o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente."
+                                {currentData.result > 0 
+                                    ? "Sua clínica apresenta uma taxa de lucro saudável. Este é o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente." 
                                     : "Atenção crítica: A operação está consumindo mais do que gera. É recomendável uma auditoria imediata nas despesas operacionais e revisão da tabela de procedimentos."}
                             </p>
                         </div>
@@ -2176,7 +2176,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const renderSettings = () => (
     <div className="flex flex-col gap-10 pb-20 animate-in fade-in custom-scrollbar">
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Building2 className="text-blue-500 w-4 h-4" /> Categorias de Receita & Procedimentos</h3><div className="flex gap-2 mb-4"><input value={newIncomeCategory} onChange={e => setNewIncomeCategory(e.target.value)} placeholder="Nova categoria (ex: Ortodontia)..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newIncomeCategory) { await supabase.from('income_categories').insert({id: 'inc_'+Date.now(), name: newIncomeCategory, subcategories: [], type: 'income'}); fetchAllData(); setNewIncomeCategory(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-blue-500">Add</button></div><div className="flex flex-col gap-3">{incomeCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><span className="text-sm font-black text-slate-200 uppercase">{cat.name}</span><div className="flex gap-2"><button onClick={() => setExpandedCatId(expandedCatId === cat.id ? null : cat.id)} className="text-slate-500 hover:text-text transition-colors">{expandedCatId === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button><button onClick={async () => { if(confirm("Excluir categoria?")) { await supabase.from('income_categories').delete().eq('id', cat.id); fetchAllData(); } }} className="text-slate-700 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></div></div>{expandedCatId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Novo procedimento..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><input type="number" value={newSubValue} onChange={e => setNewSubValue(e.target.value)} placeholder="R$ 0,00" className="w-24 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text font-mono" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName, defaultValue: parseFloat(newSubValue) || 0 }; await supabase.from('income_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); setNewSubValue(''); fetchAllData(); }} className="bg-blue-600/20 text-blue-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><span className="text-xs text-slate-400">{sub.name}</span><span className="text-xs font-mono font-bold text-slate-300">R$ {sub.defaultValue?.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span><button onClick={async () => {
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Building2 className="text-emerald-500 w-4 h-4" /> Categorias de Receita & Procedimentos</h3><div className="flex gap-2 mb-4"><input value={newIncomeCategory} onChange={e => setNewIncomeCategory(e.target.value)} placeholder="Nova categoria (ex: Ortodontia)..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newIncomeCategory) { await supabase.from('income_categories').insert({id: 'inc_'+Date.now(), name: newIncomeCategory, subcategories: [], type: 'income'}); fetchAllData(); setNewIncomeCategory(''); } }} className="px-6 py-2 bg-emerald-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-emerald-500">Add</button></div><div className="flex flex-col gap-3">{incomeCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><span className="text-sm font-black text-slate-200 uppercase">{cat.name}</span><div className="flex gap-2"><button onClick={() => setExpandedCatId(expandedCatId === cat.id ? null : cat.id)} className="text-slate-500 hover:text-text transition-colors">{expandedCatId === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button><button onClick={async () => { if(confirm("Excluir categoria?")) { await supabase.from('income_categories').delete().eq('id', cat.id); fetchAllData(); } }} className="text-slate-700 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></div></div>{expandedCatId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Novo procedimento..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><input type="number" value={newSubValue} onChange={e => setNewSubValue(e.target.value)} placeholder="R$ 0,00" className="w-24 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text font-mono" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName, defaultValue: parseFloat(newSubValue) || 0 }; await supabase.from('income_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); setNewSubValue(''); fetchAllData(); }} className="bg-emerald-600/20 text-emerald-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><span className="text-xs text-slate-400">{sub.name}</span><span className="text-xs font-mono font-bold text-slate-300">R$ {sub.defaultValue?.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span><button onClick={async () => {
                         const newSubs = cat.subcategories.filter(s => s.id !== sub.id);
                         await supabase.from('income_categories').update({ subcategories: newSubs }).eq('id', cat.id);
                         fetchAllData();
@@ -2184,11 +2184,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>))}</div></div>)}</div>))}</div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas</h3><div className="flex gap-2 mb-6"><input value={newExpenseCategory} onChange={e => setNewExpenseCategory(e.target.value)} placeholder="Nova categoria de despesa..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><select value={newExpenseType} onChange={e => setNewExpenseType(e.target.value as any)} className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"><option value="variable">Variável</option><option value="fixed">Fixa</option></select><button onClick={async () => { if(newExpenseCategory) { await supabase.from('expense_categories').insert({id: 'exp_'+Date.now(), name: newExpenseCategory, type: newExpenseType, subcategories: []}); fetchAllData(); setNewExpenseCategory(''); } }} className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500">Add</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{expenseCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === 'fixed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>{cat.type === 'fixed' ? 'Fixa' : 'Variável'}</span><input
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas</h3><div className="flex gap-2 mb-6"><input value={newExpenseCategory} onChange={e => setNewExpenseCategory(e.target.value)} placeholder="Nova categoria de despesa..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><select value={newExpenseType} onChange={e => setNewExpenseType(e.target.value as any)} className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"><option value="variable">Variável</option><option value="fixed">Fixa</option></select><button onClick={async () => { if(newExpenseCategory) { await supabase.from('expense_categories').insert({id: 'exp_'+Date.now(), name: newExpenseCategory, type: newExpenseType, subcategories: []}); fetchAllData(); setNewExpenseCategory(''); } }} className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500">Add</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{expenseCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === 'fixed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>{cat.type === 'fixed' ? 'Fixa' : 'Variável'}</span><input 
                   className="text-sm font-black text-slate-200 uppercase bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
                   value={cat.name}
                   onChange={(e) => {
-                    const nextCategories = expenseCategories.map(c =>
+                    const nextCategories = expenseCategories.map(c => 
                       c.id === cat.id ? { ...c, name: e.target.value } : c
                     );
                     setExpenseCategories(nextCategories);
@@ -2199,30 +2199,30 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   }}
                 /></div>
                 <div className="flex gap-2 items-center">
-                  <button
-                    onClick={() => setExpandedExpId(expandedExpId === cat.id ? null : cat.id)}
+                  <button 
+                    onClick={() => setExpandedExpId(expandedExpId === cat.id ? null : cat.id)} 
                     className="text-slate-500 hover:text-text transition-colors"
                   >
                     {expandedExpId === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
-                  <button
-                    onClick={async () => {
-                      if(confirm("Deseja realmente excluir esta categoria de despesas?")) {
-                        await supabase.from('expense_categories').delete().eq('id', cat.id);
-                        fetchAllData();
-                      }
-                    }}
+                  <button 
+                    onClick={async () => { 
+                      if(confirm("Deseja realmente excluir esta categoria de despesas?")) { 
+                        await supabase.from('expense_categories').delete().eq('id', cat.id); 
+                        fetchAllData(); 
+                      } 
+                    }} 
                     className="text-slate-500 hover:text-red-600 transition-colors"
                     title="Excluir Categoria"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-              </div>{expandedExpId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Subcategoria..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName }; await supabase.from('expense_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); fetchAllData(); }} className="bg-red-600/20 text-red-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><input
+              </div>{expandedExpId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Subcategoria..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName }; await supabase.from('expense_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); fetchAllData(); }} className="bg-red-600/20 text-red-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><input 
                   className="text-xs text-slate-400 bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
                   value={sub.name}
                   onChange={(e) => {
-                    const nextCategories = expenseCategories.map(c =>
+                    const nextCategories = expenseCategories.map(c => 
                         c.id === cat.id ? { ...c, subcategories: c.subcategories.map(s => s.id === sub.id ? {...s, name: e.target.value} : s) } : c
                     );
                     setExpenseCategories(nextCategories);
@@ -2240,7 +2240,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
                 </div>))}</div></div>)}</div>))}</div></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#7460a8'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#7460a8' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#8b5cf6'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#8b5cf6' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
         <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento & Taxas</h3><div className="flex gap-2 mb-4"><input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova Forma de Pagamento..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newPaymentMethod) { await supabase.from('payment_methods').insert({id: 'pm_'+Date.now(), name: newPaymentMethod, days_to_receive: 0, default_account_id: accountsList[0]?.id || ''}); fetchAllData(); setNewPaymentMethod(''); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{paymentMethods.map(pm => (<div key={pm.id} className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"><div className="flex justify-between items-center"><span className="text-sm font-black text-text uppercase">{pm.name}</span><button onClick={async () => { await supabase.from('payment_methods').delete().eq('id', pm.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div><div className="flex flex-col gap-2"><div className="flex justify-between items-center text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO:</span><input type="number" value={pm.daysToReceive} onChange={async (e) => { await supabase.from('payment_methods').update({days_to_receive: parseInt(e.target.value)}).eq('id', pm.id); fetchAllData(); }} className="w-12 bg-panel border border-border rounded text-center text-text" /></div><div className="flex flex-col gap-1"><span className="text-[10px] font-bold text-slate-500 uppercase">CONTA PADRÃO:</span><select value={pm.defaultAccountId} onChange={async (e) => { await supabase.from('payment_methods').update({default_account_id: e.target.value}).eq('id', pm.id); fetchAllData(); }} className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}</select></div></div></div>))}</div><div className="border-t border-border pt-6"><h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2"><Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras</h4><div className="overflow-x-auto custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase"><tr><th className="p-3">Bandeira</th><th className="p-3">Débito</th><th className="p-3">Crédito 1x</th>{[2,3,4,5,6,7,8,9,10,11,12].map(n => <th key={n} className="p-3">{n}x</th>)}</tr></thead><tbody className="text-[11px] text-slate-300 divide-y divide-white/5">{cardFees.map(fee => (<tr key={fee.brand} className="hover:bg-panel"><td className="p-3 font-bold text-text whitespace-nowrap">{fee.brand}</td><td className="p-3"><input type="number" step="0.01" value={fee.debit} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, debit: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td><td className="p-3"><input type="number" step="0.01" value={fee.credit1x} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, credit1x: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>{[2,3,4,5,6,7,8,9,10,11,12].map(n => (<td key={n} className="p-3"><input type="number" step="0.01" value={fee.installments[n] || 0} onChange={async (e) => { const next = cardFees.map(f => { if (f.brand === fee.brand) { const newInst = { ...f.installments, [n]: parseFloat(e.target.value) }; return { ...f, installments: newInst }; } return f; }); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>))}</tr>))}</tbody></table></div></div></div></div>
     </div>
   );
@@ -2266,7 +2266,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar">
 
            <div className="w-full h-full space-y-4">
-
+               
                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
                    <div>
                        <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
@@ -2276,7 +2276,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                    </div>
 
                    <div className="flex flex-wrap gap-2 text-xs justify-end">
-                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-blue-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
+                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-sky-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
                       <button onClick={() => openBulkModal('expense')} className="px-3 py-1.5 glass-button text-rose-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
                       <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
                       <button onClick={() => openModal('expense')} className="px-3 py-1.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 rounded-xl font-bold flex items-center gap-1.5 transition-all"><Minus className="w-3.5 h-3.5" /> Despesa</button>
@@ -2291,8 +2291,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                              onClick={() => setActiveSubTab(tab.id as SubTab)}
                              className={`
                                  px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                 ${activeSubTab === tab.id
-                                     ? 'bg-[#4059B2]/10 text-[#4059B2] dark:bg-[#7460A8]/15 dark:text-[#7460A8] border border-[#4059B2]/30 dark:border-[#7460A8]/30 shadow-sm'
+                                 ${activeSubTab === tab.id 
+                                     ? 'bg-[#5347CE]/10 text-[#5347CE] dark:bg-[#887CFD]/15 dark:text-[#887CFD] border border-[#5347CE]/30 dark:border-[#887CFD]/30 shadow-sm' 
                                      : 'text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent'}
                              `}
                          >
@@ -2308,23 +2308,23 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                          <div className="flex items-center gap-2">
                              <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">Período:</span>
                              <div className="w-60">
-                                 <DateRangePicker
-                                     value={{ start: overviewFilters.start, end: overviewFilters.end }}
-                                     onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))}
+                                 <DateRangePicker 
+                                     value={{ start: overviewFilters.start, end: overviewFilters.end }} 
+                                     onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))} 
                                  />
                              </div>
                          </div>
                      </div>
-
+                     
                      {overviewMetrics.errorCount > 0 && (<div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-500 text-sm">warning</span><span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
-
+                     
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#7460A8] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
+                             <p className="text-[#16C8C7] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
                          </div>
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#4059B2] dark:text-[#7460A8] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
+                             <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                          </div>
                      </div>
@@ -2350,7 +2350,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         ].map((chart, idx) => (
                             <div key={idx} className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between">
                                 <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">{chart.title}</h3>
-
+                                
                                 <div className="h-[210px] w-full relative flex items-center justify-center">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
@@ -2368,14 +2368,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 onMouseLeave={() => chart.setActive(null)}
                                             >
                                                 {chart.data.map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={COLORS[index % COLORS.length]}
+                                                    <Cell 
+                                                        key={`cell-${index}`} 
+                                                        fill={COLORS[index % COLORS.length]} 
                                                         opacity={chart.activeIndex === null || chart.activeIndex === index ? 1 : 0.45}
                                                         className="transition-all duration-200 cursor-pointer"
                                                     />
                                                 ))}
-                                                <Label
+                                                <Label 
                                                     position="center"
                                                     content={({ viewBox }: any) => {
                                                         const cx = viewBox?.cx || 0;
@@ -2408,8 +2408,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                             onMouseEnter={() => chart.setActive(index)}
                                             onMouseLeave={() => chart.setActive(null)}
                                             className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition-all cursor-pointer ${
-                                                chart.activeIndex === index
-                                                    ? 'bg-blue-500/20 border-blue-400 text-blue-300 scale-105 shadow-sm'
+                                                chart.activeIndex === index 
+                                                    ? 'bg-sky-500/20 border-sky-400 text-sky-300 scale-105 shadow-sm' 
                                                     : 'bg-panel/60 border-border/60 text-slate-400 hover:text-text hover:bg-panel'
                                             }`}
                                         >
@@ -2427,43 +2427,43 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                             <div>
                                 <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                                    <TrendingUp className="w-3.5 h-3.5 text-blue-400" /> Crescimento da Receita (Últimos 6 Meses)
+                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
                                 </h3>
                                 <p className="text-[9px] text-slate-400 uppercase tracking-wider">Análise de tendência comercial</p>
                             </div>
                         </div>
-
+                        
                         <div className="h-[210px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 15, right: 20, bottom: 20, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={8}
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
+                                        tickMargin={8} 
                                     />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
+                                    <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
                                         tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                                     />
-                                    <RechartsTooltip
+                                    <RechartsTooltip 
                                         contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                                         formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita Realizada' : 'Meta']}
                                         labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
                                     />
                                     <Legend verticalAlign="top" height={28} formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita Realizada' : 'Meta Mensal'}</span>} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="revenue"
-                                        name="revenue"
-                                        stroke="#536fd1"
-                                        strokeWidth={2.5}
-                                        dot={{ fill: '#536fd1', r: 3.5, strokeWidth: 1.5, stroke: '#fff' }}
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="revenue" 
+                                        name="revenue" 
+                                        stroke="#10b981" 
+                                        strokeWidth={2.5} 
+                                        dot={{ fill: '#10b981', r: 3.5, strokeWidth: 1.5, stroke: '#fff' }} 
                                         activeDot={{ r: 6, strokeWidth: 1.5, stroke: '#fff' }}
                                     >
-                                        <LabelList dataKey="revenueLabel" position="top" fill="#536fd1" fontSize={9} offset={8} />
+                                        <LabelList dataKey="revenueLabel" position="top" fill="#10b981" fontSize={9} offset={8} />
                                     </Line>
                                     <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
                                 </LineChart>
@@ -2474,25 +2474,25 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
                     <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
                         <h3 className="text-xs font-bold text-text uppercase tracking-wider">Visualização Mensal (Últimos 12 Meses)</h3>
-
+                        
                         <div className="h-[210px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart data={monthlyRevenueData} margin={{ top: 15, right: 20, bottom: 40, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={10}
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
+                                        tickMargin={10} 
                                         angle={-45}
                                         textAnchor="end"
                                     />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
+                                    <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
                                         tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                                     />
-                                    <RechartsTooltip
+                                    <RechartsTooltip 
                                         contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                                         formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita' : 'Meta']}
                                         labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
@@ -2512,20 +2512,20 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <BarChart data={monthlyRevenueData} margin={{ top: 15, right: 15, bottom: 25, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                     <ReferenceLine y={0} stroke="#94a3b8" />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={8}
+                                    <XAxis 
+                                        dataKey="month" 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
+                                        tickMargin={8} 
                                         angle={-45}
                                         textAnchor="end"
                                     />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
+                                    <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={9} 
                                         tickFormatter={(value) => `${value}%`}
                                     />
-                                    <RechartsTooltip
+                                    <RechartsTooltip 
                                         contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                                         formatter={(value: number) => [`${value}%`, 'Variação']}
                                         labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
@@ -2587,7 +2587,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                         <div className="w-full md:w-auto flex flex-col justify-end"><label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">Ou subir arquivo CSV</label><label className="cursor-pointer px-4 py-2 bg-panel border border-border hover:bg-panel/80 text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-2 transition-all"><Upload className="w-4 h-4" />Selecionar .CSV<input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" /></label></div>
                     </div>
-
+                    
                     <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-surface">
                         <table className="w-full border-collapse border border-border">
                             <thead className="sticky top-0 bg-surface z-10 text-[9px] font-black text-slate-500 uppercase tracking-widest text-left">
@@ -2644,8 +2644,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </table>
                         <button onClick={addBulkRow} className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest">+ Adicionar Nova Linha de Célula</button>
                     </div>
-
-                    <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center"><div className="mr-auto flex gap-6 text-[10px] font-black uppercase text-slate-500 tracking-tighter"><span>{bulkRows.length} linhas preparadas</span><span className="text-slate-700">|</span><span>Dica: Use [TAB] para navegar ou cole do Excel acima</span></div><button onClick={() => setIsBulkModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button><button onClick={handleSaveBulk} disabled={isSaving} className="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest">Processar Planilha</button></div>
+                    
+                    <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center"><div className="mr-auto flex gap-6 text-[10px] font-black uppercase text-slate-500 tracking-tighter"><span>{bulkRows.length} linhas preparadas</span><span className="text-slate-700">|</span><span>Dica: Use [TAB] para navegar ou cole do Excel acima</span></div><button onClick={() => setIsBulkModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button><button onClick={handleSaveBulk} disabled={isSaving} className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest">Processar Planilha</button></div>
                 </div>
             </div>
         )}
@@ -2715,7 +2715,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STATUS DO PAGAMENTO</label>
                                         <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
                                             <button type="button" onClick={() => setFormData({...formData, status: 'Pending', settlementDate: ''})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Pending' ? 'bg-red-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>A Pagar</button>
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Pago</button>
+                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Pago</button>
                                         </div>
                                     </div>
                                     {formData.status === 'Paid' && (
@@ -2752,9 +2752,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                     {(!(formData.date >= '2026-06-01') || formData.salesTeam) && (
                                         <div className="flex flex-col gap-2">
                                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TIME DE VENDA</label>
-                                            <select
-                                                value={formData.salesTeam}
-                                                onChange={e => setFormData({...formData, salesTeam: e.target.value})}
+                                            <select 
+                                                value={formData.salesTeam} 
+                                                onChange={e => setFormData({...formData, salesTeam: e.target.value})} 
                                                 disabled={formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial'}
                                                 className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
                                                     (formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial') ? 'opacity-50 cursor-not-allowed' : ''
@@ -2783,7 +2783,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STATUS DO RECEBIMENTO</label>
                                         <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
                                             <button type="button" onClick={() => setFormData({...formData, status: 'Pending', settlementDate: ''})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Pending' ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>A Receber</button>
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Recebido</button>
+                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Recebido</button>
                                         </div>
                                     </div>
                                 </div>
@@ -2791,7 +2791,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TIPO DE RECEBIMENTO</label>
                                         <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
-                                            <button type="button" onClick={() => setFormData({...formData, isPartial: false})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${!formData.isPartial ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Integral</button>
+                                            <button type="button" onClick={() => setFormData({...formData, isPartial: false})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${!formData.isPartial ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Integral</button>
                                             <button type="button" onClick={() => setFormData({...formData, isPartial: true})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Parcial</button>
                                         </div>
                                     </div>
@@ -2834,7 +2834,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
                 <div className="bg-surface border border-border w-full max-w-5xl rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]">
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><div className="flex items-center gap-4"><div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10"><Wallet className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-text leading-none mb-1">Extrato: {selectedAccountForStatement.name}</h3><p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{selectedAccountForStatement.bank}</p></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">Líquido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} • {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-blue-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>)}</div>
+                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">Líquido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} • {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>)}</div>
                     <div className="p-8 border-t border-border bg-surface flex justify-between items-center"><div className="flex gap-8"><div className="flex flex-col"><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saldo Atual Real</span><span className="text-2xl font-bold text-text">R$ {((selectedAccountForStatement.initialBalance || 0) + transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95">Fechar Extrato</button></div>
                 </div>
             </div>

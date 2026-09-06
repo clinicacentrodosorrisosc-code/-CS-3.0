@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppNotification, Tab } from '../types';
 import { supabase } from '../supabaseClient';
-import {
-  Bell,
-  AlertTriangle,
-  Clock,
-  MessageSquare,
+import { 
+  Bell, 
+  AlertTriangle, 
+  Clock, 
+  MessageSquare, 
   Info,
   Check,
   X,
@@ -21,9 +21,9 @@ interface NotificationCenterProps {
   onClose: () => void;
 }
 
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({
+export const NotificationCenter: React.FC<NotificationCenterProps> = ({ 
   isOpen,
-  onNotifyCountChange,
+  onNotifyCountChange, 
   onNavigate,
   onClose
 }) => {
@@ -40,7 +40,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         .from('support_tickets')
         .select('*')
         .neq('status', 'Resolvido');
-
+      
       if (tickets) {
         tickets.forEach(t => {
           if (t.priority === 'Critica') {
@@ -155,7 +155,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   useEffect(() => {
     loadNotifications();
-
+    
     // Set up polling (every 5 minutes)
     const interval = setInterval(loadNotifications, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -177,7 +177,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     if (priority === 'urgent') return <AlertTriangle className="text-red-500 w-5 h-5 animate-pulse" />;
     switch (type) {
       case 'deadline': return <Clock className="text-purple-500 w-5 h-5" />;
-      case 'lab': return <Clock className="text-blue-500 w-5 h-5" />;
+      case 'lab': return <Clock className="text-emerald-500 w-5 h-5" />;
       case 'message': return <MessageSquare className="text-blue-500 w-5 h-5" />;
       default: return <Info className="text-slate-400 w-5 h-5" />;
     }
@@ -187,11 +187,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] pointer-events-none">
-          <div
-            className="absolute inset-0 bg-panel pointer-events-auto backdrop-blur-[1px]"
-            onClick={onClose}
+          <div 
+            className="absolute inset-0 bg-panel pointer-events-auto backdrop-blur-[1px]" 
+            onClick={onClose} 
           />
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, x: 20, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.95 }}
@@ -211,7 +211,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {notifications.length > 0 && (
-                    <button
+                    <button 
                       onClick={markAllRead}
                       className="p-2 text-slate-500 hover:text-text transition-colors"
                       title="Marcar todas como lidas"
@@ -241,7 +241,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               )}
 
               {!loading && notifications.map((n) => (
-                <motion.div
+                <motion.div 
                   layout
                   key={n.id}
                   className={`
@@ -262,9 +262,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{n.message}</p>
-
+                      
                       {n.tab && (
-                        <button
+                        <button 
                           onClick={() => {
                             onNavigate(n.tab!, n.link);
                             onClose();
@@ -275,7 +275,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         </button>
                       )}
                     </div>
-                    <button
+                    <button 
                       onClick={() => removeNotification(n.id)}
                       className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-panel/80 rounded"
                     >
@@ -287,7 +287,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
 
             <div className="p-4 border-t border-border bg-surface shrink-0">
-                <button
+                <button 
                   onClick={loadNotifications}
                   className="w-full py-3 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold transition-all border border-border"
                 >

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Target, Plus, Trash2, Edit2, CheckSquare, Square,
+import { 
+  Target, Plus, Trash2, Edit2, CheckSquare, Square, 
   Calendar, User, X
 } from 'lucide-react';
 
@@ -20,10 +20,10 @@ export interface ManagementProject {
 
 const COLUMNS: { id: ManagementProject['status']; label: string; icon: string; color: string }[] = [
   { id: 'ideation', label: 'Ideação & Radar', icon: '💡', color: 'border-amber-500/30 text-amber-400 bg-amber-950/20' },
-  { id: 'planning', label: 'Planejamento', icon: '📋', color: 'border-blue-500/30 text-blue-400 bg-blue-950/20' },
+  { id: 'planning', label: 'Planejamento', icon: '📋', color: 'border-indigo-500/30 text-indigo-400 bg-indigo-950/20' },
   { id: 'in_progress', label: 'Em Execução', icon: '⚡', color: 'border-rose-500/30 text-rose-400 bg-rose-950/20' },
   { id: 'paused', label: 'Em Espera', icon: '⏸️', color: 'border-slate-500/30 text-slate-400 bg-slate-950/20' },
-  { id: 'completed', label: 'Concluído', icon: '✅', color: 'border-blue-500/30 text-blue-400 bg-blue-950/20' }
+  { id: 'completed', label: 'Concluído', icon: '✅', color: 'border-emerald-500/30 text-emerald-400 bg-emerald-950/20' }
 ];
 
 export const ManagementProjects: React.FC = () => {
@@ -204,11 +204,11 @@ export const ManagementProjects: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden p-6 md:p-8">
-
+      
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/60 border border-border p-4 md:p-6 rounded-3xl backdrop-blur-sm mb-6 flex-shrink-0">
         <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-400">
             <Target className="w-4 h-4" />
             <span>Quadro de Metas & Projetos Secretos</span>
           </div>
@@ -303,7 +303,7 @@ export const ManagementProjects: React.FC = () => {
                             </div>
                             <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-rose-500 to-blue-500 rounded-full transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-rose-500 to-emerald-500 rounded-full transition-all duration-300"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
@@ -315,7 +315,7 @@ export const ManagementProjects: React.FC = () => {
                                   className="flex items-center gap-2 text-xs text-slate-300 hover:text-white cursor-pointer py-0.5 select-none"
                                 >
                                   {task.done ? (
-                                    <CheckSquare className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                                    <CheckSquare className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                                   ) : (
                                     <Square className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
                                   )}
@@ -348,7 +348,7 @@ export const ManagementProjects: React.FC = () => {
                           )}
 
                           {proj.budget ? (
-                            <div className="flex items-center gap-0.5 text-blue-400 font-bold">
+                            <div className="flex items-center gap-0.5 text-emerald-400 font-bold">
                               <span>R$ {(proj.budget / 1000).toFixed(0)}k</span>
                             </div>
                           ) : null}
