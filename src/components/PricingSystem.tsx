@@ -1716,7 +1716,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
                                 <button
                                     onClick={handleRestoreDefaults}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-text text-xs font-medium rounded-lg transition-colors shrink-0"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-text text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shrink-0"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
                                     Carregar Novos Insumos
@@ -1871,7 +1871,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 <button
                                     onClick={handleManualSaveFichas}
                                     disabled={isSavingSupabase}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-medium transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
                                     title="Forçar salvamento das fichas técnicas no Supabase"
                                 >
                                     <Database className="w-3.5 h-3.5" />
@@ -1879,7 +1879,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </button>
                                 <button
                                     onClick={handleExportFichaTecnica}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-medium transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     Exportar Todas
@@ -2033,11 +2033,11 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <td className="px-4 py-2.5 font-semibold text-slate-100">
                                                                     <div className="flex items-center gap-2">
                                                                         {mc.isLabor ? (
-                                                                            <span className="inline-flex items-center gap-1 bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                                                            <span className="inline-flex items-center gap-1 bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                                                                 <Users className="w-2.5 h-2.5" /> Mão de Obra
                                                                             </span>
                                                                         ) : (
-                                                                            <span className="inline-flex items-center gap-1 bg-purple-500/15 border border-purple-500/20 text-purple-300 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                                                            <span className="inline-flex items-center gap-1 bg-purple-500/15 border border-purple-500/20 text-purple-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                                                                 Insumo
                                                                             </span>
                                                                         )}
@@ -2096,7 +2096,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             <tr key={`${tp.id}-${idx}`} className="border-b border-border hover:bg-panel">
                                                                 <td className="px-4 py-2.5 font-semibold text-slate-100">
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/20 text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-medium">
+                                                                        <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/20 text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                                                             Terceirizado
                                                                         </span>
                                                                         {editingThirdPartyId === tp.id ? (
@@ -2313,7 +2313,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     />
                                                                     <button
                                                                         onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                                        className="bg-blue-600 hover:bg-blue-500 text-text px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                                                        className="bg-blue-600 hover:bg-blue-500 text-text px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                                                                     >
                                                                         Adicionar
                                                                     </button>
@@ -2330,7 +2330,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     {newFichaItemType === 'third_party' && (
                                                         <button
                                                             onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                            className="w-full bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-lg text-xs font-medium transition-all"
+                                                            className="w-full bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                                                         >
                                                             Adicionar Serviço Terceirizado
                                                         </button>
@@ -2351,7 +2351,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
                                                 <button
                                                     onClick={() => handleSyncFichaCostToService(selectedFichaServiceId, totalFichaCost, totalFichaTime)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-xl text-xs font-medium transition-all mt-6 shadow-lg shadow-blue-900/20"
+                                                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-text py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-6 shadow-lg shadow-blue-900/20"
                                                 >
                                                     <Zap className="w-3.5 h-3.5" />
                                                     Vincular à Precificação
@@ -2614,7 +2614,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             <div className="flex justify-between items-center bg-panel rounded-xl p-3 border border-border">
                                                 <div className="text-left">
-                                                    <span className="text-[10px] text-slate-400 font-medium block">Diferença de Preço (Gap):</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Diferença de Preço (Gap):</span>
                                                     <span className={`text-[9px] font-bold ${
                                                         (price - currentPracticedPrice) > 0 ? 'text-amber-400' : (price - currentPracticedPrice) < 0 ? 'text-blue-400' : 'text-blue-400'
                                                     }`}>
@@ -3157,7 +3157,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     </span>
                                     <button
                                         onClick={handleAddEmployee}
-                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-text px-6 py-3 rounded-xl text-xs font-medium transition-colors shadow-lg shadow-blue-600/15"
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-text px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-blue-600/15"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Adicionar Colaborador
@@ -3180,21 +3180,21 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     onClick={handleAddFixedExpense}
-                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-text px-3.5 py-2 rounded-xl text-xs font-medium transition-colors shadow-md shadow-blue-600/15"
+                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-blue-600/15"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     Adicionar Item
                                 </button>
                                 <button
                                     onClick={handleResetFixedExpenses}
-                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-medium transition-colors"
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
                                     Padrão do Print
                                 </button>
                                 <button
                                     onClick={handleClearAllFixedExpenses}
-                                    className="flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/10 px-3.5 py-2 rounded-xl text-xs font-medium transition-colors"
+                                    className="flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/10 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Zerar Valores
@@ -3264,7 +3264,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     placeholder="Descreva a despesa..."
                                                 />
                                                 {isPayroll && (
-                                                    <span className="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-medium scale-95 shrink-0 select-none border border-blue-500/15" title="Sincronizado automaticamente da Folha de Pagamento">
+                                                    <span className="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-95 shrink-0 select-none border border-blue-500/15" title="Sincronizado automaticamente da Folha de Pagamento">
                                                         Auto Sinc
                                                     </span>
                                                 )}
@@ -3342,7 +3342,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={handleRestoreScenarioQuantitiesPattern}
-                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-text px-3.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer"
+                                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-text px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                     title="Preencher com volumes de vendas reais do print de referência"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5" />
@@ -3350,14 +3350,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </button>
                                 <button
                                     onClick={handleClearScenarioQuantities}
-                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer"
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Zerar Quantidades
                                 </button>
                                 <button
                                     onClick={handleResetScenarioPricesToDefaults}
-                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer"
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-border px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                                 >
                                     <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
                                     Resetar Preços
@@ -3399,7 +3399,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 divide-y lg:divide-y-0 lg:divide-x divide-white/10 bg-panel text-center">
                                 {/* Qty */}
                                 <div className="p-3">
-                                    <span className="block text-[10px] text-slate-400 font-medium">Volume Total</span>
+                                    <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Volume Total</span>
                                     <span className="block text-sm font-mono font-bold text-slate-200 mt-1">
                                         {scenarioTotals.totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} un
                                     </span>
@@ -3407,7 +3407,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Faturamento */}
                                 <div className="p-3 bg-blue-950/10">
-                                    <span className="block text-[10px] text-blue-300 font-medium">Faturamento Previsto</span>
+                                    <span className="block text-[10px] text-blue-300 font-bold uppercase tracking-wider">Faturamento Previsto</span>
                                     <span className="block text-[9px] text-blue-400/80 font-medium italic">Origem: Tab Precificação / Cenários</span>
                                     <span className="block text-sm font-mono font-bold text-text mt-1">
                                         R$ {scenarioTotals.totalFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -3416,7 +3416,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Custos Variáveis */}
                                 <div className="p-3">
-                                    <span className="block text-[10px] text-slate-400 font-medium">Custos Variáveis</span>
+                                    <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Custos Variáveis</span>
                                     <span className="block text-[9px] text-slate-500 font-medium italic">Origem: Matéria Prima e Ficha Técnica</span>
                                     <span className="block text-sm font-mono font-semibold text-slate-200 mt-1">
                                         R$ {scenarioTotals.totalVariableCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -3428,7 +3428,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Impostos */}
                                 <div className="p-3">
-                                    <span className="block text-[10px] text-slate-400 font-medium">Impostos s/ Vendas</span>
+                                    <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Impostos s/ Vendas</span>
                                     <span className="block text-sm font-mono font-semibold text-slate-200 mt-1">
                                         R$ {scenarioTotals.totalTaxes.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
@@ -3439,7 +3439,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Margem de Contribuição */}
                                 <div className="p-3 bg-blue-950/10">
-                                    <span className="block text-[10px] text-blue-400 font-medium">Margem de Contribuição</span>
+                                    <span className="block text-[10px] text-blue-400 font-bold uppercase tracking-wider">Margem de Contribuição</span>
                                     <span className="block text-sm font-mono font-bold text-blue-400 mt-1">
                                         R$ {scenarioTotals.totalMargemContribuicaoValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
@@ -3450,7 +3450,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Rateio Fixo */}
                                 <div className="p-3">
-                                    <span className="block text-[10px] text-slate-400 font-medium">Despesas Fixas</span>
+                                    <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Despesas Fixas</span>
                                     <span className="block text-[9px] text-slate-500 font-medium italic">Origem: Tab Despesas Fixas</span>
                                     <span className="block text-sm font-mono font-semibold text-slate-200 mt-1">
                                         R$ {totalFixedExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -3462,7 +3462,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                 {/* Margem de Lucro */}
                                 <div className={`p-3 ${scenarioTotals.totalProfitValue >= 0 ? 'bg-blue-950/20' : 'bg-red-950/20'}`}>
-                                    <span className={`block text-[10px] font-medium ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                    <span className={`block text-[10px] font-bold uppercase tracking-wider ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                                         Margem de Lucro
                                     </span>
                                     <span className={`block text-sm font-mono font-black mt-1 ${scenarioTotals.totalProfitValue >= 0 ? 'text-blue-300' : 'text-red-300'}`}>
@@ -3776,7 +3776,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         <div className="flex gap-2 p-1 bg-slate-900 border border-border rounded-xl max-w-lg">
                             <button
                                 onClick={() => setRelatoriosSubTab('dre_gerencial')}
-                                className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                                     relatoriosSubTab === 'dre_gerencial'
                                         ? 'bg-surface text-text shadow-lg border border-border'
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
@@ -3786,7 +3786,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             </button>
                             <button
                                 onClick={() => setRelatoriosSubTab('analise_produto')}
-                                className={`flex-1 text-center py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                                     relatoriosSubTab === 'analise_produto'
                                         ? 'bg-surface text-text shadow-lg border border-border'
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
@@ -3823,7 +3823,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {/* Despesas Fixas */}
                                             <div className="bg-white border border-slate-200 px-4 py-3 rounded-lg shadow-xs flex flex-col justify-center">
-                                                <span className="text-[10px] text-slate-400 font-medium">Despesas Fixas Totais</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Despesas Fixas Totais</span>
                                                 <span className="font-mono text-slate-800 text-sm font-black mt-1">
                                                     R$ {totalFixedExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
@@ -3831,7 +3831,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             {/* Margem Contribuição */}
                                             <div className="bg-white border border-slate-200 px-4 py-3 rounded-lg shadow-xs flex flex-col justify-center">
-                                                <span className="text-[10px] text-slate-400 font-medium">Margem Contribuição Média</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Margem Contribuição Média</span>
                                                 <span className="font-mono text-blue-600 text-sm font-black mt-1">
                                                     {scenarioTotals.totalMargemContribuicaoPct.toFixed(1)}%
                                                 </span>
@@ -3839,7 +3839,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                             {/* Lucro Desejado */}
                                             <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-lg shadow-xs flex flex-col justify-center">
-                                                <span className="text-[10px] text-slate-400 font-medium mb-1">Lucro Desejado</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Lucro Desejado</span>
                                                 <div className="flex items-center gap-1">
                                                     <div className="flex items-center border border-slate-200 rounded px-1.5 py-0.5 w-1/2">
                                                         <span className="text-[10px] text-slate-400 font-bold mr-0.5">R$</span>
@@ -4398,13 +4398,13 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 {/* Left Summary badges */}
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-rose-50 border-rose-200'}`}>
-                                                        <span className="text-[9px] text-slate-400 font-medium">Margem de Lucro %</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro %</span>
                                                         <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-blue-700' : 'text-rose-600'}`}>
                                                             {practicedMargemLucro >= 0 ? '+' : ''}{((practicedMargemLucro / practicedPrice) * 100).toFixed(1)}%
                                                         </span>
                                                     </div>
                                                     <div className={`p-3 rounded-xl border flex flex-col justify-center text-center ${practicedMargemLucro >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-rose-50 border-rose-200'}`}>
-                                                        <span className="text-[9px] text-slate-400 font-medium">Margem de Lucro R$</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro R$</span>
                                                         <span className={`text-base font-black font-mono mt-0.5 ${practicedMargemLucro >= 0 ? 'text-blue-700' : 'text-rose-600'}`}>
                                                             {practicedMargemLucro < 0 ? `-` : ''}R$ {Math.abs(practicedMargemLucro).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
@@ -4413,7 +4413,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                 {/* Left Donut Chart */}
                                                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
-                                                    <span className="text-[10px] text-slate-500 font-semibold mb-2">Distribuição % do Preço</span>
+                                                    <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">
                                                             <PieChart width={140} height={140}>
@@ -4488,13 +4488,13 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 {/* Right Summary badges */}
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-center text-center">
-                                                        <span className="text-[9px] text-slate-400 font-medium">Margem de Lucro %</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro %</span>
                                                         <span className="text-base font-black font-mono text-blue-700 mt-0.5">
                                                             +{analiseDesiredProfitPct.toFixed(1)}%
                                                         </span>
                                                     </div>
                                                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-center text-center">
-                                                        <span className="text-[9px] text-slate-400 font-medium">Margem de Lucro R$</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Margem de Lucro R$</span>
                                                         <span className="text-base font-black font-mono text-blue-700 mt-0.5">
                                                             R$ {suggestedMargemLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
@@ -4503,7 +4503,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                                                 {/* Right Donut Chart */}
                                                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
-                                                    <span className="text-[10px] text-slate-500 font-semibold mb-2">Distribuição % do Preço</span>
+                                                    <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">
                                                             <PieChart width={140} height={140}>

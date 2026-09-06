@@ -986,12 +986,12 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                             )}
 
                             {isOnline ? (
-                              <span className="text-[9px] bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-full font-medium flex items-center gap-1.5">
+                              <span className="text-[9px] bg-blue-500/10 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="size-1.5 rounded-full bg-blue-400 animate-pulse" />
                                 Online
                               </span>
                             ) : (
-                              <span className="text-[9px] bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-full font-medium flex items-center gap-1.5">
+                              <span className="text-[9px] bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="size-1.5 rounded-full bg-slate-600" />
                                 Offline
                               </span>

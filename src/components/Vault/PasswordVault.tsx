@@ -246,7 +246,7 @@ export const PasswordVault: React.FC = () => {
         {/* Top Controls & Stats */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/60 border border-border p-4 md:p-6 rounded-3xl backdrop-blur-sm">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-rose-400">
               <ShieldCheck className="w-4 h-4" />
               <span>Cofre de Credenciais Seguras</span>
             </div>
@@ -299,7 +299,7 @@ export const PasswordVault: React.FC = () => {
                 onClick={() => {
                   copyToClipboard(generatedPassword, 'gen_pwd');
                 }}
-                className="px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-semibold text-xs flex items-center gap-2 transition-all"
+                className="px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all"
               >
                 {copiedId === 'gen_pwd' ? <Check className="w-4 h-4 text-blue-300" /> : <Copy className="w-4 h-4" />}
                 <span>Copiar</span>

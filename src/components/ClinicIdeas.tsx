@@ -528,7 +528,7 @@ export const ClinicIdeas: React.FC = () => {
 
           <button
             onClick={() => handleOpenModal()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-xl text-[10px] font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" /> Nova Ideia
           </button>

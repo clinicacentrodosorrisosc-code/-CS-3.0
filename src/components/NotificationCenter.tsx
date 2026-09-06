@@ -204,7 +204,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-text leading-none">Notificações</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
                     {unreadCount} novas mensagens
                   </p>
                 </div>

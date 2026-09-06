@@ -789,7 +789,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       <div className="flex items-center gap-2 border-b border-border/80 pb-4 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('simulator')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'simulator'
               ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -799,7 +799,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('comparison')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'comparison'
               ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -809,7 +809,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('historical')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'historical'
               ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -819,7 +819,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
             activeTab === 'settings'
               ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm'
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'

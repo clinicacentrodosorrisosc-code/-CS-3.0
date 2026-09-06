@@ -421,7 +421,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
               <div>
                 <h4 className="text-sm font-bold text-text">Faturamento Diário Geral vs Alvos</h4>
-                <p className="text-[10px] text-slate-500 font-medium">Contraste diário entre a receita realizada e o alvo padrão</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Contraste diário entre a receita realizada e o alvo padrão</p>
               </div>
               <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase font-mono">
                 <div className="flex items-center gap-1.5 text-blue-400">
@@ -506,7 +506,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
                 <h4 className="text-sm font-bold text-text">Faturamento Acumulado vs Curva Ideal (Pacing)</h4>
-                <p className="text-[10px] text-slate-500 font-medium">Acompanhe se a clínica está no compasso para atingir o faturamento mensal total</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Acompanhe se a clínica está no compasso para atingir o faturamento mensal total</p>
               </div>
               <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase font-mono">
                 <div className="flex items-center gap-1.5 text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20">

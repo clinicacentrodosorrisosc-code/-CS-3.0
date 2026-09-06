@@ -208,7 +208,7 @@ export const ManagementProjects: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/60 border border-border p-4 md:p-6 rounded-3xl backdrop-blur-sm mb-6 flex-shrink-0">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400">
             <Target className="w-4 h-4" />
             <span>Quadro de Metas & Projetos Secretos</span>
           </div>
@@ -239,7 +239,7 @@ export const ManagementProjects: React.FC = () => {
                 <div className={`flex items-center justify-between p-3 rounded-2xl border ${col.color} mb-3`}>
                   <div className="flex items-center gap-2">
                     <span className="text-base">{col.icon}</span>
-                    <h3 className="text-xs font-medium">{col.label}</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider">{col.label}</h3>
                   </div>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-black/40 text-slate-200">
                     {colProjects.length}

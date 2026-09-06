@@ -832,7 +832,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest block leading-tight">Agendados Fim do Dia</span>
                                     <div className="flex items-baseline gap-1 mt-2">
                                         <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.agendamentosTotal}</span>
-                                        <span className="text-[9px] text-slate-500 font-semibold">Geral</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
 
@@ -844,7 +844,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest block leading-tight">Comparecidos</span>
                                     <div className="flex items-baseline gap-1 mt-2">
                                         <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.finalizadosTotal}</span>
-                                        <span className="text-[9px] text-slate-500 font-semibold">Geral</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
 
@@ -856,7 +856,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <span className="text-[9px] text-amber-400 font-extrabold uppercase tracking-widest block leading-tight">Total Perdas</span>
                                     <div className="flex items-baseline gap-1 mt-2">
                                         <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.totalLosses}</span>
-                                        <span className="text-[9px] text-slate-500 font-semibold">Geral</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
 
@@ -868,7 +868,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-widest block leading-tight">Taxa de Presença</span>
                                     <div className="flex items-baseline gap-1 mt-2">
                                         <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
-                                        <span className="text-[9px] text-slate-500 font-semibold">Média</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Média</span>
                                     </div>
                                 </div>
                             </div>
@@ -905,7 +905,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition-all">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-purple-400" />
-                                            <span className="text-[9px] text-slate-400 font-medium">Finalizados</span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Finalizados</span>
                                         </div>
                                         <span className="text-lg font-black text-text">{kpiMetrics.finalizadosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.attendanceRate.toFixed(1)}% do total</span>
@@ -914,7 +914,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition-all">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-amber-400" />
-                                            <span className="text-[9px] text-slate-400 font-medium">Remarcados</span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Remarcados</span>
                                         </div>
                                         <span className="text-lg font-black text-text">{kpiMetrics.remarcadosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.rescheduledRate.toFixed(1)}% do total</span>
@@ -923,7 +923,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition-all">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-rose-400" />
-                                            <span className="text-[9px] text-slate-400 font-medium">Faltaram</span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Faltaram</span>
                                         </div>
                                         <span className="text-lg font-black text-text">{kpiMetrics.naoCompareceramTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.noShowRate.toFixed(1)}% do total</span>
@@ -932,7 +932,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                     <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition-all">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-slate-500" />
-                                            <span className="text-[9px] text-slate-400 font-medium">Cancelados</span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cancelados</span>
                                         </div>
                                         <span className="text-lg font-black text-text">{kpiMetrics.canceladosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.cancelledRate.toFixed(1)}% do total</span>
@@ -995,7 +995,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                         </ResponsiveContainer>
                                     ) : (
                                         <div className="h-full flex items-center justify-center py-12">
-                                            <span className="text-xs text-slate-500 font-semibold">Sem dados históricos para exibir</span>
+                                            <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">Sem dados históricos para exibir</span>
                                         </div>
                                     )}
                                 </div>
@@ -1004,7 +1004,7 @@ export const ReceptionDailyReport: React.FC = () => {
                             {/* Box: Histórico das Diárias Preenchidas no Período */}
                             <div className="glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col h-[400px]">
                                  <div className="flex items-center justify-between border-b border-border pb-2">
-                                      <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                            <History className="w-4 h-4 text-purple-400" />
                                            Histórico das Diárias Preenchidas no Período
                                       </h4>
@@ -1127,7 +1127,7 @@ export const ReceptionDailyReport: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 py-3.5 bg-panel hover:bg-panel/80 active:scale-[0.98] text-text rounded-lg font-semibold text-xs transition-colors border border-border cursor-pointer"
+                                className="flex-1 py-3.5 bg-panel hover:bg-panel/80 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition-colors border border-border cursor-pointer"
                             >
                                 Cancelar
                             </button>
@@ -1135,7 +1135,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={saving}
-                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-lg font-semibold text-xs transition-all shadow-lg shadow-rose-600/20 cursor-pointer"
+                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition-all shadow-lg shadow-rose-600/20 cursor-pointer"
                             >
                                 {saving ? 'Excluindo...' : 'Sim, Excluir'}
                             </button>

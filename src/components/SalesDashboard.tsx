@@ -125,7 +125,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-text rounded-lg font-semibold transition-all shadow-lg shadow-blue-600/20 group"
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-text rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 group"
         >
           <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
           Exportar Relatório Excel

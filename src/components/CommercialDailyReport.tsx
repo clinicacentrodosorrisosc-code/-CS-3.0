@@ -1037,7 +1037,7 @@ export const CommercialDailyReport: React.FC = () => {
             {/* Header Area */}
             <div className="glass-panel p-6 rounded-3xl border border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                     <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-medium mb-2 inline-block">
+                     <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 inline-block">
                          Relatório & KPIs
                      </span>
                      <h3 className="text-2xl font-black text-text flex items-center gap-2 tracking-tight">
@@ -1120,7 +1120,7 @@ export const CommercialDailyReport: React.FC = () => {
             <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-border w-full md:w-fit self-center">
                 <button
                     onClick={() => setActiveTab('form')}
-                    className={`flex-1 md:flex-initial px-6 py-3 rounded-lg font-semibold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
+                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
                 >
                     <FileText className="w-4 h-4" />
                     Preencher Relatório Diário
@@ -1130,7 +1130,7 @@ export const CommercialDailyReport: React.FC = () => {
                         setActiveTab('dashboard');
                         loadHistory();
                     }}
-                    className={`flex-1 md:flex-initial px-6 py-3 rounded-lg font-semibold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'dashboard' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
+                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'dashboard' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
                 >
                     <BarChart3 className="w-4 h-4" />
                     Dashboard & Indicadores (BI)
@@ -1167,7 +1167,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           <div className="bg-blue-500/10 p-2 rounded-xl text-blue-400">
                                               <Clock className="w-4 h-4" />
                                           </div>
-                                          <h4 className="text-xs font-semibold text-slate-400">1. Como você chegou na empresa hoje?</h4>
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">1. Como você chegou na empresa hoje?</h4>
                                      </div>
                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                                           {[
@@ -1203,7 +1203,7 @@ export const CommercialDailyReport: React.FC = () => {
                                             <div className="bg-amber-500/10 p-2 rounded-xl text-amber-400">
                                                 <Sun className="w-4 h-4" />
                                             </div>
-                                            <h4 className="text-xs font-semibold text-slate-300 font-sans">Período da Manhã ☀️</h4>
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-300 font-sans">Período da Manhã ☀️</h4>
                                         </div>
 
                                         <div className="space-y-4">
@@ -1362,7 +1362,7 @@ export const CommercialDailyReport: React.FC = () => {
                                             <div className="bg-blue-500/10 p-2 rounded-xl text-blue-400">
                                                 <Sunset className="w-4 h-4" />
                                             </div>
-                                            <h4 className="text-xs font-semibold text-slate-300 font-sans">Período da Tarde 🌇</h4>
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-300 font-sans">Período da Tarde 🌇</h4>
                                         </div>
 
                                         <div className="space-y-4">
@@ -1524,7 +1524,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           <div className="bg-purple-500/10 p-2 rounded-xl text-purple-400">
                                               <Calendar className="w-4 h-4" />
                                           </div>
-                                          <h4 className="text-xs font-semibold text-slate-400">2. Resultados e Controle da Agenda de Hoje</h4>
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">2. Resultados e Controle da Agenda de Hoje</h4>
                                      </div>
 
                                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -1696,7 +1696,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           <div className="bg-amber-500/10 p-2 rounded-xl text-amber-400">
                                               <DollarSign className="w-4 h-4" />
                                           </div>
-                                          <h4 className="text-xs font-semibold text-slate-400">3. Resultados Financeiros do Dia</h4>
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">3. Resultados Financeiros do Dia</h4>
                                      </div>
                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                           <div className="flex flex-col gap-1.5">
@@ -1737,7 +1737,7 @@ export const CommercialDailyReport: React.FC = () => {
                                            <div className="bg-blue-500/10 p-2 rounded-xl text-blue-400">
                                                <Users className="w-4 h-4" />
                                            </div>
-                                           <h4 className="text-xs font-semibold text-slate-400">4. Ortodontia</h4>
+                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">4. Ortodontia</h4>
                                       </div>
                                       <div className="grid grid-cols-1 gap-4">
                                            <div className="flex flex-col gap-1.5">
@@ -1760,7 +1760,7 @@ export const CommercialDailyReport: React.FC = () => {
                                            <div className="bg-rose-500/10 p-2 rounded-xl text-rose-400">
                                                <Smile className="w-4 h-4" />
                                            </div>
-                                           <h4 className="text-xs font-semibold text-slate-400">5. Como foi o seu dia?</h4>
+                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">5. Como foi o seu dia?</h4>
                                       </div>
                                      <div className="grid grid-cols-4 gap-2">
                                           {[
@@ -1905,11 +1905,11 @@ export const CommercialDailyReport: React.FC = () => {
                         {/* Recent reports widget */}
                         <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                              <div className="flex items-center justify-between border-b border-border pb-2">
-                                 <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                      <History className="w-4 h-4 text-purple-400" />
                                      Histórico de Diárias
                                  </h4>
-                                 <span className="text-[9px] text-slate-500 font-semibold font-mono">Últimas 30</span>
+                                 <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider font-mono">Últimas 30</span>
                              </div>
                              <div className="space-y-3.5 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
                                  {parsedHistory.length === 0 ? (
@@ -2296,7 +2296,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 {/* Chart 1: Conversão Comercial Funnel */}
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col justify-between">
                                      <div className="flex items-center justify-between border-b border-border pb-2">
-                                          <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                <Users className="w-4 h-4 text-blue-400" />
                                                Comportamento & Funil de Conversão Comercial
                                           </h4>
@@ -2374,7 +2374,7 @@ export const CommercialDailyReport: React.FC = () => {
                                  {/* Chart 2: Evolução das Vendas e Recebimentos */}
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                                      <div className="flex items-center justify-between border-b border-border pb-2">
-                                          <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                <LucideLineChart className="w-4 h-4 text-blue-400" />
                                                Comportamento Financeiro (Evolução de Fluxo)
                                           </h4>
@@ -2411,7 +2411,7 @@ export const CommercialDailyReport: React.FC = () => {
                                  {/* Chart 3: Objeções Mais Comuns */}
                                  <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                                       <div className="flex items-center justify-between border-b border-border pb-2">
-                                           <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                           <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 text-red-400" />
                                                 Objeções Mais Comuns
                                            </h4>
@@ -2440,7 +2440,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 {/* Row 2: Atividades Diárias vs Rating/Chegada */}
                                 <div className="glass-panel p-6 rounded-3xl border border-border space-y-4">
                                      <div className={`flex justify-between border-b border-border pb-3 gap-3 ${exportingImage ? 'flex-row items-center' : 'flex-col sm:flex-row items-start sm:items-center'}`}>
-                                          <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                <Activity className="w-4 h-4 text-purple-400" />
                                                Métricas de Atendimento e Comparecimento
                                           </h4>
@@ -2514,7 +2514,7 @@ export const CommercialDailyReport: React.FC = () => {
                                       <div className={`glass-panel p-6 rounded-3xl border border-border flex items-center gap-6 justify-between animate-fade-in ${exportingImage ? 'flex-row' : 'flex-col md:flex-row'}`}>
                                            <div className="space-y-4 flex-1 w-full">
                                                 <div>
-                                                     <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2 border-b border-border pb-2">
+                                                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 border-b border-border pb-2">
                                                           <Smile className="w-4 h-4 text-yellow-400" />
                                                           Classificação do Clima Diário
                                                      </h4>
@@ -2575,7 +2575,7 @@ export const CommercialDailyReport: React.FC = () => {
                                       <div className={`glass-panel p-6 rounded-3xl border border-border flex items-center gap-6 justify-between animate-fade-in ${exportingImage ? 'flex-row' : 'flex-col md:flex-row'}`}>
                                            <div className="space-y-4 flex-1 w-full">
                                                 <div>
-                                                     <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2 border-b border-border pb-2">
+                                                     <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 border-b border-border pb-2">
                                                           <Clock className="w-4 h-4 text-purple-400" />
                                                           Organização & Pontualidade
                                                      </h4>
@@ -2641,7 +2641,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 {/* Box 1: Histórico das Diárias Preenchidas no Período */}
                                 <div className={`glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col ${exportingImage ? 'h-auto' : 'lg:col-span-8 h-[400px]'}`}>
                                      <div className="flex items-center justify-between border-b border-border pb-2">
-                                          <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                <History className="w-4 h-4 text-blue-400" />
                                                Histórico das Diárias Preenchidas no Período
                                           </h4>
@@ -2743,7 +2743,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 {/* Box 2: Feedbacks qualitativos e justificativas */}
                                 <div className={`glass-panel p-6 rounded-3xl border border-border space-y-4 flex flex-col ${exportingImage ? 'col-span-1 h-auto' : 'lg:col-span-4 h-[400px]'}`}>
                                      <div className="flex items-center justify-between border-b border-border pb-2">
-                                          <h4 className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                                          <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                                <MessageSquare className="w-4 h-4 text-yellow-400" />
                                                Histórico Qualitativo e Feedback do Clima
                                           </h4>
@@ -2821,7 +2821,7 @@ export const CommercialDailyReport: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 py-3.5 bg-panel hover:bg-panel/80 active:scale-[0.98] text-text rounded-lg font-semibold text-xs transition-colors border border-border"
+                                className="flex-1 py-3.5 bg-panel hover:bg-panel/80 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition-colors border border-border"
                             >
                                 Cancelar
                             </button>
@@ -2829,7 +2829,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={saving}
-                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-lg font-semibold text-xs transition-all shadow-lg shadow-rose-600/20"
+                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition-all shadow-lg shadow-rose-600/20"
                             >
                                 {saving ? 'Excluindo...' : 'Sim, Excluir'}
                             </button>

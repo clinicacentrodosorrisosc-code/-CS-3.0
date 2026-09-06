@@ -32,7 +32,7 @@ const TabContainer = ({ children }: { children: React.ReactNode }) => {
         duration: 0.35,
         ease: [0.16, 1, 0.3, 1]
       }}
-      className="module-stage absolute inset-0 flex flex-col"
+      className="absolute inset-0 flex flex-col"
       style={{ zIndex: 10 }}
     >
       {children}
@@ -442,8 +442,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="odonto-app flex flex-col lg:flex-row h-screen bg-[#F7F7F9] dark:bg-[#0F0F13] text-[#202027] dark:text-slate-100 overflow-hidden transition-colors duration-200">
-      <a href="#main-content" className="skip-link">Ir para o conteudo</a>
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F7F9] dark:bg-[#0F0F13] text-[#202027] dark:text-slate-100 overflow-hidden transition-colors duration-200">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -459,7 +458,7 @@ const App: React.FC = () => {
         openNotifications={() => setIsNotificationsOpen(true)}
       />
 
-      <main id="main-content" className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-transparent">
+      <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-transparent">
         <AppHeader
           activeTab={activeTab}
           requestedSubTab={requestedSubTab}
