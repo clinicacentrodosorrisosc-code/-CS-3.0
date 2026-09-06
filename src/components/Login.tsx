@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import clinicShowcaseImg from '../assets/images/centro_do_sorriso_login.png';
+import { SelectMenu } from './ui/select-menu';
 
 const DAILY_MESSAGES = [
   { text: "Posso todas as coisas naquele que me fortalece.", author: "Filipenses 4:13" },
@@ -174,15 +175,17 @@ export const Login: React.FC = () => {
                   Cargo / Setor
                 </label>
                 <div className="relative">
-                  <select 
+                  <SelectMenu
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white appearance-none cursor-pointer focus:border-sky-500 outline-none transition-all"
-                  >
-                    <option value="reception">Recepção</option>
-                    <option value="admin">Administrador</option>
-                    <option value="user">Usuário Padrão</option>
-                  </select>
+                    onChange={setRole}
+                    options={[
+                      { value: 'reception', label: 'Recepção' },
+                      { value: 'admin', label: 'Administrador' },
+                      { value: 'user', label: 'Usuário Padrão' },
+                    ]}
+                    placeholder="Selecionar cargo"
+                    searchPlaceholder="Buscar cargo..."
+                  />
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
                   <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-4 h-4" />
                 </div>
