@@ -2,35 +2,35 @@
 
 :root {
   /* Nexus Clean Minimalist Light Palette (Default UI) */
-  --bg: #F5F7F6;
-  --background: #F5F7F6;
-  --bg-subtle: #EEF2F0;
+  --bg: #F4F5F7;
+  --background: #F4F5F7;
+  --bg-subtle: #F0F2F5;
   --surface: #FFFFFF;
   --panel: #FFFFFF;
-  --surface-hover: #F0F4F2;
-  --surface-high: #F0F4F2;
-  --surface-elevated: #E7ECE9;
+  --surface-hover: #F5F6F8;
+  --surface-high: #F5F6F8;
+  --surface-elevated: #ECEEF2;
   
-  --border: #DFE6E2;
-  --border-subtle: #EAF0ED;
-  --border-hover: #C8D4CE;
-  --border-focus: rgba(31, 111, 91, 0.28);
+  --border: #E2E5EA;
+  --border-subtle: #ECEEF2;
+  --border-hover: #CDD2DA;
+  --border-focus: rgba(139, 61, 255, 0.22);
 
   /* Nexus Official 4-Color Palette */
-  --primary: #1F6F5B;
-  --primary-hover: #185846;
-  --primary-dim: rgba(31, 111, 91, 0.09);
-  --primary-border: rgba(31, 111, 91, 0.22);
+  --primary: #8B3DFF;
+  --primary-hover: #7627E8;
+  --primary-dim: rgba(139, 61, 255, 0.09);
+  --primary-border: rgba(139, 61, 255, 0.2);
 
-  --secondary: #537267;
-  --secondary-dim: rgba(83, 114, 103, 0.12);
+  --secondary: #3B82F6;
+  --secondary-dim: rgba(59, 130, 246, 0.1);
 
-  --accent-sky: #4D7569;
-  --accent-blue: #4D7569;
-  --accent-teal: #2A8069;
-  --accent-mint: #2A8069;
+  --accent-sky: #3B82F6;
+  --accent-blue: #3B82F6;
+  --accent-teal: #8B3DFF;
+  --accent-mint: #8B3DFF;
   
-  --success: #2A8069;
+  --success: #8B3DFF;
   --success-text: #0D9488;
   --success-bg: #E8FAF8;
   --success-dim: rgba(22, 200, 199, 0.12);
@@ -46,46 +46,46 @@
   --danger-dim: rgba(244, 63, 94, 0.12);
   --danger-border: #FCD4DC;
 
-  --text: #17211D;
-  --text-secondary: #5E6D66;
-  --text-muted: #86938D;
-  --text-dim: #B8C2BD;
+  --text: #172033;
+  --text-secondary: #667085;
+  --text-muted: #98A2B3;
+  --text-dim: #C4C9D1;
 
-  --sidebar-width-expanded: 260px;
-  --sidebar-width-collapsed: 72px;
+  --sidebar-width-expanded: 236px;
+  --sidebar-width-collapsed: 56px;
   --header-height: 60px;
 }
 
 .dark {
   /* Nexus Midnight Obsidian Dark Palette */
-  --bg: #101714;
-  --background: #101714;
-  --bg-subtle: #151E1A;
-  --surface: #19231F;
-  --panel: #19231F;
-  --surface-hover: #202D28;
-  --surface-high: #202D28;
-  --surface-elevated: #293832;
+  --bg: #101217;
+  --background: #101217;
+  --bg-subtle: #151820;
+  --surface: #1A1E27;
+  --panel: #1A1E27;
+  --surface-hover: #222733;
+  --surface-high: #222733;
+  --surface-elevated: #2A303D;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-hover: rgba(255, 255, 255, 0.15);
   --border-focus: rgba(95, 179, 148, 0.38);
 
-  --primary: #537267;
-  --primary-hover: #79C4A8;
+  --primary: #7C3AED;
+  --primary-hover: #D8C3FF;
   --primary-dim: rgba(99, 181, 150, 0.14);
   --primary-border: rgba(99, 181, 150, 0.3);
 
-  --secondary: #1F6F5B;
+  --secondary: #8B3DFF;
   --secondary-dim: rgba(83, 71, 206, 0.2);
 
-  --accent-sky: #4D7569;
-  --accent-blue: #4D7569;
-  --accent-teal: #2A8069;
-  --accent-mint: #2A8069;
+  --accent-sky: #3B82F6;
+  --accent-blue: #3B82F6;
+  --accent-teal: #8B3DFF;
+  --accent-mint: #8B3DFF;
 
-  --success: #2A8069;
+  --success: #8B3DFF;
   --success-text: #2DD4BF;
   --success-bg: rgba(22, 200, 199, 0.15);
   --success-dim: rgba(22, 200, 199, 0.15);
@@ -102,8 +102,8 @@
   --danger-border: rgba(244, 63, 94, 0.3);
 
   --text: #F1F5F3;
-  --text-secondary: #86938D;
-  --text-muted: #5E6D66;
+  --text-secondary: #98A2B3;
+  --text-muted: #667085;
   --text-dim: #53635C;
 }
 
@@ -114,7 +114,7 @@
 body {
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--bg);
-  background-image: radial-gradient(circle at 85% -10%, rgba(31, 111, 91, 0.055), transparent 32rem);
+  background-image: none;
   color: var(--text);
   margin: 0;
   padding: 0;
@@ -158,12 +158,107 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0.875rem;
-  box-shadow: 0 1px 2px rgba(18, 45, 35, 0.025), 0 8px 24px rgba(18, 45, 35, 0.035);
+  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.025);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark .nexus-card, .dark .fintech-card, .dark .glass-panel, .dark .bezel-outer, .dark .bezel-inner {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Clinica Experts-inspired operational shell */
+.ce-app .glass-panel,
+.ce-app .nexus-card,
+.ce-app .fintech-card,
+.ce-app .bezel-outer,
+.ce-app .bezel-inner {
+  background: var(--surface);
+  border-color: var(--border-subtle);
+  border-radius: 0.75rem !important;
+  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.025) !important;
+}
+
+.ce-app h1 {
+  font-size: clamp(1.125rem, 2vw, 1.5rem) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.ce-app h2,
+.ce-app h3,
+.ce-app h4 {
+  letter-spacing: -0.015em;
+}
+
+.ce-app button {
+  letter-spacing: normal !important;
+}
+
+.ce-app table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ce-app thead {
+  background: #fafbfc !important;
+  color: #667085 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.ce-app thead th {
+  border-bottom: 1px solid #e8eaee;
+  font-size: 0.6875rem;
+  font-weight: 600 !important;
+}
+
+.ce-app tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.ce-app tbody tr:hover {
+  background-color: #faf8ff !important;
+}
+
+.ce-app input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.ce-app select,
+.ce-app textarea {
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+}
+
+.ce-app input:focus,
+.ce-app select:focus,
+.ce-app textarea:focus {
+  border-color: #8b3dff !important;
+  box-shadow: 0 0 0 2px rgba(139, 61, 255, 0.1) !important;
+}
+
+.ce-app .rounded-3xl { border-radius: 1rem !important; }
+.ce-app .rounded-2xl { border-radius: 0.75rem !important; }
+.ce-app .rounded-xl { border-radius: 0.625rem !important; }
+
+.light .ce-app .text-slate-300 { color: #475467 !important; }
+.light .ce-app .text-slate-400 { color: #667085 !important; }
+.light .ce-app .text-slate-500 { color: #98a2b3 !important; }
+.light .ce-app .bg-slate-950,
+.light .ce-app .bg-slate-900,
+.light .ce-app .bg-slate-800 { background-color: #ffffff !important; }
+.light .ce-app .text-white { color: #172033 !important; }
+.light .ce-app [class*="bg-blue"].text-white,
+.light .ce-app [class*="bg-indigo"].text-white,
+.light .ce-app [class*="bg-purple"].text-white,
+.light .ce-app [class*="bg-rose"].text-white,
+.light .ce-app [class*="bg-red"].text-white { color: #ffffff !important; }
+
+.ce-app button:focus-visible,
+.ce-app a:focus-visible,
+.ce-app input:focus-visible,
+.ce-app select:focus-visible,
+.ce-app textarea:focus-visible {
+  outline: 2px solid rgba(139, 61, 255, 0.45);
+  outline-offset: 2px;
 }
 
 .nexus-card:hover, .fintech-card:hover {
@@ -227,33 +322,33 @@ body {
 }
 
 .btn-primary {
-  background: #1F6F5B;
+  background: #8B3DFF;
   color: #ffffff;
-  border: 1px solid #1F6F5B;
+  border: 1px solid #8B3DFF;
   box-shadow: 0 2px 8px rgba(83, 71, 206, 0.28);
 }
 
 .btn-primary:hover {
-  background: #185846;
-  border-color: #185846;
+  background: #7627E8;
+  border-color: #7627E8;
   box-shadow: 0 4px 12px rgba(83, 71, 206, 0.38);
 }
 
 .dark .btn-primary {
-  background: #537267;
-  color: #101714;
-  border-color: #537267;
+  background: #7C3AED;
+  color: #101217;
+  border-color: #7C3AED;
 }
 
 .dark .btn-primary:hover {
-  background: #79C4A8;
-  border-color: #79C4A8;
+  background: #D8C3FF;
+  border-color: #D8C3FF;
 }
 
 .btn-emerald {
-  background: #2A8069;
+  background: #8B3DFF;
   color: #ffffff;
-  border: 1px solid #2A8069;
+  border: 1px solid #8B3DFF;
   box-shadow: 0 2px 8px rgba(22, 200, 199, 0.25);
 }
 
@@ -300,13 +395,13 @@ select, option {
 
 select option {
   background-color: #FFFFFF !important;
-  color: #17211D !important;
+  color: #172033 !important;
   padding: 8px 12px;
   font-weight: 500;
 }
 
 .dark select option {
-  background-color: #19231F !important;
+  background-color: #1A1E27 !important;
   color: #F1F5F3 !important;
 }
 

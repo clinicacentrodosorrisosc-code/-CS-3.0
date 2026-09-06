@@ -28,9 +28,9 @@ const TabContainer = ({ children }: { children: React.ReactNode }) => {
       initial={{ opacity: 0, y: 16, scale: 0.995 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.995 }}
-      transition={{ 
-        duration: 0.35, 
-        ease: [0.16, 1, 0.3, 1] 
+      transition={{
+        duration: 0.35,
+        ease: [0.16, 1, 0.3, 1]
       }}
       className="absolute inset-0 flex flex-col"
       style={{ zIndex: 10 }}
@@ -45,12 +45,12 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.CRM);
   const activeTabRef = useRef<Tab>(Tab.CRM);
-  
+
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
 
-  
+
 
   useEffect(() => {
     activeTabRef.current = activeTab;
@@ -81,7 +81,7 @@ const App: React.FC = () => {
       return 'light';
     }
   });
-  
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
@@ -94,7 +94,7 @@ const App: React.FC = () => {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  
+
 
   const isFetchingProfile = useRef(false);
   const loadedProfileUserId = useRef<string | null>(null);
@@ -104,14 +104,14 @@ const App: React.FC = () => {
 
   const fetchUserProfile = useCallback(async (currentUser: any) => {
     if (!currentUser || isFetchingProfile.current) return;
-    
+
     if (loadedProfileUserId.current === currentUser.id) {
       setLoading(false);
       return;
     }
-    
+
     isFetchingProfile.current = true;
-    
+
 
     const timeoutId = setTimeout(() => {
       setLoading(current => {
@@ -127,14 +127,14 @@ const App: React.FC = () => {
         .select('role, allowed_tabs, allowed_sub_tabs')
         .eq('id', currentUser.id)
         .single();
-      
+
       if (error) {
         console.error("DEBUG: Erro retornado pelo Supabase (Profiles):", error);
 
       } else {
         profileData = data;
       }
-      
+
       if (!profileData) {
         const defaultRole = currentUser.user_metadata?.role || 'user';
         let defaultTabs: string[] = [Tab.CRM];
@@ -143,7 +143,7 @@ const App: React.FC = () => {
         } else if (defaultRole === 'reception') {
           defaultTabs = [Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
         }
-        
+
         const newProfile = {
           id: currentUser.id,
           email: currentUser.email,
@@ -151,11 +151,11 @@ const App: React.FC = () => {
           allowed_tabs: defaultTabs,
           allowed_sub_tabs: []
         };
-        
+
         const { error: insertError } = await supabase
           .from('profiles')
           .insert(newProfile);
-          
+
         if (insertError) {
           console.error("DEBUG: Erro ao criar perfil padrão no Supabase:", insertError);
         } else {
@@ -164,13 +164,13 @@ const App: React.FC = () => {
             .select('role, allowed_tabs, allowed_sub_tabs')
             .eq('id', currentUser.id)
             .single();
-            
+
           if (retriedData) {
             profileData = retriedData;
           }
         }
       }
-      
+
       let role = profileData?.role;
       if (!role && currentUser.user_metadata?.role) {
           role = currentUser.user_metadata.role;
@@ -180,10 +180,10 @@ const App: React.FC = () => {
 
       const rawTabs = profileData?.allowed_tabs;
       const permissionsNeverSet = rawTabs === null || rawTabs === undefined;
-      
+
       let tabs: string[] = [];
-      try { 
-        tabs = Array.isArray(rawTabs) ? rawTabs : (typeof rawTabs === 'string' ? JSON.parse(rawTabs) : []); 
+      try {
+        tabs = Array.isArray(rawTabs) ? rawTabs : (typeof rawTabs === 'string' ? JSON.parse(rawTabs) : []);
       } catch {
         console.warn("Could not parse tabs");
       }
@@ -194,10 +194,10 @@ const App: React.FC = () => {
 
       const rawSubTabs = profileData?.allowed_sub_tabs;
       const subPermissionsNeverSet = rawSubTabs === null || rawSubTabs === undefined;
-      
+
       let subTabs: string[] = [];
-      try { 
-        subTabs = Array.isArray(rawSubTabs) ? rawSubTabs : (typeof rawSubTabs === 'string' ? JSON.parse(rawSubTabs) : []); 
+      try {
+        subTabs = Array.isArray(rawSubTabs) ? rawSubTabs : (typeof rawSubTabs === 'string' ? JSON.parse(rawSubTabs) : []);
       } catch {
         console.warn("Could not parse sub-tabs");
       }
@@ -216,7 +216,7 @@ const App: React.FC = () => {
               tabs = [Tab.CRM, Tab.FINANCIAL, Tab.ORTHODONTICS, Tab.LABWORK, Tab.MEETINGS, Tab.SUPPORT, Tab.PASSWORDS];
           }
           const mandatoryReceptionSubs = ['lab_kanban'];
-          
+
           if (subPermissionsNeverSet) {
               subTabs = [
                   ...mandatoryReceptionSubs,
@@ -234,14 +234,14 @@ const App: React.FC = () => {
       } else {
 
           if (permissionsNeverSet) {
-              tabs = [Tab.CRM]; 
+              tabs = [Tab.CRM];
           }
       }
-      
+
 
       // Admin permissions check completed
       if (!tabs.includes(Tab.CRM)) tabs.unshift(Tab.CRM);
-      
+
       setAllowedTabs(tabs);
       setAllowedSubTabs(subTabs);
 
@@ -257,19 +257,19 @@ const App: React.FC = () => {
               if (masterData?.allowed_sub_tabs) {
                   let subTabsArray: string[] = [];
                   try {
-                      subTabsArray = Array.isArray(masterData.allowed_sub_tabs) 
-                          ? masterData.allowed_sub_tabs 
+                      subTabsArray = Array.isArray(masterData.allowed_sub_tabs)
+                          ? masterData.allowed_sub_tabs
                           : (typeof masterData.allowed_sub_tabs === 'string' ? JSON.parse(masterData.allowed_sub_tabs) : []);
                   } catch {
                       subTabsArray = [];
                   }
                   if (!Array.isArray(subTabsArray)) subTabsArray = [];
-                  
+
               const resetEntry = subTabsArray.find((s: string) => s.startsWith('RESET_TS:'));
               if (resetEntry && currentUser?.last_sign_in_at) {
                   const resetTime = new Date(resetEntry.split(':')[1]).getTime();
                   const sessionTime = new Date(currentUser.last_sign_in_at).getTime();
-                  
+
                   if (!isNaN(sessionTime) && sessionTime > 0 && sessionTime < resetTime) {
                       await supabase.auth.signOut();
                       window.location.reload();
@@ -284,7 +284,7 @@ const App: React.FC = () => {
       if (currentUser) {
           checkGlobalReset();
       }
-      
+
 
       if (tabs.length > 0 && !tabs.includes(activeTabRef.current)) {
           setActiveTab(tabs[0] as Tab);
@@ -294,7 +294,7 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Profile fetch error catch:", err);
       setAllowedTabs(Object.values(Tab));
-      setAllowedSubTabs([]); 
+      setAllowedSubTabs([]);
       if (currentUser?.user_metadata?.role) {
           setUserRole(currentUser.user_metadata.role);
       }
@@ -343,9 +343,9 @@ const App: React.FC = () => {
           console.warn("Session retrieval warning:", sessionError);
         }
         if (!isMounted) return;
-        
+
         setSession(initialSession);
-        
+
         if (initialSession) {
           await fetchUserProfile(initialSession.user);
         } else {
@@ -365,9 +365,9 @@ const App: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!isMounted) return;
-      
+
       setSession(newSession);
-      
+
       if (newSession) {
         fetchUserProfile(newSession.user);
       } else {
@@ -387,11 +387,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (session?.user) {
       const channel = supabase.channel('online-users');
-      
+
       channel
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
-          
+
 
           const activeSessions = Object.values(state).flatMap(presences => presences.map((p: any) => p.user_email || p.user_id));
 
@@ -417,7 +417,7 @@ const App: React.FC = () => {
   const handleSubTabSelect = (subTabId: string) => {
       setRequestedSubTab(subTabId);
 
-      setTimeout(() => setRequestedSubTab(null), 500); 
+      setTimeout(() => setRequestedSubTab(null), 500);
   };
 
   if (loading) {
@@ -440,24 +440,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F5F7F6] dark:bg-[#101714] text-[#17211D] dark:text-slate-100 overflow-hidden transition-colors duration-200">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab}
-        allowedTabs={allowedTabs}
-        userRole={userRole}
-        userEmail={session.user.email}
-        openPermissions={() => setIsPermissionsOpen(true)}
-        onSubTabSelect={handleSubTabSelect}
-        requestedSubTab={requestedSubTab}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        notificationCount={notificationCount}
-        openNotifications={() => setIsNotificationsOpen(true)}
-      />
-      
-      <main className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden bg-transparent">
-        <AppHeader
+    <div className="ce-app flex h-screen flex-col overflow-hidden bg-[#f4f5f7] text-[#172033] transition-colors duration-200 dark:bg-[#101217] dark:text-slate-100">
+      <AppHeader
           activeTab={activeTab}
           requestedSubTab={requestedSubTab}
           userRole={userRole}
@@ -470,7 +454,25 @@ const App: React.FC = () => {
           openPermissions={() => setIsPermissionsOpen(true)}
         />
 
-        <NotificationCenter 
+      <div className="flex min-h-0 flex-1">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          allowedTabs={allowedTabs}
+          userRole={userRole}
+          userEmail={session.user.email}
+          openPermissions={() => setIsPermissionsOpen(true)}
+          onSubTabSelect={handleSubTabSelect}
+          requestedSubTab={requestedSubTab}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          notificationCount={notificationCount}
+          openNotifications={() => setIsNotificationsOpen(true)}
+        />
+
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+
+        <NotificationCenter
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
           onNotifyCountChange={setNotificationCount}
@@ -520,10 +522,10 @@ const App: React.FC = () => {
 
             {activeTab === Tab.PASSWORDS && (
               <TabContainer key="passwords">
-                <Passwords 
-                  requestedSubTab={requestedSubTab} 
-                  userRole={userRole} 
-                  userEmail={session?.user?.email} 
+                <Passwords
+                  requestedSubTab={requestedSubTab}
+                  userRole={userRole}
+                  userEmail={session?.user?.email}
                 />
               </TabContainer>
             )}
@@ -544,14 +546,15 @@ const App: React.FC = () => {
 
         {/* Chat Widget FAB */}
         <ChatWidget currentUserId={session.user.id} currentUserName={session.user.email} />
-        
+
         {/* Permissions Modal */}
         <PermissionsModal isOpen={isPermissionsOpen} onClose={() => setIsPermissionsOpen(false)} onlineUsers={onlineUsers} />
-      </main>
+        </main>
+      </div>
 
-      <Toaster 
-        position="bottom-right" 
-        richColors 
+      <Toaster
+        position="bottom-right"
+        richColors
         closeButton
         theme={theme}
       />

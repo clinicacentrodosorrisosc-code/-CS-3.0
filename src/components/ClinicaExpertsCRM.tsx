@@ -198,13 +198,13 @@ export const ClinicaExpertsCRM: React.FC = () => {
   }
 
   return (
-    <div className="h-full min-h-0 flex flex-col bg-[#f5f7f6] dark:bg-[#101714] text-[#17211d] dark:text-slate-100">
-      <header className="px-5 py-4 border-b border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#15201b]/80 backdrop-blur-xl">
+    <div className="h-full min-h-0 flex flex-col bg-[#f5f7f6] dark:bg-[#101217] text-[#17211d] dark:text-slate-100">
+      <header className="px-5 py-4 border-b border-black/10 dark:border-white/10 bg-white dark:bg-[#15201b]/80 backdrop-blur-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight">CRM Clinica Experts</h1>
-              {configured ? <Wifi className="w-4 h-4 text-emerald-500" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
+              <h1 className="text-xl font-semibold tracking-tight">CRM Clinica Experts</h1>
+              {configured ? <Wifi className="w-4 h-4 text-purple-500" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               {lastSync ? `Ultima atualizacao: ${new Date(lastSync).toLocaleString('pt-BR')}` : 'Aguardando a primeira sincronizacao'}
@@ -221,7 +221,7 @@ export const ClinicaExpertsCRM: React.FC = () => {
             <button
               onClick={() => void synchronize(true)}
               disabled={syncing || !configured}
-              className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black uppercase tracking-wide flex items-center gap-2"
+              className="h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
               {syncing ? 'Atualizando' : 'Atualizar agora'}
@@ -241,29 +241,29 @@ export const ClinicaExpertsCRM: React.FC = () => {
             const cards = opportunities.filter(item => item.stage_id === stage.id);
             const exportable = new Set(cards.map(item => normalizePhoneBR(item.patient_phone)).filter(Boolean)).size;
             return (
-              <section key={stage.id} className="w-[290px] h-full flex flex-col rounded-2xl border border-black/10 dark:border-white/10 bg-white/65 dark:bg-[#15201b]/70 overflow-hidden">
+              <section key={stage.id} className="w-[290px] h-full flex flex-col rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#15201b]/70 overflow-hidden">
                 <div className="p-3 border-b border-black/10 dark:border-white/10">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="font-black text-sm truncate">{stage.name}</h2>
-                    <span className="text-[10px] font-black px-2 py-1 rounded-full bg-slate-200 dark:bg-white/10">{cards.length}</span>
+                    <h2 className="font-semibold text-sm truncate">{stage.name}</h2>
+                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-slate-200 dark:bg-white/10">{cards.length}</span>
                   </div>
                   <button
                     onClick={() => exportStage(stage)}
                     disabled={!exportable}
-                    className="mt-3 w-full h-9 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase flex items-center justify-center gap-2"
+                    className="mt-3 w-full h-9 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 disabled:opacity-40 text-purple-700 dark:text-purple-300 text-[10px] font-semibold uppercase flex items-center justify-center gap-2"
                   >
                     <Download className="w-3.5 h-3.5" /> Exportar {exportable} para WhatsApp
                   </button>
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
                   {cards.map(card => (
-                    <article key={card.id} className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1a2620] p-3 shadow-sm">
+                    <article key={card.id} className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1a2620] p-3 ">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-bold text-sm truncate">{card.patient_name || card.title}</p>
                           <p className="text-[11px] text-slate-500 truncate mt-0.5">{card.patient_phone || 'Sem telefone'}</p>
                         </div>
-                        <span className="text-[9px] font-black text-slate-400">P{card.priority}</span>
+                        <span className="text-[9px] font-semibold text-slate-400">P{card.priority}</span>
                       </div>
                       {card.seller_name && <p className="mt-2 text-[10px] text-slate-500 flex items-center gap-1"><Users className="w-3 h-3" /> {card.seller_name}</p>}
                     </article>
@@ -274,7 +274,7 @@ export const ClinicaExpertsCRM: React.FC = () => {
             );
           })}
           {!pipelineStages.length && (
-            <div className="w-[min(520px,calc(100vw-3rem))] rounded-2xl border border-dashed border-black/15 dark:border-white/15 grid place-items-center text-center p-8">
+            <div className="w-[min(520px,calc(100vw-3rem))] rounded-xl border border-dashed border-black/15 dark:border-white/15 grid place-items-center text-center p-8">
               <div>
                 <Users className="w-8 h-8 mx-auto text-slate-400 mb-3" />
                 <p className="font-bold">Nenhum funil sincronizado</p>
