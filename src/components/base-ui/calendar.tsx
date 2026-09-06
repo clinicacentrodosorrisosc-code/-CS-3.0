@@ -23,7 +23,7 @@ export function Calendar({ className = '', classNames, components, ...props }: C
         weekdays: `${defaults.weekdays} grid grid-cols-7`,
         weekday: `${defaults.weekday} py-2 text-center text-[10px] font-semibold uppercase text-muted`,
         week: `${defaults.week} grid grid-cols-7`,
-        day: `${defaults.day} relative h-9 p-0 text-center text-xs`,
+        day: `${defaults.day} relative flex h-9 items-center justify-center p-0 text-center text-xs`,
         day_button: `${defaults.day_button} inline-flex size-9 items-center justify-center rounded-full transition-colors hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`,
         outside: `${defaults.outside} text-muted opacity-35`,
         disabled: `${defaults.disabled} pointer-events-none opacity-30`,
