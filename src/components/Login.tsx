@@ -10,11 +10,9 @@ import {
   User, 
   Eye, 
   EyeOff, 
-  ArrowRight,
-  HeartHandshake,
-  Clock
+  ArrowRight
 } from 'lucide-react';
-import clinicShowcaseImg from '../assets/images/centro_do_sorriso_showcase.jpg';
+import clinicShowcaseImg from '../assets/images/centro_do_sorriso_login.png';
 
 const DAILY_MESSAGES = [
   { text: "Posso todas as coisas naquele que me fortalece.", author: "Filipenses 4:13" },
@@ -258,7 +256,7 @@ export const Login: React.FC = () => {
         {/* ============================================================ */}
         {/* RIGHT SIDE: Dedicated Space for "Centro do Sorriso" Image     */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[640px] flex flex-col justify-between overflow-hidden group">
+        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[640px] overflow-hidden group">
           
           {/* Main Showcase Image */}
           <img 
@@ -267,62 +265,14 @@ export const Login: React.FC = () => {
             className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out"
           />
 
-          {/* Cinematic Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/30 to-transparent z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07090e] via-transparent to-transparent z-10 hidden lg:block" />
-          <div className="absolute inset-0 bg-sky-950/20 mix-blend-overlay z-10" />
-
-          {/* Top Floating Glass Badge */}
-          <div className="relative z-20 p-6 sm:p-8 flex justify-between items-start">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/70 border border-white/10 backdrop-blur-xl text-white text-xs font-semibold shadow-xl">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Centro do Sorriso • Unidade Matriz
-            </div>
-
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-white/10 backdrop-blur-xl text-slate-300 text-[11px] font-medium shadow-lg">
-              <Clock className="w-3.5 h-3.5 text-sky-400" />
-              Atendimento Integrado
-            </div>
-          </div>
-
-          {/* Bottom Floating Information Showcase */}
-          <div className="relative z-20 p-6 sm:p-10 space-y-4">
-            <div className="max-w-md p-5 rounded-2xl bg-slate-950/80 border border-white/10 backdrop-blur-2xl shadow-2xl">
-              <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-widest mb-1.5">
-                <HeartHandshake className="w-4 h-4 text-sky-400" />
-                Excelência & Cuidado Humano
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                Transformando vidas através de sorrisos únicos.
-              </h3>
-              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Ambientes planejados com tecnologia de ponta, conforto e a dedicação dos melhores especialistas.
-              </p>
-
-              <div className="grid grid-cols-3 gap-2 pt-3.5 mt-3.5 border-t border-white/10 text-center">
-                <div>
-                  <div className="text-sm font-extrabold text-white">100%</div>
-                  <div className="text-[9px] uppercase tracking-wider text-slate-400">Digital</div>
-                </div>
-                <div className="border-x border-white/10">
-                  <div className="text-sm font-extrabold text-emerald-400">Seguro</div>
-                  <div className="text-[9px] uppercase tracking-wider text-slate-400">LGPD</div>
-                </div>
-                <div>
-                  <div className="text-sm font-extrabold text-sky-400">24/7</div>
-                  <div className="text-[9px] uppercase tracking-wider text-slate-400">Cloud Sync</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </div>
 
       {/* Page Minimal Footer */}
-      <div className="absolute bottom-2 text-center w-full text-[10px] text-slate-500 pointer-events-none">
-        &copy; {new Date().getFullYear()} Centro do Sorriso | Todos os direitos reservados
+      <div className="absolute bottom-2 text-center w-full text-[10px] leading-relaxed text-slate-500 pointer-events-none">
+        <div>&copy; {new Date().getFullYear()} Centro do Sorriso | Todos os direitos reservados</div>
+        <div>Feita por James Moraes, com muito carinho e litros de café</div>
       </div>
     </div>
   );
