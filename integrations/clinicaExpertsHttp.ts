@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createUserScopedSupabase, syncClinicaExperts } from './clinicaExperts.js';
+import { createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
 type ApiRequest = {
@@ -161,7 +161,9 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
     }
     if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
 
-    const operation = syncClinicaExperts(db, ownerUserId, apiToken);
+    const operation = eventName.startsWith('crm_opportunity.')
+      ? processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload)
+      : syncClinicaExperts(db, ownerUserId, apiToken);
     operation.then(async () => {
       await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
     }).catch(async error => {

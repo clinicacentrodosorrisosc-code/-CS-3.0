@@ -283,6 +283,73 @@ export async function syncClinicaExperts(
   }
 }
 
+export async function processClinicaExpertsOpportunityWebhook(
+  db: SupabaseClient,
+  userId: string,
+  payload: Record<string, any>,
+) {
+  const resource = payload.resource || payload.data || payload;
+  const pipeline = resource.pipeline;
+  const stage = resource.stage;
+  const opportunityId = resource.uuid || resource.id;
+  if (!opportunityId || !pipeline?.uuid || !stage?.uuid) {
+    throw new Error('Webhook de oportunidade sem pipeline, etapa ou identificador externo.');
+  }
+
+  const now = new Date().toISOString();
+  const { data: pipelineRow, error: pipelineError } = await db
+    .from('clinic_experts_pipelines')
+    .upsert({ user_id: userId, external_id: pipeline.uuid, name: pipeline.name || 'Funil', synced_at: now }, { onConflict: 'user_id,external_id' })
+    .select('id')
+    .single();
+  throwIfError(pipelineError, 'Erro ao salvar funil recebido pelo webhook');
+  if (!pipelineRow) throw new Error('Webhook nao retornou o funil local.');
+
+  const { data: stageRow, error: stageError } = await db
+    .from('clinic_experts_stages')
+    .upsert({ user_id: userId, pipeline_id: pipelineRow.id, external_id: stage.uuid, name: stage.name || 'Etapa', stage_type: stage.status || null, position: 0, synced_at: now }, { onConflict: 'user_id,external_id' })
+    .select('id')
+    .single();
+  throwIfError(stageError, 'Erro ao salvar etapa recebida pelo webhook');
+  if (!stageRow) throw new Error('Webhook nao retornou a etapa local.');
+
+  const isDeleted = String(payload.type || payload.event || '').endsWith('.deleted');
+  if (isDeleted) {
+    const { error } = await db.from('clinic_experts_opportunities').delete().eq('user_id', userId).eq('external_id', opportunityId);
+    throwIfError(error, 'Erro ao remover oportunidade recebida pelo webhook');
+    return;
+  }
+
+  const { data: existingOpportunity, error: existingError } = await db
+    .from('clinic_experts_opportunities')
+    .select('patient_phone, patient_email')
+    .eq('user_id', userId)
+    .eq('external_id', opportunityId)
+    .maybeSingle();
+  throwIfError(existingError, 'Erro ao consultar oportunidade existente');
+
+  const { error: opportunityError } = await db.from('clinic_experts_opportunities').upsert({
+    user_id: userId,
+    external_id: opportunityId,
+    patient_external_id: resource.patient?.uuid || null,
+    pipeline_id: pipelineRow.id,
+    stage_id: stageRow.id,
+    title: resource.title || resource.patient?.name || 'Oportunidade',
+    patient_name: resource.patient?.name || null,
+    patient_phone: existingOpportunity?.patient_phone || null,
+    patient_email: existingOpportunity?.patient_email || null,
+    seller_name: resource.seller?.name || null,
+    priority: Number(resource.priority || 1),
+    amount_cents: Number(resource.amount || 0),
+    origin: resource.origin || null,
+    observations: resource.observations || null,
+    status: stage.status || resource.status || null,
+    source_payload: payload,
+    synced_at: now,
+  }, { onConflict: 'user_id,external_id' });
+  throwIfError(opportunityError, 'Erro ao salvar oportunidade recebida pelo webhook');
+}
+
 export function createUserScopedSupabase(
   supabaseUrl: string,
   anonKey: string,
