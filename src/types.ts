@@ -10,7 +10,8 @@ export enum Tab {
   RESPONSIBILITIES = 'Responsabilidades',
   BIBLIOTECA = 'Biblioteca',
   TASKS = 'Tarefas',
-  CRM = 'CRM'
+  CRM = 'CRM',
+  SETTINGS = 'Configurações'
 }
 
 export interface UserProfile {

@@ -8,6 +8,7 @@ import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
 import crypto from "crypto";
 import { createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
+import { handleWhatsAppConfig } from "./integrations/whatsappHttp";
 
 const supabaseUrl = 'https://dmslcvvjxfulsocksave.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtc2xjdnZqeGZ1bHNvY2tzYXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMDQyNjgsImV4cCI6MjA4NDg4MDI2OH0.H0iDEj58mdwSFnLlyn1a2n_k3UZBtf_rHH8w4BkzfUw';
@@ -573,6 +574,8 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
+
+  app.all('/api/integrations/whatsapp/config', (req, res) => handleWhatsAppConfig(req, res));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

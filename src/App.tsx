@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { CRM } from './components/CRM';
+import { WhatsAppSettings } from './components/WhatsAppSettings';
 import { Financial } from './components/Financial';
 import { Orthodontics } from './components/Orthodontics';
 import { LabWork } from './components/LabWork';
@@ -492,6 +493,12 @@ const App: React.FC = () => {
             {activeTab === Tab.CRM && (
               <TabContainer key="crm">
                 <CRM />
+              </TabContainer>
+            )}
+
+            {activeTab === Tab.SETTINGS && (
+              <TabContainer key="settings">
+                <WhatsAppSettings requestedSubTab={requestedSubTab} />
               </TabContainer>
             )}
 

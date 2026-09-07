@@ -29,7 +29,8 @@ import {
   Sparkles,
   ShieldCheck,
   LayoutDashboard,
-  KanbanSquare
+  KanbanSquare,
+  Settings2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -79,6 +80,15 @@ const MENU_STRUCTURE: MenuItem[] = [
     icon: KanbanSquare,
     group: 'main',
     subItems: []
+  },
+  {
+    id: Tab.SETTINGS,
+    label: 'Configurações',
+    icon: Settings2,
+    group: 'management',
+    subItems: [
+      { id: 'whatsapp', label: 'WhatsApp Business' }
+    ]
   },
   {
     id: Tab.FINANCIAL,
