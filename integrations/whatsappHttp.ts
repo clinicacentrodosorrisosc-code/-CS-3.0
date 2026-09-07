@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { fallbackSupabaseAnonKey } from './clinicaExpertsHttp.js';
 
 type ApiRequest = {
   method?: string;
@@ -12,7 +13,7 @@ type ApiResponse = {
 };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://dmslcvvjxfulsocksave.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabaseAnonKey = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || fallbackSupabaseAnonKey;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
