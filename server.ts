@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
@@ -5,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
+import crypto from "crypto";
 import { createUserScopedSupabase, syncClinicaExperts } from "./integrations/clinicaExperts";
 
 const supabaseUrl = 'https://dmslcvvjxfulsocksave.supabase.co';
@@ -16,6 +18,11 @@ const clinicaExpertsToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
 const clinicaExpertsOwnerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const cronSecret = process.env.CRON_SECRET || '';
+const clinicaExpertsWebhookSecret = process.env.CLINICA_EXPERTS_WEBHOOK_SECRET || '';
+const clinicaExpertsSyncIntervalMinutes = Math.max(
+  1,
+  Number(process.env.CLINICA_EXPERTS_SYNC_INTERVAL_MINUTES || 1),
+);
 
 async function startServer() {
   console.log(">>> [SERVER] Iniciando servidor...");
@@ -402,6 +409,24 @@ async function startServer() {
   // Health check
   const activeClinicaExpertsSyncs = new Map<string, Promise<unknown>>();
 
+  const createClinicaExpertsServiceDb = () => {
+    if (!supabaseServiceRoleKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY ainda nao foi configurada.');
+    }
+    return createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  };
+
+  const startClinicaExpertsSync = (db: ReturnType<typeof createClient>, userId: string) => {
+    const existing = activeClinicaExpertsSyncs.get(userId);
+    if (existing) return existing;
+    const operation = syncClinicaExperts(db, userId, clinicaExpertsToken)
+      .finally(() => activeClinicaExpertsSyncs.delete(userId));
+    activeClinicaExpertsSyncs.set(userId, operation);
+    return operation;
+  };
+
   async function resolveClinicaExpertsSyncContext(authorization?: string) {
     const bearer = authorization?.replace(/^Bearer\s+/i, '') || '';
     const isCron = Boolean(cronSecret && bearer === cronSecret);
@@ -412,9 +437,7 @@ async function startServer() {
       }
       return {
         userId: clinicaExpertsOwnerUserId,
-        db: createClient(supabaseUrl, supabaseServiceRoleKey, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        }),
+        db: createClinicaExpertsServiceDb(),
       };
     }
 
@@ -452,15 +475,10 @@ async function startServer() {
         });
       }
       const context = await resolveClinicaExpertsSyncContext(req.headers.authorization);
-      const existing = activeClinicaExpertsSyncs.get(context.userId);
-      if (existing) {
+      if (activeClinicaExpertsSyncs.has(context.userId)) {
         return res.status(409).json({ error: 'Ja existe uma sincronizacao em andamento.' });
       }
-
-      const operation = syncClinicaExperts(context.db, context.userId, clinicaExpertsToken)
-        .finally(() => activeClinicaExpertsSyncs.delete(context.userId));
-      activeClinicaExpertsSyncs.set(context.userId, operation);
-      const result = await operation;
+      const result = await startClinicaExpertsSync(context.db, context.userId);
       res.json({ data: result });
     } catch (error: any) {
       console.error('>>> [CLINICA EXPERTS] Sync error:', error.message);
@@ -471,6 +489,83 @@ async function startServer() {
 
   app.post('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
   app.get('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
+
+  app.post('/api/integrations/clinica-experts/webhook/:secret', async (req, res) => {
+    const suppliedSecret = String(req.params.secret || '');
+    const expectedSecret = clinicaExpertsWebhookSecret;
+    const isValidSecret = Boolean(
+      expectedSecret
+      && suppliedSecret.length === expectedSecret.length
+      && crypto.timingSafeEqual(Buffer.from(suppliedSecret), Buffer.from(expectedSecret)),
+    );
+    if (!isValidSecret) return res.status(401).json({ error: 'Webhook nao autorizado.' });
+    if (!clinicaExpertsOwnerUserId || !supabaseServiceRoleKey || !clinicaExpertsToken) {
+      return res.status(503).json({ error: 'Integracao Clinica Experts incompleta no servidor.' });
+    }
+
+    const payload = req.body && typeof req.body === 'object' ? req.body : {};
+    const eventName = String(payload.event || payload.type || payload.name || 'unknown');
+    const externalDeliveryId = String(payload.id || payload.delivery_id || payload.uuid || '');
+    const eventKey = externalDeliveryId || crypto
+      .createHash('sha256')
+      .update(JSON.stringify(payload))
+      .digest('hex');
+    const db = createClinicaExpertsServiceDb();
+
+    try {
+      const { data: eventRow, error: insertError } = await db
+        .from('clinic_experts_webhook_events')
+        .insert({
+          user_id: clinicaExpertsOwnerUserId,
+          event_name: eventName,
+          event_key: eventKey,
+          source_payload: payload,
+        })
+        .select('id')
+        .single();
+
+      if (insertError?.code === '23505') {
+        return res.status(200).json({ received: true, duplicate: true });
+      }
+      if (insertError) throw insertError;
+
+      res.status(202).json({ received: true });
+      startClinicaExpertsSync(db, clinicaExpertsOwnerUserId)
+        .then(async () => {
+          await db
+            .from('clinic_experts_webhook_events')
+            .update({ status: 'processed', processed_at: new Date().toISOString() })
+            .eq('id', eventRow.id);
+        })
+        .catch(async error => {
+          console.error('>>> [CLINICA EXPERTS] Webhook reconciliation failed:', error.message);
+          await db
+            .from('clinic_experts_webhook_events')
+            .update({
+              status: 'failed',
+              processed_at: new Date().toISOString(),
+              error_message: String(error.message || error).slice(0, 1000),
+            })
+            .eq('id', eventRow.id);
+        });
+    } catch (error: any) {
+      console.error('>>> [CLINICA EXPERTS] Webhook error:', error.message);
+      return res.status(500).json({ error: 'Falha ao registrar webhook.' });
+    }
+  });
+
+  if (clinicaExpertsToken && clinicaExpertsOwnerUserId && supabaseServiceRoleKey) {
+    const intervalMs = clinicaExpertsSyncIntervalMinutes * 60_000;
+    const runScheduledSync = () => {
+      const db = createClinicaExpertsServiceDb();
+      startClinicaExpertsSync(db, clinicaExpertsOwnerUserId)
+        .catch(error => console.error('>>> [CLINICA EXPERTS] Scheduled sync failed:', error.message));
+    };
+    const syncTimer = setInterval(runScheduledSync, intervalMs);
+    syncTimer.unref();
+    setImmediate(runScheduledSync);
+    console.log(`>>> [CLINICA EXPERTS] Automatic sync enabled every ${clinicaExpertsSyncIntervalMinutes} minute(s).`);
+  }
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

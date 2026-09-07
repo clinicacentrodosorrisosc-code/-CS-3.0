@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { createUserScopedSupabase, syncClinicaExperts } from './clinicaExperts.js';
+import crypto from 'crypto';
 
 type ApiRequest = {
   method?: string;
@@ -104,5 +105,72 @@ export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha na sincronizacao.';
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
+  }
+}
+
+export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: Record<string, string>; query?: Record<string, string | string[]>; body?: unknown }, res: ApiResponse) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+
+  const expectedSecret = process.env.CLINICA_EXPERTS_WEBHOOK_SECRET || '';
+  const querySecret = Array.isArray(req.query?.secret) ? req.query.secret[0] : req.query?.secret;
+  const suppliedSecret = req.params?.secret || querySecret || '';
+  const isValidSecret = Boolean(
+    expectedSecret
+    && suppliedSecret.length === expectedSecret.length
+    && crypto.timingSafeEqual(Buffer.from(suppliedSecret), Buffer.from(expectedSecret)),
+  );
+  if (!isValidSecret) {
+    res.status(401).json({ error: 'Webhook nao autorizado.' });
+    return;
+  }
+
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  const ownerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '';
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!apiToken || !ownerUserId || !serviceRoleKey) {
+    res.status(503).json({ error: 'Integracao Clinica Experts incompleta no servidor.' });
+    return;
+  }
+
+  const payload = req.body && typeof req.body === 'object' ? req.body as Record<string, unknown> : {};
+  const eventName = String(payload.event || payload.type || payload.name || 'unknown');
+  const deliveryId = String(payload.id || payload.delivery_id || payload.uuid || '');
+  const eventKey = deliveryId || crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+  const db = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  try {
+    const { data: eventRow, error: insertError } = await db
+      .from('clinic_experts_webhook_events')
+      .insert({
+        user_id: ownerUserId,
+        event_name: eventName,
+        event_key: eventKey,
+        source_payload: payload,
+      })
+      .select('id')
+      .single();
+
+    if (insertError?.code === '23505') {
+      res.status(200).json({ received: true, duplicate: true });
+      return;
+    }
+    if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
+
+    const operation = syncClinicaExperts(db, ownerUserId, apiToken);
+    operation.then(async () => {
+      await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
+    }).catch(async error => {
+      await db.from('clinic_experts_webhook_events').update({ status: 'failed', processed_at: new Date().toISOString(), error_message: String(error.message || error).slice(0, 1000) }).eq('id', eventRow.id);
+    });
+
+    res.status(202).json({ received: true });
+  } catch (error) {
+    console.error('[CLINICA EXPERTS] Webhook error:', error instanceof Error ? error.message : error);
+    res.status(500).json({ error: 'Falha ao registrar webhook.' });
   }
 }

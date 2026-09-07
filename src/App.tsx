@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
+import { CRM } from './components/CRM';
 import { Financial } from './components/Financial';
 import { Orthodontics } from './components/Orthodontics';
 import { LabWork } from './components/LabWork';
@@ -188,8 +189,6 @@ const App: React.FC = () => {
         console.warn("Could not parse tabs");
       }
       if (!Array.isArray(tabs)) tabs = [];
-      tabs = tabs.filter(tab => tab !== 'CRM');
-
       // Ensure initial roles have required tabs
 
       const rawSubTabs = profileData?.allowed_sub_tabs;
@@ -487,6 +486,12 @@ const App: React.FC = () => {
             {activeTab === Tab.DASHBOARD && (
               <TabContainer key="dashboard">
                 <Dashboard userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
+
+            {activeTab === Tab.CRM && (
+              <TabContainer key="crm">
+                <CRM />
               </TabContainer>
             )}
 

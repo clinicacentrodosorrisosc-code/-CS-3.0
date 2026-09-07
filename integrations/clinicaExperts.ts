@@ -229,6 +229,27 @@ export async function syncClinicaExperts(
       throwIfError(error, 'Erro ao salvar oportunidades');
     }
 
+    const { error: staleOpportunitiesError } = await db
+      .from('clinic_experts_opportunities')
+      .delete()
+      .eq('user_id', userId)
+      .lt('synced_at', now);
+    throwIfError(staleOpportunitiesError, 'Erro ao remover oportunidades antigas');
+
+    const { error: staleStagesError } = await db
+      .from('clinic_experts_stages')
+      .delete()
+      .eq('user_id', userId)
+      .lt('synced_at', now);
+    throwIfError(staleStagesError, 'Erro ao remover etapas antigas');
+
+    const { error: stalePipelinesError } = await db
+      .from('clinic_experts_pipelines')
+      .delete()
+      .eq('user_id', userId)
+      .lt('synced_at', now);
+    throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
+
     const result: SyncResult = {
       pipelines: pipelineRows.length,
       stages: stageRows.length,

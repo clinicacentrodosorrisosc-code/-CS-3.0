@@ -28,7 +28,8 @@ import {
   BookOpen,
   Sparkles,
   ShieldCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  KanbanSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -71,6 +72,13 @@ const MENU_STRUCTURE: MenuItem[] = [
       { id: 'geral', label: 'Visao geral' },
       { id: 'commercial', label: 'Comercial' }
     ]
+  },
+  {
+    id: Tab.CRM,
+    label: 'CRM',
+    icon: KanbanSquare,
+    group: 'main',
+    subItems: []
   },
   {
     id: Tab.FINANCIAL,
