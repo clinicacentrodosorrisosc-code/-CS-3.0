@@ -10,6 +10,7 @@ import crypto from "crypto";
 import { createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
 import { handleWhatsAppConfig } from "./integrations/whatsappHttp";
 import { handleWahaConfig, handleWahaWebhook } from "./integrations/wahaHttp";
+import { handleMetaWebhook, verifyMetaWebhook } from "./integrations/metaWebhookHttp";
 
 const supabaseUrl = 'https://dmslcvvjxfulsocksave.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtc2xjdnZqeGZ1bHNvY2tzYXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMDQyNjgsImV4cCI6MjA4NDg4MDI2OH0.H0iDEj58mdwSFnLlyn1a2n_k3UZBtf_rHH8w4BkzfUw';
@@ -33,6 +34,10 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(cors());
+  app.get('/api/integrations/whatsapp/meta/webhook', (req, res) => verifyMetaWebhook(req.query, res));
+  app.post('/api/integrations/whatsapp/meta/webhook', express.raw({ type: 'application/json', limit: '10mb' }), (req, res) =>
+    handleMetaWebhook(req.body as Buffer, req.headers['x-hub-signature-256'], res),
+  );
   app.post('/api/integrations/whatsapp/waha/webhook', express.raw({ type: 'application/json', limit: '10mb' }), (req, res) =>
     handleWahaWebhook(req.body as Buffer, req.headers, res),
   );

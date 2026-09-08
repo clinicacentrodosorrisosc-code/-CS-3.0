@@ -23,6 +23,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [wabaId, setWabaId] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [verifyToken, setVerifyToken] = useState('');
+  const [twoFactorPin, setTwoFactorPin] = useState('');
   const [connected, setConnected] = useState(false);
   const [phoneLabel, setPhoneLabel] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +62,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
       const response = await fetch('/api/integrations/whatsapp/config', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumberId, wabaId, accessToken, verifyToken }),
+        body: JSON.stringify({ phoneNumberId, wabaId, accessToken, verifyToken, twoFactorPin }),
       });
       const body = await readApiResponse(response);
       setConnected(true);
@@ -131,8 +132,9 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Phone Number ID<input required value={phoneNumberId} onChange={event => setPhoneNumberId(event.target.value)} placeholder="Ex.: 123456789012345" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
               <label className="text-xs font-semibold text-[var(--text-secondary)]">WABA ID <span className="font-normal text-[var(--text-muted)]">(opcional)</span><input value={wabaId} onChange={event => setWabaId(event.target.value)} placeholder="ID da conta WhatsApp Business" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
-              <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">Token de acesso permanente<input required={!connected} type="password" value={accessToken} onChange={event => setAccessToken(event.target.value)} placeholder={connected ? 'Token salvo. Digite apenas para substituir' : 'Cole o token da Meta'} className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
+              <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">Token de acesso permanente<input required type="password" value={accessToken} onChange={event => setAccessToken(event.target.value)} placeholder={connected ? 'Digite o token para validar ou substituir' : 'Cole o token da Meta'} className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
               <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">Token de verificação do webhook<input value={verifyToken} onChange={event => setVerifyToken(event.target.value)} placeholder="Crie um token para validar o webhook da Meta" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
+              <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">PIN de verificação em duas etapas <span className="font-normal text-[var(--text-muted)]">(opcional)</span><input inputMode="numeric" maxLength={6} value={twoFactorPin} onChange={event => setTwoFactorPin(event.target.value.replace(/\D/g, ''))} placeholder="PIN de 6 dígitos para registrar o número" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]"><ShieldCheck className="h-4 w-4 text-[#1F6F5B]" /> Validação feita diretamente na Graph API</p><div className="flex gap-2">{connected && <button type="button" onClick={disconnect} className="flex h-10 items-center gap-2 rounded-xl border border-rose-200 px-3 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/20 dark:hover:bg-rose-500/10"><Unplug className="h-4 w-4" /> Desconectar</button>}<button disabled={isSaving} className="flex h-10 items-center gap-2 rounded-xl bg-[#1F6F5B] px-4 text-xs font-bold text-white transition hover:bg-[#195c4c] disabled:opacity-50">{isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />} {isSaving ? 'Validando...' : connected ? 'Atualizar conexão' : 'Conectar WhatsApp'}</button></div></div>
           </form>
