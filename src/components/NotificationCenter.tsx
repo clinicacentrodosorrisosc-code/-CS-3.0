@@ -21,6 +21,30 @@ interface NotificationCenterProps {
   onClose: () => void;
 }
 
+const getCompletedTreatmentMonths = (startDate?: string) => {
+  if (!startDate) return null;
+
+  const start = new Date(`${startDate}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return null;
+
+  const today = new Date();
+  let completedMonths = (today.getFullYear() - start.getFullYear()) * 12
+    + today.getMonth() - start.getMonth();
+
+  if (today.getDate() < start.getDate()) completedMonths--;
+
+  return Math.max(0, completedMonths);
+};
+
+const formatTreatmentDuration = (completedMonths: number) => {
+  const years = Math.floor(completedMonths / 12);
+  const months = completedMonths % 12;
+
+  return months > 0
+    ? `${years} ano${years === 1 ? '' : 's'} e ${months} ${months === 1 ? 'mês' : 'meses'}`
+    : `${years} ano${years === 1 ? '' : 's'}`;
+};
+
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ 
   isOpen,
   onNotifyCountChange, 
@@ -110,11 +134,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         });
       }
 
-      // 3. Get Ortho Problem Notes
+      // 3. Get Orthodontic alerts
       const { data: orthoPatients } = await supabase
         .from('ortho_patients')
-        .select('*')
-        .not('problem_note', 'is', null);
+        .select('id, name, start_date, status, problem_note');
 
       if (orthoPatients) {
         orthoPatients.forEach(p => {
@@ -128,6 +151,21 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               tab: Tab.ORTHODONTICS,
               isRead: false,
               createdAt: new Date().toISOString()
+            });
+          }
+
+          const completedMonths = getCompletedTreatmentMonths(p.start_date);
+          if (p.status === 'Active' && completedMonths !== null && completedMonths >= 12) {
+            generatedNotifications.push({
+              id: `ortho-duration-${p.id}`,
+              title: 'Tratamento com mais de 1 ano',
+              message: `${p.name} está em tratamento há ${formatTreatmentDuration(completedMonths)}.`,
+              type: 'deadline',
+              priority: 'high',
+              tab: Tab.ORTHODONTICS,
+              link: 'patients',
+              isRead: false,
+              createdAt: p.start_date
             });
           }
         });

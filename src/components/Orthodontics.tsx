@@ -956,6 +956,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return parts.length > 0 ? parts.join(' ') : '0d';
   };
 
+  const hasTreatmentOverOneYear = (patient: OrthoPatient) => {
+      if (patient.status !== 'Active' || !patient.startDate) return false;
+
+      const startDate = new Date(`${patient.startDate}T00:00:00`);
+      if (Number.isNaN(startDate.getTime())) return false;
+
+      const today = new Date();
+      let completedMonths = (today.getFullYear() - startDate.getFullYear()) * 12
+          + today.getMonth() - startDate.getMonth();
+
+      if (today.getDate() < startDate.getDate()) completedMonths--;
+
+      return completedMonths >= 12;
+  };
+
   const { 
     activeCount, 
     estimatedRevenue, 
@@ -2360,16 +2375,23 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <tbody className="text-gray-300 text-sm divide-y divide-white/5">
                       {filteredPatients.map((p) => {
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
+                          const hasLongTreatment = hasTreatmentOverOneYear(p);
                           
                           return (
                             <tr 
                                 key={p.id} 
-                                className={`group transition-colors ${hasProblem ? 'bg-red-500/5 hover:bg-red-500/10 border-l-2 border-l-red-500' : 'hover:bg-panel border-l-2 border-l-transparent'}`}
+                                className={`group transition-colors ${hasProblem ? 'bg-red-500/5 hover:bg-red-500/10 border-l-2 border-l-red-500' : hasLongTreatment ? 'bg-amber-500/5 hover:bg-amber-500/10 border-l-2 border-l-amber-500' : 'hover:bg-panel border-l-2 border-l-transparent'}`}
                             >
                                 <td className="p-5 font-bold text-text relative">
                                     {p.name}
                                     {hasProblem && (
                                         <span className="ml-2 inline-flex items-center justify-center bg-red-500 text-text text-[9px] px-1.5 rounded-full" title="Problema Relatado">!</span>
+                                    )}
+                                    {hasLongTreatment && (
+                                        <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-400" title="Tratamento ativo há mais de 1 ano">
+                                            <span className="material-symbols-outlined text-[11px]">warning</span>
+                                            12+ meses
+                                        </span>
                                     )}
                                     {p.endDate && <div className="text-[10px] text-slate-500 font-normal">Fim: {p.endDate.split('-').reverse().join('/')}</div>}
                                 </td>
