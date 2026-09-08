@@ -28,6 +28,9 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [wahaSessionName, setWahaSessionName] = useState('');
+  const [isConnectingWaha, setIsConnectingWaha] = useState(false);
+  const [wahaMessage, setWahaMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -82,6 +85,28 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
     setMessage({ type: 'success', text: 'WhatsApp Business desconectado.' });
   };
 
+  const connectWaha = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsConnectingWaha(true);
+    setWahaMessage(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão expirada.');
+      const response = await fetch('/api/integrations/whatsapp/waha', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionName: wahaSessionName }),
+      });
+      const body = await readApiResponse(response);
+      const status = body.session?.status ? ` Estado: ${body.session.status}.` : '';
+      setWahaMessage({ type: 'success', text: `Sessão WAHA criada e iniciada.${status} Escaneie o QR Code no painel do WAHA.` });
+    } catch (error) {
+      setWahaMessage({ type: 'error', text: error instanceof Error ? error.message : 'Falha ao conectar WAHA.' });
+    } finally {
+      setIsConnectingWaha(false);
+    }
+  };
+
   if (isLoading) return <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--text-muted)]"><Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração</div>;
 
   return (
@@ -113,6 +138,11 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
           </form>
           <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><KeyRound className="h-4 w-4" /></div><h2 className="text-sm font-bold text-[var(--text)]">Onde encontrar</h2><p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">No Meta for Developers, abra sua aplicação, vá em WhatsApp → API Setup e copie o Phone Number ID e o token. O WABA ID está na conta do WhatsApp Business.</p>{phoneLabel && <div className="mt-4 rounded-xl bg-[#EAF5F0] px-3 py-2 text-xs font-semibold text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> {phoneLabel}</div>}</aside>
         </div>
+        <form onSubmit={connectWaha} className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-bold text-[var(--text)]">Conexão WAHA</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Alternativa por WhatsApp Web. As credenciais ficam somente no servidor; configure o webhook e escaneie o QR no painel WAHA.</p></div><span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Canal alternativo</span></div>
+          {wahaMessage && <div className={`mt-4 rounded-xl border px-4 py-3 text-xs ${wahaMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200'}`}>{wahaMessage.text}</div>}
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row"><label className="flex-1 text-xs font-semibold text-[var(--text-secondary)]">Nome da sessão<input required value={wahaSessionName} onChange={event => setWahaSessionName(event.target.value)} placeholder="clinica-principal" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label><button disabled={isConnectingWaha} className="mt-5 flex h-10 items-center justify-center gap-2 rounded-xl border border-[#1F6F5B]/30 px-4 text-xs font-bold text-[#1F6F5B] transition hover:bg-[#EAF5F0] disabled:opacity-50 sm:mt-6">{isConnectingWaha ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}{isConnectingWaha ? 'Iniciando...' : 'Iniciar sessão WAHA'}</button></div>
+        </form>
       </div>
     </div>
   );
