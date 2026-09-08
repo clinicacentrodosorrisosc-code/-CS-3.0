@@ -4,6 +4,20 @@ import { supabase } from '../supabaseClient';
 
 type WhatsAppSettingsProps = { requestedSubTab?: string | null };
 
+async function readApiResponse(response: Response) {
+  const raw = await response.text();
+  let body: any = {};
+  try {
+    body = raw ? JSON.parse(raw) : {};
+  } catch {
+    body = {};
+  }
+  if (!response.ok) {
+    throw new Error(body.error || raw.slice(0, 300) || `Servidor respondeu HTTP ${response.status}.`);
+  }
+  return body;
+}
+
 export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [wabaId, setWabaId] = useState('');
@@ -21,8 +35,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Sessão expirada.');
         const response = await fetch('/api/integrations/whatsapp/config', { headers: { Authorization: `Bearer ${session.access_token}` } });
-        const body = await response.json();
-        if (!response.ok) throw new Error(body.error || 'Não foi possível carregar a configuração.');
+        const body = await readApiResponse(response);
         setConnected(Boolean(body.config?.status === 'connected'));
         setPhoneNumberId(body.config?.phone_number_id || '');
         setWabaId(body.config?.waba_id || '');
@@ -47,8 +60,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumberId, wabaId, accessToken, verifyToken }),
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || 'A Meta recusou a conexão.');
+      const body = await readApiResponse(response);
       setConnected(true);
       setAccessToken('');
       setPhoneLabel(body.phone?.verified_name || body.phone?.display_phone_number || 'Número validado pela Meta');
