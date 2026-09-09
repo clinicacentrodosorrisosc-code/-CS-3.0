@@ -124,6 +124,45 @@ body {
   overflow: hidden;
 }
 
+/* Operational reports: neutral surfaces and readable text in both themes. */
+.operational-report {
+  color: var(--text);
+}
+
+.operational-report .glass-panel,
+.operational-report [class*="bg-white/"],
+.operational-report [class*="bg-slate-900/"] {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.operational-report [class*="text-slate-400"],
+.operational-report [class*="text-slate-500"] {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+.operational-report [class*="text-indigo-400"],
+.operational-report [class*="text-teal-400"],
+.operational-report [class*="text-blue-400"] {
+  color: var(--text-secondary) !important;
+}
+
+.operational-report [class*="bg-indigo-500/"],
+.operational-report [class*="bg-teal-500/"],
+.operational-report [class*="bg-blue-500/"],
+.operational-report [class*="bg-purple-500/"] {
+  background-color: var(--surface-hover) !important;
+}
+
+.operational-report input,
+.operational-report textarea,
+.operational-report select {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
 /* Tabular Numerals & Monospace */
 .tabular-nums, .mono-num {
   font-family: 'JetBrains Mono', -apple-system, monospace;

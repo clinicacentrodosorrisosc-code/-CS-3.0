@@ -404,7 +404,7 @@ export const ReceptionDailyReport: React.FC = () => {
     }, [filteredReports]);
 
     return (
-        <div className="flex flex-col h-full w-full animate-fade-in text-slate-200">
+        <div className="operational-report flex flex-col h-full w-full animate-fade-in text-slate-200">
             <div className="flex-1 w-full space-y-6">
                 
                 {message && (

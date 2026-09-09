@@ -1033,7 +1033,7 @@ export const CommercialDailyReport: React.FC = () => {
     }, [kpiMetrics]);
 
     return (
-        <div className="flex flex-col gap-6 max-w-none w-full animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+        <div className="operational-report flex flex-col gap-6 max-w-none w-full animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Header Area */}
             <div className="glass-panel p-6 rounded-3xl border border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
