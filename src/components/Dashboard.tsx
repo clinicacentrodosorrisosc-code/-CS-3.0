@@ -368,6 +368,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
     const remainingWorkDays = calculateRemainingWorkDays();
     const neededRevenueReal = Math.max(0, Number(currentGoals.revenue) - totalGoalRev);
+    const totalSalesCount = (Object.values(monthRevenueData) as DailyData[]).reduce((total, day) => {
+        const [year, month] = day.date.split('-').map(Number);
+        return year === currentYear && month - 1 === currentMonth ? total + day.salesCount : total;
+    }, 0);
+    const averageTicket = totalSalesCount > 0 ? totalRev / totalSalesCount : 0;
+    const evaluationSummary = Object.values(evaluationCounts).reduce((total, day) => ({
+        scheduled: total.scheduled + day.ana.scheduled + day.comercial.scheduled,
+        evaluated: total.evaluated + day.ana.evaluated + day.comercial.evaluated,
+        noShow: total.noShow + day.ana.noShow + day.comercial.noShow
+    }), { scheduled: 0, evaluated: 0, noShow: 0 });
+    const evaluationRate = evaluationSummary.scheduled > 0 ? (evaluationSummary.evaluated / evaluationSummary.scheduled) * 100 : 0;
+    const noShowRate = evaluationSummary.scheduled > 0 ? (evaluationSummary.noShow / evaluationSummary.scheduled) * 100 : 0;
 
     const trendData = Array.from({ length: daysInMonthCount }, (_, i) => {
         const day = i + 1;
@@ -527,6 +539,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                         <strong className="text-[#1F6F5B] dark:text-[#63B596] font-mono font-extrabold">{remainingWorkDays} dias úteis</strong>
                     </div>
                 </div>
+          </section>
+
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Ticket médio</p>
+                  <p className="mt-1 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{formatCurrency(averageTicket)}</p>
+                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
+              </div>
+              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Avaliações concluídas</p>
+                  <p className="mt-1 text-2xl font-black tabular-nums text-[#1F6F5B] dark:text-[#63B596]">{evaluationRate.toFixed(1)}%</p>
+                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{evaluationSummary.evaluated} de {evaluationSummary.scheduled} agendadas</p>
+              </div>
+              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Taxa de no-show</p>
+                  <p className={`mt-1 text-2xl font-black tabular-nums ${noShowRate > 15 ? 'text-rose-500' : 'text-[#17211D] dark:text-white'}`}>{noShowRate.toFixed(1)}%</p>
+                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{evaluationSummary.noShow} ausência{evaluationSummary.noShow === 1 ? '' : 's'} no mês</p>
+              </div>
           </section>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
