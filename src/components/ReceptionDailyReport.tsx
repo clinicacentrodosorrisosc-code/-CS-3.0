@@ -43,6 +43,7 @@ export const ReceptionDailyReport: React.FC = () => {
         today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
         return today.toISOString().split('T')[0];
     });
+    const [activeView, setActiveView] = useState<'form' | 'dashboard'>('form');
 
     const [answers, setAnswers] = useState<ReceptionReportAnswers>({
         q1_agendamentos_final_dia: 0,
@@ -415,9 +416,21 @@ export const ReceptionDailyReport: React.FC = () => {
                     </div>
                 )}
 
+                <div className="glass-panel rounded-3xl border border-border p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-400">Operação diária</p>
+                        <h2 className="mt-1 text-xl font-black text-text">Recepção</h2>
+                        <p className="mt-1 text-xs text-slate-400">Registre o dia ou acompanhe os indicadores sem misturar os dois fluxos.</p>
+                    </div>
+                    <div className="flex w-full sm:w-auto rounded-xl border border-border bg-panel p-1">
+                        <button type="button" onClick={() => setActiveView('form')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeView === 'form' ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-400 hover:text-text'}`}>Registrar dia</button>
+                        <button type="button" onClick={() => setActiveView('dashboard')} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeView === 'dashboard' ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-400 hover:text-text'}`}>Acompanhar</button>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full items-start">
                     {/* LEFT COLUMN: Input Form */}
-                    <div className="xl:col-span-5 flex flex-col space-y-6">
+                    <div className={`xl:col-span-12 max-w-5xl flex flex-col space-y-6 ${activeView === 'form' ? '' : 'hidden'}`}>
                         
                         {/* Elegant Control Widget */}
                         <div className="glass-panel p-6 rounded-3xl border border-border relative overflow-hidden flex-shrink-0 group bg-white/[0.02] backdrop-blur-2xl">
@@ -755,7 +768,7 @@ export const ReceptionDailyReport: React.FC = () => {
                     </div>
 
                     {/* RIGHT COLUMN: Dashboard and History */}
-                    <div className="xl:col-span-7 flex flex-col space-y-6">
+                    <div className={`xl:col-span-12 flex flex-col space-y-6 ${activeView === 'dashboard' ? '' : 'hidden'}`}>
                         
                         {/* Range filters for custom period selection */}
                         <div className="flex flex-col md:flex-row md:items-center gap-4 bg-slate-900/40 p-4 rounded-3xl border border-border">
