@@ -42,6 +42,21 @@ const TabContainer = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const getOrthodonticOneYearAnniversaryPatients = (patients: Array<{ name: string; start_date: string; status: string }>) => {
+  const today = new Date();
+  const anniversaryYear = today.getFullYear() - 1;
+  const anniversaryMonth = today.getMonth();
+
+  return patients.filter((patient) => {
+    if (patient.status !== 'Active' || !patient.start_date) return false;
+
+    const startDate = new Date(`${patient.start_date}T00:00:00`);
+    return !Number.isNaN(startDate.getTime())
+      && startDate.getFullYear() === anniversaryYear
+      && startDate.getMonth() === anniversaryMonth;
+  });
+};
+
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -413,6 +428,73 @@ const App: React.FC = () => {
       };
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    let nextMonthTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const showMonthlyOrthodonticAlert = async () => {
+      const today = new Date();
+      const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      const storageKey = `ortho-one-year-popup:${session.user.id}:${monthKey}`;
+
+      if (localStorage.getItem(storageKey)) return;
+
+      const { data: patients, error } = await supabase
+        .from('ortho_patients')
+        .select('name, start_date, status');
+
+      if (error) {
+        console.error('Erro ao buscar pacientes para alerta de 1 ano:', error);
+        return;
+      }
+
+      const anniversaryPatients = getOrthodonticOneYearAnniversaryPatients(patients || []);
+      if (anniversaryPatients.length === 0) return;
+
+      localStorage.setItem(storageKey, 'shown');
+
+      const patientNames = anniversaryPatients.map((patient) => patient.name);
+      const description = patientNames.length === 1
+        ? `${patientNames[0]} completa 1 ano de tratamento neste mês.`
+        : `${patientNames.join(', ')} completam 1 ano de tratamento neste mês.`;
+
+      toast.warning(
+        anniversaryPatients.length === 1
+          ? 'Paciente com 1 ano de ortodontia'
+          : `${anniversaryPatients.length} pacientes com 1 ano de ortodontia`,
+        {
+          description,
+          duration: 10000,
+          action: {
+            label: 'Ver pacientes',
+            onClick: () => {
+              setActiveTab(Tab.ORTHODONTICS);
+              setRequestedSubTab('patients');
+              window.setTimeout(() => setRequestedSubTab(null), 500);
+            }
+          }
+        }
+      );
+    };
+
+    const scheduleNextMonthlyCheck = () => {
+      const now = new Date();
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 1, 0, 0);
+      nextMonthTimer = setTimeout(() => {
+        void showMonthlyOrthodonticAlert();
+        scheduleNextMonthlyCheck();
+      }, nextMonth.getTime() - now.getTime());
+    };
+
+    void showMonthlyOrthodonticAlert();
+    scheduleNextMonthlyCheck();
+
+    return () => {
+      if (nextMonthTimer) clearTimeout(nextMonthTimer);
+    };
+  }, [session?.user?.id]);
 
   const handleSubTabSelect = (subTabId: string) => {
       setRequestedSubTab(subTabId);

@@ -337,6 +337,24 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       }
   };
 
+  const deleteIncome = async (transaction: LocalTransaction) => {
+      const confirmed = window.confirm(`Excluir a receita de "${transaction.description}"? Esta ação não pode ser desfeita.`);
+      if (!confirmed) return;
+
+      const { error } = await supabase.from('transactions').delete().eq('id', transaction.id);
+      if (error) {
+          console.error('Erro ao excluir receita.', error);
+          toast.error('Erro ao excluir receita: ' + error.message);
+          return;
+      }
+
+      setTransactions(prev => prev.filter(item => item.id !== transaction.id));
+      setSelectedIncomes(prev => prev.filter(id => id !== transaction.id));
+      setIsModalOpen(false);
+      notifyDataChange('transactions');
+      toast.success('Receita excluída.');
+  };
+
   const bulkChangeCategoryIncomes = async (newCategory: string) => {
       if (selectedIncomes.length === 0) return;
       
@@ -2710,7 +2728,21 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         )}
                         <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÇÕES / COMENTÁRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lançamento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
                     </div>
-                    <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center"><button onClick={() => setIsModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button><button onClick={handleSaveTransaction} disabled={isSaving} className={`px-10 py-3 rounded-xl ${modalType === 'income' ? 'bg-surface' : 'bg-surface'} text-text font-bold text-sm shadow-xl transition-all active:scale-95`}>Confirmar</button></div>
+                    <div className="p-8 border-t border-border bg-surface flex items-center gap-6">
+                        {modalType === 'income' && formData.id && (
+                            <button
+                                onClick={() => {
+                                    const transaction = transactions.find(item => item.id === formData.id);
+                                    if (transaction) void deleteIncome(transaction);
+                                }}
+                                className="mr-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
+                            >
+                                <Trash2 className="w-4 h-4" /> Excluir lançamento
+                            </button>
+                        )}
+                        <button onClick={() => setIsModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button>
+                        <button onClick={handleSaveTransaction} disabled={isSaving} className={`px-10 py-3 rounded-xl ${modalType === 'income' ? 'bg-surface' : 'bg-surface'} text-text font-bold text-sm shadow-xl transition-all active:scale-95`}>Confirmar</button>
+                    </div>
                 </div>
             </div>
         )}
