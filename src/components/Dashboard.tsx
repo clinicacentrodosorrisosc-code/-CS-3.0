@@ -89,6 +89,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [trendViewMode, setTrendViewMode] = useState<'diaria' | 'mensal' | 'personalizado'>('diaria');
+  const [insightView, setInsightView] = useState<'trend' | 'performance'>('trend');
   const [customStartDate, setCustomStartDate] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
@@ -455,14 +456,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         const bgColor = revenue > 0 ? (isTargetMet ? 'bg-surface' : 'bg-surface') : 'hover:bg-panel';
 
         return (
-            <div className={`h-full flex flex-col p-2 border border-border transition-all group overflow-hidden ${bgColor}`}>
-                <div className="flex justify-between items-center mb-1">
+            <div title={`${dateStr}\nRealizado: ${formatCurrency(revenue)}\nMeta diária: ${formatCurrency(daySpecificMeta)}`} className={`h-full flex flex-col justify-between p-1 border border-border transition-all group overflow-hidden ${bgColor}`}>
+                <div className="flex justify-between items-center">
                     <span className="text-[10px] font-bold text-text-muted">{day}</span>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
                     <div className="flex flex-col">
-                        <span className="text-[8px] text-text-muted font-bold uppercase">Realizado</span>
-                        <span className="text-[10px] text-text font-black truncate">R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                        <span className="sr-only">Realizado</span>
+                        <span className="text-[9px] text-text font-black truncate">R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[8px] text-slate-500 font-bold uppercase">Meta Diária</span>
@@ -528,6 +529,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                 </div>
           </section>
 
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                  <h2 className="text-sm font-bold text-[#17211D] dark:text-white">Análise de Resultados</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Tendência e performance no mesmo espaço</p>
+              </div>
+              <div className="flex w-fit rounded-xl border border-[#DFE6E2] bg-[#F0F4F2] p-0.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
+                  <button type="button" onClick={() => setInsightView('trend')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${insightView === 'trend' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}>Tendência</button>
+                  <button type="button" onClick={() => setInsightView('performance')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${insightView === 'performance' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}>Performance</button>
+              </div>
+          </div>
+
+          {insightView === 'trend' ? (
           <section className="bg-white dark:bg-[#19231F] p-5 rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                   <div>
@@ -619,29 +632,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                   </ResponsiveContainer>
               </div>
           </section>
-
+          ) : (
           <PerformanceMetrics 
               monthRevenueData={monthRevenueData}
               currentGoals={currentGoals}
               currentYear={currentYear}
               currentMonth={currentMonth}
           />
+          )}
 
           <section className="bg-white dark:bg-[#19231F] rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] overflow-hidden flex flex-col shadow-sm transition-colors duration-300">
-                <div className="p-3.5 bg-[#F5F7F6] dark:bg-white/[0.02] border-b border-[#DFE6E2] dark:border-white/[0.08] flex justify-between items-center">
+                <div className="p-3 bg-[#F5F7F6] dark:bg-white/[0.02] border-b border-[#DFE6E2] dark:border-white/[0.08] flex justify-between items-center">
                     <h3 className="text-xs font-bold text-[#17211D] dark:text-slate-100 flex items-center gap-2">
                         <Calendar className="text-[#1F6F5B] dark:text-[#63B596] w-4 h-4" />
                         Calendário de Faturamento: Realizado vs Meta
                     </h3>
                 </div>
                 <div className="grid grid-cols-7">
-                    {WEEKDAYS.map(day => <div key={day} className="p-2 text-center text-[9px] font-extrabold uppercase text-[#86938D] border-b border-[#DFE6E2] dark:border-white/[0.08] bg-[#F5F7F6]/50 dark:bg-white/[0.02]">{day}</div>)}
+                    {WEEKDAYS.map(day => <div key={day} className="p-1.5 text-center text-[9px] font-extrabold uppercase text-[#86938D] border-b border-[#DFE6E2] dark:border-white/[0.08] bg-[#F5F7F6]/50 dark:bg-white/[0.02]">{day}</div>)}
                     {Array.from({ length: 35 }).map((_, idx) => {
                         const daysInMonthCountCell = new Date(currentYear, currentMonth + 1, 0).getDate();
                         const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
                         const day = idx - firstDayOfMonth + 1;
                         return (
-                            <div key={idx} className="min-h-[75px] border-b border-[#DFE6E2] dark:border-white/[0.08] border-r border-[#DFE6E2] dark:border-white/[0.08] last:border-r-0">
+                            <div key={idx} className="min-h-[52px] border-b border-[#DFE6E2] dark:border-white/[0.08] border-r border-[#DFE6E2] dark:border-white/[0.08] last:border-r-0">
                                 {(day > 0 && day <= daysInMonthCountCell) ? renderFinancialCalendarCell(day) : <div className="w-full h-full bg-[#F5F7F6]/30 dark:bg-white/[0.01]"></div>}
                             </div>
                         );
