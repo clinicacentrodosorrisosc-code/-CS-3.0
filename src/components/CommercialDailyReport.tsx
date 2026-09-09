@@ -1117,7 +1117,7 @@ export const CommercialDailyReport: React.FC = () => {
             )}
 
             {/* Navigation Tabs (Report vs KPIs) */}
-            <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-border w-full md:w-fit self-center">
+            <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-border w-full md:w-fit self-start">
                 <button 
                     onClick={() => setActiveTab('form')}
                     className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
