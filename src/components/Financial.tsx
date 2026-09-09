@@ -2334,7 +2334,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
 
                     {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
-                    <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-3">
+                    <div className="hidden">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                             <div>
                                 <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
@@ -2344,7 +2344,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             </div>
                         </div>
                         
-                        <div className="h-[210px] w-full">
+                        <div className="hidden" aria-hidden="true">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 15, right: 20, bottom: 20, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
