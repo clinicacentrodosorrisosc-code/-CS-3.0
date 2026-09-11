@@ -79,16 +79,17 @@ const MENU_STRUCTURE: MenuItem[] = [
     label: 'CRM',
     icon: KanbanSquare,
     group: 'main',
-    subItems: []
+    subItems: [
+      { id: 'pipeline', label: 'Funil comercial' },
+      { id: 'whatsapp', label: 'WhatsApp Business' }
+    ]
   },
   {
     id: Tab.SETTINGS,
     label: 'Configurações',
     icon: Settings2,
     group: 'management',
-    subItems: [
-      { id: 'whatsapp', label: 'WhatsApp Business' }
-    ]
+    subItems: []
   },
   {
     id: Tab.FINANCIAL,
@@ -272,6 +273,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleTabClick = (tabId: Tab, hasSubItems: boolean) => {
     setActiveTab(tabId);
+    if (tabId === Tab.CRM && hasSubItems && onSubTabSelect) {
+      onSubTabSelect('pipeline');
+    }
     if (isExpanded) {
       if (openAccordionTab === tabId) {
         // Toggle accordion if already active

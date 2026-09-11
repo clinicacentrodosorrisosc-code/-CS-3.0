@@ -574,7 +574,7 @@ const App: React.FC = () => {
 
             {activeTab === Tab.CRM && (
               <TabContainer key="crm">
-                <CRM />
+                <CRM requestedSubTab={requestedSubTab} />
               </TabContainer>
             )}
 

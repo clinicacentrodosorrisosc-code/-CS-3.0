@@ -11,6 +11,11 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { WhatsAppSettings } from './WhatsAppSettings';
+
+type CRMProps = {
+  requestedSubTab?: string | null;
+};
 
 type Pipeline = { id: string; external_id: string; name: string };
 type Stage = {
@@ -62,7 +67,7 @@ const formatLastSync = (date: string | null | undefined) => {
   })}`;
 };
 
-export const CRM: React.FC = () => {
+export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [stages, setStages] = useState<Stage[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -72,6 +77,13 @@ export const CRM: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [activeView, setActiveView] = useState<'pipeline' | 'whatsapp'>('pipeline');
+
+  useEffect(() => {
+    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline') {
+      setActiveView(requestedSubTab);
+    }
+  }, [requestedSubTab]);
 
   const loadCRM = useCallback(async () => {
     setError('');
@@ -159,6 +171,10 @@ export const CRM: React.FC = () => {
       { label: 'No funil atual', value: visibleOpportunities.length, detail: selectedPipeline?.name || 'Selecione um funil', icon: BarChart3 },
     ];
   }, [opportunities, selectedPipeline?.name, visibleOpportunities.length]);
+
+  if (activeView === 'whatsapp') {
+    return <WhatsAppSettings />;
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
