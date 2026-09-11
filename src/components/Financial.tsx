@@ -2265,6 +2265,22 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <div className="h-[210px] w-full relative flex items-center justify-center">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                            <RechartsTooltip
+                                                formatter={(value: number) => [
+                                                    `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                                                    'Valor'
+                                                ]}
+                                                labelFormatter={(label) => String(label)}
+                                                contentStyle={{
+                                                    backgroundColor: 'var(--surface)',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: '10px',
+                                                    color: 'var(--text)',
+                                                    fontSize: '11px'
+                                                }}
+                                                labelStyle={{ color: 'var(--text)', fontWeight: 700 }}
+                                                itemStyle={{ color: 'var(--primary)', fontWeight: 700 }}
+                                            />
                                             <Pie
                                                 data={chart.data}
                                                 cx="50%"
