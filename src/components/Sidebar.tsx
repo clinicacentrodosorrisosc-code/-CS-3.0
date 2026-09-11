@@ -225,6 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openAccordionTab, setOpenAccordionTab] = useState<Tab | null>(activeTab);
   const [flyoutTab, setFlyoutTab] = useState<Tab | null>(null);
+  const [flyoutPosition, setFlyoutPosition] = useState({ top: 16, left: 76 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Profile Card Modal States
@@ -288,12 +289,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const showFlyout = (tabId: Tab) => {
+  const showFlyout = (tabId: Tab, target: HTMLElement) => {
     if (isExpanded) return;
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
+    const { top, right } = target.getBoundingClientRect();
+    setFlyoutPosition({ top, left: right + 8 });
     setFlyoutTab(tabId);
   };
 
@@ -303,7 +306,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     hoverTimeoutRef.current = setTimeout(() => {
       setFlyoutTab(null);
-    }, 150);
+    }, 250);
   };
 
   const keepFlyout = () => {
@@ -338,17 +341,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div
             key={item.id}
             className="flex flex-col relative w-full"
-            onMouseEnter={() => showFlyout(item.id)}
+            onMouseEnter={(event) => showFlyout(item.id, event.currentTarget)}
             onMouseLeave={hideFlyout}
           >
             <button
               type="button"
               onClick={() => handleTabClick(item.id, hasSubItems)}
               className={`
-                group relative flex items-center justify-between px-2 py-1.5 rounded-lg transition-all duration-150 w-full text-left
+                group relative flex items-center justify-between min-h-11 px-2.5 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
                 ${isActive
-                  ? 'bg-[var(--primary-dim)] text-[var(--primary)] dark:bg-[var(--primary-dim)] dark:text-[var(--primary-hover)] font-semibold'
-                  : 'text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] font-medium'}
+                  ? 'bg-[var(--primary-dim)] border-[var(--primary-border)] text-[var(--primary)] dark:bg-[var(--primary-dim)] dark:text-[var(--primary-hover)] font-semibold'
+                  : 'border-transparent text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] hover:border-[#E2E5EA] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.08] font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
             >
@@ -567,7 +570,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             transition={{ duration: 0.15 }}
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
-            className="fixed left-[76px] top-16 w-56 rounded-2xl bg-white dark:bg-[#151820] border border-[#E2E5EA] dark:border-white/10 shadow-2xl p-3 z-50 hidden lg:flex flex-col gap-1"
+            style={{ top: flyoutPosition.top, left: flyoutPosition.left }}
+            className="fixed w-56 rounded-xl bg-white dark:bg-[#151820] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-2 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
