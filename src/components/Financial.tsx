@@ -97,7 +97,7 @@ interface LocalTransaction extends Transaction {
     isPartial?: boolean;
 }
 
-const COLORS = ['#5347CE', '#887CFD', '#4896FE', '#16C8C7', '#38BDF8', '#818CF8'];
+const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#16A34A', '#38BDF8', '#1D4ED8'];
 
 const ALL_TABS_CONFIG = [
   { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },

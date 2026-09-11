@@ -58,13 +58,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </button>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="grid size-8 place-items-center rounded-full border-2 border-[#8b3dff] text-[10px] font-bold text-[#8b3dff]">CS</div>
+          <div className="grid size-8 place-items-center rounded-full border-2 border-[var(--primary)] text-[10px] font-bold text-[var(--primary)]">CS</div>
           <span className="hidden text-sm font-semibold tracking-[-0.02em] text-[#172033] sm:inline dark:text-white">Centro do Sorriso</span>
         </div>
 
         <div className="hidden h-5 w-px bg-[#e2e5ea] md:block dark:bg-white/10" />
         <div className="hidden min-w-0 items-center gap-1.5 text-xs md:flex">
-          <span className="truncate font-semibold text-[#8b3dff]">{moduleLabel}</span>
+          <span className="truncate font-semibold text-[var(--primary)]">{moduleLabel}</span>
           {subLabel && <><ChevronRight className="size-3 text-[#b0b6c0]" /><span className="truncate text-[#667085] dark:text-slate-300">{subLabel}</span></>}
         </div>
       </div>
@@ -76,7 +76,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </span>
 
         {userRole === 'admin' && openPermissions && (
-          <button type="button" onClick={openPermissions} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#8b3dff] dark:text-slate-400 dark:hover:bg-white/[0.05]" title="Gerenciar permissoes">
+          <button type="button" onClick={openPermissions} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[var(--primary)] dark:text-slate-400 dark:hover:bg-white/[0.05]" title="Gerenciar permissões">
             <ShieldCheck className="size-4" />
           </button>
         )}

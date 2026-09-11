@@ -166,7 +166,7 @@ export const CRM: React.FC = () => {
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
           <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#1F6F5B] dark:text-[#63B596]">
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--primary)] dark:text-[var(--primary-hover)]">
                 <span className="h-px w-6 bg-current" />
                 Clínica Experts
               </div>
@@ -185,7 +185,7 @@ export const CRM: React.FC = () => {
                 type="button"
                 onClick={handleSync}
                 disabled={isSyncing || syncStatus?.configured === false}
-                className="flex h-10 items-center gap-2 rounded-xl bg-[#1F6F5B] px-4 text-xs font-bold text-white shadow-[0_8px_24px_rgba(31,111,91,0.18)] transition hover:bg-[#195c4c] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F6F5B]/40"
+                className="flex h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-[0_8px_24px_rgba(37,99,235,0.18)] transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
               >
                 <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
                 {isSyncing ? 'Sincronizando' : 'Sincronizar agora'}

@@ -91,7 +91,7 @@ export const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#07090e] p-3 sm:p-6 font-sans relative overflow-hidden text-slate-100 select-none">
       {/* Background Animated Rings & Ambient Glows */}
       <div className="absolute top-10 left-10 w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Main Split Container: Login on Left, Clinic Showcase Image on Right */}
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-black/60 relative z-10">
@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
             </div>
             
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-              Centro do <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-teal-300 to-emerald-400">Sorriso</span>
+              Centro do <span className="text-blue-400">Sorriso</span>
             </h1>
             
             <p className="text-xs sm:text-sm text-slate-400 mt-2 font-normal">
@@ -206,7 +206,7 @@ export const Login: React.FC = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-600 hover:from-sky-400 hover:to-emerald-500 text-white shadow-lg shadow-sky-950/40 transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-950/40 transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

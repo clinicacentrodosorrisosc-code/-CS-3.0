@@ -347,7 +347,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={`
                 group relative flex items-center justify-between px-2 py-1.5 rounded-lg transition-all duration-150 w-full text-left
                 ${isActive
-                  ? 'bg-[#8b3dff]/10 text-[#7c2cf3] dark:bg-[#9b5cff]/15 dark:text-[#c9a9ff] font-semibold'
+                  ? 'bg-[var(--primary-dim)] text-[var(--primary)] dark:bg-[var(--primary-dim)] dark:text-[var(--primary-hover)] font-semibold'
                   : 'text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
@@ -356,7 +356,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className={`
                   w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
                   ${isActive
-                    ? 'bg-[#8b3dff] text-white shadow-sm shadow-[#8b3dff]/20'
+                    ? 'bg-[var(--primary)] text-white shadow-sm shadow-blue-500/20'
                     : 'text-[#667085] group-hover:text-[#172033] dark:text-slate-400 dark:group-hover:text-slate-200'}
                 `}>
                   <IconComponent className="w-4 h-4" />
@@ -405,7 +405,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className={`
                       w-full text-left py-1.5 px-2.5 text-[11px] rounded-lg transition-all flex items-center justify-between
                       ${requestedSubTab === subItem.id
-                        ? 'text-[#8B3DFF] dark:text-[#C9A9FF] font-bold bg-[#8B3DFF]/10 dark:bg-[#C9A9FF]/10'
+                  ? 'text-[var(--primary)] dark:text-[var(--primary-hover)] font-bold bg-[var(--primary-dim)] dark:bg-[var(--primary-dim)]'
                         : 'text-[#667085] hover:text-[#172033] hover:bg-[#F5F6F8] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.03]'}
                     `}
                   >
@@ -456,8 +456,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Top Branding & Expand/Collapse Trigger */}
         <div className="h-[50px] px-2.5 flex items-center justify-between border-b border-[#e8eaee] dark:border-white/[0.06] select-none lg:hidden">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[#8B3DFF] p-[1px] shadow-md shadow-[#8B3DFF]/20 shrink-0">
-              <div className="w-full h-full bg-white dark:bg-[#0B0F17] rounded-[11px] flex items-center justify-center font-black text-[#8B3DFF] dark:text-[#C9A9FF] text-sm">
+            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] p-[1px] shadow-md shadow-blue-500/20 shrink-0">
+              <div className="w-full h-full bg-white dark:bg-[#0B0F17] rounded-[11px] flex items-center justify-center font-black text-[var(--primary)] dark:text-[var(--primary-hover)] text-sm">
                 CS
               </div>
             </div>

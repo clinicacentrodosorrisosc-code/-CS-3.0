@@ -72,7 +72,7 @@ const isOrthoDay = (date: Date) => {
     return true;
 }
 
-const COLORS = ['#d946ef', '#8b5cf6', '#2dd4bf', '#fb923c', '#ef4444', '#3b82f6'];
+const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#F59E0B', '#EF4444', '#1D4ED8'];
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 // Config for sub-tabs
