@@ -71,17 +71,6 @@ async function registerMetaNumber(phoneNumberId: string, accessToken: string, tw
   if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou registrar o número.');
 }
 
-async function subscribeMetaApp(wabaId: string | null, accessToken: string) {
-  if (!wabaId) return;
-  const response = await fetch(`https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(wabaId)}/subscribed_apps`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
-    signal: AbortSignal.timeout(15_000),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou assinar o aplicativo no WABA.');
-}
-
 export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
   if (!['GET', 'POST', 'DELETE'].includes(req.method || '')) {
     res.status(405).json({ error: 'Metodo nao permitido.' });
@@ -92,12 +81,9 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
     if (req.method === 'GET') {
       const { data, error } = await db.from('whatsapp_config').select('phone_number_id,waba_id,status,connected_at,updated_at,registered_at,subscribed_apps_at,last_registration_error').eq('user_id', userId).maybeSingle();
       if (error) throw error;
-      const requestOrigin = headerValue(req.headers.origin)?.replace(/\/$/, '');
-      const baseUrl = appPublicUrl || requestOrigin || null;
       res.status(200).json({
         configured: Boolean(data),
         config: data || null,
-        webhook: data && baseUrl ? { callbackUrl: `${baseUrl}/api/integrations/whatsapp/meta/webhook`, verifyToken: 'o token configurado abaixo', fields: ['messages', 'message_template_status_update'] } : null,
       });
       return;
     }
@@ -111,7 +97,6 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
     const phoneNumberId = String(req.body?.phoneNumberId || '').trim();
     const wabaId = String(req.body?.wabaId || '').trim() || null;
     const accessToken = String(req.body?.accessToken || '').trim();
-    const verifyToken = String(req.body?.verifyToken || '').trim() || null;
     const twoFactorPin = String(req.body?.twoFactorPin || '').trim();
     if (!phoneNumberId || !accessToken) {
       res.status(400).json({ error: 'Phone Number ID e token da Meta sao obrigatorios.' });
@@ -120,7 +105,6 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
 
     const metaPhone = await validateMetaCredentials(phoneNumberId, accessToken);
     await registerMetaNumber(phoneNumberId, accessToken, twoFactorPin);
-    await subscribeMetaApp(wabaId, accessToken);
     const encryptedAccessToken = encryptAccessToken(accessToken);
     const { error } = await db.from('whatsapp_config').upsert({
       user_id: userId,
@@ -128,11 +112,11 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
       waba_id: wabaId,
       access_token: null,
       access_token_encrypted: encryptedAccessToken,
-      verify_token: verifyToken,
+      verify_token: null,
       status: 'connected',
       connected_at: new Date().toISOString(),
       registered_at: twoFactorPin ? new Date().toISOString() : null,
-      subscribed_apps_at: wabaId ? new Date().toISOString() : null,
+      subscribed_apps_at: null,
       last_registration_error: null,
     }, { onConflict: 'user_id' });
     if (error) throw error;
