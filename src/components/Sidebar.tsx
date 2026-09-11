@@ -348,7 +348,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               type="button"
               onClick={() => handleTabClick(item.id, hasSubItems)}
               className={`
-                group relative flex items-center justify-between min-h-11 px-2.5 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
+                group relative flex items-center min-h-11 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
+                ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
                 ${isActive
                   ? 'bg-[var(--primary-dim)] border-[var(--primary-border)] text-[var(--primary)] dark:bg-[var(--primary-dim)] dark:text-[var(--primary-hover)] font-semibold'
                   : 'border-transparent text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] hover:border-[#E2E5EA] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.08] font-medium'}
