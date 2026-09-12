@@ -2117,14 +2117,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   ];
 
   const renderPatients = () => (
-      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="ortho-patient-list flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1: Total Pacientes Ativos */}
-              <div className="glass-panel max-w-xs p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              <div className="max-w-xs rounded-xl border border-border bg-surface p-4 flex flex-col justify-between shadow-sm">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
-                      <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400 material-symbols-outlined text-base">groups</span>
+                      <span className="p-2 rounded-lg bg-panel text-slate-500 material-symbols-outlined text-base">groups</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
                       <span className="text-2xl font-black text-text font-mono">{aditivoStats.totalActive}</span>
@@ -2208,7 +2208,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-center bg-surface p-4 rounded-xl border border-border [&_select]:hidden">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-sm [&_select]:hidden">
               <input 
                 type="text" 
                 placeholder="Buscar paciente..."
@@ -2351,11 +2351,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
           )}
 
-          <div className="glass-panel rounded-2xl border border-border overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
               <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                   <thead>
-                      <tr className="border-b border-border bg-panel text-gray-400 text-xs uppercase tracking-wider font-medium">
+                      <tr className="border-b border-border bg-surface-high text-xs font-semibold text-slate-500">
                           <th 
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('name')}
@@ -2430,7 +2430,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           <th className="p-5 font-semibold text-right">Ação</th>
                       </tr>
                   </thead>
-                  <tbody className="text-gray-300 text-sm divide-y divide-white/5">
+                  <tbody className="text-text text-sm divide-y divide-border">
                       {filteredPatients.map((p) => {
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
                           const hasLongTreatment = hasTreatmentOverOneYear(p);
@@ -2438,7 +2438,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           return (
                             <tr 
                                 key={p.id} 
-                                className={`group transition-colors ${hasProblem ? 'bg-red-500/5 hover:bg-red-500/10 border-l-2 border-l-red-500' : hasLongTreatment ? 'bg-amber-500/5 hover:bg-amber-500/10 border-l-2 border-l-amber-500' : 'hover:bg-panel border-l-2 border-l-transparent'}`}
+                                className={`group border-l-2 transition-colors ${hasProblem ? 'border-l-red-300 hover:bg-surface-high' : hasLongTreatment ? 'border-l-amber-300 hover:bg-surface-high' : 'border-l-transparent hover:bg-surface-high'}`}
                             >
                                 <td className="p-5 font-bold text-text relative">
                                     {p.name}
@@ -2467,7 +2467,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         </button>
                                     </td>
                                 )}
-                                <td className="p-5 text-purple-400">{p.applianceType}</td>
+                                <td className="p-5 text-slate-600">{p.applianceType}</td>
                                 <td className="p-5">
                                     <button 
                                         onClick={() => setEditingPatientId(p.id)}
@@ -2496,10 +2496,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 <td className="p-5">
                                     <button
                                         onClick={() => handleToggleAditivoMsg(p.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                                             p.aditivoMsgSent
-                                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25 hover:border-emerald-500/50'
-                                            : 'bg-panel hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border-border hover:border-amber-500/30'
+                                            ? 'bg-surface-high text-slate-700 border-border hover:bg-panel'
+                                            : 'bg-surface text-slate-500 border-border hover:bg-surface-high'
                                         }`}
                                         title={p.aditivoMsgSent ? `Mensagem enviada${p.aditivoMsgSentAt ? ` em ${p.aditivoMsgSentAt.split('-').reverse().join('/')}` : ''}. Clique para desmarcar.` : 'Clique para marcar como mensagem enviada'}
                                     >
@@ -2519,10 +2519,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 <td className="p-5">
                                     <button
                                         onClick={() => handleToggleAditivoSigned(p.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                                             p.aditivoSigned
-                                            ? 'bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25 hover:border-blue-500/50'
-                                            : 'bg-panel hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border-border hover:border-amber-500/30'
+                                            ? 'bg-surface-high text-slate-700 border-border hover:bg-panel'
+                                            : 'bg-surface text-slate-500 border-border hover:bg-surface-high'
                                         }`}
                                         title={p.aditivoSigned ? `Aditivo assinado digitalmente${p.aditivoSignedAt ? ` em ${p.aditivoSignedAt.split('-').reverse().join('/')}` : ''}. Clique para desmarcar.` : 'Clique para marcar como assinado digitalmente'}
                                     >
@@ -2553,9 +2553,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 <td className="p-5 text-center">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
-                                        p.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                                        p.status === 'Finished' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                                        'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                        p.status === 'Active' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                                        p.status === 'Finished' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                                        'bg-slate-50 text-slate-500 border-slate-200'
                                     }`}>
                                         {p.status === 'Active' ? 'Ativo' : p.status === 'Finished' ? 'Finalizado' : 'Suspenso'}
                                     </span>
@@ -2564,14 +2564,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     <div className="flex justify-end gap-2 items-center">
                                         <button 
                                             onClick={() => setEditingPatient(p)}
-                                            className="size-8 flex items-center justify-center rounded-lg bg-panel hover:bg-purple-500 hover:text-white border border-border text-slate-400 transition-all shadow-sm"
+                                            className="size-8 flex items-center justify-center rounded-lg border border-border bg-surface text-slate-500 transition-all hover:bg-surface-high hover:text-text"
                                             title="Editar Informações do Paciente"
                                         >
                                             <span className="material-symbols-outlined text-sm">edit</span>
                                         </button>
                                         <button 
                                             onClick={() => openNoteModal(p)}
-                                            className={`size-8 flex items-center justify-center rounded-lg transition-all border ${hasProblem ? 'bg-red-500 text-text border-red-500' : 'bg-panel hover:bg-red-500 hover:text-text border-border text-slate-400'}`}
+                                            className={`size-8 flex items-center justify-center rounded-lg transition-all border ${hasProblem ? 'bg-red-50 text-red-600 border-red-200' : 'bg-surface hover:bg-surface-high border-border text-slate-500'}`}
                                             title="Relatar Problema / Observação"
                                         >
                                             <span className="material-symbols-outlined text-sm">warning</span>
@@ -2580,7 +2580,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         {p.status === 'Active' && (
                                             <button 
                                                 onClick={() => handleOpenFinishModal(p.id)}
-                                                className="px-3 py-1.5 rounded-lg bg-panel hover:bg-purple-500 hover:text-text border border-border transition-all text-xs font-semibold text-slate-400"
+                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high"
                                             >
                                                 Finalizar
                                             </button>
@@ -2588,14 +2588,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         {(p.status === 'Finished' || p.status === 'Suspended') && (
                                             <button 
                                                 onClick={() => handleReactivate(p.id)}
-                                                className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-text border border-emerald-500/20 transition-all text-xs font-bold"
+                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high"
                                             >
                                                 Reativar
                                             </button>
                                         )}
                                         <button 
                                             onClick={() => handleDeletePatient(p.id, p.name)}
-                                            className="px-2 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 transition-all text-xs font-bold flex items-center justify-center gap-1"
+                                            className="px-2 py-1.5 rounded-lg border border-border bg-surface text-slate-500 transition-all text-xs font-semibold flex items-center justify-center gap-1 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                                             title="Excluir Paciente Permanentemente"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
