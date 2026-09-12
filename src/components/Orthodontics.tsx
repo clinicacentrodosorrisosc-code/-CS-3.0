@@ -136,6 +136,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
   const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number } | null>(null);
   const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   const isAdmin = userRole === 'admin';
 
@@ -2561,7 +2562,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </span>
                                 </td>
                                 <td className="p-5 text-right">
-                                    <div className="flex justify-end gap-2 items-center">
+                                    <div className="hidden">
                                         <button 
                                             onClick={() => setEditingPatient(p)}
                                             className="size-8 flex items-center justify-center rounded-lg border border-border bg-surface text-slate-500 transition-all hover:bg-surface-high hover:text-text"
@@ -2600,6 +2601,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
+                                    </div>
+                                    <div className="relative inline-flex">
+                                        <button type="button" onClick={() => setOpenActionMenuId(current => current === p.id ? null : p.id)} aria-expanded={openActionMenuId === p.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high hover:text-text">
+                                            Ações <span className="material-symbols-outlined text-base">more_horiz</span>
+                                        </button>
+                                        {openActionMenuId === p.id && (
+                                            <div className="absolute right-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg">
+                                                <button onClick={() => { setEditingPatient(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">edit</span>Editar paciente</button>
+                                                <button onClick={() => { openNoteModal(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">warning</span>{hasProblem ? 'Ver alerta' : 'Adicionar alerta'}</button>
+                                                {p.status === 'Active' ? <button onClick={() => { handleOpenFinishModal(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">task_alt</span>Finalizar tratamento</button> : <button onClick={() => { handleReactivate(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">restart_alt</span>Reativar tratamento</button>}
+                                                <button onClick={() => { handleDeletePatient(p.id, p.name); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-600 transition-colors hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" />Excluir paciente</button>
+                                            </div>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
