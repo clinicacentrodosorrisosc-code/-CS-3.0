@@ -1751,15 +1751,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return (
           <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Header Controls Bar */}
-              <div className="flex flex-wrap justify-between items-center bg-surface p-4 rounded-2xl border border-border gap-4">
+              <div className="flex flex-wrap justify-between items-center bg-surface p-4 rounded-xl border border-border gap-4 shadow-sm">
                   <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+                      <div className="p-2.5 bg-panel rounded-lg border border-border text-slate-500">
                           <Calendar className="w-5 h-5" />
                       </div>
                       <div>
                           <h3 className="text-text font-bold text-lg font-display flex items-center gap-2">
                               Calendário Mensal de Ortodontia
-                              <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
+                              <span className="text-xs px-2.5 py-0.5 rounded-md bg-surface-high text-slate-500 font-medium">
                                   {monthName} {currentYear}
                               </span>
                           </h3>
@@ -1769,23 +1769,23 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   {/* Month Navigation & Controls */}
                   <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center bg-panel border border-border rounded-xl p-1 gap-1">
+                      <div className="flex items-center bg-panel border border-border rounded-lg p-1 gap-1">
                           <button 
                               onClick={handlePrevMonth}
-                              className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-surface-high text-slate-500 hover:text-text rounded-md transition-colors"
                               title="Mês Anterior"
                           >
                               <ChevronLeft className="w-4 h-4" />
                           </button>
                           <button 
                               onClick={handleToday}
-                              className="px-3 py-1 text-xs font-bold text-slate-300 hover:text-text hover:bg-surface rounded-lg transition-colors"
+                              className="px-3 py-1 text-xs font-semibold text-slate-500 hover:text-text hover:bg-surface-high rounded-md transition-colors"
                           >
                               Hoje
                           </button>
                           <button 
                               onClick={handleNextMonth}
-                              className="p-1.5 hover:bg-surface text-slate-300 hover:text-text rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-surface-high text-slate-500 hover:text-text rounded-md transition-colors"
                               title="Próximo Mês"
                           >
                               <ChevronRight className="w-4 h-4" />
@@ -1815,7 +1815,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Search & Status Filter */}
-              <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-2xl border border-border">
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-3 rounded-xl border border-border shadow-sm">
                   <div className="flex items-center gap-2 flex-1 min-w-[240px]">
                       <div className="relative flex-1">
                           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1849,8 +1849,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   onClick={() => setCalendarStatusFilter(f.id as any)}
                                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                                       calendarStatusFilter === f.id
-                                          ? 'bg-purple-600 text-white shadow-md'
-                                          : 'text-slate-400 hover:text-text'
+                                          ? 'bg-slate-700 text-white'
+                                          : 'text-slate-500 hover:text-text hover:bg-surface-high'
                                   }`}
                               >
                                   {f.label}
@@ -1861,46 +1861,46 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* KPI Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(168, 85, 247, 0.2)">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">Dias de Ortodontia</span>
-                          <Calendar className="w-4 h-4 text-purple-400" />
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Dias de Ortodontia</span>
+                          <Calendar className="w-4 h-4 text-slate-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-text">{orthoDaysCount} <span className="text-xs font-normal text-slate-400">dias</span></span>
                       <span className="text-[10px] text-slate-400">Atendimento oficial no mês</span>
-                  </SpotlightCard>
+                  </div>
 
-                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(59, 130, 246, 0.2)">
+                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Total Agendados</span>
-                          <Clock className="w-4 h-4 text-blue-400" />
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Agendados</span>
+                          <Clock className="w-4 h-4 text-slate-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-text">{totalScheduledCount} <span className="text-xs font-normal text-slate-400">consultas</span></span>
                       <span className="text-[10px] text-slate-400">Pacientes com horário marcado</span>
-                  </SpotlightCard>
+                  </div>
 
-                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.2)">
+                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Atendidos / Presentes</span>
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-emerald-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
                       <span className="text-[10px] text-slate-400">Presença confirmada</span>
-                  </SpotlightCard>
+                  </div>
 
-                  <SpotlightCard className="glass-panel p-4 rounded-2xl border border-border flex flex-col gap-1" spotlightColor="rgba(244, 63, 94, 0.2)">
+                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Faltas / Ausentes</span>
                           <XCircle className="w-4 h-4 text-rose-400" />
                       </div>
                       <span className="text-2xl font-bold font-display text-rose-400">{totalAbsentCount} <span className="text-xs font-normal text-slate-400">ausências</span></span>
                       <span className="text-[10px] text-slate-400">Pacientes que faltaram</span>
-                  </SpotlightCard>
+                  </div>
               </div>
 
               {/* Monthly Calendar Grid */}
-              <div className="glass-panel rounded-2xl border border-border p-6 overflow-hidden flex flex-col gap-4">
+              <div className="rounded-xl border border-border bg-surface p-4 overflow-hidden flex flex-col gap-3 shadow-sm">
                   <div className="grid grid-cols-7 gap-3 text-center">
                       {(() => {
                           const isAug2026OrLater = parseInt(currentYear) > 2026 || (parseInt(currentYear) === 2026 && (parseInt(selectedMonth) - 1) >= 7);
@@ -1910,8 +1910,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   key={dayName} 
                                   className={`py-2 text-xs font-bold uppercase tracking-wider rounded-xl ${
                                       orthoDaysHeader.includes(idx)
-                                          ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                                          : 'text-slate-400 bg-panel/50'
+                                          ? 'bg-surface-high text-slate-600 border border-border'
+                                          : 'text-slate-400'
                                   }`}
                               >
                                   {dayName}
@@ -1923,7 +1923,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="grid grid-cols-7 gap-3">
                       {gridCells.map((cell, idx) => {
                           if (!cell) {
-                              return <div key={`empty-${idx}`} className="bg-panel/20 border border-border/30 rounded-2xl min-h-[130px] opacity-20" />;
+                              return <div key={`empty-${idx}`} className="bg-surface-high/40 rounded-xl min-h-[130px]" />;
                           }
 
                           const { dateObj, dateKey, dayNum, isOrtho, isToday } = cell;
@@ -1945,28 +1945,28 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   key={dateKey}
                                   onClick={() => setSelectedCalendarDay(dateObj)}
                                   className={`
-                                      group border rounded-2xl p-3 min-h-[130px] flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden
+                                      group border rounded-xl p-3 min-h-[130px] flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden
                                       ${isToday 
-                                          ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' 
+                                          ? 'bg-slate-50 border-slate-400 shadow-sm'
                                           : isOrtho 
-                                              ? 'bg-purple-900/10 border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-900/20' 
-                                              : 'bg-surface/60 border-border hover:border-slate-500 hover:bg-panel'}
+                                              ? 'bg-surface-high border-border hover:border-slate-400'
+                                              : 'bg-surface border-border hover:border-slate-300 hover:bg-surface-high'}
                                   `}
                               >
                                   <div className="flex justify-between items-start mb-2">
                                       <div className="flex items-center gap-1.5">
-                                          <span className={`text-sm font-black font-display ${isToday ? 'text-blue-400' : isOrtho ? 'text-purple-300' : 'text-slate-300'}`}>
+                                          <span className={`text-sm font-bold font-display ${isToday ? 'text-slate-800' : isOrtho ? 'text-slate-700' : 'text-slate-600'}`}>
                                               {dayNum}
                                           </span>
                                           {isToday && (
-                                              <span className="text-[8px] bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded tracking-wider uppercase">
+                                              <span className="text-[8px] bg-slate-700 text-white font-semibold px-1.5 py-0.5 rounded tracking-wider uppercase">
                                                   Hoje
                                               </span>
                                           )}
                                       </div>
 
                                       {isOrtho && (
-                                          <span className="text-[8px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded tracking-wider uppercase flex items-center gap-1">
+                                          <span className="text-[8px] font-semibold text-slate-500 px-1.5 py-0.5 rounded tracking-wider uppercase flex items-center gap-1">
                                               Atendimento
                                           </span>
                                       )}
@@ -1992,10 +1992,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                   className={`
                                                       text-[10px] font-semibold px-2 py-1 rounded-lg border flex items-center justify-between gap-1 truncate transition-transform hover:scale-[1.02]
                                                       ${isPresent 
-                                                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
+                                                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                                                           : isScheduled 
-                                                              ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' 
-                                                              : 'bg-rose-500/20 border-rose-500/40 text-rose-300'}
+                                                              ? 'bg-slate-100 border-slate-200 text-slate-700'
+                                                              : 'bg-red-50 border-red-200 text-red-700'}
                                                   `}
                                               >
                                                   <span className="truncate">{p.name}</span>
@@ -2019,9 +2019,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                       )}
                                   </div>
 
-                                  <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-bold text-slate-500 group-hover:text-purple-400 transition-colors">
+                                  <div className="pt-2 border-t border-border flex justify-between items-center text-[10px] font-semibold text-slate-500 transition-colors">
                                       <span>{dayPatients.length} paciente{dayPatients.length !== 1 ? 's' : ''}</span>
-                                      <span className="flex items-center gap-0.5 text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <span className="flex items-center gap-0.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                           <Plus className="w-3 h-3" /> Gerenciar
                                       </span>
                                   </div>
