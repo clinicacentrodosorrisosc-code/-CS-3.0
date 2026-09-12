@@ -40,6 +40,19 @@ function encryptAccessToken(token: string) {
   return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64');
 }
 
+function decryptAccessToken(encryptedValue: string) {
+  const key = Buffer.from(credentialsEncryptionKey, 'base64');
+  if (key.length !== 32) throw new Error('WHATSAPP_CREDENTIALS_ENCRYPTION_KEY deve ser uma chave base64 de 32 bytes.');
+  const payload = Buffer.from(encryptedValue, 'base64');
+  if (payload.length < 29) throw new Error('O token criptografado do WhatsApp estÃ¡ invÃ¡lido. Reconecte a conta.');
+  const iv = payload.subarray(0, 12);
+  const authTag = payload.subarray(12, 28);
+  const ciphertext = payload.subarray(28);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(authTag);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+}
+
 async function authenticate(req: ApiRequest) {
   const bearer = headerValue(req.headers.authorization)?.replace(/^Bearer\s+/i, '') || '';
   if (!bearer) throw new Error('Sessao ausente. Faca login novamente.');
@@ -129,6 +142,48 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
     res.status(200).json({ connected: true, phone: metaPhone });
   } catch (error) {
     const message = errorMessage(error, 'Falha ao configurar WhatsApp.');
+    res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
+  }
+}
+
+export async function handleWhatsAppTemplates(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+
+  try {
+    const { userId, db } = await authenticate(req);
+    const { data: config, error } = await db
+      .from('whatsapp_config')
+      .select('waba_id,access_token_encrypted,status')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!config || config.status !== 'connected') throw new Error('Conecte o WhatsApp Business antes de atualizar os templates.');
+    if (!config.waba_id) throw new Error('Informe o WABA ID na conexao para atualizar os templates da Meta.');
+    if (!config.access_token_encrypted) throw new Error('O token da Meta nao esta disponivel. Reconecte o WhatsApp Business.');
+
+    const accessToken = decryptAccessToken(config.access_token_encrypted);
+    const templates: unknown[] = [];
+    let nextUrl: string | null = `https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(config.waba_id)}/message_templates?limit=100&fields=id,name,status,language,category,quality_score,components`;
+    let pages = 0;
+
+    while (nextUrl && pages < 50) {
+      const response = await fetch(nextUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(15_000),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou a consulta dos templates.');
+      if (Array.isArray(body.data)) templates.push(...body.data);
+      nextUrl = typeof body?.paging?.next === 'string' ? body.paging.next : null;
+      pages += 1;
+    }
+
+    res.status(200).json({ templates, total: templates.length, fetchedAt: new Date().toISOString() });
+  } catch (error) {
+    const message = errorMessage(error, 'Falha ao atualizar templates do WhatsApp.');
     res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
   }
 }
