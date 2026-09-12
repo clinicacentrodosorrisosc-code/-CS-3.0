@@ -142,6 +142,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
   const [patientFilters, setPatientFilters] = useState<string[]>([]);
+  // Mantidos temporariamente para compatibilidade com os controles legados ocultos.
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Finished' | 'Suspended'>('All');
+  const [feeFilter, setFeeFilter] = useState<number | 'All'>('All');
+  const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
+  const [aditivoMsgFilter, setAditivoMsgFilter] = useState<'All' | 'Sent' | 'Pending'>('All');
+  const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending'>('All');
+  const [dueDateFilter, setDueDateFilter] = useState<'All' | 'Changed' | 'Standard'>('All');
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
