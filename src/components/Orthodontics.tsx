@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
 // --- TYPES ---
-type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'settings';
+type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'payments' | 'settings';
 
 interface OrthoPatient {
   id: string;
@@ -81,6 +81,7 @@ const ORTHO_TABS_CONFIG = [
     { id: 'calendar', label: 'Calendário Mensal', icon: 'calendar_month', permissionId: 'ortho_calendar' },
     { id: 'grid', label: 'Grade', icon: 'calendar_view_month', permissionId: 'ortho_grid' },
     { id: 'patients', label: 'Pacientes', icon: 'groups', permissionId: 'ortho_patients' },
+    { id: 'payments', label: 'Pagamentos 12+', icon: 'payments', permissionId: 'ortho_payments' },
     { id: 'settings', label: 'Configurações', icon: 'settings', permissionId: 'ortho_settings' },
 ];
 
@@ -165,6 +166,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   // States for filters
   const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1)); 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear().toString());
+  const [paymentMonth, setPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   // Chart Hover State
   const [activeApplianceIndex, setActiveApplianceIndex] = useState<number | null>(null);
@@ -969,6 +971,29 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (today.getDate() < startDate.getDate()) completedMonths--;
 
       return completedMonths >= 12;
+  };
+
+  const getPostYearPayment = (patient: OrthoPatient, month: string) =>
+      patient.attendance?.[`__post12_payment_${month}`] as { paidAt?: string } | undefined;
+
+  const handleTogglePostYearPayment = async (patient: OrthoPatient) => {
+      const key = `__post12_payment_${paymentMonth}`;
+      const existingPayment = getPostYearPayment(patient, paymentMonth);
+      const attendance = { ...patient.attendance };
+
+      if (existingPayment?.paidAt) delete attendance[key];
+      else attendance[key] = { paidAt: new Date().toISOString().slice(0, 10) };
+
+      setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, attendance } : p));
+      const { error } = await supabase.from('ortho_patients').update({ attendance }).eq('id', patient.id);
+      if (error) {
+          toast.error('N\u00e3o foi poss\u00edvel atualizar o pagamento: ' + error.message);
+          await loadData();
+          return;
+      }
+
+      notifyDataChange('ortho_patients');
+      toast.success(existingPayment?.paidAt ? 'Pagamento desmarcado.' : 'Pagamento registrado.');
   };
 
   const { 
@@ -2056,10 +2081,55 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       };
   }, [patients]);
 
+  const renderPayments = () => {
+      const eligiblePatients = patients.filter(hasTreatmentOverOneYear);
+      const paidCount = eligiblePatients.filter(patient => getPostYearPayment(patient, paymentMonth)?.paidAt).length;
+      const pendingCount = eligiblePatients.length - paidCount;
+      const paymentMonthLabel = new Date(`${paymentMonth}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+      return (
+          <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                      <div>
+                          <h2 className="text-base font-bold text-text">{'Mensalidades ap\u00f3s 12 meses'}</h2>
+                          <p className="mt-1 text-xs text-slate-400">{'Pacientes ativos com 12 meses completos de tratamento. O vencimento padr\u00e3o \u00e9 dia 10.'}</p>
+                      </div>
+                      <label className="flex flex-col gap-1 text-xs font-semibold text-slate-400">
+                          {'Compet\u00eancia'}
+                          <input type="month" value={paymentMonth} onChange={(event) => setPaymentMonth(event.target.value)} className="rounded-lg border border-border bg-panel px-3 py-2 text-sm text-text outline-none focus:border-sky-500" />
+                      </label>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div className="rounded-xl bg-panel p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{'Eleg\u00edveis'}</p><p className="mt-1 text-xl font-black text-text font-mono">{eligiblePatients.length}</p></div>
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-400">Pagos</p><p className="mt-1 text-xl font-black text-emerald-400 font-mono">{paidCount}</p></div>
+                      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-amber-400">Pendentes</p><p className="mt-1 text-xl font-black text-amber-400 font-mono">{pendingCount}</p></div>
+                  </div>
+              </section>
+
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                          <thead className="border-b border-border bg-panel text-[11px] font-semibold uppercase tracking-wide text-slate-400"><tr><th className="p-4">Paciente</th><th className="p-4">{'In\u00edcio'}</th><th className="p-4 text-right">Mensalidade</th><th className="p-4 text-center">{paymentMonthLabel}</th></tr></thead>
+                          <tbody className="divide-y divide-border/70">
+                              {eligiblePatients.map(patient => {
+                                  const payment = getPostYearPayment(patient, paymentMonth);
+                                  const isPaid = Boolean(payment?.paidAt);
+                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}<span className="ml-2 text-[10px] font-bold text-amber-400">12+ meses</span></td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => handleTogglePostYearPayment(patient)} className={`inline-flex min-w-32 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'pending'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Pendente'}</button></td></tr>;
+                              })}
+                              {eligiblePatients.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-sm text-slate-400">Nenhum paciente ativo completou 12 meses de tratamento.</td></tr>}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      );
+  };
+
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1: Total Pacientes Ativos */}
               <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
@@ -2320,21 +2390,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
-                          {/* Coluna Vencimento (Visível Apenas para Administrador) */}
-                          {isAdmin && (
-                              <th 
-                                className="p-5 font-semibold text-center cursor-pointer hover:text-text transition-colors group/sort text-amber-400"
-                                onClick={() => toggleSort('dueDateChanged')}
-                              >
-                                <div className="flex items-center justify-center gap-1">
-                                    <span>Vencimento</span>
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase font-black">Admin</span>
-                                    <span className={`material-symbols-outlined text-sm transition-opacity ${sortConfig.key === 'dueDateChanged' && sortConfig.direction !== 'none' ? 'opacity-100 text-amber-400' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                                        {sortConfig.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                    </span>
-                                </div>
-                              </th>
-                          )}
                           <th 
                             className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
                             onClick={() => toggleSort('startDate')}
@@ -2480,32 +2535,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </button>
                                 </td>
 
-                                {/* Coluna Vencimento (Visível Apenas para Administrador) */}
-                                {isAdmin && (
-                                    <td className="p-5 text-center">
-                                        <button
-                                            onClick={() => handleToggleDueDateChanged(p.id)}
-                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-sm ${
-                                                p.dueDateChanged
-                                                ? 'bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25 shadow-amber-950/20'
-                                                : 'bg-panel hover:bg-amber-500/10 text-slate-500 hover:text-amber-300 border-border hover:border-amber-500/30'
-                                            }`}
-                                            title={
-                                                p.dueDateChanged 
-                                                ? `Vencimento alterado${p.dueDay ? ` para: ${p.dueDay}` : ''}${p.dueDateChangedAt ? ` (em ${p.dueDateChangedAt.split('-').reverse().join('/')})` : ''}${p.dueDateNotes ? ` - Obs: ${p.dueDateNotes}` : ''}. Clique para alternar.`
-                                                : 'Vencimento padrão. Clique para marcar como vencimento alterado.'
-                                            }
-                                        >
-                                            <span className="material-symbols-outlined text-sm">
-                                                {p.dueDateChanged ? 'edit_calendar' : 'calendar_today'}
-                                            </span>
-                                            <span>{p.dueDateChanged ? (p.dueDay ? `${p.dueDay}` : 'Alterado') : 'Padrão'}</span>
-                                            {p.dueDateChanged && (
-                                                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                            )}
-                                        </button>
-                                    </td>
-                                )}
 
                                 <td className="p-5 text-slate-400 text-xs">{p.startDate ? p.startDate.split('-').reverse().join('/') : '-'}</td>
                                 <td className="p-5 text-slate-300 text-xs font-mono">
@@ -2965,6 +2994,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                {activeSubTab === 'calendar' && renderCalendar()}
                {activeSubTab === 'grid' && renderGrid()}
                {activeSubTab === 'patients' && renderPatients()}
+               {activeSubTab === 'payments' && renderPayments()}
                {activeSubTab === 'settings' && renderSettings()}
            </div>
         </div>

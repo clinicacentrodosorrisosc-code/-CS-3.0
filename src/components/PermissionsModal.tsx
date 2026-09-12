@@ -53,6 +53,7 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
     { id: 'ortho_calendar', label: 'Calendário Mensal' },
     { id: 'ortho_grid', label: 'Grade de Presença' },
     { id: 'ortho_patients', label: 'Lista de Pacientes' },
+    { id: 'ortho_payments', label: 'Pagamentos 12+ meses' },
     { id: 'ortho_settings', label: 'Configurações' },
   ],
   [Tab.LABWORK]: [
