@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { WhatsAppSettings } from './WhatsAppSettings';
+import { CRMAutomations } from './CRMAutomations';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -77,10 +78,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [activeView, setActiveView] = useState<'pipeline' | 'whatsapp'>('pipeline');
+  const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp'>('pipeline');
 
   useEffect(() => {
-    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline') {
+    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline' || requestedSubTab === 'automations') {
       setActiveView(requestedSubTab);
     }
   }, [requestedSubTab]);
@@ -174,6 +175,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
   if (activeView === 'whatsapp') {
     return <WhatsAppSettings />;
+  }
+
+  if (activeView === 'automations') {
+    return <CRMAutomations />;
   }
 
   return (

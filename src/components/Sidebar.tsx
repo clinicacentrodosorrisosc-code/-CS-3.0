@@ -81,6 +81,7 @@ const MENU_STRUCTURE: MenuItem[] = [
     group: 'main',
     subItems: [
       { id: 'pipeline', label: 'Funil comercial' },
+      { id: 'automations', label: 'Automações' },
       { id: 'whatsapp', label: 'WhatsApp Business' }
     ]
   },
