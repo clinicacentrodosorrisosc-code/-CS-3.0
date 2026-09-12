@@ -92,7 +92,7 @@ export function MultiSelectMenu({ values, options, onChange, placeholder = 'Sele
   }, []);
   return <div ref={rootRef} className={`relative ${className}`}>
     <button type="button" id={id} role="combobox" aria-expanded={open} onClick={() => setOpen(current => !current)} className="flex h-10 w-full items-center justify-between rounded-xl border border-border/60 bg-background px-3 text-sm font-normal text-text shadow-sm outline-none transition-colors hover:bg-accent/20 focus-visible:ring-2 focus-visible:ring-[#887CFD]/35">
-      <span className={`truncate ${values.length ? 'text-text' : 'text-muted'}`}>{values.length === 0 ? placeholder : values.length === 1 ? values[0] : `${values.length} selecionadas`}</span><ChevronsUpDown className="size-4 shrink-0 text-muted" aria-hidden="true" />
+      <span className={`truncate ${values.length ? 'text-text' : 'text-muted'}`}>{values.length === 0 ? placeholder : values.length === 1 ? options.find(option => option.value === values[0])?.label || values[0] : `${values.length} selecionadas`}</span><ChevronsUpDown className="size-4 shrink-0 text-muted" aria-hidden="true" />
     </button>
     {open && <div role="listbox" aria-labelledby={id} className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-xl border border-border/60 bg-surface shadow-xl">
       <div className="flex items-center gap-2 border-b border-border/60 px-3"><Search className="size-3.5 shrink-0 text-muted" /><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder={searchPlaceholder} className="h-9 min-w-0 flex-1 bg-transparent text-xs text-text outline-none placeholder:text-muted" /></div>

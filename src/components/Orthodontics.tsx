@@ -7,12 +7,13 @@ import {
 import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { OrthodonticsCalendar } from './OrthodonticsCalendar';
+import { MultiSelectMenu, type SelectMenuOption } from './ui/select-menu';
 import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
 // --- TYPES ---
-type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'payments' | 'settings';
+type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'settings';
 
 interface OrthoPatient {
   id: string;
@@ -81,7 +82,6 @@ const ORTHO_TABS_CONFIG = [
     { id: 'calendar', label: 'Calendário Mensal', icon: 'calendar_month', permissionId: 'ortho_calendar' },
     { id: 'grid', label: 'Grade', icon: 'calendar_view_month', permissionId: 'ortho_grid' },
     { id: 'patients', label: 'Pacientes', icon: 'groups', permissionId: 'ortho_patients' },
-    { id: 'payments', label: 'Pagamentos 12+', icon: 'payments', permissionId: 'ortho_payments' },
     { id: 'settings', label: 'Configurações', icon: 'settings', permissionId: 'ortho_settings' },
 ];
 
@@ -141,12 +141,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
   // States for filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Finished' | 'Suspended'>('All');
-  const [feeFilter, setFeeFilter] = useState<number | 'All'>('All');
-  const [contractFilter, setContractFilter] = useState<'All' | 'Digital' | 'Papel' | 'Empty'>('All');
-  const [aditivoMsgFilter, setAditivoMsgFilter] = useState<'All' | 'Sent' | 'Pending'>('All');
-  const [aditivoStatusFilter, setAditivoStatusFilter] = useState<'All' | 'Signed' | 'Pending'>('All');
-  const [dueDateFilter, setDueDateFilter] = useState<'All' | 'Changed' | 'Standard'>('All');
+  const [patientFilters, setPatientFilters] = useState<string[]>([]);
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | 'none' }>({
@@ -416,45 +411,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
       }
 
-      if (statusFilter !== 'All') {
-          result = result.filter(p => p.status === statusFilter);
-      }
+      const selectedByGroup = (group: string) => patientFilters.filter(filter => filter.startsWith(`${group}:`)).map(filter => filter.slice(group.length + 1));
+      const statuses = selectedByGroup('status');
+      const contracts = selectedByGroup('contract');
+      const payments = selectedByGroup('payment');
+      const durations = selectedByGroup('duration');
 
-      if (feeFilter !== 'All') {
-          result = result.filter(p => p.maintenanceValue === feeFilter);
-      }
-
-      if (contractFilter !== 'All') {
-          result = result.filter(p => {
-              const ct = p.attendance?.__contract_type;
-              if (contractFilter === 'Empty') return !ct || ct === '';
-              return ct === contractFilter;
-          });
-      }
-
-      if (aditivoMsgFilter !== 'All') {
-          if (aditivoMsgFilter === 'Sent') {
-              result = result.filter(p => p.aditivoMsgSent);
-          } else if (aditivoMsgFilter === 'Pending') {
-              result = result.filter(p => !p.aditivoMsgSent);
-          }
-      }
-
-      if (aditivoStatusFilter !== 'All') {
-          if (aditivoStatusFilter === 'Signed') {
-              result = result.filter(p => p.aditivoSigned);
-          } else if (aditivoStatusFilter === 'Pending') {
-              result = result.filter(p => !p.aditivoSigned);
-          }
-      }
-
-      if (isAdmin && dueDateFilter !== 'All') {
-          if (dueDateFilter === 'Changed') {
-              result = result.filter(p => p.dueDateChanged);
-          } else if (dueDateFilter === 'Standard') {
-              result = result.filter(p => !p.dueDateChanged);
-          }
-      }
+      if (statuses.length) result = result.filter(patient => statuses.includes(patient.status));
+      if (contracts.length) result = result.filter(patient => contracts.includes(patient.contractType || 'Empty'));
+      if (durations.includes('12plus')) result = result.filter(hasTreatmentOverOneYear);
+      if (payments.length) result = result.filter(patient => {
+          if (!hasTreatmentOverOneYear(patient)) return false;
+          const isPaid = Boolean(getPostYearPayment(patient, paymentMonth)?.paidAt);
+          return (payments.includes('paid') && isPaid) || (payments.includes('pending') && !isPaid);
+      });
 
       if (sortConfig.direction !== 'none') {
           result.sort((a, b) => {
@@ -506,7 +476,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
       
       return result;
-  }, [patients, searchTerm, statusFilter, feeFilter, contractFilter, aditivoMsgFilter, aditivoStatusFilter, dueDateFilter, sortConfig, isAdmin]);
+  }, [patients, searchTerm, patientFilters, paymentMonth, sortConfig]);
 
   // --- ACTIONS ---
 
@@ -556,7 +526,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               // Optimistic update
               setPatients(prev => prev.map(p => p.id === id ? { ...p, status: 'Active', endDate: undefined } : p));
               toast.success('Paciente reativado com sucesso! Ele agora aparecerá na Grade.');
-              setStatusFilter('Active');
+              setPatientFilters(current => current.filter(filter => filter !== 'status:Finished' && filter !== 'status:Suspended'));
               await loadData();
           } else {
               console.error("Error reactivating patient", error);
@@ -958,7 +928,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return parts.length > 0 ? parts.join(' ') : '0d';
   };
 
-  const hasTreatmentOverOneYear = (patient: OrthoPatient) => {
+  function hasTreatmentOverOneYear(patient: OrthoPatient) {
       if (patient.status !== 'Active' || !patient.startDate) return false;
 
       const startDate = new Date(`${patient.startDate}T00:00:00`);
@@ -971,10 +941,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (today.getDate() < startDate.getDate()) completedMonths--;
 
       return completedMonths >= 12;
-  };
+  }
 
-  const getPostYearPayment = (patient: OrthoPatient, month: string) =>
-      patient.attendance?.[`__post12_payment_${month}`] as { paidAt?: string } | undefined;
+  function getPostYearPayment(patient: OrthoPatient, month: string) {
+      return patient.attendance?.[`__post12_payment_${month}`] as { paidAt?: string } | undefined;
+  }
 
   const handleTogglePostYearPayment = async (patient: OrthoPatient) => {
       const key = `__post12_payment_${paymentMonth}`;
@@ -2126,12 +2097,24 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       );
   };
 
+  const patientFilterOptions: SelectMenuOption[] = [
+      { value: 'status:Active', label: 'Ativos', group: 'Status' },
+      { value: 'status:Finished', label: 'Finalizados', group: 'Status' },
+      { value: 'status:Suspended', label: 'Suspensos', group: 'Status' },
+      { value: 'contract:Digital', label: 'Digital', group: 'Contrato' },
+      { value: 'contract:Papel', label: 'Papel', group: 'Contrato' },
+      { value: 'contract:Empty', label: 'Sem contrato', group: 'Contrato' },
+      { value: 'duration:12plus', label: 'Tratamento com 12+ meses', group: 'Tratamento' },
+      { value: 'payment:paid', label: 'Pagamento registrado', group: 'Pagamento do m\u00eas' },
+      { value: 'payment:pending', label: 'Pagamento pendente', group: 'Pagamento do m\u00eas' },
+  ];
+
   const renderPatients = () => (
       <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1: Total Pacientes Ativos */}
-              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              <div className="glass-panel max-w-xs p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
                       <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400 material-symbols-outlined text-base">groups</span>
@@ -2143,7 +2126,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Card 2: Mensagens Enviadas */}
-              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
                       <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 material-symbols-outlined text-base">send</span>
@@ -2158,10 +2141,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
                       <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
                   </div>
-              </div>
+              </div>}
 
               {/* Card 3: Aditivos Assinados Digitalmente */}
-              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados (Digital)</span>
                       <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">draw</span>
@@ -2176,10 +2159,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
                       <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.signedPct}%` }} />
                   </div>
-              </div>
+              </div>}
 
               {/* Card 4: Pendências */}
-              <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Assinatura</span>
                       <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">pending_actions</span>
@@ -2191,10 +2174,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                       <span className="text-xs text-slate-400">({aditivoStats.msgPendingCount} sem msg)</span>
                   </div>
-              </div>
+              </div>}
 
               {/* Card 5: Vencimentos Alterados (Visível Somente para Administrador) */}
-              {isAdmin && (
+              {false && isAdmin && (
                   <div className="glass-panel p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between shadow-lg shadow-amber-950/10">
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
@@ -2218,7 +2201,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-center bg-surface p-4 rounded-xl border border-border">
+          <div className="flex flex-wrap gap-4 items-center bg-surface p-4 rounded-xl border border-border [&_select]:hidden">
               <input 
                 type="text" 
                 placeholder="Buscar paciente..."
@@ -2226,6 +2209,18 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-panel border border-border rounded-lg text-sm text-text px-4 py-2 outline-none focus:border-purple-500"
               />
+              <MultiSelectMenu
+                values={patientFilters}
+                options={patientFilterOptions}
+                onChange={setPatientFilters}
+                placeholder="Filtrar pacientes"
+                searchPlaceholder="Buscar filtro..."
+                className="min-w-56"
+              />
+              <label className="flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5 text-xs font-semibold text-slate-400">
+                {'M\u00eas do pagamento'}
+                <input type="month" value={paymentMonth} onChange={(event) => setPaymentMonth(event.target.value)} className="bg-transparent text-sm text-text outline-none" />
+              </label>
               <select 
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -2423,6 +2418,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </span>
                             </div>
                           </th>
+                          <th className="p-5 text-center font-semibold">Pagamento</th>
                           <th className="p-5 font-semibold text-center">Status</th>
                           <th className="p-5 font-semibold text-right">Ação</th>
                       </tr>
@@ -2541,6 +2537,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     {calculateDuration(p.startDate, p.endDate)}
                                 </td>
                                 <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
+                                <td className="p-5 text-center">
+                                    {hasLongTreatment ? (() => {
+                                        const payment = getPostYearPayment(p, paymentMonth);
+                                        const isPaid = Boolean(payment?.paidAt);
+                                        return <button onClick={() => handleTogglePostYearPayment(p)} className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'pending'}</span>{isPaid ? `Pago ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Pendente'}</button>;
+                                    })() : <span className="text-xs text-slate-500">—</span>}
+                                </td>
                                 <td className="p-5 text-center">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
                                         p.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
@@ -2994,7 +2997,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                {activeSubTab === 'calendar' && renderCalendar()}
                {activeSubTab === 'grid' && renderGrid()}
                {activeSubTab === 'patients' && renderPatients()}
-               {activeSubTab === 'payments' && renderPayments()}
                {activeSubTab === 'settings' && renderSettings()}
            </div>
         </div>
