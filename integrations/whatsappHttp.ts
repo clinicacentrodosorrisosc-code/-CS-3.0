@@ -25,6 +25,12 @@ function headerValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function errorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
+  return fallback;
+}
+
 function encryptAccessToken(token: string) {
   const key = Buffer.from(credentialsEncryptionKey, 'base64');
   if (key.length !== 32) throw new Error('WHATSAPP_CREDENTIALS_ENCRYPTION_KEY deve ser uma chave base64 de 32 bytes.');
@@ -122,7 +128,7 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
     if (error) throw error;
     res.status(200).json({ connected: true, phone: metaPhone });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Falha ao configurar WhatsApp.';
+    const message = errorMessage(error, 'Falha ao configurar WhatsApp.');
     res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
   }
 }
