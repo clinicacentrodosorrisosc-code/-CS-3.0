@@ -38,6 +38,7 @@ type Opportunity = {
   priority: number;
   amount_cents: number;
   origin: string | null;
+  observations: string | null;
   status: string | null;
   synced_at: string;
 };
@@ -91,7 +92,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     const selectedId = selectedPipelineId;
     let opportunitiesQuery = supabase
       .from('clinic_experts_opportunities')
-      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, status, synced_at')
+      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, synced_at')
       .order('synced_at', { ascending: false });
     if (selectedId) opportunitiesQuery = opportunitiesQuery.eq('pipeline_id', selectedId);
     const [pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
@@ -309,6 +310,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                               {opportunity.priority > 1 && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" title="Prioridade" />}
                             </div>
                             {opportunity.amount_cents > 0 && <p className="mt-3 font-mono text-xs font-semibold text-[#1F6F5B] dark:text-[#63B596]">{formatCurrency(opportunity.amount_cents)}</p>}
+                            {opportunity.observations && <p className="mt-2 line-clamp-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-2 py-1.5 text-[10px] leading-relaxed text-[var(--text-secondary)]" title={opportunity.observations}>{opportunity.observations}</p>}
                             <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-[var(--text-muted)]">
                               <span className="truncate">{opportunity.seller_name || 'Sem responsável'}</span>
                               <span className="truncate">{opportunity.origin || 'Clínica Experts'}</span>
