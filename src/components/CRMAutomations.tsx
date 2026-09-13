@@ -12,7 +12,7 @@ import {
   useNodesState,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Clock3, GitBranch, Loader2, MessageSquareText, Play, Plus, Save, Timer, Workflow } from 'lucide-react';
+import { Clock3, GitBranch, Loader2, MessageSquareText, Play, Plus, Save, Timer, Trash2, Workflow } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 type NodeKind = 'trigger' | 'wait' | 'schedule' | 'template';
@@ -116,6 +116,15 @@ export const CRMAutomations: React.FC = () => {
     setNodes(current => current.map(node => node.id === selectedNodeId ? { ...node, data: { ...node.data, ...patch } } : node));
   };
 
+  const deleteSelectedNode = () => {
+    if (!selectedNodeId || !selectedNode) return;
+    if (!window.confirm(`Excluir a etapa "${selectedNode.data.label}" deste fluxo?`)) return;
+    setNodes(current => current.filter(node => node.id !== selectedNodeId));
+    setEdges(current => current.filter(edge => edge.source !== selectedNodeId && edge.target !== selectedNodeId));
+    setSelectedNodeId(null);
+    setMessage({ type: 'success', text: 'Etapa removida. Salve o fluxo para confirmar a alteração.' });
+  };
+
   const addNode = (kind: NodeKind) => {
     const catalog = nodeCatalog.find(item => item.kind === kind)!;
     const id = `${kind}-${Date.now()}`;
@@ -137,6 +146,7 @@ export const CRMAutomations: React.FC = () => {
   };
 
   const newFlow = () => {
+    if (!window.confirm('Criar um novo fluxo? Alterações ainda não salvas no fluxo atual serão descartadas.')) return;
     setSelectedFlowId(null);
     setName('Novo fluxo comercial');
     setDescription('');
@@ -229,6 +239,7 @@ export const CRMAutomations: React.FC = () => {
             {selectedNode.data.kind === 'wait' && <div className="grid grid-cols-[1fr_120px] gap-2"><label className="text-xs font-semibold">Tempo<input type="number" min="1" value={selectedNode.data.delayValue || 1} onChange={event => updateNode({ delayValue: Number(event.target.value) })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Unidade<select value={selectedNode.data.delayUnit || 'hours'} onChange={event => updateNode({ delayUnit: event.target.value as FlowNodeData['delayUnit'] })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></label></div>}
             {selectedNode.data.kind === 'schedule' && <><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Início<input type="time" value={selectedNode.data.startTime || '08:00'} onChange={event => updateNode({ startTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label><label className="text-xs font-semibold">Fim<input type="time" value={selectedNode.data.endTime || '18:00'} onChange={event => updateNode({ endTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label></div><div><p className="text-xs font-semibold">Dias permitidos</p><div className="mt-2 flex flex-wrap gap-1">{weekdays.map((day, index) => { const active = (selectedNode.data.weekdays || []).includes(index); return <button key={day} type="button" onClick={() => updateNode({ weekdays: active ? (selectedNode.data.weekdays || []).filter(value => value !== index) : [...(selectedNode.data.weekdays || []), index] })} className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${active ? 'border-[var(--primary)] bg-[var(--primary-dim)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>{day}</button>; })}</div></div></>}
             {selectedNode.data.kind === 'template' && <><label className="block text-xs font-semibold">Template aprovado<select value={selectedNode.data.templateId || ''} onChange={event => { const template = templates.find(item => item.id === event.target.value); updateNode({ templateId: template?.id || '', templateName: template?.name || '', language: template?.language || '' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={item.id} value={item.id}>{item.name} · {item.language}</option>)}</select></label><label className="block text-xs font-semibold">Variáveis<textarea value={selectedNode.data.variables || ''} onChange={event => updateNode({ variables: event.target.value })} placeholder={'{{1}} = patient_name\n{{2}} = seller_name'} rows={5} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-3 font-mono text-[11px] outline-none" /></label><p className="text-[10px] leading-4 text-[var(--text-muted)]">Disponíveis: patient_name, patient_phone, seller_name, opportunity_title, amount.</p></>}
+            <button type="button" onClick={deleteSelectedNode} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 text-xs font-bold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 className="h-4 w-4" /> Excluir etapa</button>
           </div>}
         </aside>
       </div>
