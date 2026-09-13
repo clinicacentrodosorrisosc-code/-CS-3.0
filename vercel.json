@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
