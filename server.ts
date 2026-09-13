@@ -428,10 +428,10 @@ async function startServer() {
     });
   };
 
-  const startClinicaExpertsSync = (db: ReturnType<typeof createClient>, userId: string) => {
+  const startClinicaExpertsSync = (db: ReturnType<typeof createClient>, userId: string, pipelineExternalId?: string) => {
     const existing = activeClinicaExpertsSyncs.get(userId);
     if (existing) return existing;
-    const operation = syncClinicaExperts(db, userId, clinicaExpertsToken)
+    const operation = syncClinicaExperts(db, userId, clinicaExpertsToken, pipelineExternalId)
       .finally(() => activeClinicaExpertsSyncs.delete(userId));
     activeClinicaExpertsSyncs.set(userId, operation);
     return operation;
@@ -488,7 +488,10 @@ async function startServer() {
       if (activeClinicaExpertsSyncs.has(context.userId)) {
         return res.status(409).json({ error: 'Ja existe uma sincronizacao em andamento.' });
       }
-      const result = await startClinicaExpertsSync(context.db, context.userId);
+      const pipelineExternalId = typeof req.body?.pipelineExternalId === 'string' && req.body.pipelineExternalId.trim()
+        ? req.body.pipelineExternalId.trim()
+        : undefined;
+      const result = await startClinicaExpertsSync(context.db, context.userId, pipelineExternalId);
       res.json({ data: result });
     } catch (error: any) {
       console.error('>>> [CLINICA EXPERTS] Sync error:', error.message);

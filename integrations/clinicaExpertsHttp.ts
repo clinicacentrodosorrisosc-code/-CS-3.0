@@ -5,6 +5,7 @@ import crypto from 'crypto';
 type ApiRequest = {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
 };
 
 type ApiResponse = {
@@ -97,7 +98,11 @@ export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse
       res.status(409).json({ error: 'Ja existe uma sincronizacao em andamento.' });
       return;
     }
-    const operation = syncClinicaExperts(context.db, context.userId, apiToken)
+    const body = req.body && typeof req.body === 'object' ? req.body as { pipelineExternalId?: unknown } : {};
+    const pipelineExternalId = typeof body.pipelineExternalId === 'string' && body.pipelineExternalId.trim()
+      ? body.pipelineExternalId.trim()
+      : undefined;
+    const operation = syncClinicaExperts(context.db, context.userId, apiToken, pipelineExternalId)
       .finally(() => activeSyncs.delete(context.userId));
     activeSyncs.set(context.userId, operation);
     const result = await operation;

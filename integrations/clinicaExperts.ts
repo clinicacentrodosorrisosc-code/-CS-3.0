@@ -103,10 +103,11 @@ class ClinicaExpertsClient {
     });
   }
 
-  listOpportunities() {
+  listOpportunities(pipelineExternalId?: string) {
     return this.listAll<ExternalOpportunity>('/crm/opportunities', {
       sort_column: 'updated_at',
       sort_direction: 'desc',
+      ...(pipelineExternalId ? { pipeline_uuid: pipelineExternalId } : {}),
     });
   }
 
@@ -131,6 +132,7 @@ export async function syncClinicaExperts(
   db: SupabaseClient,
   userId: string,
   apiToken: string,
+  pipelineExternalId?: string,
 ): Promise<SyncResult> {
   const client = new ClinicaExpertsClient(apiToken);
   const startedAt = new Date().toISOString();
@@ -145,9 +147,7 @@ export async function syncClinicaExperts(
   try {
     const pipelines = await client.listPipelines();
     await delay(REQUEST_GAP_MS);
-    const opportunities = await client.listOpportunities();
-    await delay(REQUEST_GAP_MS);
-    const patients = await client.listPatients();
+    const opportunities = await client.listOpportunities(pipelineExternalId);
     const now = new Date().toISOString();
 
     const pipelineRows = pipelines.map(pipeline => ({
@@ -170,7 +170,14 @@ export async function syncClinicaExperts(
     throwIfError(pipelineReadError, 'Erro ao reler funis');
     const pipelineIds = new Map((localPipelines || []).map(row => [row.external_id, row.id]));
 
-    const stageRows = pipelines.flatMap(pipeline => {
+    const synchronizedPipelines = pipelineExternalId
+      ? pipelines.filter(pipeline => pipeline.uuid === pipelineExternalId)
+      : pipelines;
+    if (pipelineExternalId && synchronizedPipelines.length === 0) {
+      throw new Error('O funil selecionado nao foi encontrado na Clinica Experts. Atualize a tela e tente novamente.');
+    }
+
+    const stageRows = synchronizedPipelines.flatMap(pipeline => {
       const pipelineId = pipelineIds.get(pipeline.uuid);
       if (!pipelineId) return [];
       return (pipeline.stages || []).map(stage => ({
@@ -196,11 +203,11 @@ export async function syncClinicaExperts(
       .eq('user_id', userId);
     throwIfError(stageReadError, 'Erro ao reler etapas');
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
-    const patientById = new Map(patients.map(patient => [patient.uuid, patient]));
     const { data: previousOpportunities, error: previousOpportunitiesError } = await db
       .from('clinic_experts_opportunities')
-      .select('id,external_id,stage_id')
-      .eq('user_id', userId);
+      .select('id,external_id,stage_id,patient_phone,patient_email')
+      .eq('user_id', userId)
+      .in('pipeline_id', Array.from(new Set(stageRows.map(stage => stage.pipeline_id))));
     throwIfError(previousOpportunitiesError, 'Erro ao consultar etapas anteriores das oportunidades');
     const previousByExternalId = new Map((previousOpportunities || []).map(row => [row.external_id, row]));
 
@@ -211,7 +218,7 @@ export async function syncClinicaExperts(
       const stageId = externalStageId ? stageIds.get(externalStageId) : undefined;
       if (!pipelineId || !stageId) return [];
       const patientId = opportunity.patient?.uuid || undefined;
-      const patient = patientId ? patientById.get(patientId) : undefined;
+      const previous = previousByExternalId.get(opportunity.uuid);
 
       return [{
         user_id: userId,
@@ -220,9 +227,9 @@ export async function syncClinicaExperts(
         pipeline_id: pipelineId,
         stage_id: stageId,
         title: opportunity.title || opportunity.patient?.name || 'Oportunidade',
-        patient_name: patient?.name || opportunity.patient?.name || null,
-        patient_phone: patient?.phone || null,
-        patient_email: patient?.email || null,
+        patient_name: opportunity.patient?.name || null,
+        patient_phone: previous?.patient_phone || null,
+        patient_email: previous?.patient_email || null,
         seller_name: opportunity.seller?.name || null,
         priority: Number(opportunity.priority || 1),
         amount_cents: Number(opportunity.amount || 0),
@@ -249,32 +256,39 @@ export async function syncClinicaExperts(
       });
     }
 
-    const { error: staleOpportunitiesError } = await db
+    let staleOpportunitiesQuery = db
       .from('clinic_experts_opportunities')
       .delete()
       .eq('user_id', userId)
       .lt('synced_at', now);
+    if (pipelineExternalId) {
+      const selectedPipelineId = pipelineIds.get(pipelineExternalId);
+      if (selectedPipelineId) staleOpportunitiesQuery = staleOpportunitiesQuery.eq('pipeline_id', selectedPipelineId);
+    }
+    const { error: staleOpportunitiesError } = await staleOpportunitiesQuery;
     throwIfError(staleOpportunitiesError, 'Erro ao remover oportunidades antigas');
 
-    const { error: staleStagesError } = await db
-      .from('clinic_experts_stages')
-      .delete()
-      .eq('user_id', userId)
-      .lt('synced_at', now);
-    throwIfError(staleStagesError, 'Erro ao remover etapas antigas');
+    if (!pipelineExternalId) {
+      const { error: staleStagesError } = await db
+        .from('clinic_experts_stages')
+        .delete()
+        .eq('user_id', userId)
+        .lt('synced_at', now);
+      throwIfError(staleStagesError, 'Erro ao remover etapas antigas');
 
-    const { error: stalePipelinesError } = await db
-      .from('clinic_experts_pipelines')
-      .delete()
-      .eq('user_id', userId)
-      .lt('synced_at', now);
-    throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
+      const { error: stalePipelinesError } = await db
+        .from('clinic_experts_pipelines')
+        .delete()
+        .eq('user_id', userId)
+        .lt('synced_at', now);
+      throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
+    }
 
     const result: SyncResult = {
       pipelines: pipelineRows.length,
       stages: stageRows.length,
       opportunities: opportunityRows.length,
-      patients: patients.length,
+      patients: new Set(opportunityRows.map(opportunity => opportunity.patient_external_id).filter(Boolean)).size,
       finishedAt: now,
     };
 

@@ -88,13 +88,16 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
   const loadCRM = useCallback(async () => {
     setError('');
+    const selectedId = selectedPipelineId;
+    let opportunitiesQuery = supabase
+      .from('clinic_experts_opportunities')
+      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, status, synced_at')
+      .order('synced_at', { ascending: false });
+    if (selectedId) opportunitiesQuery = opportunitiesQuery.eq('pipeline_id', selectedId);
     const [pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
       supabase.from('clinic_experts_pipelines').select('id, external_id, name').order('name'),
       supabase.from('clinic_experts_stages').select('id, pipeline_id, name, stage_type, position').order('position'),
-      supabase
-        .from('clinic_experts_opportunities')
-        .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, status, synced_at')
-        .order('synced_at', { ascending: false }),
+      opportunitiesQuery,
     ]);
 
     const firstError = pipelinesResult.error || stagesResult.error || opportunitiesResult.error;
@@ -103,7 +106,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     setStages((stagesResult.data || []) as Stage[]);
     setOpportunities((opportunitiesResult.data || []) as Opportunity[]);
     setSelectedPipelineId(current => current || pipelinesResult.data?.[0]?.id || '');
-  }, []);
+  }, [selectedPipelineId]);
 
   const loadStatus = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -141,7 +144,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
       if (!session) throw new Error('Sua sessão expirou. Entre novamente.');
       const response = await fetch('/api/integrations/clinica-experts/sync', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pipelineExternalId: selectedPipeline?.external_id }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Falha ao sincronizar o CRM.');
@@ -154,6 +158,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   };
 
   const selectedPipeline = pipelines.find(pipeline => pipeline.id === selectedPipelineId);
+  const handlePipelineChange = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
+    setOpportunities([]);
+  };
   const visibleStages = stages.filter(stage => stage.pipeline_id === selectedPipelineId);
   const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
   const visibleOpportunities = opportunities.filter(opportunity => {
@@ -248,7 +256,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                 {pipelines.length > 0 && (
                   <select
                     value={selectedPipelineId}
-                    onChange={event => setSelectedPipelineId(event.target.value)}
+                    onChange={event => handlePipelineChange(event.target.value)}
                     className="h-9 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-xs font-semibold text-[var(--text)] outline-none focus:border-[#1F6F5B]/50"
                   >
                     {pipelines.map(pipeline => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}
