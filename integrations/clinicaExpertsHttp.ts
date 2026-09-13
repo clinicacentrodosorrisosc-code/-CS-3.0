@@ -127,10 +127,9 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
     return;
   }
 
-  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
   const ownerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '';
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  if (!apiToken || !ownerUserId || !serviceRoleKey) {
+  if (!ownerUserId || !serviceRoleKey) {
     res.status(503).json({ error: 'Integracao Clinica Experts incompleta no servidor.' });
     return;
   }
@@ -144,7 +143,7 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
   });
 
   try {
-    const { data: eventRow, error: insertError } = await db
+    let { data: eventRow, error: insertError } = await db
       .from('clinic_experts_webhook_events')
       .insert({
         user_id: ownerUserId,
@@ -156,21 +155,37 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
       .single();
 
     if (insertError?.code === '23505') {
-      res.status(200).json({ received: true, duplicate: true });
-      return;
+      const { data: existingEvent, error: existingError } = await db
+        .from('clinic_experts_webhook_events')
+        .select('id,status')
+        .eq('user_id', ownerUserId)
+        .eq('event_key', eventKey)
+        .single();
+      if (existingError || !existingEvent) throw existingError || new Error('Webhook duplicado nao encontrado.');
+      if (existingEvent.status === 'processed' || existingEvent.status === 'ignored') {
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+      eventRow = existingEvent;
+      insertError = null;
+      await db.from('clinic_experts_webhook_events').update({ status: 'received', processed_at: null, error_message: null }).eq('id', eventRow.id);
     }
     if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
 
-    const operation = eventName.startsWith('crm_opportunity.')
-      ? processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload)
-      : syncClinicaExperts(db, ownerUserId, apiToken);
-    operation.then(async () => {
-      await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
-    }).catch(async error => {
-      await db.from('clinic_experts_webhook_events').update({ status: 'failed', processed_at: new Date().toISOString(), error_message: String(error.message || error).slice(0, 1000) }).eq('id', eventRow.id);
-    });
+    if (!eventName.startsWith('crm_opportunity.')) {
+      await db.from('clinic_experts_webhook_events').update({ status: 'ignored', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
+      res.status(200).json({ received: true, ignored: true });
+      return;
+    }
 
-    res.status(202).json({ received: true });
+    try {
+      await processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload);
+      await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
+      res.status(200).json({ received: true, processed: true });
+    } catch (error) {
+      await db.from('clinic_experts_webhook_events').update({ status: 'failed', processed_at: new Date().toISOString(), error_message: String(error instanceof Error ? error.message : error).slice(0, 1000) }).eq('id', eventRow.id);
+      throw error;
+    }
   } catch (error) {
     console.error('[CLINICA EXPERTS] Webhook error:', error instanceof Error ? error.message : error);
     res.status(500).json({ error: 'Falha ao registrar webhook.' });

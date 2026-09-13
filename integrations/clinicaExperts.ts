@@ -363,7 +363,11 @@ export async function processClinicaExpertsOpportunityWebhook(
     synced_at: now,
   }, { onConflict: 'user_id,external_id' }).select('id,pipeline_id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').single();
   throwIfError(opportunityError, 'Erro ao salvar oportunidade recebida pelo webhook');
-  if (savedOpportunity && existingOpportunity && existingOpportunity.stage_id !== savedOpportunity.stage_id) {
+  const eventName = String(payload.type || payload.event || payload.name || '');
+  const enteredStage = !existingOpportunity
+    || existingOpportunity.stage_id !== savedOpportunity?.stage_id
+    || eventName.endsWith('.created');
+  if (savedOpportunity && enteredStage) {
     await processCrmStageAutomations(db, userId, savedOpportunity).catch(error => {
       console.error('[crm-automation] webhook trigger failed', error instanceof Error ? error.message : error);
     });

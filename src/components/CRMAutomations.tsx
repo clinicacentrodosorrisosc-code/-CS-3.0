@@ -45,6 +45,14 @@ type Stage = { id: string; pipeline_id: string; name: string };
 type MetaTemplateComponent = { type: string; text?: string };
 type MetaTemplate = { id: string; name: string; status: string; language: string; category: string; components?: MetaTemplateComponent[] };
 type Opportunity = { id: string; stage_id: string; patient_name: string | null; patient_phone: string | null; seller_name: string | null; title: string; amount_cents: number };
+type AutomationExecution = {
+  id: string;
+  flow_id: string;
+  status: 'processing' | 'sent' | 'failed' | 'skipped';
+  template_name: string | null;
+  error_message: string | null;
+  created_at: string;
+};
 
 const variableOptions = [
   { value: 'patient_name', label: 'Nome do paciente' },
@@ -93,23 +101,26 @@ export const CRMAutomations: React.FC = () => {
   const [stages, setStages] = useState<Stage[]>([]);
   const [templates, setTemplates] = useState<MetaTemplate[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [executions, setExecutions] = useState<AutomationExecution[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadBaseData = useCallback(async () => {
-    const [flowsResult, pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
+    const [flowsResult, pipelinesResult, stagesResult, opportunitiesResult, executionsResult] = await Promise.all([
       supabase.from('crm_automation_flows').select('id,name,description,is_active,nodes,edges,updated_at').order('updated_at', { ascending: false }),
       supabase.from('clinic_experts_pipelines').select('id,name').order('name'),
       supabase.from('clinic_experts_stages').select('id,pipeline_id,name').order('position'),
       supabase.from('clinic_experts_opportunities').select('id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').order('synced_at', { ascending: false }),
+      supabase.from('crm_automation_executions').select('id,flow_id,status,template_name,error_message,created_at').order('created_at', { ascending: false }).limit(20),
     ]);
-    const firstError = flowsResult.error || pipelinesResult.error || stagesResult.error || opportunitiesResult.error;
+    const firstError = flowsResult.error || pipelinesResult.error || stagesResult.error || opportunitiesResult.error || executionsResult.error;
     if (firstError) throw firstError;
     setFlows((flowsResult.data || []) as FlowRecord[]);
     setPipelines((pipelinesResult.data || []) as Pipeline[]);
     setStages((stagesResult.data || []) as Stage[]);
     setOpportunities((opportunitiesResult.data || []) as Opportunity[]);
+    setExecutions((executionsResult.data || []) as AutomationExecution[]);
   }, []);
 
   const refreshTemplates = useCallback(async () => {
@@ -175,6 +186,14 @@ export const CRMAutomations: React.FC = () => {
       .catch(error => setMessage({ type: 'error', text: error?.message || 'Falha ao carregar o construtor.' }))
       .finally(() => setLoading(false));
   }, [ensureSdrFlow, loadBaseData, refreshTemplates]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('crm-automation-executions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_automation_executions' }, () => void loadBaseData())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [loadBaseData]);
 
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
   const selectedPipelineId = selectedNode?.data.pipelineId || '';
@@ -325,6 +344,9 @@ export const CRMAutomations: React.FC = () => {
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Meus fluxos</p>
           <div className="mt-2 space-y-1">{flows.length === 0 ? <p className="px-2 py-3 text-xs text-[var(--text-muted)]">Nenhum fluxo salvo.</p> : flows.map(flow => <button key={flow.id} type="button" onClick={() => openFlow(flow)} className={`w-full rounded-xl border px-3 py-2 text-left ${selectedFlowId === flow.id ? 'border-[var(--primary-border)] bg-[var(--primary-dim)]' : 'border-transparent hover:bg-[var(--surface-hover)]'}`}><span className="block truncate text-xs font-semibold">{flow.name}</span><span className="mt-1 flex items-center gap-1 text-[10px] text-[var(--text-muted)]"><span className={`h-1.5 w-1.5 rounded-full ${flow.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />{flow.is_active ? 'Ativo' : 'Rascunho'}</span></button>)}</div>
           <div className="my-4 border-t border-[var(--border)]" />
+          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Últimas execuções</p>
+          <div className="mt-2 space-y-1.5">{executions.length === 0 ? <p className="px-2 py-2 text-[10px] text-[var(--text-muted)]">Nenhum disparo registrado.</p> : executions.slice(0, 8).map(execution => { const flowName = flows.find(flow => flow.id === execution.flow_id)?.name || 'Fluxo'; const statusLabel = execution.status === 'sent' ? 'Enviado' : execution.status === 'failed' ? 'Falhou' : execution.status === 'processing' ? 'Processando' : 'Ignorado'; return <div key={execution.id} className="rounded-xl border border-[var(--border)] px-2.5 py-2"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] font-semibold">{flowName}</span><span className={`text-[9px] font-bold ${execution.status === 'sent' ? 'text-emerald-600' : execution.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>{statusLabel}</span></div><p className="mt-1 truncate text-[9px] text-[var(--text-muted)]">{execution.template_name || 'Template'} · {new Date(execution.created_at).toLocaleString('pt-BR')}</p>{execution.error_message && <p title={execution.error_message} className="mt-1 line-clamp-2 text-[9px] leading-3 text-rose-600">{execution.error_message}</p>}</div>; })}</div>
+          <div className="my-4 border-t border-[var(--border)]" />
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Adicionar etapa</p>
           <div className="mt-2 space-y-2">{nodeCatalog.map(({ kind, label, detail, icon: Icon }) => <button key={kind} type="button" onClick={() => addNode(kind)} className="flex w-full items-start gap-2 rounded-xl border border-[var(--border)] p-2.5 text-left hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]"><Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" /><span><strong className="block text-xs">{label}</strong><small className="mt-0.5 block text-[10px] leading-4 text-[var(--text-muted)]">{detail}</small></span></button>)}</div>
         </aside>
@@ -342,7 +364,7 @@ export const CRMAutomations: React.FC = () => {
           <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Configuração da etapa</p>
           {!selectedNode ? <div className="mt-10 text-center"><Play className="mx-auto h-7 w-7 text-[var(--text-muted)]" /><p className="mt-2 text-xs text-[var(--text-muted)]">Selecione um bloco no quadro.</p></div> : <div className="mt-4 space-y-4">
             <label className="block text-xs font-semibold">Nome do bloco<input value={selectedNode.data.label} onChange={event => updateNode({ label: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none" /></label>
-            {selectedNode.data.kind === 'trigger' && <><label className="block text-xs font-semibold">Funil<select value={selectedNode.data.pipelineId || ''} onChange={event => updateNode({ pipelineId: event.target.value, stageId: '' })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="block text-xs font-semibold">Etapa<select value={selectedNode.data.stageId || ''} onChange={event => updateNode({ stageId: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
+            {selectedNode.data.kind === 'trigger' && <><label className="block text-xs font-semibold">Funil<select value={selectedNode.data.pipelineId || ''} onChange={event => updateNode({ pipelineId: event.target.value, stageId: '' })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="block text-xs font-semibold">Etapa<select value={selectedNode.data.stageId || ''} onChange={event => { const stage = stages.find(item => item.id === event.target.value); updateNode({ stageId: event.target.value, label: stage ? `Entrou em ${stage.name}` : 'Entrou em uma etapa' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
             {selectedNode.data.kind === 'wait' && <div className="grid grid-cols-[1fr_120px] gap-2"><label className="text-xs font-semibold">Tempo<input type="number" min="1" value={selectedNode.data.delayValue || 1} onChange={event => updateNode({ delayValue: Number(event.target.value) })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Unidade<select value={selectedNode.data.delayUnit || 'hours'} onChange={event => updateNode({ delayUnit: event.target.value as FlowNodeData['delayUnit'] })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></label></div>}
             {selectedNode.data.kind === 'schedule' && <><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Início<input type="time" value={selectedNode.data.startTime || '08:00'} onChange={event => updateNode({ startTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label><label className="text-xs font-semibold">Fim<input type="time" value={selectedNode.data.endTime || '18:00'} onChange={event => updateNode({ endTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label></div><div><p className="text-xs font-semibold">Dias permitidos</p><div className="mt-2 flex flex-wrap gap-1">{weekdays.map((day, index) => { const active = (selectedNode.data.weekdays || []).includes(index); return <button key={day} type="button" onClick={() => updateNode({ weekdays: active ? (selectedNode.data.weekdays || []).filter(value => value !== index) : [...(selectedNode.data.weekdays || []), index] })} className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${active ? 'border-[var(--primary)] bg-[var(--primary-dim)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>{day}</button>; })}</div></div></>}
             {selectedNode.data.kind === 'template' && <>
