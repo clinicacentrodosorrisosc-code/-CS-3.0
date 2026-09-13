@@ -6,6 +6,50 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/integrations/clinica-experts/sync",
+      "schedule": "0 23 * * *"
+    },
+    {
       "path": "/api/integrations/crm-automation/process",
       "schedule": "15 0 * * *"
     },

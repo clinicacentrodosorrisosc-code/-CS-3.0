@@ -35,7 +35,7 @@ async function sendTemplate(db: SupabaseClient, userId: string, opportunity: Opp
   return String(body?.messages?.[0]?.id || '');
 }
 
-export async function queueCrmStageAutomations(db: SupabaseClient, userId: string, opportunity: Opportunity) {
+export async function queueCrmStageAutomations(db: SupabaseClient, userId: string, opportunity: Opportunity, options: { allowReentry?: boolean } = {}) {
   const { data: flows, error } = await db.from('crm_automation_flows').select('id,nodes,edges').eq('user_id', userId).eq('is_active', true);
   if (error) throw error;
   for (const flow of flows || []) {
@@ -46,6 +46,15 @@ export async function queueCrmStageAutomations(db: SupabaseClient, userId: strin
     if (!templateNode) continue;
     const { error: insertError } = await db.from('crm_automation_executions').insert({ flow_id: flow.id, user_id: userId, opportunity_id: opportunity.id, trigger_stage_id: opportunity.stage_id, template_name: templateNode.data?.templateName, status: 'pending' });
     if (insertError && insertError.code !== '23505') throw insertError;
+    if (insertError?.code === '23505' && options.allowReentry) {
+      const { error: requeueError } = await db.from('crm_automation_executions')
+        .update({ status: 'pending', attempts: 0, available_at: new Date().toISOString(), locked_at: null, meta_message_id: null, error_message: null, finished_at: null, created_at: new Date().toISOString() })
+        .eq('flow_id', flow.id)
+        .eq('opportunity_id', opportunity.id)
+        .eq('trigger_stage_id', opportunity.stage_id)
+        .in('status', ['sent', 'failed', 'skipped']);
+      if (requeueError) throw requeueError;
+    }
   }
 }
 

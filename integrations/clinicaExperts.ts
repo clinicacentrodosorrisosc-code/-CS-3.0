@@ -251,7 +251,7 @@ export async function syncClinicaExperts(
     for (const opportunity of opportunityRows) {
       const previous = previousByExternalId.get(opportunity.external_id);
       if (!previous || previous.stage_id === opportunity.stage_id) continue;
-      await queueCrmStageAutomations(db, userId, { ...opportunity, id: previous.id }).catch(error => {
+      await queueCrmStageAutomations(db, userId, { ...opportunity, id: previous.id }, { allowReentry: true }).catch(error => {
         console.error('[crm-automation] reconciliation trigger failed', error instanceof Error ? error.message : error);
       });
     }
@@ -412,11 +412,12 @@ export async function processClinicaExpertsOpportunityWebhook(
   }, { onConflict: 'user_id,external_id' }).select('id,pipeline_id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').single();
   throwIfError(opportunityError, 'Erro ao salvar oportunidade recebida pelo webhook');
   const eventName = String(payload.type || payload.event || payload.name || '');
+  const stageChanged = Boolean(existingOpportunity && existingOpportunity.stage_id !== savedOpportunity?.stage_id);
   const enteredStage = !existingOpportunity
-    || existingOpportunity.stage_id !== savedOpportunity?.stage_id
+    || stageChanged
     || eventName.endsWith('.created');
   if (savedOpportunity && enteredStage) {
-    await queueCrmStageAutomations(db, userId, savedOpportunity).catch(error => {
+    await queueCrmStageAutomations(db, userId, savedOpportunity, { allowReentry: stageChanged }).catch(error => {
       console.error('[crm-automation] webhook trigger failed', error instanceof Error ? error.message : error);
     });
     await processCrmAutomationQueue(db, userId, 1).catch(error => {
