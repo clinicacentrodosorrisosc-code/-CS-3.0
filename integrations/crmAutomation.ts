@@ -21,6 +21,32 @@ function templateComponents(mapping: string | undefined, opportunity: Opportunit
   return parameters.length ? [{ type: 'body', parameters }] : undefined;
 }
 
+function nextScheduleWindow(nodes: FlowNode[]) {
+  const schedule = nodes.find(node => node.data?.kind === 'schedule')?.data;
+  if (!schedule) return null;
+  const weekdays = Array.isArray((schedule as any).weekdays) ? (schedule as any).weekdays as number[] : [];
+  const startTime = String((schedule as any).startTime || '00:00');
+  const endTime = String((schedule as any).endTime || '23:59');
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  const part = (type: string) => parts.find(item => item.type === type)?.value || '';
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
+  const currentTime = `${part('hour')}:${part('minute')}`;
+  if (weekdays.includes(weekday) && currentTime >= startTime && currentTime <= endTime) return null;
+  const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const [month, day, year] = localDate.split('/');
+  const candidate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  for (let offset = 0; offset < 8; offset += 1) {
+    const date = new Date(candidate.getTime() + offset * 86_400_000);
+    if (weekdays.includes(date.getUTCDay())) {
+      const isoDate = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+      const target = new Date(`${isoDate}T${startTime}:00-03:00`);
+      if (target > now) return target.toISOString();
+    }
+  }
+  return null;
+}
+
 async function sendTemplate(db: SupabaseClient, userId: string, opportunity: Opportunity, node: FlowNode) {
   const { data: config, error } = await db.from('whatsapp_config').select('phone_number_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
   if (error) throw error;
@@ -80,6 +106,8 @@ export async function processCrmAutomationQueue(db: SupabaseClient, userId: stri
     const trigger = nodes.find(node => node.data?.kind === 'trigger' && node.data.stageId === execution.trigger_stage_id);
     const templateNode = trigger ? nodes.find(node => node.id === edges.find(edge => edge.source === trigger.id)?.target && node.data?.kind === 'template') : undefined;
     if (!opportunity || !templateNode) { skipped += 1; await db.from('crm_automation_executions').update({ status: 'skipped', finished_at: new Date().toISOString(), locked_at: null, error_message: 'Fluxo ou oportunidade nao esta mais disponivel.' }).eq('id', execution.id); return; }
+    const availableAt = nextScheduleWindow(nodes);
+    if (availableAt) { await db.from('crm_automation_executions').update({ status: 'pending', available_at: availableAt, locked_at: null, error_message: null }).eq('id', execution.id); return; }
     try { const metaMessageId = await sendTemplate(db, userId, opportunity, templateNode); sent += 1; await db.from('crm_automation_executions').update({ status: 'sent', meta_message_id: metaMessageId, finished_at: new Date().toISOString(), locked_at: null }).eq('id', execution.id); }
     catch (error) { failed += 1; const message = error instanceof Error ? error.message : 'Falha ao enviar template.'; await db.from('crm_automation_executions').update({ status: 'failed', error_message: message.slice(0, 1000), available_at: new Date(Date.now() + 5 * 60_000).toISOString(), locked_at: null }).eq('id', execution.id); console.error('[crm-automation] template send failed', message); }
   }));
