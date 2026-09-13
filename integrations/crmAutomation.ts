@@ -33,9 +33,9 @@ function nextScheduleWindow(nodes: FlowNode[]) {
   const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
   const currentTime = `${part('hour')}:${part('minute')}`;
   if (weekdays.includes(weekday) && currentTime >= startTime && currentTime <= endTime) return null;
-  const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
-  const [month, day, year] = localDate.split('/');
-  const candidate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  const dateParts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const datePart = (type: string) => dateParts.find(item => item.type === type)?.value || '';
+  const candidate = new Date(Date.UTC(Number(datePart('year')), Number(datePart('month')) - 1, Number(datePart('day'))));
   for (let offset = 0; offset < 8; offset += 1) {
     const date = new Date(candidate.getTime() + offset * 86_400_000);
     if (weekdays.includes(date.getUTCDay())) {
