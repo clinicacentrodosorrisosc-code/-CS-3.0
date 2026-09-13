@@ -42,7 +42,17 @@ type FlowRecord = {
 };
 type Pipeline = { id: string; name: string };
 type Stage = { id: string; pipeline_id: string; name: string };
-type MetaTemplate = { id: string; name: string; status: string; language: string; category: string };
+type MetaTemplateComponent = { type: string; text?: string };
+type MetaTemplate = { id: string; name: string; status: string; language: string; category: string; components?: MetaTemplateComponent[] };
+type Opportunity = { id: string; stage_id: string; patient_name: string | null; patient_phone: string | null; seller_name: string | null; title: string; amount_cents: number };
+
+const variableOptions = [
+  { value: 'patient_name', label: 'Nome do paciente' },
+  { value: 'patient_phone', label: 'Telefone do paciente' },
+  { value: 'seller_name', label: 'Responsável comercial' },
+  { value: 'opportunity_title', label: 'Nome da oportunidade' },
+  { value: 'amount', label: 'Valor da oportunidade' },
+];
 
 const initialNodes: Node<FlowNodeData>[] = [
   { id: 'trigger-1', type: 'input', position: { x: 80, y: 160 }, data: { kind: 'trigger', label: 'Entrou em uma etapa' } },
@@ -76,21 +86,24 @@ export const CRMAutomations: React.FC = () => {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [stages, setStages] = useState<Stage[]>([]);
   const [templates, setTemplates] = useState<MetaTemplate[]>([]);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadBaseData = useCallback(async () => {
-    const [flowsResult, pipelinesResult, stagesResult] = await Promise.all([
+    const [flowsResult, pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
       supabase.from('crm_automation_flows').select('id,name,description,is_active,nodes,edges,updated_at').order('updated_at', { ascending: false }),
       supabase.from('clinic_experts_pipelines').select('id,name').order('name'),
       supabase.from('clinic_experts_stages').select('id,pipeline_id,name').order('position'),
+      supabase.from('clinic_experts_opportunities').select('id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').order('synced_at', { ascending: false }),
     ]);
-    const firstError = flowsResult.error || pipelinesResult.error || stagesResult.error;
+    const firstError = flowsResult.error || pipelinesResult.error || stagesResult.error || opportunitiesResult.error;
     if (firstError) throw firstError;
     setFlows((flowsResult.data || []) as FlowRecord[]);
     setPipelines((pipelinesResult.data || []) as Pipeline[]);
     setStages((stagesResult.data || []) as Stage[]);
+    setOpportunities((opportunitiesResult.data || []) as Opportunity[]);
   }, []);
 
   const refreshTemplates = useCallback(async () => {
@@ -160,11 +173,44 @@ export const CRMAutomations: React.FC = () => {
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
   const selectedPipelineId = selectedNode?.data.pipelineId || '';
   const visibleStages = stages.filter(stage => stage.pipeline_id === selectedPipelineId);
+  const triggerNode = nodes.find(node => node.data.kind === 'trigger');
+  const sampleCard = opportunities.find(opportunity => opportunity.stage_id === triggerNode?.data.stageId) || null;
+  const selectedTemplate = selectedNode?.data.kind === 'template'
+    ? templates.find(template => template.id === selectedNode.data.templateId)
+      || templates.find(template => template.name === selectedNode.data.templateName && template.language === selectedNode.data.language)
+    : null;
+  const templateBody = selectedTemplate?.components?.find(component => component.type === 'BODY')?.text || '';
+  const placeholderNumbers = Array.from(new Set(Array.from(templateBody.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
+  const variableMappings = Object.fromEntries(String(selectedNode?.data.variables || '').split(/\r?\n/).map(line => line.match(/^\s*\{\{(\d+)\}\}\s*=\s*([a-z_]+)\s*$/i)).filter((match): match is RegExpMatchArray => Boolean(match)).map(match => [Number(match[1]), match[2]])) as Record<number, string>;
 
-  const updateNode = (patch: Partial<FlowNodeData>) => {
+  const sampleValue = (key: string) => {
+    if (!sampleCard) return `[${variableOptions.find(option => option.value === key)?.label || key}]`;
+    const values: Record<string, string> = {
+      patient_name: sampleCard.patient_name || 'Paciente sem nome',
+      patient_phone: sampleCard.patient_phone || 'Telefone não informado',
+      seller_name: sampleCard.seller_name || 'Responsável não informado',
+      opportunity_title: sampleCard.title || 'Oportunidade',
+      amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((sampleCard.amount_cents || 0) / 100),
+    };
+    return values[key] || `[${key}]`;
+  };
+
+  const previewMessage = templateBody.replace(/\{\{(\d+)\}\}/g, (_, rawIndex: string) => {
+    const index = Number(rawIndex);
+    return variableMappings[index] ? sampleValue(variableMappings[index]) : `{{${index}}}`;
+  });
+
+  const setVariableMapping = (index: number, value: string) => {
+    const next = { ...variableMappings };
+    if (value) next[index] = value;
+    else delete next[index];
+    updateNode({ variables: Object.entries(next).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n') });
+  };
+
+  function updateNode(patch: Partial<FlowNodeData>) {
     if (!selectedNodeId) return;
     setNodes(current => current.map(node => node.id === selectedNodeId ? { ...node, data: { ...node.data, ...patch } } : node));
-  };
+  }
 
   const deleteSelectedNode = () => {
     if (!selectedNodeId || !selectedNode) return;
@@ -223,8 +269,13 @@ export const CRMAutomations: React.FC = () => {
     if (!name.trim()) return 'Informe o nome do fluxo.';
     if (!trigger?.data.pipelineId || !trigger.data.stageId) return 'Configure o funil e a etapa do gatilho.';
     if (!template?.data.templateName || !template.data.language) return 'Escolha um template aprovado da Meta.';
+    const metaTemplate = templates.find(item => item.name === template.data.templateName && item.language === template.data.language);
+    const body = metaTemplate?.components?.find(component => component.type === 'BODY')?.text || '';
+    const requiredPositions = Array.from(new Set(Array.from(body.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1]))));
+    const configuredPositions = new Set(String(template.data.variables || '').split(/\r?\n/).map(line => Number(line.match(/\{\{(\d+)\}\}/)?.[1])).filter(Number.isFinite));
+    if (requiredPositions.some(position => !configuredPositions.has(position))) return 'Mapeie todas as variáveis obrigatórias do template.';
     return null;
-  }, [name, nodes]);
+  }, [name, nodes, templates]);
 
   const saveFlow = async () => {
     setSaving(true);
@@ -288,7 +339,12 @@ export const CRMAutomations: React.FC = () => {
             {selectedNode.data.kind === 'trigger' && <><label className="block text-xs font-semibold">Funil<select value={selectedNode.data.pipelineId || ''} onChange={event => updateNode({ pipelineId: event.target.value, stageId: '' })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="block text-xs font-semibold">Etapa<select value={selectedNode.data.stageId || ''} onChange={event => updateNode({ stageId: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
             {selectedNode.data.kind === 'wait' && <div className="grid grid-cols-[1fr_120px] gap-2"><label className="text-xs font-semibold">Tempo<input type="number" min="1" value={selectedNode.data.delayValue || 1} onChange={event => updateNode({ delayValue: Number(event.target.value) })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Unidade<select value={selectedNode.data.delayUnit || 'hours'} onChange={event => updateNode({ delayUnit: event.target.value as FlowNodeData['delayUnit'] })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></label></div>}
             {selectedNode.data.kind === 'schedule' && <><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Início<input type="time" value={selectedNode.data.startTime || '08:00'} onChange={event => updateNode({ startTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label><label className="text-xs font-semibold">Fim<input type="time" value={selectedNode.data.endTime || '18:00'} onChange={event => updateNode({ endTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label></div><div><p className="text-xs font-semibold">Dias permitidos</p><div className="mt-2 flex flex-wrap gap-1">{weekdays.map((day, index) => { const active = (selectedNode.data.weekdays || []).includes(index); return <button key={day} type="button" onClick={() => updateNode({ weekdays: active ? (selectedNode.data.weekdays || []).filter(value => value !== index) : [...(selectedNode.data.weekdays || []), index] })} className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${active ? 'border-[var(--primary)] bg-[var(--primary-dim)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>{day}</button>; })}</div></div></>}
-            {selectedNode.data.kind === 'template' && <><label className="block text-xs font-semibold">Template aprovado<select value={selectedNode.data.templateId || ''} onChange={event => { const template = templates.find(item => item.id === event.target.value); updateNode({ templateId: template?.id || '', templateName: template?.name || '', language: template?.language || '' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={item.id} value={item.id}>{item.name} · {item.language}</option>)}</select></label><label className="block text-xs font-semibold">Variáveis<textarea value={selectedNode.data.variables || ''} onChange={event => updateNode({ variables: event.target.value })} placeholder={'{{1}} = patient_name\n{{2}} = seller_name'} rows={5} className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-3 font-mono text-[11px] outline-none" /></label><p className="text-[10px] leading-4 text-[var(--text-muted)]">Disponíveis: patient_name, patient_phone, seller_name, opportunity_title, amount.</p></>}
+            {selectedNode.data.kind === 'template' && <>
+              <label className="block text-xs font-semibold">Template aprovado<select value={selectedTemplate?.id || ''} onChange={event => { const template = templates.find(item => item.id === event.target.value); updateNode({ templateId: template?.id || '', templateName: template?.name || '', language: template?.language || '', variables: '' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={item.id} value={item.id}>{item.name} · {item.language}</option>)}</select></label>
+              {selectedTemplate && <div className="rounded-xl border border-[var(--border)] bg-[#E7F7EF] p-3 dark:bg-emerald-500/10"><p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Mensagem do template</p><p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-[var(--text)]">{previewMessage || 'Este template não possui texto no corpo.'}</p>{sampleCard && <p className="mt-2 border-t border-emerald-600/15 pt-2 text-[10px] text-[var(--text-muted)]">Prévia usando o card de {sampleCard.patient_name || sampleCard.title}.</p>}</div>}
+              {placeholderNumbers.length > 0 && <div><p className="text-xs font-semibold">Variáveis da mensagem</p><div className="mt-2 space-y-2">{placeholderNumbers.map(index => <label key={index} className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-2 text-xs"><span className="font-mono text-[var(--primary)]">{`{{${index}}}`}</span><select value={variableMappings[index] || ''} onChange={event => setVariableMapping(index, event.target.value)} className="h-9 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="">Selecione o dado do card</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}{variableMappings[index] === option.value ? `: ${sampleValue(option.value)}` : ''}</option>)}</select></label>)}</div></div>}
+              {selectedTemplate && placeholderNumbers.length === 0 && <p className="rounded-lg bg-[var(--bg-subtle)] px-3 py-2 text-[10px] text-[var(--text-muted)]">Este template não possui variáveis no corpo da mensagem.</p>}
+            </>}
             <button type="button" onClick={deleteSelectedNode} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 text-xs font-bold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 className="h-4 w-4" /> Excluir etapa</button>
           </div>}
         </aside>
