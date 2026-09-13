@@ -30,3 +30,5 @@ node_modules
 # Production build
 dist
 dist-ssr
+.vercel
+.env*
