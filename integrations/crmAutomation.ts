@@ -108,12 +108,31 @@ export async function processCrmStageAutomations(db: SupabaseClient, userId: str
     const templateNode = nodes.find(node => node.id === nextId && node.data?.kind === 'template');
     if (!templateNode) continue;
 
-    const { data: execution, error: insertError } = await db
+    let { data: execution, error: insertError } = await db
       .from('crm_automation_executions')
       .insert({ flow_id: flow.id, user_id: userId, opportunity_id: opportunity.id, trigger_stage_id: opportunity.stage_id, template_name: templateNode.data?.templateName })
       .select('id')
       .maybeSingle();
-    if (insertError?.code === '23505') continue;
+    if (insertError?.code === '23505') {
+      const { data: previousExecution, error: previousError } = await db
+        .from('crm_automation_executions')
+        .select('id,status')
+        .eq('flow_id', flow.id)
+        .eq('opportunity_id', opportunity.id)
+        .eq('trigger_stage_id', opportunity.stage_id)
+        .single();
+      if (previousError) throw previousError;
+      if (previousExecution?.status !== 'failed') continue;
+      const { data: retryExecution, error: retryError } = await db
+        .from('crm_automation_executions')
+        .update({ status: 'processing', error_message: null, meta_message_id: null, finished_at: null, created_at: new Date().toISOString() })
+        .eq('id', previousExecution.id)
+        .select('id')
+        .single();
+      if (retryError) throw retryError;
+      execution = retryExecution;
+      insertError = null;
+    }
     if (insertError || !execution) throw insertError || new Error('Falha ao registrar execução da automação.');
 
     try {

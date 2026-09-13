@@ -116,6 +116,11 @@ class ClinicaExpertsClient {
       sort_direction: 'asc',
     });
   }
+
+  async getPatient(patientId: string) {
+    const response = await this.get<{ data?: ExternalPatient } | ExternalPatient>(`/patients/${encodeURIComponent(patientId)}`);
+    return 'data' in response && response.data ? response.data : response as ExternalPatient;
+  }
 }
 
 function throwIfError(error: { message: string } | null, context: string) {
@@ -302,6 +307,7 @@ export async function processClinicaExpertsOpportunityWebhook(
   db: SupabaseClient,
   userId: string,
   payload: Record<string, any>,
+  apiToken?: string,
 ) {
   const resource = payload.resource || payload.data || payload;
   const pipeline = resource.pipeline;
@@ -343,16 +349,44 @@ export async function processClinicaExpertsOpportunityWebhook(
     .maybeSingle();
   throwIfError(existingError, 'Erro ao consultar oportunidade existente');
 
+  const patientExternalId = resource.patient?.uuid || resource.patient?.id || null;
+  let patientPhone = existingOpportunity?.patient_phone
+    || resource.patient?.phone
+    || resource.patient?.cellphone
+    || resource.patient?.mobile
+    || null;
+  let patientEmail = existingOpportunity?.patient_email || resource.patient?.email || null;
+
+  if (!patientPhone && patientExternalId) {
+    const { data: knownPatientOpportunity, error: knownPatientError } = await db
+      .from('clinic_experts_opportunities')
+      .select('patient_phone,patient_email')
+      .eq('user_id', userId)
+      .eq('patient_external_id', patientExternalId)
+      .not('patient_phone', 'is', null)
+      .limit(1)
+      .maybeSingle();
+    throwIfError(knownPatientError, 'Erro ao consultar telefone conhecido do paciente');
+    patientPhone = knownPatientOpportunity?.patient_phone || null;
+    patientEmail = patientEmail || knownPatientOpportunity?.patient_email || null;
+  }
+
+  if (!patientPhone && patientExternalId && apiToken) {
+    const patient = await new ClinicaExpertsClient(apiToken).getPatient(patientExternalId);
+    patientPhone = patient.phone || null;
+    patientEmail = patientEmail || patient.email || null;
+  }
+
   const { data: savedOpportunity, error: opportunityError } = await db.from('clinic_experts_opportunities').upsert({
     user_id: userId,
     external_id: opportunityId,
-    patient_external_id: resource.patient?.uuid || null,
+    patient_external_id: patientExternalId,
     pipeline_id: pipelineRow.id,
     stage_id: stageRow.id,
     title: resource.title || resource.patient?.name || 'Oportunidade',
     patient_name: resource.patient?.name || null,
-    patient_phone: existingOpportunity?.patient_phone || null,
-    patient_email: existingOpportunity?.patient_email || null,
+    patient_phone: patientPhone,
+    patient_email: patientEmail,
     seller_name: resource.seller?.name || null,
     priority: Number(resource.priority || 1),
     amount_cents: Number(resource.amount || 0),

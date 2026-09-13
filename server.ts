@@ -557,7 +557,7 @@ async function startServer() {
       }
 
       try {
-        await processClinicaExpertsOpportunityWebhook(db, clinicaExpertsOwnerUserId, payload);
+        await processClinicaExpertsOpportunityWebhook(db, clinicaExpertsOwnerUserId, payload, clinicaExpertsToken);
         await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
         return res.status(200).json({ received: true, processed: true });
       } catch (error: any) {

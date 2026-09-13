@@ -129,6 +129,7 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
 
   const ownerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '';
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
   if (!ownerUserId || !serviceRoleKey) {
     res.status(503).json({ error: 'Integracao Clinica Experts incompleta no servidor.' });
     return;
@@ -179,7 +180,7 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
     }
 
     try {
-      await processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload);
+      await processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload, apiToken);
       await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
       res.status(200).json({ received: true, processed: true });
     } catch (error) {
