@@ -101,11 +101,61 @@ export const CRMAutomations: React.FC = () => {
     setTemplates((body.templates || []).filter((template: MetaTemplate) => template.status === 'APPROVED'));
   }, []);
 
+  const ensureSdrFlow = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Sessão expirada.');
+    const { data: existing, error: existingError } = await supabase
+      .from('crm_automation_flows')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('name', 'Fluxo SDR')
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (existing) return;
+
+    const { data: pipeline, error: pipelineError } = await supabase
+      .from('clinic_experts_pipelines')
+      .select('id,name')
+      .eq('user_id', user.id)
+      .ilike('name', '%comercial%')
+      .limit(1)
+      .maybeSingle();
+    if (pipelineError) throw pipelineError;
+    if (!pipeline) throw new Error('Funil Comercial não encontrado na sincronização da Clínica Experts.');
+
+    const { data: stage, error: stageError } = await supabase
+      .from('clinic_experts_stages')
+      .select('id,name')
+      .eq('user_id', user.id)
+      .eq('pipeline_id', pipeline.id)
+      .ilike('name', '%qualifica%')
+      .limit(1)
+      .maybeSingle();
+    if (stageError) throw stageError;
+    if (!stage) throw new Error('Etapa Qualificação não encontrada no funil Comercial.');
+
+    const presetNodes: Node<FlowNodeData>[] = [
+      { id: 'fluxo-sdr-trigger', type: 'input', position: { x: 100, y: 180 }, data: { kind: 'trigger', label: 'Entrou em Qualificação', pipelineId: pipeline.id, stageId: stage.id } },
+      { id: 'fluxo-sdr-template', position: { x: 420, y: 180 }, data: { kind: 'template', label: 'Enviar lembrete_2h', templateName: 'lembrete_2h', language: 'pt_BR', variables: '' } },
+    ];
+    const presetEdges: Edge[] = [{ id: 'fluxo-sdr-trigger-template', source: 'fluxo-sdr-trigger', target: 'fluxo-sdr-template', animated: true }];
+    const { error: insertError } = await supabase.from('crm_automation_flows').insert({
+      user_id: user.id,
+      name: 'Fluxo SDR',
+      description: 'Envia o template lembrete_2h quando um card entra em Comercial → Qualificação.',
+      is_active: true,
+      nodes: presetNodes,
+      edges: presetEdges,
+    });
+    if (insertError && insertError.code !== '23505') throw insertError;
+  }, []);
+
   useEffect(() => {
-    Promise.all([loadBaseData(), refreshTemplates()])
+    Promise.all([ensureSdrFlow(), refreshTemplates()])
+      .then(() => loadBaseData())
       .catch(error => setMessage({ type: 'error', text: error?.message || 'Falha ao carregar o construtor.' }))
       .finally(() => setLoading(false));
-  }, [loadBaseData, refreshTemplates]);
+  }, [ensureSdrFlow, loadBaseData, refreshTemplates]);
 
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
   const selectedPipelineId = selectedNode?.data.pipelineId || '';

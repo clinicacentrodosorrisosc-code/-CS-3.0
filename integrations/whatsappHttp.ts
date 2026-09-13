@@ -40,7 +40,7 @@ function encryptAccessToken(token: string) {
   return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64');
 }
 
-function decryptAccessToken(encryptedValue: string) {
+export function decryptWhatsAppAccessToken(encryptedValue: string) {
   const key = Buffer.from(credentialsEncryptionKey, 'base64');
   if (key.length !== 32) throw new Error('WHATSAPP_CREDENTIALS_ENCRYPTION_KEY deve ser uma chave base64 de 32 bytes.');
   const payload = Buffer.from(encryptedValue, 'base64');
@@ -164,7 +164,7 @@ export async function handleWhatsAppTemplates(req: ApiRequest, res: ApiResponse)
     if (!config.waba_id) throw new Error('Informe o WABA ID na conexao para atualizar os templates da Meta.');
     if (!config.access_token_encrypted) throw new Error('O token da Meta nao esta disponivel. Reconecte o WhatsApp Business.');
 
-    const accessToken = decryptAccessToken(config.access_token_encrypted);
+    const accessToken = decryptWhatsAppAccessToken(config.access_token_encrypted);
     const templates: unknown[] = [];
     let nextUrl: string | null = `https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(config.waba_id)}/message_templates?limit=100&fields=id,name,status,language,category,quality_score,components`;
     let pages = 0;

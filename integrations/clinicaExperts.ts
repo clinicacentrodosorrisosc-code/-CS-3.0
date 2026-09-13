@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { processCrmStageAutomations } from './crmAutomation.js';
 
 const API_BASE_URL = 'https://api.clinicaexperts.com.br/api/v1';
 const PAGE_SIZE = 100;
@@ -191,6 +192,12 @@ export async function syncClinicaExperts(
     throwIfError(stageReadError, 'Erro ao reler etapas');
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
     const patientById = new Map(patients.map(patient => [patient.uuid, patient]));
+    const { data: previousOpportunities, error: previousOpportunitiesError } = await db
+      .from('clinic_experts_opportunities')
+      .select('id,external_id,stage_id')
+      .eq('user_id', userId);
+    throwIfError(previousOpportunitiesError, 'Erro ao consultar etapas anteriores das oportunidades');
+    const previousByExternalId = new Map((previousOpportunities || []).map(row => [row.external_id, row]));
 
     const opportunityRows = opportunities.flatMap(opportunity => {
       const externalPipelineId = opportunity.pipeline?.uuid;
@@ -227,6 +234,14 @@ export async function syncClinicaExperts(
         .from('clinic_experts_opportunities')
         .upsert(opportunityRows.slice(index, index + 500), { onConflict: 'user_id,external_id' });
       throwIfError(error, 'Erro ao salvar oportunidades');
+    }
+
+    for (const opportunity of opportunityRows) {
+      const previous = previousByExternalId.get(opportunity.external_id);
+      if (!previous || previous.stage_id === opportunity.stage_id) continue;
+      await processCrmStageAutomations(db, userId, { ...opportunity, id: previous.id }).catch(error => {
+        console.error('[crm-automation] reconciliation trigger failed', error instanceof Error ? error.message : error);
+      });
     }
 
     const { error: staleOpportunitiesError } = await db
@@ -322,13 +337,13 @@ export async function processClinicaExpertsOpportunityWebhook(
 
   const { data: existingOpportunity, error: existingError } = await db
     .from('clinic_experts_opportunities')
-    .select('patient_phone, patient_email')
+    .select('id, stage_id, patient_phone, patient_email')
     .eq('user_id', userId)
     .eq('external_id', opportunityId)
     .maybeSingle();
   throwIfError(existingError, 'Erro ao consultar oportunidade existente');
 
-  const { error: opportunityError } = await db.from('clinic_experts_opportunities').upsert({
+  const { data: savedOpportunity, error: opportunityError } = await db.from('clinic_experts_opportunities').upsert({
     user_id: userId,
     external_id: opportunityId,
     patient_external_id: resource.patient?.uuid || null,
@@ -346,8 +361,13 @@ export async function processClinicaExpertsOpportunityWebhook(
     status: stage.status || resource.status || null,
     source_payload: payload,
     synced_at: now,
-  }, { onConflict: 'user_id,external_id' });
+  }, { onConflict: 'user_id,external_id' }).select('id,pipeline_id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').single();
   throwIfError(opportunityError, 'Erro ao salvar oportunidade recebida pelo webhook');
+  if (savedOpportunity && existingOpportunity && existingOpportunity.stage_id !== savedOpportunity.stage_id) {
+    await processCrmStageAutomations(db, userId, savedOpportunity).catch(error => {
+      console.error('[crm-automation] webhook trigger failed', error instanceof Error ? error.message : error);
+    });
+  }
 }
 
 export function createUserScopedSupabase(
