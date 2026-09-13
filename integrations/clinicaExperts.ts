@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { processCrmStageAutomations } from './crmAutomation.js';
+import { processCrmAutomationQueue, queueCrmStageAutomations } from './crmAutomation.js';
 
 const API_BASE_URL = 'https://api.clinicaexperts.com.br/api/v1';
 const PAGE_SIZE = 100;
@@ -251,7 +251,7 @@ export async function syncClinicaExperts(
     for (const opportunity of opportunityRows) {
       const previous = previousByExternalId.get(opportunity.external_id);
       if (!previous || previous.stage_id === opportunity.stage_id) continue;
-      await processCrmStageAutomations(db, userId, { ...opportunity, id: previous.id }).catch(error => {
+      await queueCrmStageAutomations(db, userId, { ...opportunity, id: previous.id }).catch(error => {
         console.error('[crm-automation] reconciliation trigger failed', error instanceof Error ? error.message : error);
       });
     }
@@ -416,8 +416,11 @@ export async function processClinicaExpertsOpportunityWebhook(
     || existingOpportunity.stage_id !== savedOpportunity?.stage_id
     || eventName.endsWith('.created');
   if (savedOpportunity && enteredStage) {
-    await processCrmStageAutomations(db, userId, savedOpportunity).catch(error => {
+    await queueCrmStageAutomations(db, userId, savedOpportunity).catch(error => {
       console.error('[crm-automation] webhook trigger failed', error instanceof Error ? error.message : error);
+    });
+    await processCrmAutomationQueue(db, userId, 1).catch(error => {
+      console.error('[crm-automation] webhook queue processing failed', error instanceof Error ? error.message : error);
     });
   }
 }
