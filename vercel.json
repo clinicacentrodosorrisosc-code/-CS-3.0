@@ -4,6 +4,54 @@
     {
       "path": "/api/integrations/clinica-experts/sync",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 0 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 2 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 4 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 6 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 8 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 10 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 12 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 14 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 16 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 18 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 20 * * *"
+    },
+    {
+      "path": "/api/integrations/crm-automation/process",
+      "schedule": "15 22 * * *"
     }
   ]
 }
