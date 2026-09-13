@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import { fallbackSupabaseAnonKey } from './clinicaExpertsHttp.js';
+import { fallbackSupabaseAnonKey } from './supabasePublicConfig.js';
 
 type ApiRequest = {
   method?: string;

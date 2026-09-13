@@ -74,6 +74,12 @@ async function sessionHeaders() {
   return { Authorization: `Bearer ${session.access_token}` };
 }
 
+function readableError(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') return error.message;
+  return fallback;
+}
+
 export const CRMAutomations: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<FlowNodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
@@ -294,7 +300,7 @@ export const CRMAutomations: React.FC = () => {
       await loadBaseData();
       setMessage({ type: 'success', text: isActive ? 'Fluxo salvo e marcado como ativo.' : 'Rascunho salvo com sucesso.' });
     } catch (error) {
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Falha ao salvar o fluxo.' });
+      setMessage({ type: 'error', text: readableError(error, 'Falha ao salvar o fluxo.') });
     } finally {
       setSaving(false);
     }
