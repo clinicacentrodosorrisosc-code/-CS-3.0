@@ -9,6 +9,7 @@ const url = process.env.VITE_SUPABASE_URL || 'https://dmslcvvjxfulsocksave.supab
 const anon = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || fallbackSupabaseAnonKey;
 const service = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const graphVersion = process.env.META_GRAPH_VERSION || 'v23.0';
+const brazilRates: Record<string, number> = { MARKETING: 0.3217, UTILITY: 0.035, AUTHENTICATION: 0.035 };
 
 const normalizePhone = (value: string | null) => { const digits = String(value || '').replace(/\D/g, ''); return (digits.length === 10 || digits.length === 11) && !digits.startsWith('55') ? `55${digits}` : digits; };
 const header = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
@@ -66,10 +67,28 @@ async function registerSkippedRecipients(db: SupabaseClient, campaign: any) {
   const { count } = await db.from('whatsapp_bulk_campaign_recipients').select('id', { count: 'exact', head: true }).eq('campaign_id', campaign.id);
   await db.from('whatsapp_bulk_campaigns').update({ total_recipients: count || 0 }).eq('id', campaign.id);
 }
+async function previewCampaign(db: SupabaseClient, userId: string, params: Record<string, unknown>) {
+  const pipelineId = String(params.pipelineId || ''), stageId = String(params.stageId || ''), templateName = String(params.templateName || ''), language = String(params.language || 'pt_BR');
+  if (!pipelineId || !templateName) throw new Error('Selecione o funil e o template para conferir a campanha.');
+  const { data: config, error: configError } = await db.from('whatsapp_config').select('waba_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
+  if (configError || !config || config.status !== 'connected' || !config.waba_id || !config.access_token_encrypted) throw new Error('Conecte o WhatsApp Business e informe o WABA ID.');
+  const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(config.waba_id)}/message_templates?limit=100&fields=name,status,language,category,components`, { headers: { Authorization: `Bearer ${decryptWhatsAppAccessToken(config.access_token_encrypted)}` }, signal: AbortSignal.timeout(15000) });
+  const body: any = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body?.error?.message || 'Nao foi possivel consultar o template na Meta.');
+  const template = (body.data || []).find((item: any) => item.name === templateName && item.language === language && item.status === 'APPROVED');
+  if (!template) throw new Error('O template aprovado nao foi encontrado na Meta. Atualize os templates e tente novamente.');
+  let query = db.from('clinic_experts_opportunities').select('id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
+  if (stageId) query = query.eq('stage_id', stageId);
+  const { data: opportunities, error } = await query; if (error) throw error;
+  const phones = new Set<string>(); let eligible = 0; let skippedInvalid = 0; let skippedDuplicate = 0; let sample: Opportunity | null = null;
+  for (const item of (opportunities || []) as Opportunity[]) { const phone = normalizePhone(item.patient_phone); if (phone.length < 12) { skippedInvalid += 1; continue; } if (phones.has(phone)) { skippedDuplicate += 1; continue; } phones.add(phone); eligible += 1; sample ||= item; }
+  const category = String(template.category || '').toUpperCase(); const unitPrice = brazilRates[category] || 0; const allBrazil = [...phones].every(phone => phone.startsWith('55'));
+  return { template: { name: template.name, language: template.language, category, body: (template.components || []).find((item: any) => item.type === 'BODY')?.text || '' }, recipients: { totalCards: (opportunities || []).length, eligible, skippedInvalid, skippedDuplicate }, sample, pricing: { currency: 'BRL', unitPrice, total: unitPrice * eligible, estimated: Boolean(unitPrice && allBrazil), note: unitPrice ? 'Estimativa maxima para mensagens entregues a numeros com DDI Brasil; descontos por volume, creditos e isencoes nao estao incluidos.' : 'A Meta nao informou uma tarifa estimavel para esta categoria ou existem destinatarios fora do Brasil.' } };
+}
 export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
   try {
     const { userId, db } = await auth(req);
     if (req.method === 'GET') {
+      if (String((req as any).query?.action || '') === 'preview') return res.status(200).json(await previewCampaign(db, userId, (req as any).query || {}));
       const campaignId = String((req as any).query?.campaignId || '');
       if (campaignId) {
         const { data: campaign, error: campaignError } = await db.from('whatsapp_bulk_campaigns').select('*').eq('id', campaignId).eq('user_id', userId).single(); if (campaignError) throw campaignError;
