@@ -271,6 +271,22 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       setIsSaving(false);
   };
 
+  const handleDeleteAccount = async (account: LocalAccount) => {
+      const isReceivingAccount = paymentMethods.some(method => method.defaultAccountId === account.id);
+      const hasTransactions = transactions.some(transaction => transaction.accountId === account.id);
+
+      if (isReceivingAccount || hasTransactions) {
+          return toast.error('Esta conta possui recebimentos ou lançamentos vinculados e não pode ser excluída.');
+      }
+      if (!window.confirm(`Excluir a conta "${account.name}"?`)) return;
+
+      const { error } = await supabase.from('financial_accounts').delete().eq('id', account.id);
+      if (error) return toast.error('Erro ao excluir conta: ' + error.message);
+
+      setAccountsList(items => items.filter(item => item.id !== account.id));
+      toast.success('Conta bancária excluída.');
+  };
+
   // States for Charts Interaction
   const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(null);
   const [activeProcedureIndex, setActiveProcedureIndex] = useState<number | null>(null);
@@ -2107,6 +2123,32 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 </button>
                 </div>))}</div></div>)}</div>))}</div></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#8b5cf6'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#8b5cf6' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
+        <section className="glass-panel rounded-2xl border border-border bg-surface p-6">
+          <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-bold text-text"><Building2 className="h-4 w-4 text-blue-500" /> Contas bancárias para recebimento</h3>
+              <p className="mt-1 text-xs text-slate-400">Cadastre as contas que poderão receber Pix, cartões e demais entradas.</p>
+            </div>
+            <button onClick={() => setIsAccountModalOpen(true)} className="btn btn-secondary flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold"><Plus className="h-3.5 w-3.5" /> Nova conta bancária</button>
+          </div>
+          {accountsList.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-panel px-4 py-5 text-center text-xs text-slate-400">Nenhuma conta bancária cadastrada. Crie uma conta para vinculá-la aos recebimentos.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {accountsList.map(account => {
+                const receivingMethods = paymentMethods.filter(method => method.defaultAccountId === account.id);
+                return <div key={account.id} className="rounded-xl border border-border bg-panel p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0"><p className="truncate text-sm font-bold text-text">{account.name}</p><p className="mt-0.5 truncate text-xs text-slate-400">{account.bank}</p></div>
+                    <button onClick={() => handleDeleteAccount(account)} className="rounded-md p-1 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400" title="Excluir conta"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><span>Saldo inicial</span><span className="text-text">{Number(account.initialBalance || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                  <p className="mt-2 text-[11px] text-slate-400">{receivingMethods.length ? `${receivingMethods.length} forma${receivingMethods.length === 1 ? '' : 's'} de pagamento vinculada${receivingMethods.length === 1 ? '' : 's'}` : 'Sem forma de pagamento vinculada'}</p>
+                </div>;
+              })}
+            </div>
+          )}
+        </section>
         <section className="glass-panel rounded-2xl border border-border bg-surface p-6">
           <div className="mb-6 flex items-center justify-between gap-3">
             <div>
