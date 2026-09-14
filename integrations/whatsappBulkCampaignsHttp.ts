@@ -49,10 +49,38 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
   await db.from('whatsapp_bulk_campaigns').update({ status: pending ? 'sending' : 'completed', sent_count: totalSent || 0, failed_count: totalFailed || 0, finished_at: pending ? null : new Date().toISOString() }).eq('id', campaignId);
   return { sent, failed, pending: pending || 0, completed: !pending };
 }
+async function registerSkippedRecipients(db: SupabaseClient, campaign: any) {
+  let query = db.from('clinic_experts_opportunities').select('id,patient_phone').eq('user_id', campaign.user_id).eq('pipeline_id', campaign.pipeline_id);
+  if (campaign.stage_id) query = query.eq('stage_id', campaign.stage_id);
+  const { data: opportunities, error } = await query; if (error) throw error;
+  const { data: existing, error: existingError } = await db.from('whatsapp_bulk_campaign_recipients').select('opportunity_id,phone').eq('campaign_id', campaign.id);
+  if (existingError) throw existingError;
+  const existingIds = new Set((existing || []).map(item => item.opportunity_id)); const usedPhones = new Set((existing || []).map(item => item.phone).filter(Boolean));
+  const skipped = (opportunities || []).filter(item => !existingIds.has(item.id)).map(item => {
+    const phone = normalizePhone(item.patient_phone);
+    const duplicate = phone.length >= 12 && usedPhones.has(phone);
+    if (phone.length >= 12) usedPhones.add(phone);
+    return { campaign_id: campaign.id, opportunity_id: item.id, phone, status: 'skipped', error_message: duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : 'Telefone ausente ou invalido.' };
+  });
+  if (skipped.length) { const { error: insertError } = await db.from('whatsapp_bulk_campaign_recipients').insert(skipped); if (insertError) throw insertError; }
+  const { count } = await db.from('whatsapp_bulk_campaign_recipients').select('id', { count: 'exact', head: true }).eq('campaign_id', campaign.id);
+  await db.from('whatsapp_bulk_campaigns').update({ total_recipients: count || 0 }).eq('id', campaign.id);
+}
 export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
   try {
     const { userId, db } = await auth(req);
-    if (req.method === 'GET') { const { data, error } = await db.from('whatsapp_bulk_campaigns').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20); if (error) throw error; return res.status(200).json({ campaigns: data || [] }); }
+    if (req.method === 'GET') {
+      const campaignId = String((req as any).query?.campaignId || '');
+      if (campaignId) {
+        const { data: campaign, error: campaignError } = await db.from('whatsapp_bulk_campaigns').select('*').eq('id', campaignId).eq('user_id', userId).single(); if (campaignError) throw campaignError;
+        await registerSkippedRecipients(db, campaign);
+        const { data: recipients, error: recipientError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,phone,status,meta_message_id,error_message,created_at,sent_at').eq('campaign_id', campaign.id).order('created_at'); if (recipientError) throw recipientError;
+        const ids = (recipients || []).map(item => item.opportunity_id); const { data: opportunities, error: opportunitiesError } = ids.length ? await db.from('clinic_experts_opportunities').select('id,patient_name,title').in('id', ids) : { data: [], error: null }; if (opportunitiesError) throw opportunitiesError;
+        const names = new Map((opportunities || []).map(item => [item.id, item]));
+        return res.status(200).json({ campaign, recipients: (recipients || []).map(item => ({ ...item, patient_name: names.get(item.opportunity_id)?.patient_name || 'Paciente sem nome', opportunity_title: names.get(item.opportunity_id)?.title || 'Oportunidade' })) });
+      }
+      const { data, error } = await db.from('whatsapp_bulk_campaigns').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20); if (error) throw error; return res.status(200).json({ campaigns: data || [] });
+    }
     if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo nao permitido.' });
     if (req.body?.action === 'process') return res.status(200).json(await sendBatch(db, userId, String(req.body.campaignId || '')));
     const { name, templateName, language = 'pt_BR', variableMapping = '', pipelineId, stageId } = req.body || {};
@@ -72,12 +100,12 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     let query = db.from('clinic_experts_opportunities').select('id,patient_phone').eq('user_id', userId).eq('pipeline_id', pipelineId);
     if (stageId) query = query.eq('stage_id', stageId);
     const { data: opportunities, error } = await query; if (error) throw error;
-    const uniquePhones = new Set<string>();
-    const recipients = (opportunities || []).map(item => ({ opportunity_id: item.id, phone: normalizePhone(item.patient_phone) })).filter(item => item.phone.length >= 12 && !uniquePhones.has(item.phone) && Boolean(uniquePhones.add(item.phone)));
-    if (!recipients.length) return res.status(400).json({ error: 'Nenhum contato com telefone valido foi encontrado neste filtro.' });
+    const usedPhones = new Set<string>();
+    const recipients = (opportunities || []).map(item => { const phone = normalizePhone(item.patient_phone); const duplicate = phone.length >= 12 && usedPhones.has(phone); if (phone.length >= 12) usedPhones.add(phone); return { opportunity_id: item.id, phone, status: phone.length < 12 || duplicate ? 'skipped' : 'pending', error_message: duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : phone.length < 12 ? 'Telefone ausente ou invalido.' : null }; });
+    if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
     const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
     if (createError || !campaign) throw createError || new Error('Falha ao criar campanha.');
     const { error: recipientsError } = await db.from('whatsapp_bulk_campaign_recipients').insert(recipients.map(item => ({ ...item, campaign_id: campaign.id }))); if (recipientsError) throw recipientsError;
-    return res.status(201).json({ campaignId: campaign.id, totalRecipients: recipients.length });
+    return res.status(201).json({ campaignId: campaign.id, totalRecipients: recipients.filter(item => item.status === 'pending').length });
   } catch (error) { const message = error instanceof Error ? error.message : 'Falha na campanha.'; return res.status(/Sessao/i.test(message) ? 401 : 400).json({ error: message }); }
 }
