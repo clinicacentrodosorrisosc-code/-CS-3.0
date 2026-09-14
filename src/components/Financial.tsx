@@ -11,7 +11,7 @@ import {
   Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit, 
   Wallet, ShieldCheck, TrendingUp,
   Building2, ChevronDown, ChevronUp, Trash2, Banknote, Users, Factory, CreditCard, 
-  Percent, List, Plus, Minus, Receipt, Upload, X, Download, Check
+  List, Plus, Minus, Receipt, Upload, X, Download, Check
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import * as XLSX from 'xlsx';
@@ -70,13 +70,6 @@ interface PaymentMethod {
     defaultAccountId?: string; 
 }
 
-interface CardFeeConfig {
-    brand: string;
-    debit: number;
-    credit1x: number;
-    installments: Record<number, number>;
-}
-
 interface LocalAccount extends Account {
     initialBalance: number;
 }
@@ -88,10 +81,7 @@ interface LocalTransaction extends Transaction {
     reconciliationStatus?: 'verified' | 'error' | 'pending';
     reconciliationNote?: string;
     invoiceEmitted?: boolean;
-    appliedFeeRate?: number;
-    explicitFeeAmount?: number;
     observation?: string;
-    cardBrand?: string;
     accountId?: string;
     installments?: number;
     isPartial?: boolean;
@@ -167,8 +157,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [salesTeams, setSalesTeams] = useState<SalesTeam[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [monthlyRevenueGoal, setMonthlyRevenueGoal] = useState<number>(0);
-
-  const [cardFees, setCardFees] = useState<CardFeeConfig[]>([]);
 
   // Settings UI States
   const [newIncomeCategory, setNewIncomeCategory] = useState('');
@@ -264,7 +252,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const handleSaveAccount = async () => {
       if (!newAccount.name || !newAccount.bank) return toast.error('Preencha nome e banco.');
       setIsSaving(true);
-      const { error } = await supabase.from('accounts').insert({
+      const { error } = await supabase.from('financial_accounts').insert({
           id: 'acc_' + safeGenerateId(),
           name: newAccount.name,
           bank: newAccount.bank,
@@ -440,7 +428,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     id: '', description: '', amount: '', category: '', procedure: '', accountId: '',
     date: today, status: 'Paid' as 'Paid' | 'Pending', paymentMethod: 'Dinheiro', professional: '', installments: 1, observation: '',
     isPartial: false,
-    cardBrand: '',
     settlementDate: '',
     supplier: '',
     salesTeam: '',
@@ -636,9 +623,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   installments: t.installments, accountId: t.account_id, reconciliationStatus: t.reconciliation_status,
                   invoiceEmitted: t.invoice_emitted, observation: t.observation, procedure: t.procedure,
                   isPartial: t.is_partial,
-                  appliedFeeRate: t.applied_fee_rate,
-                  explicitFeeAmount: t.explicit_fee_amount,
-                  cardBrand: t.card_brand,
                   externalId: t.external_id, 
                   source: t.source,
                   settlementDate: t.settlement_date,
@@ -651,7 +635,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           const { data: goalData } = await supabase.from('dashboard_configs').select('revenue_goal').eq('month_key', currentKey).maybeSingle();
           if (goalData) setMonthlyRevenueGoal(Number(goalData.revenue_goal));
 
-          const { data: accData } = await supabase.from('accounts').select('*');
+          const { data: accData } = await supabase.from('financial_accounts').select('*');
           if (accData) setAccountsList(accData.map(a => ({ ...a, initialBalance: a.initial_balance })));
           const { data: incCats } = await supabase.from('income_categories').select('*');
           if (incCats) setIncomeCategories(incCats.map(c => ({ ...c, subcategories: Array.isArray(c.subcategories) ? c.subcategories : [] })));
@@ -665,8 +649,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           if (teams) setSalesTeams(teams);
           const { data: payMethods } = await supabase.from('payment_methods').select('*');
           if (payMethods) setPaymentMethods(payMethods.map(p => ({ id: p.id, name: p.name, daysToReceive: p.days_to_receive, defaultAccountId: p.default_account_id })));
-          const { data: fees } = await supabase.from('card_fees').select('*');
-          if (fees && fees.length > 0) setCardFees(fees);
       } catch (error) { console.error(error); } finally { setLoading(false); }
   };
 
@@ -676,8 +658,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   useRealtimeSubscription([
     'transactions', 
-    'accounts', 
-    'card_fees', 
+    'financial_accounts',
     'income_categories', 
     'expense_categories', 
     'professionals', 
@@ -708,11 +689,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           if (modalType === 'income') {
               if (!formData.professional) return toast.error('Selecione o profissional responsável.');
               
-              const method = (formData.paymentMethod || '').toLowerCase();
-              const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
-              if (isCard && !formData.cardBrand) {
-                  return toast.error('Selecione a bandeira do cartão para cálculo de taxas.');
-              }
           }
 
           setIsSaving(true);
@@ -762,7 +738,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   installments: formData.installments, 
                   observation: formData.observation,
                   is_partial: formData.isPartial,
-                  card_brand: formData.cardBrand,
                   settlement_date: currentSettlementDate || null,
                   supplier: formData.supplier,
                   sales_team: isRestrictedProcedure ? '' : formData.salesTeam
@@ -973,7 +948,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             accountId: editData.accountId || '', date: editData.date, status: editData.status as any,
             paymentMethod: editData.paymentMethod || '', professional: editData.professional || '',
             installments: editData.installments || 1, observation: editData.observation || '',
-            isPartial: !!editData.isPartial, cardBrand: editData.cardBrand || '',
+            isPartial: !!editData.isPartial,
             settlementDate: editData.settlementDate || '',
             supplier: editData.supplier || '',
             salesTeam: editData.salesTeam || '',
@@ -985,7 +960,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         setFormData({
             id: '', description: '', amount: '', category: defaultCat, procedure: '',
             accountId: defaultAcc, date: today, status: type === 'expense' ? 'Pending' : 'Paid', paymentMethod: 'Dinheiro',
-            professional: '', installments: 1, observation: '', isPartial: false, cardBrand: '',
+            professional: '', installments: 1, observation: '', isPartial: false,
             settlementDate: '',
             supplier: '',
             salesTeam: '',
@@ -1020,11 +995,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           setTransactions(prev => prev.map(t => t.id === selectedTxForObs.id ? { ...t, observation: tempObs } : t));
           setIsObsModalOpen(false);
       }
-  };
-
-  const handleUpdateFee = async (txId: string, newFee: number) => {
-      const { error } = await supabase.from('transactions').update({ explicit_fee_amount: newFee }).eq('id', txId);
-      if (!error) setTransactions(prev => prev.map(t => t.id === txId ? { ...t, explicitFeeAmount: newFee } : t));
   };
 
   const toggleNF = async (tx: LocalTransaction) => {
@@ -1068,27 +1038,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     }));
   };
 
-  const getEffectiveFee = (tx: LocalTransaction) => {
-      if (tx.explicitFeeAmount !== undefined && tx.explicitFeeAmount !== null && tx.explicitFeeAmount !== 0) return tx.explicitFeeAmount;
-      const method = (tx.paymentMethod || '').toLowerCase();
-      
-      if (method === 'financiamento dentalcred') {
-          return (tx.amount * 6.59) / 100;
-      }
-      
-      const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
-      if (isCard && cardFees.length > 0) {
-          const feeConfig = cardFees.find(f => f && f.brand === tx.cardBrand) || cardFees[0];
-          let rate = 0;
-          if (feeConfig) {
-              if (method.includes('débito')) rate = feeConfig.debit || 0;
-              else if (tx.installments && tx.installments > 1) rate = (feeConfig.installments && feeConfig.installments[tx.installments]) || 0;
-              else rate = feeConfig.credit1x || 0;
-          }
-          return (tx.amount * rate) / 100;
-      }
-      return 0;
-  };
+  // Mantido em zero apenas para compatibilidade com lançamentos antigos durante a transição.
+  // Nenhuma taxa bancária é calculada ou aplicada pelo financeiro.
+  const getEffectiveFee = () => 0;
+  const handleUpdateFee = async () => {};
 
   const handleExport = (data: LocalTransaction[]) => {
     const headers = ['Data', 'Descrição', 'Categoria', 'Procedimento', 'Profissional', 'Forma Pagto', 'Valor', 'Status', 'Obs'];
@@ -1372,7 +1325,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   };
 
   const renderTransactionsTable = () => {
-    const showFees = userEmail !== 'recepcao.centrodosorriso@gmail.com';
+    const showFees = false;
     const isMyProfile = userEmail === 'clinica.centrodosorrisosc@gmail.com' || userRole === 'admin';
     const filtered = transactions.filter(t => {
         if (t.type !== 'income') return false;
@@ -1399,12 +1352,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     }).sort((a, b) => b.date.localeCompare(a.date));
     const totalRevenue = filtered.reduce((acc, curr) => acc + curr.amount, 0);
     const selectedIncomesSum = filtered.filter(t => selectedIncomes.includes(t.id)).reduce((acc, curr) => acc + curr.amount, 0);
-    const selectedIncomesNetSum = filtered.filter(t => selectedIncomes.includes(t.id)).reduce((acc, curr) => acc + (curr.amount - getEffectiveFee(curr)), 0);
+    const selectedIncomesNetSum = filtered.filter(t => selectedIncomes.includes(t.id)).reduce((acc, curr) => acc + curr.amount, 0);
     const totalNF = filtered.filter(t => t.invoiceEmitted).reduce((acc, curr) => acc + curr.amount, 0);
     const errorCount = filtered.filter(t => t.reconciliationStatus === 'error').length;
     return (
         <div className="flex flex-col gap-4 animate-in fade-in h-full">
-            {isMyProfile && (
+            <>
                 <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
                     <div className="flex items-center gap-2">
                         <button
@@ -1432,7 +1385,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     )}
                 </div>
-            )}
+                    {transactionsViewMode === 'realizado' && <div className="hidden" />}
+            </>
 
             {isMyProfile && transactionsViewMode === 'orcamento' ? (
                 renderBudgetPlanner()
@@ -2152,7 +2106,23 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 </button>
                 </div>))}</div></div>)}</div>))}</div></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#8b5cf6'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#8b5cf6' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento & Taxas</h3><div className="flex gap-2 mb-4"><input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova Forma de Pagamento..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newPaymentMethod) { await supabase.from('payment_methods').insert({id: 'pm_'+Date.now(), name: newPaymentMethod, days_to_receive: 0, default_account_id: accountsList[0]?.id || ''}); fetchAllData(); setNewPaymentMethod(''); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{paymentMethods.map(pm => (<div key={pm.id} className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"><div className="flex justify-between items-center"><span className="text-sm font-black text-text uppercase">{pm.name}</span><button onClick={async () => { await supabase.from('payment_methods').delete().eq('id', pm.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div><div className="flex flex-col gap-2"><div className="flex justify-between items-center text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO:</span><input type="number" value={pm.daysToReceive} onChange={async (e) => { await supabase.from('payment_methods').update({days_to_receive: parseInt(e.target.value)}).eq('id', pm.id); fetchAllData(); }} className="w-12 bg-panel border border-border rounded text-center text-text" /></div><div className="flex flex-col gap-1"><span className="text-[10px] font-bold text-slate-500 uppercase">CONTA PADRÃO:</span><select value={pm.defaultAccountId} onChange={async (e) => { await supabase.from('payment_methods').update({default_account_id: e.target.value}).eq('id', pm.id); fetchAllData(); }} className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}</select></div></div></div>))}</div><div className="border-t border-border pt-6"><h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2"><Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras</h4><div className="overflow-x-auto custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase"><tr><th className="p-3">Bandeira</th><th className="p-3">Débito</th><th className="p-3">Crédito 1x</th>{[2,3,4,5,6,7,8,9,10,11,12].map(n => <th key={n} className="p-3">{n}x</th>)}</tr></thead><tbody className="text-[11px] text-slate-300 divide-y divide-white/5">{cardFees.map(fee => (<tr key={fee.brand} className="hover:bg-panel"><td className="p-3 font-bold text-text whitespace-nowrap">{fee.brand}</td><td className="p-3"><input type="number" step="0.01" value={fee.debit} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, debit: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td><td className="p-3"><input type="number" step="0.01" value={fee.credit1x} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, credit1x: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>{[2,3,4,5,6,7,8,9,10,11,12].map(n => (<td key={n} className="p-3"><input type="number" step="0.01" value={fee.installments[n] || 0} onChange={async (e) => { const next = cardFees.map(f => { if (f.brand === fee.brand) { const newInst = { ...f.installments, [n]: parseFloat(e.target.value) }; return { ...f, installments: newInst }; } return f; }); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>))}</tr>))}</tbody></table></div></div></div></div>
+        <section className="glass-panel rounded-2xl border border-border bg-surface p-6">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-bold text-text"><CreditCard className="h-4 w-4 text-purple-500" /> Formas de pagamento</h3>
+              <p className="mt-1 text-xs text-slate-400">Defina o prazo e a conta bancária que receberá cada forma de pagamento.</p>
+            </div>
+            <button onClick={() => setIsAccountModalOpen(true)} className="btn btn-secondary flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold"><Building2 className="h-3.5 w-3.5" /> Nova conta</button>
+          </div>
+          <div className="mb-5 flex gap-2">
+            <input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova forma de pagamento..." className="flex-1 rounded-lg border border-border bg-panel px-4 py-2 text-sm text-text" />
+            <button onClick={async () => { if (!newPaymentMethod.trim()) return; const { error } = await supabase.from('payment_methods').insert({ id: 'pm_' + Date.now(), name: newPaymentMethod.trim(), days_to_receive: 0, default_account_id: accountsList[0]?.id || null }); if (error) return toast.error('Erro ao criar forma de pagamento: ' + error.message); await fetchAllData(); setNewPaymentMethod(''); }} className="rounded-lg bg-purple-600 px-6 py-2 text-xs font-bold uppercase text-white">Adicionar</button>
+          </div>
+          {accountsList.length === 0 && <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">Cadastre uma conta bancária antes de definir a conta de recebimento.</div>}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {paymentMethods.map(pm => <div key={pm.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-panel p-4"><div className="flex items-center justify-between"><span className="text-sm font-black uppercase text-text">{pm.name}</span><button onClick={async () => { const { error } = await supabase.from('payment_methods').delete().eq('id', pm.id); if (error) return toast.error('Erro ao excluir forma de pagamento: ' + error.message); await fetchAllData(); }} className="text-slate-600 transition-colors hover:text-red-400" title="Excluir forma de pagamento"><Trash2 className="h-3.5 w-3.5" /></button></div><label className="flex items-center justify-between gap-3 text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO</span><input type="number" min="0" value={pm.daysToReceive} onChange={async e => { const value = Math.max(0, parseInt(e.target.value, 10) || 0); const { error } = await supabase.from('payment_methods').update({ days_to_receive: value }).eq('id', pm.id); if (error) return toast.error('Erro ao atualizar prazo: ' + error.message); setPaymentMethods(items => items.map(item => item.id === pm.id ? { ...item, daysToReceive: value } : item)); }} className="w-14 rounded border border-border bg-surface px-1 py-1 text-center text-text" /></label><label className="flex flex-col gap-1 text-[10px] font-bold uppercase text-slate-500"><span>Conta de recebimento</span><select value={pm.defaultAccountId || ''} onChange={async e => { const value = e.target.value || null; const { error } = await supabase.from('payment_methods').update({ default_account_id: value }).eq('id', pm.id); if (error) return toast.error('Erro ao definir conta de recebimento: ' + error.message); setPaymentMethods(items => items.map(item => item.id === pm.id ? { ...item, defaultAccountId: value || undefined } : item)); }} className="w-full rounded border border-border bg-surface px-2 py-2 text-xs normal-case text-text"><option value="">Selecione uma conta...</option>{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}</select></label></div>)}
+          </div>
+        </section>
     </div>
   );
 
@@ -2722,15 +2692,6 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                             <button type="button" onClick={() => setFormData({...formData, isPartial: true})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Parcial</button>
                                         </div>
                                     </div>
-                                    {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito') || (formData.paymentMethod || '').toLowerCase().includes('débito'))) && (
-                                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANDEIRA DO CARTÃO</label>
-                                            <select value={formData.cardBrand} onChange={e => setFormData({...formData, cardBrand: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold">
-                                                <option value="">Selecione...</option>
-                                                {cardFees.map(f => <option key={f.brand} value={f.brand}>{f.brand}</option>)}
-                                            </select>
-                                        </div>
-                                    )}
                                 </div>
                                 {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito'))) && !(formData.paymentMethod || '').toLowerCase().includes('débito') && (
                                     <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
@@ -2785,4 +2746,4 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   );
 };
 
-export default Financial;
+                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right pr-8">Valor</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo inicial da conta</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => (b.settlementDate || b.date).localeCompare(a.settlementDate || a.date)).map(tx => <tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{(tx.settlementDate || tx.date).split('-').reverse().join('/')}</td><td className="p-4"><span className="font-bold text-text">{tx.description}</span><span className="ml-2 text-[10px] text-slate-500 uppercase">{tx.category} • {tx.paymentMethod}</span></td><td className={`p-4 text-right font-black pr-8 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>{tx.type === 'income' ? '+' : '-'} R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>)}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && <div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>}</div>

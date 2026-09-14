@@ -19,9 +19,6 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     invoice_emitted BOOLEAN DEFAULT false,
     observation TEXT,
     is_partial BOOLEAN DEFAULT false,
-    applied_fee_rate DECIMAL(5,2),
-    explicit_fee_amount DECIMAL(12,2),
-    card_brand TEXT,
     external_id TEXT UNIQUE,
     source TEXT,
     sales_team TEXT,
@@ -33,6 +30,22 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Acesso total autenticado" ON public.transactions;
 CREATE POLICY "Acesso total autenticado" ON public.transactions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- ==========================================
+-- 1.0 CONTAS BANCÁRIAS DO FINANCEIRO
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.financial_accounts (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    bank TEXT NOT NULL,
+    initial_balance DECIMAL(12,2) NOT NULL DEFAULT 0,
+    type TEXT NOT NULL DEFAULT 'checking',
+    color TEXT NOT NULL DEFAULT '#3b82f6',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+ALTER TABLE public.financial_accounts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Acesso total financial_accounts" ON public.financial_accounts;
+CREATE POLICY "Acesso total financial_accounts" ON public.financial_accounts FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ==========================================
 -- 1.1 TABELA DE TIMES DE VENDA
