@@ -26,6 +26,17 @@ function components(mapping: string, item: Opportunity) {
   const parameters = String(mapping || '').split(/\r?\n/).map(line => line.match(/^\s*\{\{(\d+)\}\}\s*=\s*([a-z_]+)\s*$/i)).filter((match): match is RegExpMatchArray => Boolean(match)).sort((a, b) => Number(a[1]) - Number(b[1])).map(match => ({ type: 'text', text: value(match[2], item) }));
   return parameters.length ? [{ type: 'body', parameters }] : undefined;
 }
+async function resolvePhones(db: SupabaseClient, userId: string, raw: Array<Opportunity & { patient_external_id?: string | null }>, allowHistory: boolean) {
+  const patientIds = [...new Set(raw.map(item => item.patient_external_id).filter(Boolean))] as string[];
+  const [relatedResult, historyResult] = await Promise.all([
+    patientIds.length ? db.from('clinic_experts_opportunities').select('patient_external_id,patient_phone').eq('user_id', userId).in('patient_external_id', patientIds).not('patient_phone', 'is', null) : Promise.resolve({ data: [], error: null }),
+    raw.length ? db.from('whatsapp_bulk_campaign_recipients').select('opportunity_id,phone,created_at').in('opportunity_id', raw.map(item => item.id)).neq('phone', '').order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (relatedResult.error) throw relatedResult.error; if (historyResult.error) throw historyResult.error;
+  const related = new Map<string, string>(); for (const item of relatedResult.data || []) { const phone = normalizePhone(item.patient_phone); if (phone.length >= 12 && !related.has(item.patient_external_id)) related.set(item.patient_external_id, phone); }
+  const history = new Map<string, string>(); for (const item of historyResult.data || []) if (item.phone && !history.has(item.opportunity_id)) history.set(item.opportunity_id, item.phone);
+  return raw.map(item => { const current = normalizePhone(item.patient_phone); if (current.length >= 12) return { ...item, phone: current, phoneSource: 'card', status: 'ready', reason: '' }; const relatedPhone = item.patient_external_id ? related.get(item.patient_external_id) : ''; if (relatedPhone) return { ...item, phone: relatedPhone, phoneSource: 'patient_record', status: 'ready', reason: 'Telefone localizado em outro card do mesmo paciente.' }; const historical = history.get(item.id); if (historical) return { ...item, phone: historical, phoneSource: 'history', status: allowHistory ? 'ready' : 'needs_confirmation', reason: allowHistory ? 'Telefone historico confirmado para esta campanha.' : 'Telefone localizado no historico; confirme para incluir no envio.' }; return { ...item, phone: '', phoneSource: 'none', status: 'skipped', reason: 'Telefone ausente ou invalido.' }; });
+}
 async function sendBatch(db: SupabaseClient, userId: string, campaignId: string) {
   const { data: campaign, error: campaignError } = await db.from('whatsapp_bulk_campaigns').select('template_name,template_language,variable_mapping').eq('id', campaignId).eq('user_id', userId).single();
   if (campaignError) throw campaignError;
@@ -76,13 +87,14 @@ async function previewCampaign(db: SupabaseClient, userId: string, params: Recor
   const body: any = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body?.error?.message || 'Nao foi possivel consultar o template na Meta.');
   const template = (body.data || []).find((item: any) => item.name === templateName && item.language === language && item.status === 'APPROVED');
   if (!template) throw new Error('O template aprovado nao foi encontrado na Meta. Atualize os templates e tente novamente.');
-  let query = db.from('clinic_experts_opportunities').select('id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
+  const allowHistory = String(params.useHistoricalPhones || '') === 'true';
+  let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
   if (stageId) query = query.eq('stage_id', stageId);
   const { data: opportunities, error } = await query; if (error) throw error;
-  const phones = new Set<string>(); let eligible = 0; let skippedInvalid = 0; let skippedDuplicate = 0; let sample: Opportunity | null = null;
-  const contacts = ((opportunities || []) as Opportunity[]).map(item => { const phone = normalizePhone(item.patient_phone); let status = 'ready'; let reason = ''; if (phone.length < 12) { status = 'skipped'; reason = 'Telefone ausente ou invalido.'; skippedInvalid += 1; } else if (phones.has(phone)) { status = 'skipped'; reason = 'Telefone duplicado nesta campanha.'; skippedDuplicate += 1; } else { phones.add(phone); eligible += 1; sample ||= item; } return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone, status, reason }; });
+  const resolved = await resolvePhones(db, userId, (opportunities || []) as any, allowHistory); const phones = new Set<string>(); let eligible = 0; let skippedInvalid = 0; let skippedDuplicate = 0; let awaitingConfirmation = 0; let sample: Opportunity | null = null;
+  const contacts = resolved.map(item => { if (item.status === 'needs_confirmation') { awaitingConfirmation += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: item.status, reason: item.reason, phoneSource: item.phoneSource }; } if (item.status !== 'ready') { skippedInvalid += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: item.status, reason: item.reason, phoneSource: item.phoneSource }; } if (phones.has(item.phone)) { skippedDuplicate += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: 'skipped', reason: 'Telefone duplicado nesta campanha.', phoneSource: item.phoneSource }; } phones.add(item.phone); eligible += 1; sample ||= item; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: 'ready', reason: item.reason, phoneSource: item.phoneSource }; });
   const category = String(template.category || '').toUpperCase(); const unitPrice = brazilRates[category] || 0; const allBrazil = [...phones].every(phone => phone.startsWith('55'));
-  return { template: { name: template.name, language: template.language, category, body: (template.components || []).find((item: any) => item.type === 'BODY')?.text || '' }, recipients: { totalCards: (opportunities || []).length, eligible, skippedInvalid, skippedDuplicate, contacts }, sample, pricing: { currency: 'BRL', unitPrice, total: unitPrice * eligible, estimated: Boolean(unitPrice && allBrazil), note: unitPrice ? 'Estimativa maxima para mensagens entregues a numeros com DDI Brasil; descontos por volume, creditos e isencoes nao estao incluidos.' : 'A Meta nao informou uma tarifa estimavel para esta categoria ou existem destinatarios fora do Brasil.' } };
+  return { template: { name: template.name, language: template.language, category, body: (template.components || []).find((item: any) => item.type === 'BODY')?.text || '' }, recipients: { totalCards: (opportunities || []).length, eligible, skippedInvalid, skippedDuplicate, awaitingConfirmation, contacts }, sample, pricing: { currency: 'BRL', unitPrice, total: unitPrice * eligible, estimated: Boolean(unitPrice && allBrazil), note: unitPrice ? 'Estimativa maxima para mensagens entregues a numeros com DDI Brasil; descontos por volume, creditos e isencoes nao estao incluidos.' : 'A Meta nao informou uma tarifa estimavel para esta categoria ou existem destinatarios fora do Brasil.' } };
 }
 export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
   try {
@@ -102,7 +114,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo nao permitido.' });
     if (req.body?.action === 'process') return res.status(200).json(await sendBatch(db, userId, String(req.body.campaignId || '')));
-    const { name, templateName, language = 'pt_BR', variableMapping = '', pipelineId, stageId } = req.body || {};
+    const { name, templateName, language = 'pt_BR', variableMapping = '', pipelineId, stageId, useHistoricalPhones = false } = req.body || {};
     if (!name || !templateName || !pipelineId) return res.status(400).json({ error: 'Nome, template e funil sao obrigatorios.' });
     const { data: config, error: configError } = await db.from('whatsapp_config').select('waba_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
     if (configError || !config || config.status !== 'connected' || !config.waba_id || !config.access_token_encrypted) throw new Error('Conecte o WhatsApp Business e informe o WABA ID antes de criar a campanha.');
@@ -116,11 +128,11 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       templateUrl = typeof templateBody?.paging?.next === 'string' ? templateBody.paging.next : null; pages += 1;
     }
     if (!approved) throw new Error('Escolha um template atualmente aprovado pela Meta.');
-    let query = db.from('clinic_experts_opportunities').select('id,patient_phone').eq('user_id', userId).eq('pipeline_id', pipelineId);
+    let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
     if (stageId) query = query.eq('stage_id', stageId);
     const { data: opportunities, error } = await query; if (error) throw error;
-    const usedPhones = new Set<string>();
-    const recipients = (opportunities || []).map(item => { const phone = normalizePhone(item.patient_phone); const duplicate = phone.length >= 12 && usedPhones.has(phone); if (phone.length >= 12) usedPhones.add(phone); return { opportunity_id: item.id, phone, status: phone.length < 12 || duplicate ? 'skipped' : 'pending', error_message: duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : phone.length < 12 ? 'Telefone ausente ou invalido.' : null }; });
+    const resolved = await resolvePhones(db, userId, (opportunities || []) as any, Boolean(useHistoricalPhones)); const usedPhones = new Set<string>();
+    const recipients = resolved.map(item => { const duplicate = item.status === 'ready' && usedPhones.has(item.phone); if (item.status === 'ready') usedPhones.add(item.phone); return { opportunity_id: item.id, phone: item.phone, status: item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' }; });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
     const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
     if (createError || !campaign) throw createError || new Error('Falha ao criar campanha.');
