@@ -184,7 +184,7 @@ export async function enrichClinicaExpertsOpportunityPhones(
   let matchedPatients = 0;
   let updatedOpportunities = 0;
   let lastPage = safeStartPage;
-  const phoneUpdates: Array<{ id: string; user_id: string; patient_phone: string; synced_at: string }> = [];
+  const phoneUpdates = new Map<string, string>();
 
   for (let offset = 0; offset < pageCount; offset += 1) {
     const page = safeStartPage + offset;
@@ -199,20 +199,12 @@ export async function enrichClinicaExpertsOpportunityPhones(
       if (!phone) continue;
       patientsWithPhone += 1;
       matchedPatients += 1;
-      for (const opportunityId of opportunityIdsByPatient.get(patient.uuid) || []) {
-        phoneUpdates.push({ id: opportunityId, user_id: userId, patient_phone: phone, synced_at: new Date().toISOString() });
-      }
+      phoneUpdates.set(patient.uuid, phone);
     }
 
     const apiLastPage = Math.max(1, Number(response.meta?.last_page || page));
     if (page >= apiLastPage || patients.length === 0) {
-      for (let index = 0; index < phoneUpdates.length; index += 500) {
-        const { error: updateError } = await db
-          .from('clinic_experts_opportunities')
-          .upsert(phoneUpdates.slice(index, index + 500), { onConflict: 'id' });
-        throwIfError(updateError, 'Nao foi possivel atualizar os telefones dos cards');
-      }
-      updatedOpportunities = phoneUpdates.length;
+      updatedOpportunities = await updatePatientPhones(db, userId, phoneUpdates, opportunityIdsByPatient);
       return {
         startPage: safeStartPage,
         processedPages: offset + 1,
@@ -227,13 +219,7 @@ export async function enrichClinicaExpertsOpportunityPhones(
     if (offset + 1 < pageCount) await delay(REQUEST_GAP_MS);
   }
 
-  for (let index = 0; index < phoneUpdates.length; index += 500) {
-    const { error: updateError } = await db
-      .from('clinic_experts_opportunities')
-      .upsert(phoneUpdates.slice(index, index + 500), { onConflict: 'id' });
-    throwIfError(updateError, 'Nao foi possivel atualizar os telefones dos cards');
-  }
-  updatedOpportunities = phoneUpdates.length;
+  updatedOpportunities = await updatePatientPhones(db, userId, phoneUpdates, opportunityIdsByPatient);
 
   return {
     startPage: safeStartPage,
@@ -245,6 +231,30 @@ export async function enrichClinicaExpertsOpportunityPhones(
     updatedOpportunities,
     finished: safeStartPage + pageCount - 1 >= lastPage,
   };
+}
+
+async function updatePatientPhones(
+  db: SupabaseClient,
+  userId: string,
+  phoneUpdates: Map<string, string>,
+  opportunityIdsByPatient: Map<string, string[]>,
+) {
+  const updates = Array.from(phoneUpdates.entries());
+  let updatedOpportunities = 0;
+  for (let index = 0; index < updates.length; index += 20) {
+    const results = await Promise.all(updates.slice(index, index + 20).map(async ([patientId, phone]) => {
+      const { data, error } = await db
+        .from('clinic_experts_opportunities')
+        .update({ patient_phone: phone, synced_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('patient_external_id', patientId)
+        .select('id');
+      throwIfError(error, 'Nao foi possivel atualizar os telefones dos cards');
+      return data?.length || opportunityIdsByPatient.get(patientId)?.length || 0;
+    }));
+    updatedOpportunities += results.reduce((sum, count) => sum + count, 0);
+  }
+  return updatedOpportunities;
 }
 
 function throwIfError(error: { message: string } | null, context: string) {
