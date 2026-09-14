@@ -13,6 +13,7 @@ import {
 import { supabase } from '../supabaseClient';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { CRMAutomations } from './CRMAutomations';
+import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -79,10 +80,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp'>('pipeline');
+  const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp' | 'campaigns'>('pipeline');
 
   useEffect(() => {
-    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline' || requestedSubTab === 'automations') {
+    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline' || requestedSubTab === 'automations' || requestedSubTab === 'campaigns') {
       setActiveView(requestedSubTab);
     }
   }, [requestedSubTab]);
@@ -188,6 +189,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
   if (activeView === 'automations') {
     return <CRMAutomations />;
+  }
+
+  if (activeView === 'campaigns') {
+    return <WhatsAppBulkCampaigns />;
   }
 
   return (
