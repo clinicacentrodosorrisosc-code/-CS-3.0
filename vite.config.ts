@@ -20,9 +20,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Mantém o arquivo de entrada estável para que o HTML e o bundle
-        // publicado pela Vercel não se desencontrem por cache de hash.
-        entryFileNames: 'assets/app.js',
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('three')) {
