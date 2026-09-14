@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
+import { createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
 type ApiRequest = {
@@ -125,7 +125,18 @@ export async function handleClinicaExpertsPhoneEnrichment(req: ApiRequest, res: 
   }
   try {
     const context = await resolveContext(req);
-    const body = req.body && typeof req.body === 'object' ? req.body as { startPage?: unknown; pageCount?: unknown } : {};
+    const body = req.body && typeof req.body === 'object' ? req.body as { startPage?: unknown; pageCount?: unknown; strategy?: unknown; afterId?: unknown; limit?: unknown } : {};
+    if (body.strategy === 'direct') {
+      const result = await enrichClinicaExpertsOpportunityPhonesDirect(
+        context.db,
+        context.userId,
+        apiToken,
+        typeof body.afterId === 'string' ? body.afterId : undefined,
+        Number(body.limit),
+      );
+      res.status(200).json({ data: result });
+      return;
+    }
     const startPage = Number(body.startPage);
     const pageCount = Number(body.pageCount);
     const result = await enrichClinicaExpertsOpportunityPhones(

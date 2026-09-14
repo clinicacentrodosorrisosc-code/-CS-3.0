@@ -46,6 +46,14 @@ export type PhoneEnrichmentResult = {
   finished: boolean;
 };
 
+export type DirectPhoneEnrichmentResult = {
+  processedPatients: number;
+  patientsWithPhone: number;
+  updatedOpportunities: number;
+  nextCursor: string | null;
+  finished: boolean;
+};
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class ClinicaExpertsClient {
@@ -231,6 +239,61 @@ export async function enrichClinicaExpertsOpportunityPhones(
     updatedOpportunities,
     finished: safeStartPage + pageCount - 1 >= lastPage,
   };
+}
+
+/**
+ * Uses the patient UUID from each opportunity. The API's paginated patient list
+ * can omit records that are nevertheless available through /patients/{uuid}.
+ */
+export async function enrichClinicaExpertsOpportunityPhonesDirect(
+  db: SupabaseClient,
+  userId: string,
+  apiToken: string,
+  afterId?: string,
+  requestedLimit = 50,
+): Promise<DirectPhoneEnrichmentResult> {
+  const limit = Math.min(50, Math.max(1, Math.floor(requestedLimit) || 50));
+  let query = db
+    .from('clinic_experts_opportunities')
+    .select('id,patient_external_id')
+    .eq('user_id', userId)
+    .is('patient_phone', null)
+    .not('patient_external_id', 'is', null)
+    .order('id', { ascending: true })
+    .limit(limit);
+  if (afterId) query = query.gt('id', afterId);
+  const { data: opportunities, error } = await query;
+  throwIfError(error, 'Nao foi possivel selecionar os cards sem telefone');
+  const rows = opportunities || [];
+  if (!rows.length) return { processedPatients: 0, patientsWithPhone: 0, updatedOpportunities: 0, nextCursor: null, finished: true };
+
+  const client = new ClinicaExpertsClient(apiToken);
+  let patientsWithPhone = 0;
+  let updatedOpportunities = 0;
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    try {
+      const patient = await client.getPatient(String(row.patient_external_id));
+      const phone = normalizedPatientPhone(patient.phone);
+      if (phone) {
+        const { data: updatedRows, error: updateError } = await db
+          .from('clinic_experts_opportunities')
+          .update({ patient_phone: phone, synced_at: new Date().toISOString() })
+          .eq('user_id', userId)
+          .eq('patient_external_id', row.patient_external_id)
+          .select('id');
+        throwIfError(updateError, 'Nao foi possivel salvar o telefone do paciente');
+        patientsWithPhone += 1;
+        updatedOpportunities += updatedRows?.length || 0;
+      }
+    } catch (requestError) {
+      // A missing or inaccessible patient must remain pending; never infer a phone.
+      console.warn('[CLINICA EXPERTS] phone lookup skipped', row.patient_external_id, requestError instanceof Error ? requestError.message : requestError);
+    }
+    if (index + 1 < rows.length) await delay(REQUEST_GAP_MS);
+  }
+  const nextCursor = rows[rows.length - 1]?.id || null;
+  return { processedPatients: rows.length, patientsWithPhone, updatedOpportunities, nextCursor, finished: rows.length < limit };
 }
 
 async function updatePatientPhones(
