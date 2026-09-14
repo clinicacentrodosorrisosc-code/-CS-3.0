@@ -35,6 +35,17 @@ export type SyncResult = {
   finishedAt: string;
 };
 
+export type PhoneEnrichmentResult = {
+  startPage: number;
+  processedPages: number;
+  lastPage: number;
+  patientsRead: number;
+  patientsWithPhone: number;
+  matchedPatients: number;
+  updatedOpportunities: number;
+  finished: boolean;
+};
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class ClinicaExpertsClient {
@@ -118,10 +129,122 @@ class ClinicaExpertsClient {
     });
   }
 
+  listPatientsPage(page: number) {
+    return this.get<ApiList<ExternalPatient>>('/patients', {
+      sort_column: 'name',
+      sort_direction: 'asc',
+      per_page: PAGE_SIZE,
+      page,
+    });
+  }
+
   async getPatient(patientId: string) {
     const response = await this.get<{ data?: ExternalPatient } | ExternalPatient>(`/patients/${encodeURIComponent(patientId)}`);
     return 'data' in response && response.data ? response.data : response as ExternalPatient;
   }
+}
+
+function normalizedPatientPhone(value?: string | null) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (digits.length === 10 || digits.length === 11) return `55${digits}`;
+  return digits.length >= 12 && digits.length <= 15 ? digits : null;
+}
+
+export async function enrichClinicaExpertsOpportunityPhones(
+  db: SupabaseClient,
+  userId: string,
+  apiToken: string,
+  startPage = 1,
+  requestedPageCount = 70,
+): Promise<PhoneEnrichmentResult> {
+  const safeStartPage = Math.max(1, Math.floor(startPage) || 1);
+  // 70 pages at the documented request gap remains below Vercel's 60-second limit.
+  const pageCount = Math.min(70, Math.max(1, Math.floor(requestedPageCount) || 70));
+  const client = new ClinicaExpertsClient(apiToken);
+  const { data: opportunities, error: opportunitiesError } = await db
+    .from('clinic_experts_opportunities')
+    .select('id, patient_external_id')
+    .eq('user_id', userId)
+    .not('patient_external_id', 'is', null);
+  throwIfError(opportunitiesError, 'Nao foi possivel consultar os cards para atualizar telefones');
+
+  const patientIds = new Set((opportunities || [])
+    .map(row => String(row.patient_external_id || '').trim())
+    .filter(Boolean));
+  const opportunityIdsByPatient = new Map<string, string[]>();
+  for (const opportunity of opportunities || []) {
+    const patientId = String(opportunity.patient_external_id || '').trim();
+    if (!patientId) continue;
+    const ids = opportunityIdsByPatient.get(patientId) || [];
+    ids.push(String(opportunity.id));
+    opportunityIdsByPatient.set(patientId, ids);
+  }
+  let patientsRead = 0;
+  let patientsWithPhone = 0;
+  let matchedPatients = 0;
+  let updatedOpportunities = 0;
+  let lastPage = safeStartPage;
+  const phoneUpdates: Array<{ id: string; user_id: string; patient_phone: string; synced_at: string }> = [];
+
+  for (let offset = 0; offset < pageCount; offset += 1) {
+    const page = safeStartPage + offset;
+    const response = await client.listPatientsPage(page);
+    const patients = Array.isArray(response.data) ? response.data : [];
+    patientsRead += patients.length;
+    lastPage = Math.max(page, Number(response.meta?.last_page || page));
+
+    for (const patient of patients) {
+      if (!patientIds.has(patient.uuid)) continue;
+      const phone = normalizedPatientPhone(patient.phone);
+      if (!phone) continue;
+      patientsWithPhone += 1;
+      matchedPatients += 1;
+      for (const opportunityId of opportunityIdsByPatient.get(patient.uuid) || []) {
+        phoneUpdates.push({ id: opportunityId, user_id: userId, patient_phone: phone, synced_at: new Date().toISOString() });
+      }
+    }
+
+    const apiLastPage = Math.max(1, Number(response.meta?.last_page || page));
+    if (page >= apiLastPage || patients.length === 0) {
+      for (let index = 0; index < phoneUpdates.length; index += 500) {
+        const { error: updateError } = await db
+          .from('clinic_experts_opportunities')
+          .upsert(phoneUpdates.slice(index, index + 500), { onConflict: 'id' });
+        throwIfError(updateError, 'Nao foi possivel atualizar os telefones dos cards');
+      }
+      updatedOpportunities = phoneUpdates.length;
+      return {
+        startPage: safeStartPage,
+        processedPages: offset + 1,
+        lastPage: apiLastPage,
+        patientsRead,
+        patientsWithPhone,
+        matchedPatients,
+        updatedOpportunities,
+        finished: true,
+      };
+    }
+    if (offset + 1 < pageCount) await delay(REQUEST_GAP_MS);
+  }
+
+  for (let index = 0; index < phoneUpdates.length; index += 500) {
+    const { error: updateError } = await db
+      .from('clinic_experts_opportunities')
+      .upsert(phoneUpdates.slice(index, index + 500), { onConflict: 'id' });
+    throwIfError(updateError, 'Nao foi possivel atualizar os telefones dos cards');
+  }
+  updatedOpportunities = phoneUpdates.length;
+
+  return {
+    startPage: safeStartPage,
+    processedPages: pageCount,
+    lastPage,
+    patientsRead,
+    patientsWithPhone,
+    matchedPatients,
+    updatedOpportunities,
+    finished: safeStartPage + pageCount - 1 >= lastPage,
+  };
 }
 
 function throwIfError(error: { message: string } | null, context: string) {

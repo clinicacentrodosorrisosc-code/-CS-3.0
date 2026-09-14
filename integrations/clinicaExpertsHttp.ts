@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
+import { createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
 type ApiRequest = {
@@ -109,6 +109,35 @@ export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse
     res.status(200).json({ data: result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha na sincronizacao.';
+    res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
+  }
+}
+
+export async function handleClinicaExpertsPhoneEnrichment(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  if (!apiToken) {
+    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+    return;
+  }
+  try {
+    const context = await resolveContext(req);
+    const body = req.body && typeof req.body === 'object' ? req.body as { startPage?: unknown; pageCount?: unknown } : {};
+    const startPage = Number(body.startPage);
+    const pageCount = Number(body.pageCount);
+    const result = await enrichClinicaExpertsOpportunityPhones(
+      context.db,
+      context.userId,
+      apiToken,
+      Number.isFinite(startPage) ? startPage : 1,
+      Number.isFinite(pageCount) ? pageCount : 70,
+    );
+    res.status(200).json({ data: result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao atualizar telefones.';
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
   }
 }
