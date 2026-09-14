@@ -41,7 +41,10 @@ export interface Transaction {
   reconciliationNote?: string;
   invoiceEmitted?: boolean;
   isPartial?: boolean;
+  appliedFeeRate?: number;
+  explicitFeeAmount?: number;
   observation?: string;
+  cardBrand?: string;
   isRecurrent?: boolean;
   totalRecurrences?: number;
   recurrenceIndex?: number;
