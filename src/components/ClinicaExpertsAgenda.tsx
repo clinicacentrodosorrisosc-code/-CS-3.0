@@ -89,8 +89,8 @@ export const ClinicaExpertsAgenda: React.FC = () => {
     const topCompletedProcedure = [...completedProcedures.entries()].sort(([, left], [, right]) => right - left)[0] || null;
     const evaluations = events.filter(isEvaluation);
     const evaluationCompleted = evaluations.filter(event => String(event.status || '').toLowerCase() === 'done').length;
-    const evaluationActive = evaluations.filter(event => ['scheduled', 'confirmed', 'waiting', 'progress'].includes(String(event.status || '').toLowerCase())).length;
-    const evaluationLost = evaluations.filter(event => ['canceled', 'noshow', 'rescheduled'].includes(String(event.status || '').toLowerCase())).length;
+    const evaluationRescheduled = evaluations.filter(event => String(event.status || '').toLowerCase() === 'rescheduled').length;
+    const evaluationLost = evaluations.filter(event => ['canceled', 'noshow'].includes(String(event.status || '').toLowerCase())).length;
     return {
       total: events.length,
       canceled: countStatus('canceled'),
@@ -102,7 +102,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       attendanceRate: attendedBase ? (countStatus('done') / attendedBase) * 100 : 0,
       lossRate: events.length ? ((countStatus('canceled') + countStatus('noshow')) / events.length) * 100 : 0,
       topCompletedProcedure,
-      evaluations: { total: evaluations.length, completed: evaluationCompleted, active: evaluationActive, lost: evaluationLost },
+      evaluations: { total: evaluations.length, completed: evaluationCompleted, rescheduled: evaluationRescheduled, lost: evaluationLost },
     };
   }, [events]);
 
@@ -158,7 +158,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
           <article className="rounded-2xl border border-[#DFE6E2] bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]">
             <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2F0] text-[#1F6F5B] dark:bg-white/[0.06] dark:text-[#63B596]"><ClipboardCheck className="size-4" /></div><div><h3 className="text-sm font-bold text-[#17211D] dark:text-white">Avaliações</h3><p className="text-xs text-[#5E6D66] dark:text-slate-400">Acompanhamento exclusivo das consultas identificadas como avaliação.</p></div></div>
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[{ label: 'Total', value: summary.evaluations.total }, { label: 'Concluídas', value: summary.evaluations.completed }, { label: 'Ativas', value: summary.evaluations.active }, { label: 'Perdidas', value: summary.evaluations.lost }].map(item => <div key={item.label} className="rounded-xl bg-[#F8FAF9] px-3 py-2.5 dark:bg-white/[0.03]"><p className="text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
+              {[{ label: 'Total', value: summary.evaluations.total }, { label: 'Concluídas', value: summary.evaluations.completed }, { label: 'Remarcadas', value: summary.evaluations.rescheduled }, { label: 'Perdidas', value: summary.evaluations.lost }].map(item => <div key={item.label} className="rounded-xl bg-[#F8FAF9] px-3 py-2.5 dark:bg-white/[0.03]"><p className="text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
             </div>
           </article>
         </section>
