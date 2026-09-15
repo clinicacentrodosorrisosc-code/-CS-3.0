@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarCheck2, CalendarDays, CalendarX2, ChevronLeft, ChevronRight, Clock3, RefreshCw, RotateCcw, Stethoscope, UserCheck, UserRound, UsersRound, UserX } from 'lucide-react';
+import { CalendarDays, CalendarX2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, RefreshCw, RotateCcw, Trophy, UserCheck, UsersRound, UserX } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 type AgendaEvent = {
@@ -13,7 +13,7 @@ type AgendaEvent = {
   patient?: { name?: string | null } | null;
   professional?: { name?: string | null } | null;
   rooms?: Array<{ name?: string | null }>;
-  procedures?: Array<{ name?: string | null }>;
+  procedures?: Array<{ name?: string | null; quantity?: number | null }>;
 };
 
 const formatApiDate = (date: Date, endOfDay = false) => {
@@ -69,33 +69,40 @@ export const ClinicaExpertsAgenda: React.FC = () => {
 
   const summary = useMemo(() => {
     const countStatus = (status: string) => events.filter(event => String(event.status || '').toLowerCase() === status).length;
-    const countStatuses = (...statuses: string[]) => events.filter(event => statuses.includes(String(event.status || '').toLowerCase())).length;
+    const normalizeText = (value?: string | null) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isEvaluation = (event: AgendaEvent) => [event.title, event.type, ...(event.procedures?.map(procedure => procedure.name) || [])]
+      .some(value => normalizeText(value).includes('avaliacao'));
     const bookedMinutes = events.reduce((total, event) => {
       const status = String(event.status || '').toLowerCase();
       if (status === 'canceled' || status === 'rescheduled' || !event.ends_at) return total;
       const duration = new Date(event.ends_at).getTime() - new Date(event.starts_at).getTime();
       return total + (Number.isFinite(duration) && duration > 0 ? duration / 60_000 : 0);
     }, 0);
-    const attendedBase = countStatuses('done', 'noshow');
-    const activeBase = countStatuses('scheduled', 'confirmed', 'waiting', 'progress', 'done');
+    const attendedBase = events.filter(event => ['done', 'noshow'].includes(String(event.status || '').toLowerCase())).length;
+    const completedProcedures = new Map<string, number>();
+    events.filter(event => String(event.status || '').toLowerCase() === 'done').forEach(event => {
+      event.procedures?.forEach(procedure => {
+        const name = procedure.name?.trim();
+        if (name) completedProcedures.set(name, (completedProcedures.get(name) || 0) + Math.max(1, Number(procedure.quantity) || 1));
+      });
+    });
+    const topCompletedProcedure = [...completedProcedures.entries()].sort(([, left], [, right]) => right - left)[0] || null;
+    const evaluations = events.filter(isEvaluation);
+    const evaluationCompleted = evaluations.filter(event => String(event.status || '').toLowerCase() === 'done').length;
+    const evaluationActive = evaluations.filter(event => ['scheduled', 'confirmed', 'waiting', 'progress'].includes(String(event.status || '').toLowerCase())).length;
+    const evaluationLost = evaluations.filter(event => ['canceled', 'noshow', 'rescheduled'].includes(String(event.status || '').toLowerCase())).length;
     return {
       total: events.length,
-      scheduled: countStatus('scheduled'),
-      confirmed: countStatus('confirmed'),
       canceled: countStatus('canceled'),
       noShow: countStatus('noshow'),
       rescheduled: countStatus('rescheduled'),
-      waiting: countStatus('waiting'),
-      inProgress: countStatus('progress'),
       completed: countStatus('done'),
-      uniquePatients: new Set(events.map(event => event.patient?.name?.trim()).filter(Boolean)).size,
       professionals: new Set(events.map(event => event.professional?.name?.trim()).filter(Boolean)).size,
-      rooms: new Set(events.flatMap(event => event.rooms?.map(room => room.name?.trim()).filter(Boolean) || [])).size,
-      procedures: new Set(events.flatMap(event => event.procedures?.map(procedure => procedure.name?.trim()).filter(Boolean) || [])).size,
       bookedMinutes,
       attendanceRate: attendedBase ? (countStatus('done') / attendedBase) * 100 : 0,
-      confirmationRate: activeBase ? (countStatus('confirmed') / activeBase) * 100 : 0,
       lossRate: events.length ? ((countStatus('canceled') + countStatus('noshow')) / events.length) * 100 : 0,
+      topCompletedProcedure,
+      evaluations: { total: evaluations.length, completed: evaluationCompleted, active: evaluationActive, lost: evaluationLost },
     };
   }, [events]);
 
@@ -130,27 +137,30 @@ export const ClinicaExpertsAgenda: React.FC = () => {
         <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
           {[
             { label: 'Consultas do dia', value: summary.total, icon: CalendarDays, tone: 'text-[#1F6F5B] dark:text-[#63B596]' },
-            { label: 'Agendadas', value: summary.scheduled, icon: CalendarCheck2, tone: 'text-slate-600 dark:text-slate-300' },
-            { label: 'Confirmadas', value: summary.confirmed, icon: UserCheck, tone: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Aguardando', value: summary.waiting, icon: Clock3, tone: 'text-violet-600 dark:text-violet-400' },
-            { label: 'Em atendimento', value: summary.inProgress, icon: Stethoscope, tone: 'text-indigo-600 dark:text-indigo-400' },
             { label: 'Concluídas', value: summary.completed, icon: UserCheck, tone: 'text-[#1F6F5B] dark:text-[#63B596]' },
             { label: 'Canceladas', value: summary.canceled, icon: CalendarX2, tone: 'text-rose-600 dark:text-rose-400' },
             { label: 'Não compareceram', value: summary.noShow, icon: UserX, tone: 'text-amber-600 dark:text-amber-400' },
             { label: 'Reagendadas', value: summary.rescheduled, icon: RotateCcw, tone: 'text-sky-600 dark:text-sky-400' },
           ].map(item => <div key={item.label} className="rounded-2xl border border-[#DFE6E2] bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]"><item.icon className={`size-4 ${item.tone}`} /><p className="mt-3 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
         </section>
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            { label: 'Pacientes únicos', value: summary.uniquePatients, icon: UserRound, helper: 'no dia' },
             { label: 'Profissionais', value: summary.professionals, icon: UsersRound, helper: 'na agenda' },
-            { label: 'Salas utilizadas', value: summary.rooms, icon: CalendarDays, helper: 'com consulta' },
-            { label: 'Procedimentos', value: summary.procedures, icon: Stethoscope, helper: 'distintos' },
             { label: 'Horas reservadas', value: `${Math.floor(summary.bookedMinutes / 60)}h${String(Math.round(summary.bookedMinutes % 60)).padStart(2, '0')}`, icon: Clock3, helper: 'sem canceladas' },
             { label: 'Presença', value: `${summary.attendanceRate.toFixed(0)}%`, icon: UserCheck, helper: 'concluídas vs. faltas' },
-            { label: 'Confirmação', value: `${summary.confirmationRate.toFixed(0)}%`, icon: CalendarCheck2, helper: 'da agenda ativa' },
             { label: 'Perdas', value: `${summary.lossRate.toFixed(0)}%`, icon: UserX, helper: 'canceladas e faltas' },
           ].map(item => <div key={item.label} className="rounded-xl border border-[#DFE6E2] bg-[#F8FAF9] p-3 dark:border-white/[0.08] dark:bg-white/[0.03]"><item.icon className="size-3.5 text-[#5E6D66] dark:text-slate-400" /><p className="mt-2 text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p><p className="mt-0.5 text-[10px] text-[#86938D]">{item.helper}</p></div>)}
+        </section>
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+          <article className="rounded-2xl border border-[#CFE5DC] bg-[#EAF5F0] p-5 dark:border-[#1F6F5B]/35 dark:bg-[#1F6F5B]/10">
+            <div className="flex items-start gap-3"><div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/80 text-[#1F6F5B] dark:bg-[#1F6F5B]/25 dark:text-[#63B596]"><Trophy className="size-4" /></div><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wider text-[#1F6F5B] dark:text-[#63B596]">Procedimento com mais concluídos</p><h3 className="mt-1 truncate text-lg font-black text-[#17211D] dark:text-white">{summary.topCompletedProcedure?.[0] || 'Sem procedimentos concluídos'}</h3><p className="mt-1 text-xs text-[#5E6D66] dark:text-slate-400">{summary.topCompletedProcedure ? `${summary.topCompletedProcedure[1]} concluído${summary.topCompletedProcedure[1] === 1 ? '' : 's'} no dia` : 'O indicador aparece quando houver uma consulta concluída.'}</p></div></div>
+          </article>
+          <article className="rounded-2xl border border-[#DFE6E2] bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]">
+            <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2F0] text-[#1F6F5B] dark:bg-white/[0.06] dark:text-[#63B596]"><ClipboardCheck className="size-4" /></div><div><h3 className="text-sm font-bold text-[#17211D] dark:text-white">Avaliações</h3><p className="text-xs text-[#5E6D66] dark:text-slate-400">Acompanhamento exclusivo das consultas identificadas como avaliação.</p></div></div>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[{ label: 'Total', value: summary.evaluations.total }, { label: 'Concluídas', value: summary.evaluations.completed }, { label: 'Ativas', value: summary.evaluations.active }, { label: 'Perdidas', value: summary.evaluations.lost }].map(item => <div key={item.label} className="rounded-xl bg-[#F8FAF9] px-3 py-2.5 dark:bg-white/[0.03]"><p className="text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
+            </div>
+          </article>
         </section>
         <section className="overflow-hidden rounded-2xl border border-[#DFE6E2] bg-white shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]">
           {events.length === 0 ? <div className="flex min-h-48 flex-col items-center justify-center px-5 text-center"><CalendarDays className="size-7 text-[#86938D]" /><p className="mt-3 text-sm font-bold text-[#17211D] dark:text-white">Nenhuma consulta para este dia</p><p className="mt-1 text-xs text-[#5E6D66] dark:text-slate-400">A agenda foi consultada na Clínica Experts.</p></div> : <div className="divide-y divide-[#DFE6E2] dark:divide-white/[0.08]">{events.map(event => { const start = new Date(event.starts_at); const end = event.ends_at ? new Date(event.ends_at) : null; const patient = event.patient?.name || event.title || 'Paciente não informado'; const procedure = event.procedures?.map(item => item.name).filter(Boolean).join(', ') || event.type || 'Atendimento'; const rooms = event.rooms?.map(item => item.name).filter(Boolean).join(', '); return <article key={event.uuid} className="flex gap-4 p-4 sm:items-center"><div className="w-12 shrink-0 text-center"><p className="text-sm font-black tabular-nums text-[#17211D] dark:text-white">{start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>{end && <p className="mt-0.5 text-[10px] text-[#86938D]">até {end.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>}</div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate text-sm font-bold text-[#17211D] dark:text-white">{patient}</h3><span className="rounded-full bg-[#EAF5F0] px-2 py-0.5 text-[10px] font-bold text-[#1F6F5B] dark:bg-[#1F6F5B]/20 dark:text-[#63B596]">{statusLabel(event.status)}</span></div><p className="mt-1 truncate text-xs text-[#5E6D66] dark:text-slate-400">{procedure}{event.professional?.name ? ` · ${event.professional.name}` : ''}{rooms ? ` · ${rooms}` : ''}</p>{event.annotation && <p className="mt-1 truncate text-[11px] text-[#86938D]">{event.annotation}</p>}</div><Clock3 className="mt-0.5 size-4 shrink-0 text-[#86938D] sm:hidden" /></article>; })}</div>}
