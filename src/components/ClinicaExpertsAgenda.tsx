@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, RefreshCw, UserRound, UsersRound } from 'lucide-react';
+import { CalendarDays, CalendarX2, ChevronLeft, ChevronRight, Clock3, RefreshCw, RotateCcw, UserCheck, UserX } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 type AgendaEvent = {
@@ -63,11 +63,16 @@ export const ClinicaExpertsAgenda: React.FC = () => {
 
   useEffect(() => { loadAgenda(); }, [loadAgenda]);
 
-  const summary = useMemo(() => ({
-    total: events.length,
-    confirmed: events.filter(event => String(event.status || '').toLowerCase().includes('confirm')).length,
-    professionals: new Set(events.map(event => event.professional?.name).filter(Boolean)).size,
-  }), [events]);
+  const summary = useMemo(() => {
+    const countStatus = (status: string) => events.filter(event => String(event.status || '').toLowerCase() === status).length;
+    return {
+      total: events.length,
+      confirmed: countStatus('confirmed'),
+      canceled: countStatus('canceled'),
+      noShow: countStatus('noshow'),
+      rescheduled: countStatus('rescheduled'),
+    };
+  }, [events]);
 
   const changeDay = (amount: number) => setSelectedDate(current => {
     const next = new Date(current);
@@ -97,8 +102,14 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       {loading ? <div className="space-y-2 animate-pulse"><div className="h-20 rounded-2xl bg-white dark:bg-white/[0.06]" /><div className="h-20 rounded-2xl bg-white dark:bg-white/[0.06]" /></div> : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"><p className="font-bold">Não foi possível consultar a agenda.</p><p className="mt-1 text-xs">{error}</p></div>
       ) : <>
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[{ label: 'Consultas do dia', value: summary.total, icon: CalendarDays }, { label: 'Confirmadas', value: summary.confirmed, icon: UserRound }, { label: 'Profissionais', value: summary.professionals, icon: UsersRound }].map(item => <div key={item.label} className="rounded-2xl border border-[#DFE6E2] bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]"><item.icon className="size-4 text-[#1F6F5B] dark:text-[#63B596]" /><p className="mt-3 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          {[
+            { label: 'Consultas do dia', value: summary.total, icon: CalendarDays, tone: 'text-[#1F6F5B] dark:text-[#63B596]' },
+            { label: 'Confirmadas', value: summary.confirmed, icon: UserCheck, tone: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Canceladas', value: summary.canceled, icon: CalendarX2, tone: 'text-rose-600 dark:text-rose-400' },
+            { label: 'Não compareceram', value: summary.noShow, icon: UserX, tone: 'text-amber-600 dark:text-amber-400' },
+            { label: 'Reagendadas', value: summary.rescheduled, icon: RotateCcw, tone: 'text-sky-600 dark:text-sky-400' },
+          ].map(item => <div key={item.label} className="rounded-2xl border border-[#DFE6E2] bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]"><item.icon className={`size-4 ${item.tone}`} /><p className="mt-3 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
         </section>
         <section className="overflow-hidden rounded-2xl border border-[#DFE6E2] bg-white shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]">
           {events.length === 0 ? <div className="flex min-h-48 flex-col items-center justify-center px-5 text-center"><CalendarDays className="size-7 text-[#86938D]" /><p className="mt-3 text-sm font-bold text-[#17211D] dark:text-white">Nenhuma consulta para este dia</p><p className="mt-1 text-xs text-[#5E6D66] dark:text-slate-400">A agenda foi consultada na Clínica Experts.</p></div> : <div className="divide-y divide-[#DFE6E2] dark:divide-white/[0.08]">{events.map(event => { const start = new Date(event.starts_at); const end = event.ends_at ? new Date(event.ends_at) : null; const patient = event.patient?.name || event.title || 'Paciente não informado'; const procedure = event.procedures?.map(item => item.name).filter(Boolean).join(', ') || event.type || 'Atendimento'; const rooms = event.rooms?.map(item => item.name).filter(Boolean).join(', '); return <article key={event.uuid} className="flex gap-4 p-4 sm:items-center"><div className="w-12 shrink-0 text-center"><p className="text-sm font-black tabular-nums text-[#17211D] dark:text-white">{start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>{end && <p className="mt-0.5 text-[10px] text-[#86938D]">até {end.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>}</div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate text-sm font-bold text-[#17211D] dark:text-white">{patient}</h3><span className="rounded-full bg-[#EAF5F0] px-2 py-0.5 text-[10px] font-bold text-[#1F6F5B] dark:bg-[#1F6F5B]/20 dark:text-[#63B596]">{statusLabel(event.status)}</span></div><p className="mt-1 truncate text-xs text-[#5E6D66] dark:text-slate-400">{procedure}{event.professional?.name ? ` · ${event.professional.name}` : ''}{rooms ? ` · ${rooms}` : ''}</p>{event.annotation && <p className="mt-1 truncate text-[11px] text-[#86938D]">{event.annotation}</p>}</div><Clock3 className="mt-0.5 size-4 shrink-0 text-[#86938D] sm:hidden" /></article>; })}</div>}
