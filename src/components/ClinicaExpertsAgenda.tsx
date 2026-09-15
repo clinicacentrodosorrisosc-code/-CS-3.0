@@ -102,7 +102,13 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       attendanceRate: attendedBase ? (countStatus('done') / attendedBase) * 100 : 0,
       lossRate: events.length ? ((countStatus('canceled') + countStatus('noshow')) / events.length) * 100 : 0,
       topCompletedProcedure,
-      evaluations: { total: evaluations.length, completed: evaluationCompleted, rescheduled: evaluationRescheduled, lost: evaluationLost },
+      evaluations: {
+        total: evaluations.length,
+        completed: evaluationCompleted,
+        rescheduled: evaluationRescheduled,
+        lost: evaluationLost,
+        effectivenessRate: evaluationCompleted + evaluationLost > 0 ? (evaluationCompleted / (evaluationCompleted + evaluationLost)) * 100 : 0,
+      },
     };
   }, [events]);
 
@@ -157,8 +163,8 @@ export const ClinicaExpertsAgenda: React.FC = () => {
           </article>
           <article className="rounded-2xl border border-[#DFE6E2] bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#19231F]">
             <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-xl bg-[#EEF2F0] text-[#1F6F5B] dark:bg-white/[0.06] dark:text-[#63B596]"><ClipboardCheck className="size-4" /></div><div><h3 className="text-sm font-bold text-[#17211D] dark:text-white">Avaliações</h3><p className="text-xs text-[#5E6D66] dark:text-slate-400">Acompanhamento exclusivo das consultas identificadas como avaliação.</p></div></div>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[{ label: 'Total', value: summary.evaluations.total }, { label: 'Concluídas', value: summary.evaluations.completed }, { label: 'Remarcadas', value: summary.evaluations.rescheduled }, { label: 'Perdidas', value: summary.evaluations.lost }].map(item => <div key={item.label} className="rounded-xl bg-[#F8FAF9] px-3 py-2.5 dark:bg-white/[0.03]"><p className="text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {[{ label: 'Total', value: summary.evaluations.total }, { label: 'Concluídas', value: summary.evaluations.completed }, { label: 'Remarcadas', value: summary.evaluations.rescheduled }, { label: 'Perdidas', value: summary.evaluations.lost }, { label: 'Efetividade', value: `${summary.evaluations.effectivenessRate.toFixed(0)}%`, helper: 'concluídas ÷ resultados' }].map(item => <div key={item.label} className="rounded-xl bg-[#F8FAF9] px-3 py-2.5 dark:bg-white/[0.03]"><p className="text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p>{item.helper && <p className="mt-0.5 text-[10px] text-[#86938D]">{item.helper}</p>}</div>)}
             </div>
           </article>
         </section>
