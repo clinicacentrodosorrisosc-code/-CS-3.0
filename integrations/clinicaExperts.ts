@@ -28,7 +28,7 @@ type ExternalOpportunity = {
 };
 
 export type ExternalCalendarEvent = {
-  id: number | string;
+  uuid: string;
   title?: string | null;
   type?: string | null;
   annotation?: string | null;
@@ -37,7 +37,7 @@ export type ExternalCalendarEvent = {
   status?: string | null;
   patient?: { uuid?: string; name?: string | null } | null;
   professional?: { uuid?: string; name?: string | null } | null;
-  room?: { uuid?: string; name?: string | null } | null;
+  rooms?: Array<{ id?: number | string; name?: string | null }>;
   procedures?: Array<{ id?: number | string; name?: string | null }>;
 };
 
@@ -152,7 +152,7 @@ export class ClinicaExpertsClient {
   }
 
   listCalendarEvents(startsAt: string, endsAt: string) {
-    return this.listAll<ExternalCalendarEvent>('/calendar-events', {
+    return this.listAll<ExternalCalendarEvent>('/bookings', {
       starts_at: startsAt,
       ends_at: endsAt,
       sort_column: 'starts_at',
