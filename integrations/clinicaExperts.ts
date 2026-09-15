@@ -27,6 +27,20 @@ type ExternalOpportunity = {
   stage?: { uuid?: string; name?: string; status?: string } | null;
 };
 
+export type ExternalCalendarEvent = {
+  id: number | string;
+  title?: string | null;
+  type?: string | null;
+  annotation?: string | null;
+  starts_at: string;
+  ends_at?: string | null;
+  status?: string | null;
+  patient?: { uuid?: string; name?: string | null } | null;
+  professional?: { uuid?: string; name?: string | null } | null;
+  room?: { uuid?: string; name?: string | null } | null;
+  procedures?: Array<{ id?: number | string; name?: string | null }>;
+};
+
 export type SyncResult = {
   pipelines: number;
   stages: number;
@@ -56,7 +70,7 @@ export type DirectPhoneEnrichmentResult = {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-class ClinicaExpertsClient {
+export class ClinicaExpertsClient {
   constructor(private readonly token: string) {}
 
   private async get<T>(path: string, query: Record<string, string | number> = {}): Promise<T> {
@@ -133,6 +147,15 @@ class ClinicaExpertsClient {
   listPatients() {
     return this.listAll<ExternalPatient>('/patients', {
       sort_column: 'name',
+      sort_direction: 'asc',
+    });
+  }
+
+  listCalendarEvents(startsAt: string, endsAt: string) {
+    return this.listAll<ExternalCalendarEvent>('/calendar-events', {
+      starts_at: startsAt,
+      ends_at: endsAt,
+      sort_column: 'starts_at',
       sort_direction: 'asc',
     });
   }

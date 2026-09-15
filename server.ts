@@ -7,7 +7,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
 import crypto from "crypto";
-import { createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
+import { ClinicaExpertsClient, createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
 import { handleWhatsAppConfig } from "./integrations/whatsappHttp";
 import { handleWhatsAppBulkCampaigns } from "./integrations/whatsappBulkCampaignsHttp";
 import { handleWahaConfig, handleWahaWebhook } from "./integrations/wahaHttp";
@@ -475,6 +475,23 @@ async function startServer() {
       res.json({ configured: Boolean(clinicaExpertsToken), lastSync: data || null });
     } catch (error: any) {
       res.status(400).json({ error: error.message || 'Falha ao consultar integracao.' });
+    }
+  });
+
+  app.get('/api/integrations/clinica-experts/agenda', async (req, res) => {
+    try {
+      if (!clinicaExpertsToken) return res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+      await resolveClinicaExpertsSyncContext(req.headers.authorization);
+      const startsAt = typeof req.query.starts_at === 'string' ? req.query.starts_at : '';
+      const endsAt = typeof req.query.ends_at === 'string' ? req.query.ends_at : '';
+      if (!startsAt || !endsAt || Number.isNaN(Date.parse(startsAt)) || Number.isNaN(Date.parse(endsAt)) || Date.parse(endsAt) < Date.parse(startsAt)) {
+        return res.status(400).json({ error: 'Informe um intervalo de datas valido para a agenda.' });
+      }
+      const data = await new ClinicaExpertsClient(clinicaExpertsToken).listCalendarEvents(startsAt, endsAt);
+      return res.json({ data });
+    } catch (error: any) {
+      const status = /Sessao|Authorization/i.test(error.message) ? 401 : 500;
+      return res.status(status).json({ error: error.message || 'Falha ao consultar a agenda.' });
     }
   });
 

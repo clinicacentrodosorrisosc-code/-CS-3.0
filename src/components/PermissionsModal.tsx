@@ -40,6 +40,7 @@ interface PermissionsModalProps {
 const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?: string }[]> = {
   [Tab.DASHBOARD]: [
     { id: 'dash_financial', label: 'Visao financeira' },
+    { id: 'dash_agenda', label: 'Agenda Clínica Experts' },
   ],
   [Tab.FINANCIAL]: [
     { id: 'financial_overview', label: 'Visão Geral' },

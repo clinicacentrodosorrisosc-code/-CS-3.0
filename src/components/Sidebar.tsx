@@ -71,7 +71,8 @@ const MENU_STRUCTURE: MenuItem[] = [
     group: 'main',
     subItems: [
       { id: 'geral', label: 'Visao geral' },
-      { id: 'commercial', label: 'Comercial' }
+      { id: 'commercial', label: 'Comercial' },
+      { id: 'agenda', label: 'Agenda' }
     ]
   },
   {

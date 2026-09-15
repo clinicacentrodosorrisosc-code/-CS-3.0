@@ -10,6 +10,7 @@ import { Calendar, ChevronLeft, ChevronRight, Settings, X } from 'lucide-react';
 import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
+import { ClinicaExpertsAgenda } from './ClinicaExpertsAgenda';
 
 // --- TYPES ---
 interface DailyData {
@@ -60,7 +61,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
   // Props userRole and allowedSubTabs removed as they were unreferenced
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [activeSubTab, setActiveSubTab] = useState<'geral' | 'commercial' | 'reception'>('geral');
+  const [activeSubTab, setActiveSubTab] = useState<'geral' | 'commercial' | 'reception' | 'agenda'>('geral');
   
   useEffect(() => {
     // Integration cleanup
@@ -83,6 +84,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       setActiveSubTab('reception');
     } else if (requestedSubTab === 'geral') {
       setActiveSubTab('geral');
+    } else if (requestedSubTab === 'agenda') {
+      setActiveSubTab('agenda');
     }
   }, [requestedSubTab]);
   
@@ -708,7 +711,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                    <div>
                        <h1 className="text-xl md:text-2xl font-bold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-tight">
-                          {activeSubTab === 'geral' ? 'Dashboard Geral' : activeSubTab === 'commercial' ? 'Comercial' : 'Recepção'}
+                          {activeSubTab === 'geral' ? 'Dashboard Geral' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
                        </h1>
                        <p className="text-xs text-slate-400 mt-0.5">Métricas de performance e faturamento em tempo real.</p>
                    </div>
@@ -730,11 +733,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                     {[
                         { id: 'geral', label: 'Geral' },
                         { id: 'commercial', label: 'Comercial' },
+                        { id: 'agenda', label: 'Agenda' },
                         { id: 'reception', label: 'Recepção' }
                     ].map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveSubTab(tab.id as 'geral' | 'commercial' | 'reception')}
+                            onClick={() => setActiveSubTab(tab.id as 'geral' | 'commercial' | 'reception' | 'agenda')}
                             className={`
                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
                                 ${activeSubTab === tab.id 
@@ -758,7 +762,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                         <div className="h-[400px] w-full glass-panel rounded-2xl mt-4"></div>
                     </div>
                   ) : (
-                    activeSubTab === 'geral' ? renderFinancialView() : activeSubTab === 'commercial' ? <CommercialDailyReport /> : <ReceptionDailyReport />
+                    activeSubTab === 'geral' ? renderFinancialView() : activeSubTab === 'commercial' ? <CommercialDailyReport /> : activeSubTab === 'reception' ? <ReceptionDailyReport /> : <ClinicaExpertsAgenda />
                   )}
               </div>
 

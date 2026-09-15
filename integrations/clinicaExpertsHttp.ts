@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import { createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
+import { ClinicaExpertsClient, createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
 type ApiRequest = {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
   body?: unknown;
+  query?: Record<string, string | string[] | undefined>;
 };
 
 type ApiResponse = {
@@ -78,6 +79,41 @@ export async function handleClinicaExpertsStatus(req: ApiRequest, res: ApiRespon
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha ao consultar integracao.';
     res.status(/Sessao/i.test(message) ? 401 : 400).json({ error: message });
+  }
+}
+
+export async function handleClinicaExpertsAgenda(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  if (!apiToken) {
+    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+    return;
+  }
+
+  const queryValue = (key: string) => {
+    const value = req.query?.[key];
+    return Array.isArray(value) ? value[0] : value;
+  };
+  const startsAt = queryValue('starts_at');
+  const endsAt = queryValue('ends_at');
+  const isValidDate = (value?: string) => Boolean(value && !Number.isNaN(Date.parse(value)));
+
+  if (!isValidDate(startsAt) || !isValidDate(endsAt) || Date.parse(endsAt!) < Date.parse(startsAt!)) {
+    res.status(400).json({ error: 'Informe um intervalo de datas valido para a agenda.' });
+    return;
+  }
+
+  try {
+    await resolveContext(req);
+    const data = await new ClinicaExpertsClient(apiToken).listCalendarEvents(startsAt!, endsAt!);
+    res.status(200).json({ data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao consultar a agenda.';
+    res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
   }
 }
 
