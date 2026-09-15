@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Filter,
   Loader2,
+  MessageCircle,
   RefreshCw,
   Search,
   UserRoundPlus,
@@ -14,6 +15,7 @@ import { supabase } from '../supabaseClient';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { CRMAutomations } from './CRMAutomations';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
+import { WhatsAppQuickSend } from './WhatsAppQuickSend';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -41,6 +43,7 @@ type Opportunity = {
   origin: string | null;
   observations: string | null;
   status: string | null;
+  tags: string[];
   synced_at: string;
 };
 type SyncStatus = {
@@ -76,9 +79,12 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [selectedPipelineId, setSelectedPipelineId] = useState('');
   const [query, setQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
+  const [quickOpportunity, setQuickOpportunity] = useState<Opportunity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp' | 'campaigns'>('pipeline');
 
@@ -93,7 +99,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     const selectedId = selectedPipelineId;
     let opportunitiesQuery = supabase
       .from('clinic_experts_opportunities')
-      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, synced_at')
+      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, tags, synced_at')
       .order('synced_at', { ascending: false });
     if (selectedId) opportunitiesQuery = opportunitiesQuery.eq('pipeline_id', selectedId);
     const [pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
@@ -162,16 +168,21 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const selectedPipeline = pipelines.find(pipeline => pipeline.id === selectedPipelineId);
   const handlePipelineChange = (pipelineId: string) => {
     setSelectedPipelineId(pipelineId);
+    setSelectedTag('');
     setOpportunities([]);
   };
   const visibleStages = stages.filter(stage => stage.pipeline_id === selectedPipelineId);
   const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
   const visibleOpportunities = opportunities.filter(opportunity => {
     if (opportunity.pipeline_id !== selectedPipelineId) return false;
+    if (selectedTag && !(opportunity.tags || []).includes(selectedTag)) return false;
     if (!normalizedQuery) return true;
     return [opportunity.title, opportunity.patient_name, opportunity.patient_phone, opportunity.seller_name]
       .some(value => value?.toLocaleLowerCase('pt-BR').includes(normalizedQuery));
   });
+  const availableTags = useMemo(() => Array.from(new Set(opportunities
+    .filter(opportunity => opportunity.pipeline_id === selectedPipelineId)
+    .flatMap(opportunity => opportunity.tags || []))).sort((a, b) => a.localeCompare(b, 'pt-BR')), [opportunities, selectedPipelineId]);
 
   const metrics = useMemo(() => {
     const active = opportunities.filter(opportunity => !['won', 'lost', 'closed'].includes(opportunity.status || ''));
@@ -234,6 +245,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
               <span>{error}</span>
             </div>
           )}
+          {notice && <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /><span>{notice}</span></div>}
 
           <section className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Indicadores do CRM">
             {metrics.map(({ label, value, detail, icon: Icon }) => (
@@ -274,9 +286,13 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                   <Search className="h-3.5 w-3.5 shrink-0" />
                   <input value={query} onChange={event => setQuery(event.target.value)} type="search" placeholder="Buscar por nome ou telefone" className="min-w-0 flex-1 bg-transparent text-xs text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]" aria-label="Buscar leads" />
                 </label>
-                <button type="button" className="flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] px-3 text-xs font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]">
-                  <Filter className="h-3.5 w-3.5" /> Filtros
-                </button>
+                <label className="flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-xs font-semibold text-[var(--text-secondary)]">
+                  <Filter className="h-3.5 w-3.5" />
+                  <select value={selectedTag} onChange={event => setSelectedTag(event.target.value)} className="max-w-[160px] bg-transparent outline-none">
+                    <option value="">Todas as tags</option>
+                    {availableTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
+                  </select>
+                </label>
               </div>
             </div>
 
@@ -316,9 +332,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                             </div>
                             {opportunity.amount_cents > 0 && <p className="mt-3 font-mono text-xs font-semibold text-[#1F6F5B] dark:text-[#63B596]">{formatCurrency(opportunity.amount_cents)}</p>}
                             {opportunity.observations && <p className="mt-2 line-clamp-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-2 py-1.5 text-[10px] leading-relaxed text-[var(--text-secondary)]" title={opportunity.observations}>{opportunity.observations}</p>}
+                            {(opportunity.tags || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1">{opportunity.tags.map(tag => <span key={tag} className="max-w-full truncate rounded-md bg-[#EAF5F0] px-2 py-1 text-[9px] font-semibold text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]">{tag}</span>)}</div>}
                             <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-[var(--text-muted)]">
                               <span className="truncate">{opportunity.seller_name || 'Sem responsável'}</span>
-                              <span className="truncate">{opportunity.origin || 'Clínica Experts'}</span>
+                              <button type="button" onClick={() => setQuickOpportunity(opportunity)} className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 font-semibold text-[var(--primary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)]" title="Fazer disparo rápido"><MessageCircle className="h-3 w-3" />Disparo rápido</button>
                             </div>
                           </div>
                         ))}
@@ -332,6 +349,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
           </section>
         </div>
       </div>
+      {quickOpportunity && <WhatsAppQuickSend opportunity={quickOpportunity} onClose={() => setQuickOpportunity(null)} onSent={() => { setNotice('Mensagem enviada e card atualizado.'); void loadCRM(); }} />}
     </div>
   );
 };
