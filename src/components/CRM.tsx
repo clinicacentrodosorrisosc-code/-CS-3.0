@@ -6,16 +6,19 @@ import {
   Filter,
   Loader2,
   MessageCircle,
+  Phone,
   RefreshCw,
   Search,
   UserRoundPlus,
   UsersRound,
+  Upload,
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { CRMAutomations } from './CRMAutomations';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
 import { WhatsAppQuickSend } from './WhatsAppQuickSend';
+import { CRMPhoneImport } from './CRMPhoneImport';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -32,6 +35,7 @@ type Stage = {
 type Opportunity = {
   id: string;
   external_id: string;
+  patient_external_id: string | null;
   pipeline_id: string;
   stage_id: string;
   title: string;
@@ -62,6 +66,10 @@ const formatCurrency = (amountCents: number) => new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
 }).format(amountCents / 100);
+const hasValidPhone = (phone: string | null | undefined) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  return digits.length >= 12 && digits.length <= 15;
+};
 
 const formatLastSync = (date: string | null | undefined) => {
   if (!date) return 'Ainda não sincronizado';
@@ -81,6 +89,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [quickOpportunity, setQuickOpportunity] = useState<Opportunity | null>(null);
+  const [phoneImportOpen, setPhoneImportOpen] = useState(false);
+  const [phoneFilter, setPhoneFilter] = useState<'all' | 'missing' | 'valid'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState('');
@@ -99,7 +109,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     const selectedId = selectedPipelineId;
     let opportunitiesQuery = supabase
       .from('clinic_experts_opportunities')
-      .select('id, external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, tags, synced_at')
+      .select('id, external_id, patient_external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, tags, synced_at')
       .order('synced_at', { ascending: false });
     if (selectedId) opportunitiesQuery = opportunitiesQuery.eq('pipeline_id', selectedId);
     const [pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
@@ -169,6 +179,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const handlePipelineChange = (pipelineId: string) => {
     setSelectedPipelineId(pipelineId);
     setSelectedTag('');
+    setPhoneFilter('all');
     setOpportunities([]);
   };
   const visibleStages = stages.filter(stage => stage.pipeline_id === selectedPipelineId);
@@ -176,6 +187,9 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const visibleOpportunities = opportunities.filter(opportunity => {
     if (opportunity.pipeline_id !== selectedPipelineId) return false;
     if (selectedTag && !(opportunity.tags || []).includes(selectedTag)) return false;
+    const hasPhone = hasValidPhone(opportunity.patient_phone);
+    if (phoneFilter === 'missing' && hasPhone) return false;
+    if (phoneFilter === 'valid' && !hasPhone) return false;
     if (!normalizedQuery) return true;
     return [opportunity.title, opportunity.patient_name, opportunity.patient_phone, opportunity.seller_name]
       .some(value => value?.toLocaleLowerCase('pt-BR').includes(normalizedQuery));
@@ -227,6 +241,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                 {syncStatus?.lastSync?.status === 'success' ? <CheckCircle2 className="h-4 w-4 text-[#1F6F5B]" /> : <AlertCircle className="h-4 w-4" />}
                 <span>{formatLastSync(syncStatus?.lastSync?.finished_at)}</span>
               </div>
+              <button type="button" onClick={() => setPhoneImportOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><Upload className="h-4 w-4" />Importar telefones</button>
               <button
                 type="button"
                 onClick={handleSync}
@@ -293,6 +308,14 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                     {availableTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
                   </select>
                 </label>
+                <label className="flex h-9 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-xs font-semibold text-[var(--text-secondary)]">
+                  <Phone className="h-3.5 w-3.5" />
+                  <select value={phoneFilter} onChange={event => setPhoneFilter(event.target.value as 'all' | 'missing' | 'valid')} className="max-w-[165px] bg-transparent outline-none">
+                    <option value="all">Todos os telefones</option>
+                    <option value="missing">Sem telefone</option>
+                    <option value="valid">Com telefone válido</option>
+                  </select>
+                </label>
               </div>
             </div>
 
@@ -327,6 +350,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-bold text-[var(--text)]">{opportunity.patient_name || opportunity.title}</p>
                                 <p className="mt-0.5 truncate text-[10px] text-[var(--text-muted)]">{opportunity.title}</p>
+                                <p className={`mt-1 flex items-center gap-1 text-[10px] font-medium ${hasValidPhone(opportunity.patient_phone) ? 'text-[var(--text-secondary)]' : 'text-amber-700 dark:text-amber-300'}`}><Phone className="h-3 w-3" />{hasValidPhone(opportunity.patient_phone) ? opportunity.patient_phone : 'Sem telefone'}</p>
                               </div>
                               {opportunity.priority > 1 && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" title="Prioridade" />}
                             </div>
@@ -350,6 +374,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
         </div>
       </div>
       {quickOpportunity && <WhatsAppQuickSend opportunity={quickOpportunity} onClose={() => setQuickOpportunity(null)} onSent={() => { setNotice('Mensagem enviada e card atualizado.'); void loadCRM(); }} />}
+      {phoneImportOpen && <CRMPhoneImport opportunities={opportunities} onClose={() => setPhoneImportOpen(false)} onImported={updated => { setNotice(`${updated} card(s) receberam telefone pela importação.`); void loadCRM(); }} />}
     </div>
   );
 };

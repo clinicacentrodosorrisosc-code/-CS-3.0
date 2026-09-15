@@ -23,6 +23,17 @@ export const WhatsAppQuickSend: React.FC<{ opportunity: QuickOpportunity; onClos
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  useEffect(() => {
     void (async () => {
       try {
         const response = await fetch('/api/integrations/whatsapp/templates', { headers: await headers() });
@@ -84,9 +95,9 @@ export const WhatsAppQuickSend: React.FC<{ opportunity: QuickOpportunity; onClos
     finally { setSending(false); }
   };
 
-  return <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/35">
-    <aside className="custom-scrollbar h-full w-full max-w-md overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
-      <header className="flex items-start justify-between gap-4"><div><p className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--primary)]"><MessageCircle className="h-3.5 w-3.5" />Disparo rápido</p><h2 className="mt-1 text-xl font-bold tracking-tight">{opportunity.patient_name || opportunity.title}</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Envio individual com template aprovado pela Meta.</p></div><button onClick={onClose} className="rounded-lg p-2 transition hover:bg-[var(--surface-hover)]"><X className="h-5 w-5" /></button></header>
+  return <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/35" onMouseDown={onClose} role="presentation">
+    <aside className="custom-scrollbar h-full w-full max-w-md overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl" onMouseDown={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Disparo rápido">
+      <header className="flex items-start justify-between gap-4"><div><p className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--primary)]"><MessageCircle className="h-3.5 w-3.5" />Disparo rápido</p><h2 className="mt-1 text-xl font-bold tracking-tight">{opportunity.patient_name || opportunity.title}</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Envio individual com template aprovado pela Meta.</p></div><button type="button" onClick={onClose} aria-label="Fechar disparo rápido" className="rounded-lg p-2 transition hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><X className="h-5 w-5" /></button></header>
       {error && <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">{error}</p>}
       {loading ? <div className="flex items-center justify-center gap-2 py-16 text-xs text-[var(--text-muted)]"><Loader2 className="h-4 w-4 animate-spin" />Carregando templates</div> : <div className="mt-6 space-y-5">
         <label className="block text-xs font-semibold">Template<select value={templateKey} onChange={event => setTemplateKey(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none">{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label>
