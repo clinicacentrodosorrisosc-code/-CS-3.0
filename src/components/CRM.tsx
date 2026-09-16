@@ -6,12 +6,14 @@ import {
   Filter,
   Loader2,
   MessageCircle,
+  GitMerge,
   Phone,
   RefreshCw,
   Search,
   UserRoundPlus,
   UsersRound,
   Upload,
+  X,
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { WhatsAppSettings } from './WhatsAppSettings';
@@ -41,6 +43,7 @@ type Opportunity = {
   title: string;
   patient_name: string | null;
   patient_phone: string | null;
+  patient_email?: string | null;
   seller_name: string | null;
   priority: number;
   amount_cents: number;
@@ -49,6 +52,25 @@ type Opportunity = {
   status: string | null;
   tags: string[];
   synced_at: string;
+};
+
+type DuplicateGroup = { key: string; label: string; cards: Opportunity[] };
+type Reconciliation = { externalTotal: number; localTotal: number; stages: Array<{ stageId: string; stage: string; externalCount: number; localCount: number; difference: number; externalStatuses: Array<[string, number]> }>; onlyLocal: Array<{ external_id: string; title: string; patient_name: string | null; status: string | null; synced_at: string }>; onlyExternal: Array<{ external_id: string; title: string; patient_name: string | null; status: string | null; stage: string }> };
+type MergeField = 'title' | 'patient_name' | 'patient_phone' | 'patient_email' | 'seller_name' | 'origin' | 'observations' | 'status' | 'priority' | 'amount_cents' | 'tags';
+
+const mergeFields: Array<{ key: MergeField; label: string; format?: (value: unknown) => string }> = [
+  { key: 'title', label: 'Oportunidade' }, { key: 'patient_name', label: 'Paciente' }, { key: 'patient_phone', label: 'Telefone' }, { key: 'patient_email', label: 'E-mail' },
+  { key: 'seller_name', label: 'Responsável' }, { key: 'origin', label: 'Origem' }, { key: 'observations', label: 'Observações' }, { key: 'status', label: 'Status' },
+  { key: 'priority', label: 'Prioridade', format: value => String(value || 1) }, { key: 'amount_cents', label: 'Valor', format: value => formatCurrency(Number(value || 0)) },
+  { key: 'tags', label: 'Tags', format: value => Array.isArray(value) && value.length ? value.join(', ') : 'Sem tags' },
+];
+
+const duplicateKey = (opportunity: Opportunity) => {
+  if (opportunity.patient_external_id) return `patient:${opportunity.patient_external_id}`;
+  const phone = String(opportunity.patient_phone || '').replace(/\D/g, '');
+  if (phone.length >= 10) return `phone:${phone}`;
+  const name = String(opportunity.patient_name || '').trim().toLocaleLowerCase('pt-BR');
+  return name.length >= 5 ? `name:${name}` : '';
 };
 type SyncStatus = {
   configured: boolean;
@@ -90,6 +112,13 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [selectedTag, setSelectedTag] = useState('');
   const [quickOpportunity, setQuickOpportunity] = useState<Opportunity | null>(null);
   const [phoneImportOpen, setPhoneImportOpen] = useState(false);
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [selectedDuplicateGroup, setSelectedDuplicateGroup] = useState<DuplicateGroup | null>(null);
+  const [survivorId, setSurvivorId] = useState('');
+  const [fieldSources, setFieldSources] = useState<Partial<Record<MergeField, string>>>({});
+  const [isMerging, setIsMerging] = useState(false);
+  const [reconciliation, setReconciliation] = useState<Reconciliation | null>(null);
+  const [isReconciling, setIsReconciling] = useState(false);
   const [phoneFilter, setPhoneFilter] = useState<'all' | 'missing' | 'valid'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -109,7 +138,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     const selectedId = selectedPipelineId;
     let opportunitiesQuery = supabase
       .from('clinic_experts_opportunities')
-      .select('id, external_id, patient_external_id, pipeline_id, stage_id, title, patient_name, patient_phone, seller_name, priority, amount_cents, origin, observations, status, tags, synced_at')
+      .select('id, external_id, patient_external_id, pipeline_id, stage_id, title, patient_name, patient_phone, patient_email, seller_name, priority, amount_cents, origin, observations, status, tags, synced_at')
+      .is('merged_into_id', null)
       .order('synced_at', { ascending: false });
     if (selectedId) opportunitiesQuery = opportunitiesQuery.eq('pipeline_id', selectedId);
     const [pipelinesResult, stagesResult, opportunitiesResult] = await Promise.all([
@@ -198,6 +228,61 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     .filter(opportunity => opportunity.pipeline_id === selectedPipelineId)
     .flatMap(opportunity => opportunity.tags || []))).sort((a, b) => a.localeCompare(b, 'pt-BR')), [opportunities, selectedPipelineId]);
 
+  const duplicateGroups = useMemo(() => {
+    const grouped = new Map<string, Opportunity[]>();
+    opportunities.filter(item => item.pipeline_id === selectedPipelineId).forEach(item => {
+      const key = duplicateKey(item);
+      if (key) grouped.set(key, [...(grouped.get(key) || []), item]);
+    });
+    return Array.from(grouped.entries()).filter(([, cards]) => cards.length > 1).map(([key, cards]) => ({ key, cards: cards.slice(0, 2), label: cards[0].patient_name || cards[0].patient_phone || cards[0].title }));
+  }, [opportunities, selectedPipelineId]);
+
+  const openMergeReview = (group: DuplicateGroup) => {
+    const preferred = group.cards[0];
+    setSelectedDuplicateGroup(group);
+    setSurvivorId(preferred.id);
+    setFieldSources(Object.fromEntries(mergeFields.map(field => [field.key, preferred.id])));
+  };
+
+  const confirmMerge = async () => {
+    if (!selectedDuplicateGroup || !survivorId) return;
+    const survivor = selectedDuplicateGroup.cards.find(card => card.id === survivorId);
+    const duplicate = selectedDuplicateGroup.cards.find(card => card.id !== survivorId);
+    if (!survivor || !duplicate) return;
+    setIsMerging(true);
+    setError('');
+    try {
+      const values = Object.fromEntries(mergeFields.map(field => {
+        const source = selectedDuplicateGroup.cards.find(card => card.id === (fieldSources[field.key] || survivorId)) || survivor;
+        return [field.key, source[field.key]];
+      }));
+      const { error: mergeError } = await supabase.rpc('merge_clinic_experts_opportunities', { p_survivor_id: survivor.id, p_duplicate_id: duplicate.id, p_values: values });
+      if (mergeError) throw mergeError;
+      setDuplicatesOpen(false);
+      setSelectedDuplicateGroup(null);
+      setNotice(`Cards mesclados. ${duplicate.patient_name || duplicate.title} foi ocultado no CRM local.`);
+      await loadCRM();
+    } catch (currentError) {
+      setError(currentError instanceof Error ? currentError.message : 'Não foi possível mesclar os cards.');
+    } finally { setIsMerging(false); }
+  };
+
+  const runReconciliation = async () => {
+    if (!selectedPipeline?.external_id) return;
+    setIsReconciling(true);
+    setError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.');
+      const response = await fetch(`/api/integrations/clinica-experts/reconciliation?pipelineExternalId=${encodeURIComponent(selectedPipeline.external_id)}`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Não foi possível reconciliar o funil.');
+      setReconciliation(body.data as Reconciliation);
+    } catch (currentError) {
+      setError(currentError instanceof Error ? currentError.message : 'Não foi possível reconciliar o funil.');
+    } finally { setIsReconciling(false); }
+  };
+
   const metrics = useMemo(() => {
     const active = opportunities.filter(opportunity => !['won', 'lost', 'closed'].includes(opportunity.status || ''));
     const today = new Date().toISOString().slice(0, 10);
@@ -241,6 +326,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                 {syncStatus?.lastSync?.status === 'success' ? <CheckCircle2 className="h-4 w-4 text-[#1F6F5B]" /> : <AlertCircle className="h-4 w-4" />}
                 <span>{formatLastSync(syncStatus?.lastSync?.finished_at)}</span>
               </div>
+              <button type="button" onClick={runReconciliation} disabled={isReconciling || !selectedPipeline} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] disabled:opacity-50"><BarChart3 className={`h-4 w-4 ${isReconciling ? 'animate-pulse' : ''}`} />{isReconciling ? 'Comparando...' : 'Reconciliar funil'}</button>
+              <button type="button" onClick={() => setDuplicatesOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><GitMerge className="h-4 w-4" />Duplicidades{duplicateGroups.length > 0 && <span className="rounded-full bg-[var(--primary-dim)] px-1.5 py-0.5 text-[10px] text-[var(--primary)]">{duplicateGroups.length}</span>}</button>
               <button type="button" onClick={() => setPhoneImportOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><Upload className="h-4 w-4" />Importar telefones</button>
               <button
                 type="button"
@@ -373,6 +460,18 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
           </section>
         </div>
       </div>
+      {reconciliation && <div className="fixed inset-0 z-50 flex items-end bg-slate-950/40 sm:items-center sm:justify-center sm:p-6" role="presentation"><section className="flex max-h-[90dvh] w-full max-w-4xl flex-col rounded-t-2xl bg-[var(--surface)] shadow-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-label="Reconciliação do funil"><header className="flex items-start justify-between gap-4 border-b border-[var(--border)] p-5"><div><p className="text-[11px] font-semibold text-[var(--primary)]">RECONCILIAÇÃO SEGURA</p><h2 className="mt-1 text-xl font-bold">Clínica Experts × CRM local</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Apenas comparação: nenhum card foi alterado ou excluído.</p></div><button type="button" onClick={() => setReconciliation(null)} className="rounded-lg p-2 hover:bg-[var(--surface-hover)]" aria-label="Fechar"><X className="h-5 w-5" /></button></header><div className="custom-scrollbar overflow-y-auto p-5"><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[var(--bg-subtle)] p-4"><p className="text-xs text-[var(--text-muted)]">Cards retornados pela API</p><strong className="mt-1 block font-mono text-2xl">{reconciliation.externalTotal}</strong></div><div className="rounded-xl bg-[var(--bg-subtle)] p-4"><p className="text-xs text-[var(--text-muted)]">Cards no CRM local</p><strong className="mt-1 block font-mono text-2xl">{reconciliation.localTotal}</strong></div></div><div className="mt-5 overflow-hidden rounded-xl border border-[var(--border)]"><div className="grid grid-cols-[1fr_70px_70px_80px] bg-[var(--bg-subtle)] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]"><span>Etapa</span><span>API</span><span>Local</span><span>Diferença</span></div>{reconciliation.stages.map(stage => <div key={stage.stageId} className="border-t border-[var(--border-subtle)] px-3 py-3"><div className="grid grid-cols-[1fr_70px_70px_80px] text-xs"><span className="font-semibold">{stage.stage}</span><span>{stage.externalCount}</span><span>{stage.localCount}</span><span className={stage.difference === 0 ? 'text-emerald-600' : 'font-semibold text-amber-600'}>{stage.difference > 0 ? '+' : ''}{stage.difference}</span></div>{stage.externalStatuses.length > 0 && <p className="mt-1 text-[10px] text-[var(--text-muted)]">API por status: {stage.externalStatuses.map(([status, count]) => `${status}: ${count}`).join(' · ')}</p>}</div>)}</div>{(reconciliation.onlyLocal.length > 0 || reconciliation.onlyExternal.length > 0) && <div className="mt-5 grid gap-4 md:grid-cols-2"><div><h3 className="text-xs font-bold">Só no CRM local ({reconciliation.onlyLocal.length})</h3><div className="mt-2 space-y-1.5">{reconciliation.onlyLocal.map(card => <div key={card.external_id} className="rounded-lg border border-[var(--border)] p-2 text-[11px]"><strong className="block truncate">{card.patient_name || card.title}</strong><span className="block truncate text-[var(--text-muted)]">{card.external_id} · {card.status || 'sem status'}</span></div>)}</div></div><div><h3 className="text-xs font-bold">Só na API ({reconciliation.onlyExternal.length})</h3><div className="mt-2 space-y-1.5">{reconciliation.onlyExternal.map(card => <div key={card.external_id} className="rounded-lg border border-[var(--border)] p-2 text-[11px]"><strong className="block truncate">{card.patient_name || card.title}</strong><span className="block truncate text-[var(--text-muted)]">{card.external_id} · {card.status || 'sem status'}</span></div>)}</div></div></div>}</div></section></div>}
+      {duplicatesOpen && <div className="fixed inset-0 z-50 flex items-end bg-slate-950/40 p-0 sm:items-center sm:justify-center sm:p-6" role="presentation">
+        <section className="flex max-h-[92dvh] w-full max-w-5xl flex-col rounded-t-2xl bg-[var(--surface)] shadow-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-label="Mesclar cards duplicados">
+          <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] p-5"><div><p className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--primary)]"><GitMerge className="h-3.5 w-3.5" />Higienização do CRM</p><h2 className="mt-1 text-xl font-bold tracking-tight">Cards duplicados</h2><p className="mt-1 text-xs text-[var(--text-muted)]">A mesclagem é local: o card de origem continua na Clínica Experts e fica oculto aqui.</p></div><button type="button" onClick={() => { setDuplicatesOpen(false); setSelectedDuplicateGroup(null); }} className="rounded-lg p-2 hover:bg-[var(--surface-hover)]" aria-label="Fechar"><X className="h-5 w-5" /></button></header>
+          {!selectedDuplicateGroup ? <div className="custom-scrollbar overflow-y-auto p-4">{duplicateGroups.length === 0 ? <div className="py-14 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" /><p className="mt-3 text-sm font-semibold">Nenhuma duplicidade encontrada neste funil</p><p className="mt-1 text-xs text-[var(--text-muted)]">Comparamos identificador do paciente, telefone e, quando necessário, nome.</p></div> : <div className="space-y-2">{duplicateGroups.map(group => <button type="button" key={group.key} onClick={() => openMergeReview(group)} className="flex w-full items-center justify-between gap-4 rounded-xl border border-[var(--border)] p-4 text-left transition hover:border-[var(--primary)]/35 hover:bg-[var(--surface-hover)]"><span><strong className="block text-sm">{group.label}</strong><span className="mt-1 block text-xs text-[var(--text-muted)]">{group.cards.map(card => `${card.title} · ${card.patient_phone || 'sem telefone'}`).join('  |  ')}</span></span><span className="shrink-0 rounded-full bg-[var(--primary-dim)] px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]">Revisar {group.cards.length} cards</span></button>)}</div>}</div> : <div className="custom-scrollbar overflow-y-auto p-5">
+            <div className="mb-5 grid gap-3 md:grid-cols-2">{selectedDuplicateGroup.cards.slice(0, 2).map(card => <button type="button" key={card.id} onClick={() => setSurvivorId(card.id)} className={`rounded-xl border p-4 text-left transition ${survivorId === card.id ? 'border-[var(--primary)] bg-[var(--primary-dim)] ring-1 ring-[var(--primary)]/20' : 'border-[var(--border)] hover:bg-[var(--surface-hover)]'}`}><span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{survivorId === card.id ? 'Card que será mantido' : 'Card que será ocultado'}</span><strong className="mt-1 block text-sm">{card.patient_name || card.title}</strong><span className="mt-1 block text-xs text-[var(--text-secondary)]">{card.title}</span><span className="mt-1 block text-xs text-[var(--text-muted)]">{card.patient_phone || 'Sem telefone'}</span></button>)}</div>
+            <p className="mb-3 text-xs font-semibold text-[var(--text-secondary)]">Escolha de qual card manter cada dado</p>
+            <div className="overflow-hidden rounded-xl border border-[var(--border)]"><div className="grid grid-cols-[minmax(100px,0.7fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]"><span>Campo</span>{selectedDuplicateGroup.cards.slice(0, 2).map(card => <span key={card.id} className="truncate px-2">{card.patient_name || card.title}</span>)}</div>{mergeFields.map(field => <div key={field.key} className="grid grid-cols-[minmax(100px,0.7fr)_minmax(0,1fr)_minmax(0,1fr)] border-b border-[var(--border-subtle)] last:border-b-0"><span className="px-3 py-3 text-xs font-semibold text-[var(--text-secondary)]">{field.label}</span>{selectedDuplicateGroup.cards.slice(0, 2).map(card => { const value = card[field.key]; const display = field.format ? field.format(value) : String(value || 'Não informado'); const selected = (fieldSources[field.key] || survivorId) === card.id; return <button type="button" key={card.id} onClick={() => setFieldSources(current => ({ ...current, [field.key]: card.id }))} className={`min-w-0 border-l border-[var(--border-subtle)] px-3 py-3 text-left text-xs transition ${selected ? 'bg-[var(--primary-dim)] text-[var(--text)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}><span className={`mr-2 inline-block h-3 w-3 rounded-full border align-[-1px] ${selected ? 'border-[var(--primary)] bg-[var(--primary)] ring-2 ring-[var(--primary)]/15' : 'border-[var(--border)]'}`} /><span className="break-words">{display}</span></button>})}</div>)}</div>
+          </div>}
+          {selectedDuplicateGroup && <footer className="flex items-center justify-between gap-3 border-t border-[var(--border)] p-4"><button type="button" onClick={() => setSelectedDuplicateGroup(null)} className="rounded-xl px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">Voltar</button><button type="button" onClick={confirmMerge} disabled={isMerging} className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50"><GitMerge className="h-4 w-4" />{isMerging ? 'Mesclando...' : 'Confirmar mesclagem'}</button></footer>}
+        </section>
+      </div>}
       {quickOpportunity && <WhatsAppQuickSend opportunity={quickOpportunity} onClose={() => setQuickOpportunity(null)} onSent={() => { setNotice('Mensagem enviada e card atualizado.'); void loadCRM(); }} />}
       {phoneImportOpen && <CRMPhoneImport opportunities={opportunities} onClose={() => setPhoneImportOpen(false)} onImported={updated => { setNotice(`${updated} card(s) receberam telefone pela importação.`); void loadCRM(); }} />}
     </div>

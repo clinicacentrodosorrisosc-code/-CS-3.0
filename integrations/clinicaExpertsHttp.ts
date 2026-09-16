@@ -82,6 +82,59 @@ export async function handleClinicaExpertsStatus(req: ApiRequest, res: ApiRespon
   }
 }
 
+export async function handleClinicaExpertsCrmReconciliation(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  if (!apiToken) {
+    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+    return;
+  }
+  const pipelineExternalId = headerValue(req.query?.pipelineExternalId);
+  if (!pipelineExternalId) {
+    res.status(400).json({ error: 'Informe o funil para reconciliar.' });
+    return;
+  }
+  try {
+    const context = await resolveContext(req);
+    const [{ data: pipeline, error: pipelineError }, externalRows] = await Promise.all([
+      context.db.from('clinic_experts_pipelines').select('id').eq('user_id', context.userId).eq('external_id', pipelineExternalId).maybeSingle(),
+      new ClinicaExpertsClient(apiToken).listOpportunities(pipelineExternalId),
+    ]);
+    if (pipelineError) throw pipelineError;
+    if (!pipeline) throw new Error('Funil local nao encontrado. Sincronize o CRM antes de reconciliar.');
+    const [{ data: stages, error: stagesError }, { data: localRows, error: localError }] = await Promise.all([
+      context.db.from('clinic_experts_stages').select('id,external_id,name').eq('user_id', context.userId).eq('pipeline_id', pipeline.id),
+      context.db.from('clinic_experts_opportunities').select('external_id,stage_id,title,patient_name,status,synced_at').eq('user_id', context.userId).eq('pipeline_id', pipeline.id),
+    ]);
+    if (stagesError) throw stagesError;
+    if (localError) throw localError;
+    const stageByExternal = new Map((stages || []).map(stage => [stage.external_id, stage]));
+    const localByStage = new Map<string, typeof localRows>();
+    for (const row of localRows || []) localByStage.set(row.stage_id, [...(localByStage.get(row.stage_id) || []), row]);
+    const externalIds = new Set(externalRows.map(row => row.uuid));
+    const localIds = new Set((localRows || []).map(row => row.external_id));
+    const stagesReport = (stages || []).map(stage => {
+      const remote = externalRows.filter(row => row.stage?.uuid === stage.external_id);
+      const local = localByStage.get(stage.id) || [];
+      const statuses = Object.entries(remote.reduce<Record<string, number>>((counts, row) => {
+        const key = String(row.status || row.stage?.status || 'sem status');
+        counts[key] = (counts[key] || 0) + 1;
+        return counts;
+      }, {})).sort((a, b) => b[1] - a[1]);
+      return { stageId: stage.id, stage: stage.name, externalCount: remote.length, localCount: local.length, difference: local.length - remote.length, externalStatuses: statuses };
+    });
+    const onlyLocal = (localRows || []).filter(row => !externalIds.has(row.external_id)).slice(0, 100);
+    const onlyExternal = externalRows.filter(row => !localIds.has(row.uuid)).slice(0, 100).map(row => ({ external_id: row.uuid, title: row.title || row.patient?.name || 'Oportunidade', patient_name: row.patient?.name || null, status: row.status || row.stage?.status || null, stage: stageByExternal.get(row.stage?.uuid || '')?.name || row.stage?.name || 'Etapa não mapeada' }));
+    res.status(200).json({ data: { externalTotal: externalRows.length, localTotal: (localRows || []).length, stages: stagesReport, onlyLocal, onlyExternal } });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao reconciliar o CRM.';
+    res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
+  }
+}
+
 export async function handleClinicaExpertsAgenda(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Metodo nao permitido.' });

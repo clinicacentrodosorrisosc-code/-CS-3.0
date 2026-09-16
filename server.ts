@@ -520,6 +520,10 @@ async function startServer() {
 
   app.post('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
   app.get('/api/integrations/clinica-experts/sync', runClinicaExpertsSync);
+  app.get('/api/integrations/clinica-experts/reconciliation', async (req, res) => {
+    const { handleClinicaExpertsCrmReconciliation } = await import('./integrations/clinicaExpertsHttp.js');
+    return handleClinicaExpertsCrmReconciliation(req, res);
+  });
   app.post('/api/integrations/clinica-experts/enrich-phones', async (req, res) => {
     const { handleClinicaExpertsPhoneEnrichment } = await import('./integrations/clinicaExpertsHttp.js');
     return handleClinicaExpertsPhoneEnrichment(req, res);
