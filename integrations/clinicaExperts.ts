@@ -424,11 +424,20 @@ export async function syncClinicaExperts(
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
     const { data: previousOpportunities, error: previousOpportunitiesError } = await db
       .from('clinic_experts_opportunities')
-      .select('id,external_id,stage_id,patient_phone,patient_email')
-      .eq('user_id', userId)
-      .in('pipeline_id', Array.from(new Set(stageRows.map(stage => stage.pipeline_id))));
+      .select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email')
+      .eq('user_id', userId);
     throwIfError(previousOpportunitiesError, 'Erro ao consultar etapas anteriores das oportunidades');
     const previousByExternalId = new Map((previousOpportunities || []).map(row => [row.external_id, row]));
+    const contactByPatientExternalId = new Map<string, { patient_phone: string | null; patient_email: string | null }>();
+    for (const row of previousOpportunities || []) {
+      const patientId = String(row.patient_external_id || '').trim();
+      if (!patientId || (!row.patient_phone && !row.patient_email)) continue;
+      const known = contactByPatientExternalId.get(patientId);
+      contactByPatientExternalId.set(patientId, {
+        patient_phone: known?.patient_phone || row.patient_phone || null,
+        patient_email: known?.patient_email || row.patient_email || null,
+      });
+    }
 
     const opportunityRows = opportunities.flatMap(opportunity => {
       const externalPipelineId = opportunity.pipeline?.uuid;
@@ -438,6 +447,7 @@ export async function syncClinicaExperts(
       if (!pipelineId || !stageId) return [];
       const patientId = opportunity.patient?.uuid || undefined;
       const previous = previousByExternalId.get(opportunity.uuid);
+      const knownContact = patientId ? contactByPatientExternalId.get(patientId) : undefined;
 
       return [{
         user_id: userId,
@@ -447,8 +457,8 @@ export async function syncClinicaExperts(
         stage_id: stageId,
         title: opportunity.title || opportunity.patient?.name || 'Oportunidade',
         patient_name: opportunity.patient?.name || null,
-        patient_phone: previous?.patient_phone || null,
-        patient_email: previous?.patient_email || null,
+        patient_phone: previous?.patient_phone || knownContact?.patient_phone || null,
+        patient_email: previous?.patient_email || knownContact?.patient_email || null,
         seller_name: opportunity.seller?.name || null,
         priority: Number(opportunity.priority || 1),
         amount_cents: Number(opportunity.amount || 0),
