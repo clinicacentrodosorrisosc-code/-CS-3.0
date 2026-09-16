@@ -705,31 +705,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         
         {/* View Content */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar">
-           <div className={`w-full transition-all duration-300`}>
+        <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-8 lg:py-7 custom-scrollbar">
+           <div className="dashboard-workspace w-full max-w-[1600px] mx-auto">
                
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+               <div className="dashboard-command-bar flex flex-col gap-5 p-4 md:flex-row md:items-center md:justify-between md:p-5">
                    <div>
-                       <h1 className="text-xl md:text-2xl font-bold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-tight">
+                       <span className="dashboard-eyebrow">VISÃO OPERACIONAL</span>
+                       <h1 className="mt-2 text-2xl font-semibold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-[-0.035em] md:text-[28px]">
                           {activeSubTab === 'geral' ? 'Dashboard Geral' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
                        </h1>
                        <p className="text-xs text-slate-400 mt-0.5">Métricas de performance e faturamento em tempo real.</p>
                    </div>
 
                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <div className="flex items-center gap-2 bg-surface/80 border border-border p-1 rounded-xl">
+                      <div className="flex items-center gap-2 bg-[var(--surface-high)] p-1 rounded-full">
                           <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth()-1); setCurrentDate(d); }} className="p-1 hover:bg-panel rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"><ChevronLeft className="w-3.5 h-3.5" /></button>
                           <div className="flex items-center gap-1.5 px-2"><span className="text-xs font-bold text-text uppercase">{currentDate.toLocaleDateString('pt-BR', { month: 'short' })}</span><span className="text-[10px] text-slate-400 font-mono font-bold">{currentDate.getFullYear()}</span></div>
                           <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth()+1); setCurrentDate(d); }} className="p-1 hover:bg-panel rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"><ChevronRight className="w-3.5 h-3.5" /></button>
                       </div>
                       {activeSubTab === 'geral' && (
-                          <button onClick={() => setIsConfigModalOpen(true)} className="px-3 py-1.5 rounded-xl btn btn-primary flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer" title="Definir Metas do Mês"><Settings className="w-3.5 h-3.5" /> Metas</button>
+                          <button onClick={() => setIsConfigModalOpen(true)} className="px-3 py-1.5 rounded-xl btn btn-primary flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer" title="Definir Metas do Mês"><Settings className="w-3.5 h-3.5" /> Metas</button>
                       )}
                    </div>
                </div>
 
                {/* SUB NAVIGATION BAR */}
-               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-border/80 mb-4">
+               <div className="dashboard-segmented-control flex items-center gap-1 overflow-x-auto no-scrollbar mb-6">
                     {[
                         { id: 'geral', label: 'Geral' },
                         { id: 'commercial', label: 'Comercial' },
@@ -740,10 +741,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                             key={tab.id}
                             onClick={() => setActiveSubTab(tab.id as 'geral' | 'commercial' | 'reception' | 'agenda')}
                             className={`
-                                px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
+                                px-4 py-2 rounded-full text-[11px] font-semibold tracking-[-0.01em] transition-colors whitespace-nowrap cursor-pointer
                                 ${activeSubTab === tab.id 
-                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
-                                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
+                                    ? 'bg-white text-[var(--primary)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:bg-white/[0.12]'
+                                    : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-white/65 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04]'}
                             `}
                         >
                             {tab.label}
@@ -771,8 +772,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       </div>
 
       {isConfigModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-            <div className="glass-panel w-full max-w-lg rounded-2xl p-6 flex flex-col gap-6 shadow-2xl">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-150">
+            <div className="glass-panel w-full max-w-lg rounded-2xl p-6 flex flex-col gap-6 shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center border-b border-border pb-4">
                   <div>
                     <h3 className="text-xl font-bold text-text leading-tight">Configurações do Mês</h3>
@@ -804,7 +805,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                 <button 
                   onClick={handleSaveConfigModal} 
                   disabled={isSaving}
-                  className="w-full mt-4 py-3 glass-button glass-button-primary text-text font-black rounded-xl transition-all active:scale-95 disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg"
+                  className="w-full mt-4 py-3 glass-button glass-button-primary text-text font-black rounded-xl transition-colors active:scale-95 disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg"
                 >
                   Salvar Metas
                 </button>

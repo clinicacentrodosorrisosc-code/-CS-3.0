@@ -51,18 +51,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     : null;
 
   return (
-    <header className="z-50 flex h-[58px] min-h-[58px] w-full items-center justify-between border-b border-[#e2e5ea] bg-white px-3 sm:px-5 dark:border-white/[0.08] dark:bg-[#151820]">
+    <header className="z-50 flex h-[58px] min-h-[58px] w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-5 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
       <div className="flex min-w-0 items-center gap-3">
         <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white" aria-label="Abrir menu">
           <Menu className="size-4" />
         </button>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="grid size-8 place-items-center rounded-full border-2 border-[var(--primary)] text-[10px] font-bold text-[var(--primary)]">CS</div>
-          <span className="hidden text-sm font-semibold tracking-[-0.02em] text-[#172033] sm:inline dark:text-white">Centro do Sorriso</span>
+          <div className="grid size-8 place-items-center rounded-[10px] bg-[var(--primary)] text-[10px] font-bold text-white shadow-[0_3px_10px_rgba(0,122,255,0.22)]">CS</div>
+          <span className="hidden text-sm font-semibold tracking-[-0.025em] text-[var(--text)] sm:inline">Centro do Sorriso</span>
         </div>
 
-        <div className="hidden h-5 w-px bg-[#e2e5ea] md:block dark:bg-white/10" />
+        <div className="hidden h-5 w-px bg-[var(--border)] md:block" />
         <div className="hidden min-w-0 items-center gap-1.5 text-xs md:flex">
           <span className="truncate font-semibold text-[var(--primary)]">{moduleLabel}</span>
           {subLabel && <><ChevronRight className="size-3 text-[#b0b6c0]" /><span className="truncate text-[#667085] dark:text-slate-300">{subLabel}</span></>}
@@ -94,7 +94,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
         )}
 
-        <button type="button" className="ml-1 grid size-8 place-items-center rounded-full border border-[#d7b09c] bg-[#fde9df] text-[10px] font-bold text-[#6b4434]" title={userEmail || 'Perfil'}>
+        <button type="button" className="ml-1 grid size-8 place-items-center rounded-full border border-[var(--primary-border)] bg-[var(--primary-dim)] text-[10px] font-bold text-[var(--primary)]" title={userEmail || 'Perfil'}>
           {(userEmail || 'CS').slice(0, 2).toUpperCase()}
         </button>
       </div>

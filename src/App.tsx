@@ -522,7 +522,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="ce-app flex h-screen flex-col overflow-hidden bg-[#f4f5f7] text-[#172033] transition-colors duration-200 dark:bg-[#101217] dark:text-slate-100">
+    <div className="ce-app flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--text)] transition-colors duration-200">
       <AppHeader
           activeTab={activeTab}
           requestedSubTab={requestedSubTab}

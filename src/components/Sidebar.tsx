@@ -358,7 +358,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 group relative flex items-center min-h-11 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
                 ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
                 ${isActive
-                  ? 'bg-[var(--primary-dim)] border-[var(--primary-border)] text-[var(--primary)] dark:bg-[var(--primary-dim)] dark:text-[var(--primary-hover)] font-semibold'
+                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-[0_6px_16px_rgba(0,122,255,0.18)] font-semibold'
                   : 'border-transparent text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] hover:border-[#E2E5EA] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.08] font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
@@ -367,7 +367,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className={`
                   w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
                   ${isActive
-                    ? 'bg-[var(--primary)] text-white shadow-sm shadow-blue-500/20'
+                    ? 'bg-white/18 text-white'
                     : 'text-[#667085] group-hover:text-[#172033] dark:text-slate-400 dark:group-hover:text-slate-200'}
                 `}>
                   <IconComponent className="w-4 h-4" />
@@ -458,8 +458,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           mass: 0.5
         }}
         className={`
-          flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40
-          bg-white dark:bg-[#151820] border-b lg:border-b-0 lg:border-r border-[#e2e5ea] dark:border-white/[0.08]
+          flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-2 lg:mr-2 lg:h-[calc(100%-1rem)] lg:rounded-2xl
+          bg-white dark:bg-[#151820] border border-[var(--border-subtle)]
           transition-colors duration-200
           ${isMobileMenuOpen ? 'h-[92vh] w-full rounded-b-3xl shadow-2xl z-50' : 'h-auto'}
         `}
@@ -535,7 +535,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title="Abrir Perfil"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#8B3DFF] to-[#C9A9FF] flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                 {userRole.slice(0, 2).toUpperCase()}
               </div>
 
@@ -608,7 +608,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={`
                             text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between
                             ${requestedSubTab === sub.id
-                              ? 'text-[#8B3DFF] dark:text-[#C9A9FF] bg-[#8B3DFF]/10 dark:bg-[#C9A9FF]/10 font-bold'
+                            ? 'text-[var(--primary)] bg-[var(--primary-dim)] font-bold'
                               : 'text-[#667085] hover:text-[#172033] hover:bg-[#F5F6F8] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04]'}
                           `}
                         >
@@ -624,7 +624,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setActiveTab(currentItem.id);
                         setFlyoutTab(null);
                       }}
-                      className="text-left px-2.5 py-1.5 rounded-lg text-xs text-[#8B3DFF] dark:text-[#C9A9FF] hover:bg-[#F5F6F8] dark:hover:bg-white/[0.04]"
+                      className="text-left px-2.5 py-1.5 rounded-lg text-xs text-[var(--primary)] hover:bg-[#F5F6F8] dark:hover:bg-white/[0.04]"
                     >
                       Acessar módulo
                     </button>
@@ -683,7 +683,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Overlapping Avatar */}
                 <div className="absolute -top-10 left-6">
                   <div className={`
-                    size-20 rounded-2xl border-4 overflow-hidden shadow-xl relative bg-[#8B3DFF] flex items-center justify-center text-2xl font-black text-white
+                    size-20 rounded-2xl border-4 overflow-hidden shadow-xl relative bg-[var(--primary)] flex items-center justify-center text-2xl font-black text-white
                     ${theme === 'dark' ? 'border-slate-950' : 'border-white'}
                   `}>
                     {userRole.slice(0, 2).toUpperCase()}
