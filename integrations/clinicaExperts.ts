@@ -422,17 +422,22 @@ export async function syncClinicaExperts(
       .eq('user_id', userId);
     throwIfError(stageReadError, 'Erro ao reler etapas');
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
-    const { data: previousOpportunities, error: previousOpportunitiesError } = await db
-      .from('clinic_experts_opportunities')
-      .select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email,local_overrides')
-      .eq('user_id', userId);
+    const [{ data: previousOpportunities, error: previousOpportunitiesError }, { data: importedRows, error: importedRowsError }] = await Promise.all([
+      db.from('clinic_experts_opportunities').select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email,local_overrides').eq('user_id', userId),
+      db.from('clinic_experts_imported_data').select('opportunity_external_id,patient_external_id,data').eq('user_id', userId),
+    ]);
     throwIfError(previousOpportunitiesError, 'Erro ao consultar etapas anteriores das oportunidades');
+    throwIfError(importedRowsError, 'Erro ao consultar dados importados localmente');
     const previousByExternalId = new Map((previousOpportunities || []).map(row => [row.external_id, row]));
+    const importedByExternalId = new Map((importedRows || []).map(row => [row.opportunity_external_id, row.data]));
+    const importedByPatientExternalId = new Map((importedRows || []).filter(row => row.patient_external_id).map(row => [String(row.patient_external_id), row.data]));
     const contactByPatientExternalId = new Map<string, { patient_phone: string | null; patient_email: string | null }>();
     const localPhone = (row?: { patient_phone?: string | null; local_overrides?: unknown }) => {
       const overrides = row?.local_overrides && typeof row.local_overrides === 'object' ? row.local_overrides as Record<string, unknown> : {};
       return typeof overrides.patient_phone === 'string' && overrides.patient_phone.trim() ? overrides.patient_phone : row?.patient_phone || null;
     };
+    const importedPhone = (data?: unknown) => data && typeof data === 'object' && typeof (data as Record<string, unknown>).patient_phone === 'string'
+      ? String((data as Record<string, unknown>).patient_phone).trim() || null : null;
     for (const row of previousOpportunities || []) {
       const patientId = String(row.patient_external_id || '').trim();
       const phone = localPhone(row);
@@ -453,6 +458,7 @@ export async function syncClinicaExperts(
       const patientId = opportunity.patient?.uuid || undefined;
       const previous = previousByExternalId.get(opportunity.uuid);
       const knownContact = patientId ? contactByPatientExternalId.get(patientId) : undefined;
+      const protectedPhone = importedPhone(importedByExternalId.get(opportunity.uuid)) || (patientId ? importedPhone(importedByPatientExternalId.get(patientId)) : null);
 
       return [{
         user_id: userId,
@@ -462,7 +468,7 @@ export async function syncClinicaExperts(
         stage_id: stageId,
         title: opportunity.title || opportunity.patient?.name || 'Oportunidade',
         patient_name: opportunity.patient?.name || null,
-        patient_phone: localPhone(previous) || knownContact?.patient_phone || null,
+        patient_phone: protectedPhone || localPhone(previous) || knownContact?.patient_phone || null,
         patient_email: previous?.patient_email || knownContact?.patient_email || null,
         seller_name: opportunity.seller?.name || null,
         priority: Number(opportunity.priority || 1),
@@ -598,11 +604,34 @@ export async function processClinicaExpertsOpportunityWebhook(
   throwIfError(existingError, 'Erro ao consultar oportunidade existente');
 
   const patientExternalId = resource.patient?.uuid || resource.patient?.id || null;
+  const { data: importedForCard, error: importedForCardError } = await db
+    .from('clinic_experts_imported_data')
+    .select('data')
+    .eq('user_id', userId)
+    .eq('opportunity_external_id', opportunityId)
+    .maybeSingle();
+  throwIfError(importedForCardError, 'Erro ao consultar dado importado do card');
+  let importedData = importedForCard?.data;
+  if (!importedData && patientExternalId) {
+    const { data: importedForPatient, error: importedForPatientError } = await db
+      .from('clinic_experts_imported_data')
+      .select('data')
+      .eq('user_id', userId)
+      .eq('patient_external_id', patientExternalId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    throwIfError(importedForPatientError, 'Erro ao consultar dado importado do paciente');
+    importedData = importedForPatient?.data;
+  }
+  const importedPhone = importedData && typeof importedData === 'object' && typeof (importedData as Record<string, unknown>).patient_phone === 'string'
+    ? String((importedData as Record<string, unknown>).patient_phone).trim() : '';
   const overridePhone = existingOpportunity?.local_overrides && typeof existingOpportunity.local_overrides === 'object'
     && typeof (existingOpportunity.local_overrides as Record<string, unknown>).patient_phone === 'string'
     ? String((existingOpportunity.local_overrides as Record<string, unknown>).patient_phone).trim()
     : '';
-  let patientPhone = overridePhone
+  let patientPhone = importedPhone
+    || overridePhone
     || existingOpportunity?.patient_phone
     || resource.patient?.phone
     || resource.patient?.cellphone
