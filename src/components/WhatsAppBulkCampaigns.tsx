@@ -38,7 +38,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
   const [name, setName] = useState('');
   const [successTag, setSuccessTag] = useState('');
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>('all');
-  const [tagFilter, setTagFilter] = useState('');
+  const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [variableMappings, setVariableMappings] = useState<Record<number, string>>({});
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -87,7 +87,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       if (error) { setNotice(error.message); return; }
       const tags = [...new Set((data || []).flatMap(item => Array.isArray(item.tags) ? item.tags : []).map(tag => String(tag).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
       setAvailableTags(tags);
-      setTagFilter(current => tags.includes(current) ? current : '');
+      setTagFilters(current => current.filter(tag => tags.includes(tag)));
     })();
   }, [pipelineId, stageId]);
 
@@ -132,7 +132,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     void (async () => {
       try {
         const params = new URLSearchParams({ action: 'preview', pipelineId, stageId, templateName: currentTemplate.name, language: currentTemplate.language });
-        if (tagFilterMode !== 'all' && tagFilter) { params.set('tagFilterMode', tagFilterMode); params.set('tagFilter', tagFilter); }
+        if (tagFilterMode !== 'all' && tagFilters.length) { params.set('tagFilterMode', tagFilterMode); params.set('tagFilters', JSON.stringify(tagFilters)); }
         const response = await fetch(`/api/integrations/whatsapp/bulk-campaigns?${params}`, { headers: await authHeaders(), signal: controller.signal });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error);
@@ -143,7 +143,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [pipelineId, stageId, tagFilterMode, tagFilter, currentTemplate?.name, currentTemplate?.language]);
+  }, [pipelineId, stageId, tagFilterMode, tagFilters, currentTemplate?.name, currentTemplate?.language]);
 
   const selectableContacts = preview?.recipients.contacts.filter(contact => contact.status !== 'skipped') || [];
   const selectedContacts = selectableContacts.filter(contact => selectedIds.has(contact.id));
@@ -160,7 +160,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   const send = async () => {
     if (!name.trim() || !currentTemplate || !selectedIds.size) return;
-    if (tagFilterMode !== 'all' && !tagFilter) { setNotice('Selecione a tag usada no filtro do público.'); return; }
+    if (tagFilterMode !== 'all' && !tagFilters.length) { setNotice('Selecione ao menos uma tag usada no filtro do público.'); return; }
     if (missingVariables.length) { setNotice('Escolha o conteúdo de todas as variáveis do template antes de enviar.'); return; }
     const historicalSelected = selectedContacts.some(contact => contact.status === 'needs_confirmation');
     if (historicalSelected && !window.confirm('Há telefones recuperados do histórico entre os selecionados. Confirma o uso desses números?')) return;
@@ -168,7 +168,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     setSending(true); setNotice('');
     try {
       const headers = await authHeaders();
-      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: Array.from(selectedIds), successTag, tagFilterMode, tagFilter }) });
+      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: Array.from(selectedIds), successTag, tagFilterMode, tagFilters }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       let pending = body.totalRecipients;
@@ -213,10 +213,10 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
           <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
             <div className="flex items-center gap-1.5 text-xs font-bold"><Tag className="h-3.5 w-3.5 text-[var(--primary)]" />Público por tag</div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-semibold">Regra do filtro<select value={tagFilterMode} onChange={event => { const mode = event.target.value as TagFilterMode; setTagFilterMode(mode); if (mode === 'all') setTagFilter(''); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="all">Não filtrar por tag</option><option value="include">Enviar apenas para quem possui a tag</option><option value="exclude">Não enviar para quem possui a tag</option></select></label>
-              {tagFilterMode !== 'all' && <label className="text-xs font-semibold">Tag<select value={tagFilter} onChange={event => setTagFilter(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="">Selecione uma tag</option>{availableTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}</select>{!availableTags.length && <span className="mt-1 block text-[10px] font-normal text-[var(--text-muted)]">Nenhuma tag encontrada neste público.</span>}</label>}
+              <label className="text-xs font-semibold">Regra do filtro<select value={tagFilterMode} onChange={event => { const mode = event.target.value as TagFilterMode; setTagFilterMode(mode); if (mode === 'all') setTagFilters([]); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="all">Não filtrar por tag</option><option value="include">Enviar para quem possui alguma das tags</option><option value="exclude">Não enviar para quem possui alguma das tags</option></select></label>
+              {tagFilterMode !== 'all' && <div className="text-xs font-semibold"><span>Tags selecionadas ({tagFilters.length})</span><div className="mt-1.5 max-h-32 space-y-1 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2">{availableTags.map(tag => { const selected = tagFilters.includes(tag); return <button key={tag} type="button" onClick={() => setTagFilters(current => selected ? current.filter(item => item !== tag) : [...current, tag])} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium hover:bg-[var(--surface-hover)]"><span className={`flex h-4 w-4 items-center justify-center rounded border ${selected ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-[var(--border)]'}`}>{selected && <Check className="h-3 w-3" />}</span><span className="truncate">{tag}</span></button>; })}{!availableTags.length && <span className="block p-2 text-[10px] font-normal text-[var(--text-muted)]">Nenhuma tag encontrada neste público.</span>}</div></div>}
             </div>
-            {tagFilterMode !== 'all' && tagFilter && <p className="mt-3 text-[10px] text-[var(--text-muted)]">A prévia e o envio considerarão somente este critério de tag.</p>}
+            {tagFilterMode !== 'all' && tagFilters.length > 0 && <p className="mt-3 text-[10px] text-[var(--text-muted)]">A prévia e o envio considerarão qualquer uma das tags selecionadas.</p>}
           </section>
           {currentTemplate && <section className="mt-5 grid gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10 md:grid-cols-[minmax(0,1fr)_280px]">
             <div>
@@ -236,7 +236,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
             <label className="mt-4 block text-xs font-semibold"><span className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Tag após envio confirmado</span><input value={successTag} onChange={event => setSuccessTag(event.target.value)} maxLength={40} placeholder="Ex.: Campanha retorno" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-[var(--primary)]" /></label>
             <p className="mt-3 text-[10px] leading-relaxed text-[var(--text-muted)]">{preview.pricing.note}</p>
           </section>}
-          <button disabled={sending || !name.trim() || !selectedIds.size || missingVariables.length > 0 || (tagFilterMode !== 'all' && !tagFilter)} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
+          <button disabled={sending || !name.trim() || !selectedIds.size || missingVariables.length > 0 || (tagFilterMode !== 'all' && !tagFilters.length)} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
         </main>
         <aside className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><h2 className="text-sm font-bold">Histórico recente</h2><div className="mt-3 space-y-2">{campaigns.length ? campaigns.map(campaign => <button key={campaign.id} onClick={() => void openReport(campaign)} className="w-full rounded-xl border border-[var(--border-subtle)] p-3 text-left transition hover:bg-[var(--surface-hover)]"><span className="block truncate text-xs font-semibold">{campaign.name}</span><span className="mt-1 block text-[10px] text-[var(--text-muted)]">{campaign.sent_count}/{campaign.total_recipients} enviados · ver relatório</span></button>) : <p className="py-8 text-center text-xs text-[var(--text-muted)]">Nenhuma campanha enviada</p>}</div></aside>
       </div>

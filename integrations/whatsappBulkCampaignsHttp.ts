@@ -5,7 +5,7 @@ import { fallbackSupabaseAnonKey } from './supabasePublicConfig.js';
 type Request = { method?: string; headers: Record<string, string | string[] | undefined>; body?: any };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void };
 type Opportunity = { id: string; patient_phone: string | null; patient_name: string | null; seller_name: string | null; title: string; amount_cents: number; tags?: string[] };
-type TagFilter = { mode: 'all' | 'include' | 'exclude'; tag: string };
+type TagFilter = { mode: 'all' | 'include' | 'exclude'; tags: string[] };
 const url = process.env.VITE_SUPABASE_URL || 'https://dmslcvvjxfulsocksave.supabase.co';
 const anon = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || fallbackSupabaseAnonKey;
 const service = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -15,14 +15,22 @@ const brazilRates: Record<string, number> = { MARKETING: 0.3217, UTILITY: 0.035,
 const normalizePhone = (value: string | null) => { const digits = String(value || '').replace(/\D/g, ''); return (digits.length === 10 || digits.length === 11) && !digits.startsWith('55') ? `55${digits}` : digits; };
 const normalizeTagValue = (value: unknown) => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
 const tagFilterFrom = (source: Record<string, unknown>): TagFilter => {
-  const tag = String(source.tagFilter || source.tag || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  const serializedTags = typeof source.tagFilters === 'string' && source.tagFilters.trim().startsWith('[') ? (() => { try { const parsed = JSON.parse(source.tagFilters); return Array.isArray(parsed) ? parsed : []; } catch { return []; } })() : null;
+  let rawTags: unknown[] = [];
+  if (Array.isArray(source.tagFilters)) rawTags = source.tagFilters;
+  else if (serializedTags) rawTags = serializedTags;
+  else if (Array.isArray(source.tag_filter_values)) rawTags = source.tag_filter_values;
+  else if (source.tagFilters) rawTags = [source.tagFilters];
+  else if (source.tagFilter || source.tag || source.tag_filter_value) rawTags = [source.tagFilter || source.tag || source.tag_filter_value];
+  const tags = [...new Set(rawTags.map(tag => String(tag || '').trim().replace(/\s+/g, ' ').slice(0, 40)).filter(Boolean))];
   const requestedMode = String(source.tagFilterMode || source.tagMode || 'all');
-  return tag && (requestedMode === 'include' || requestedMode === 'exclude') ? { mode: requestedMode, tag } : { mode: 'all', tag: '' };
+  return tags.length && (requestedMode === 'include' || requestedMode === 'exclude') ? { mode: requestedMode, tags } : { mode: 'all', tags: [] };
 };
 const matchesTagFilter = (opportunity: Opportunity, filter: TagFilter) => {
   if (filter.mode === 'all') return true;
-  const hasTag = (Array.isArray(opportunity.tags) ? opportunity.tags : []).some(tag => normalizeTagValue(tag) === normalizeTagValue(filter.tag));
-  return filter.mode === 'include' ? hasTag : !hasTag;
+  const selectedTags = new Set(filter.tags.map(normalizeTagValue));
+  const hasAnySelectedTag = (Array.isArray(opportunity.tags) ? opportunity.tags : []).some(tag => selectedTags.has(normalizeTagValue(tag)));
+  return filter.mode === 'include' ? hasAnySelectedTag : !hasAnySelectedTag;
 };
 const header = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 async function auth(req: Request) {
@@ -84,7 +92,7 @@ async function registerSkippedRecipients(db: SupabaseClient, campaign: any) {
   const { data: existing, error: existingError } = await db.from('whatsapp_bulk_campaign_recipients').select('opportunity_id,phone').eq('campaign_id', campaign.id);
   if (existingError) throw existingError;
   const existingIds = new Set((existing || []).map(item => item.opportunity_id)); const usedPhones = new Set((existing || []).map(item => item.phone).filter(Boolean));
-  const tagFilter = tagFilterFrom({ tagFilterMode: campaign.tag_filter_mode, tagFilter: campaign.tag_filter_value });
+  const tagFilter = tagFilterFrom({ tagFilterMode: campaign.tag_filter_mode, tagFilters: campaign.tag_filter_values, tagFilter: campaign.tag_filter_value });
   const skipped = (opportunities || []).filter(item => matchesTagFilter(item as Opportunity, tagFilter) && !existingIds.has(item.id)).map(item => {
     const phone = normalizePhone(item.patient_phone);
     const duplicate = phone.length >= 12 && usedPhones.has(phone);
@@ -142,7 +150,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     const { name, templateName, language = 'pt_BR', variableMapping = '', pipelineId, stageId, useHistoricalPhones = false, selectedOpportunityIds, successTag } = req.body || {};
     const tagFilter = tagFilterFrom(req.body || {});
     if (!name || !templateName || !pipelineId) return res.status(400).json({ error: 'Nome, template e funil sao obrigatorios.' });
-    if (['include', 'exclude'].includes(String(req.body?.tagFilterMode || '')) && !tagFilter.tag) return res.status(400).json({ error: 'Selecione a tag usada no filtro do público.' });
+    if (['include', 'exclude'].includes(String(req.body?.tagFilterMode || '')) && !tagFilter.tags.length) return res.status(400).json({ error: 'Selecione ao menos uma tag usada no filtro do público.' });
     const { data: config, error: configError } = await db.from('whatsapp_config').select('waba_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
     if (configError || !config || config.status !== 'connected' || !config.waba_id || !config.access_token_encrypted) throw new Error('Conecte o WhatsApp Business e informe o WABA ID antes de criar a campanha.');
     let templateUrl: string | null = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(config.waba_id)}/message_templates?limit=100&fields=name,status,language`;
@@ -172,7 +180,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
     const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;
-    const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, success_tag: normalizedSuccessTag, tag_filter_mode: tagFilter.mode, tag_filter_value: tagFilter.tag || null, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
+    const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, success_tag: normalizedSuccessTag, tag_filter_mode: tagFilter.mode, tag_filter_value: tagFilter.tags[0] || null, tag_filter_values: tagFilter.tags, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
     if (createError || !campaign) throw createError || new Error('Falha ao criar campanha.');
     const { error: recipientsError } = await db.from('whatsapp_bulk_campaign_recipients').insert(recipients.map(item => ({ ...item, campaign_id: campaign.id }))); if (recipientsError) throw recipientsError;
     return res.status(201).json({ campaignId: campaign.id, totalRecipients: recipients.filter(item => item.status === 'pending').length });
