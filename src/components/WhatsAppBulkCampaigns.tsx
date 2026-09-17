@@ -7,8 +7,18 @@ type Stage = { id: string; pipeline_id: string; name: string };
 type Template = { name: string; language: string; status: string; components?: { type: string; text?: string }[] };
 type Campaign = { id: string; name: string; template_name: string; sent_count: number; failed_count?: number; total_recipients: number; status?: string; created_at?: string };
 type Contact = { id: string; patient_name: string; opportunity_title: string; phone: string; status: 'ready' | 'skipped' | 'needs_confirmation'; reason: string; phoneSource?: string };
-type Preview = { template: { category: string; body: string }; recipients: { totalCards: number; eligible: number; skippedInvalid: number; skippedDuplicate: number; awaitingConfirmation: number; contacts: Contact[] }; pricing: { unitPrice: number; total: number; estimated: boolean; note: string } };
+type OpportunitySample = { patient_name: string | null; patient_phone: string | null; seller_name: string | null; title: string; amount_cents: number };
+type Preview = { template: { category: string; body: string }; sample: OpportunitySample | null; recipients: { totalCards: number; eligible: number; skippedInvalid: number; skippedDuplicate: number; awaitingConfirmation: number; contacts: Contact[] }; pricing: { unitPrice: number; total: number; estimated: boolean; note: string } };
 type RecipientReport = { id: string; opportunity_id: string; phone: string; status: string; error_message?: string | null; patient_name: string; opportunity_title: string };
+type TagFilterMode = 'all' | 'include' | 'exclude';
+
+const variableOptions = [
+  { value: 'patient_name', label: 'Nome do paciente' },
+  { value: 'patient_phone', label: 'Telefone do paciente' },
+  { value: 'seller_name', label: 'Responsável comercial' },
+  { value: 'opportunity_title', label: 'Nome da oportunidade' },
+  { value: 'amount', label: 'Valor da oportunidade' },
+];
 
 const brl = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 async function authHeaders() {
@@ -27,6 +37,10 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
   const [templateKey, setTemplateKey] = useState('');
   const [name, setName] = useState('');
   const [successTag, setSuccessTag] = useState('');
+  const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>('all');
+  const [tagFilter, setTagFilter] = useState('');
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [variableMappings, setVariableMappings] = useState<Record<number, string>>({});
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [contactSearch, setContactSearch] = useState('');
@@ -59,8 +73,58 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   const currentTemplate = templates.find(item => `${item.name}::${item.language}` === templateKey);
   const visibleStages = stages.filter(item => item.pipeline_id === pipelineId);
-  const variableMapping = Array.from((currentTemplate?.components?.find(item => item.type === 'BODY')?.text || '').matchAll(/\{\{(\d+)\}\}/g))
-    .map((match, index) => `{{${match[1]}}} = ${['patient_name', 'seller_name', 'opportunity_title', 'amount'][index] || 'patient_name'}`).join('\n');
+  const templateBody = currentTemplate?.components?.find(item => item.type === 'BODY')?.text || '';
+  const placeholderNumbers = Array.from(new Set(Array.from(templateBody.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
+  const variableMapping = Object.entries(variableMappings).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n');
+  const missingVariables = placeholderNumbers.filter(position => !variableMappings[position]);
+
+  useEffect(() => {
+    if (!pipelineId) { setAvailableTags([]); return; }
+    void (async () => {
+      let query = supabase.from('clinic_experts_opportunities').select('tags').eq('pipeline_id', pipelineId);
+      if (stageId) query = query.eq('stage_id', stageId);
+      const { data, error } = await query;
+      if (error) { setNotice(error.message); return; }
+      const tags = [...new Set((data || []).flatMap(item => Array.isArray(item.tags) ? item.tags : []).map(tag => String(tag).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      setAvailableTags(tags);
+      setTagFilter(current => tags.includes(current) ? current : '');
+    })();
+  }, [pipelineId, stageId]);
+
+  const sampleValue = (key: string) => {
+    const sample = preview?.sample;
+    if (!sample) return `[${variableOptions.find(option => option.value === key)?.label || key}]`;
+    const values: Record<string, string> = {
+      patient_name: sample.patient_name || 'Paciente sem nome',
+      patient_phone: sample.patient_phone || 'Telefone não informado',
+      seller_name: sample.seller_name || 'Responsável não informado',
+      opportunity_title: sample.title || 'Oportunidade',
+      amount: brl((sample.amount_cents || 0) / 100),
+    };
+    return values[key] || `[${key}]`;
+  };
+
+  const renderedMessage = templateBody.replace(/\{\{(\d+)\}\}/g, (_, rawPosition: string) => {
+    const position = Number(rawPosition);
+    return variableMappings[position] ? sampleValue(variableMappings[position]) : `{{${position}}}`;
+  });
+
+  const selectTemplate = (nextTemplateKey: string) => {
+    setTemplateKey(nextTemplateKey);
+    const nextTemplate = templates.find(item => `${item.name}::${item.language}` === nextTemplateKey);
+    const positions = Array.from(new Set(Array.from((nextTemplate?.components?.find(item => item.type === 'BODY')?.text || '').matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
+    const defaults = ['patient_name', 'seller_name', 'opportunity_title', 'amount'];
+    setVariableMappings(Object.fromEntries(positions.map((position, index) => [position, defaults[index] || 'patient_name'])));
+  };
+
+  const setVariableMapping = (position: number, key: string) => {
+    setVariableMappings(current => {
+      const next = { ...current };
+      if (key) next[position] = key;
+      else delete next[position];
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!pipelineId || !currentTemplate) { setPreview(null); setSelectedIds(new Set()); return; }
@@ -68,6 +132,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     void (async () => {
       try {
         const params = new URLSearchParams({ action: 'preview', pipelineId, stageId, templateName: currentTemplate.name, language: currentTemplate.language });
+        if (tagFilterMode !== 'all' && tagFilter) { params.set('tagFilterMode', tagFilterMode); params.set('tagFilter', tagFilter); }
         const response = await fetch(`/api/integrations/whatsapp/bulk-campaigns?${params}`, { headers: await authHeaders(), signal: controller.signal });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error);
@@ -78,7 +143,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [pipelineId, stageId, currentTemplate?.name, currentTemplate?.language]);
+  }, [pipelineId, stageId, tagFilterMode, tagFilter, currentTemplate?.name, currentTemplate?.language]);
 
   const selectableContacts = preview?.recipients.contacts.filter(contact => contact.status !== 'skipped') || [];
   const selectedContacts = selectableContacts.filter(contact => selectedIds.has(contact.id));
@@ -95,13 +160,15 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   const send = async () => {
     if (!name.trim() || !currentTemplate || !selectedIds.size) return;
+    if (tagFilterMode !== 'all' && !tagFilter) { setNotice('Selecione a tag usada no filtro do público.'); return; }
+    if (missingVariables.length) { setNotice('Escolha o conteúdo de todas as variáveis do template antes de enviar.'); return; }
     const historicalSelected = selectedContacts.some(contact => contact.status === 'needs_confirmation');
     if (historicalSelected && !window.confirm('Há telefones recuperados do histórico entre os selecionados. Confirma o uso desses números?')) return;
     if (!window.confirm(`Confirmar envio para ${selectedIds.size} contato(s)?`)) return;
     setSending(true); setNotice('');
     try {
       const headers = await authHeaders();
-      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: Array.from(selectedIds), successTag }) });
+      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: Array.from(selectedIds), successTag, tagFilterMode, tagFilter }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       let pending = body.totalRecipients;
@@ -141,15 +208,35 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
             <label className="text-xs font-semibold">Nome da campanha<input value={name} onChange={event => setName(event.target.value)} placeholder="Ex.: Retorno setembro" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none focus:border-[var(--primary)]" /></label>
             <label className="text-xs font-semibold">Funil<select value={pipelineId} onChange={event => { setPipelineId(event.target.value); setStageId(''); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none">{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
             <label className="text-xs font-semibold">Etapa<select value={stageId} onChange={event => setStageId(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Todas as etapas</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-            <label className="text-xs font-semibold">Template aprovado<select value={templateKey} onChange={event => setTemplateKey(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Selecione</option>{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label>
+            <label className="text-xs font-semibold">Template aprovado<select value={templateKey} onChange={event => selectTemplate(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Selecione</option>{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label>
           </div>
+          <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+            <div className="flex items-center gap-1.5 text-xs font-bold"><Tag className="h-3.5 w-3.5 text-[var(--primary)]" />Público por tag</div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="text-xs font-semibold">Regra do filtro<select value={tagFilterMode} onChange={event => { const mode = event.target.value as TagFilterMode; setTagFilterMode(mode); if (mode === 'all') setTagFilter(''); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="all">Não filtrar por tag</option><option value="include">Enviar apenas para quem possui a tag</option><option value="exclude">Não enviar para quem possui a tag</option></select></label>
+              {tagFilterMode !== 'all' && <label className="text-xs font-semibold">Tag<select value={tagFilter} onChange={event => setTagFilter(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="">Selecione uma tag</option>{availableTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}</select>{!availableTags.length && <span className="mt-1 block text-[10px] font-normal text-[var(--text-muted)]">Nenhuma tag encontrada neste público.</span>}</label>}
+            </div>
+            {tagFilterMode !== 'all' && tagFilter && <p className="mt-3 text-[10px] text-[var(--text-muted)]">A prévia e o envio considerarão somente este critério de tag.</p>}
+          </section>
+          {currentTemplate && <section className="mt-5 grid gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10 md:grid-cols-[minmax(0,1fr)_280px]">
+            <div>
+              <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Como ficará a mensagem</p><span className="rounded-md bg-white/70 px-2 py-1 text-[9px] font-semibold text-emerald-700 dark:bg-white/10 dark:text-emerald-200">{currentTemplate.language}</span></div>
+              <div className="mt-3 max-w-xl rounded-xl rounded-tl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[var(--surface)]"><p className="whitespace-pre-wrap text-xs leading-5 text-[var(--text)]">{renderedMessage || 'Este template não possui texto no corpo.'}</p></div>
+              <p className="mt-2 text-[10px] text-[var(--text-muted)]">{preview?.sample ? `Exemplo usando o contato ${preview.sample.patient_name || preview.sample.title}.` : 'Os valores reais serão personalizados para cada contato selecionado.'}</p>
+            </div>
+            <div className="border-t border-emerald-600/15 pt-4 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+              <p className="text-xs font-bold text-[var(--text)]">Variáveis da mensagem</p>
+              {placeholderNumbers.length > 0 ? <div className="mt-3 space-y-2">{placeholderNumbers.map(position => <label key={position} className="block text-[10px] font-semibold text-[var(--text-secondary)]"><span className="mb-1 flex items-center justify-between"><span>{`Variável {{${position}}}`}</span>{variableMappings[position] && <span className="max-w-[150px] truncate font-normal text-[var(--text-muted)]">{sampleValue(variableMappings[position])}</span>}</span><select value={variableMappings[position] || ''} onChange={event => setVariableMapping(position, event.target.value)} className="h-9 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs text-[var(--text)] outline-none focus:border-[var(--primary)]"><option value="">Escolha o conteúdo</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}</div> : <p className="mt-3 rounded-lg bg-white/60 px-3 py-2 text-[10px] text-[var(--text-muted)] dark:bg-white/5">Este template não possui variáveis no corpo.</p>}
+              {missingVariables.length > 0 && <p className="mt-2 text-[10px] font-semibold text-amber-700 dark:text-amber-300">Defina {missingVariables.length === 1 ? 'a variável pendente' : `as ${missingVariables.length} variáveis pendentes`} para liberar o envio.</p>}
+            </div>
+          </section>}
           {preview && <section className="mt-5 rounded-2xl bg-[var(--bg-subtle)] p-4">
             <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-[11px] font-semibold text-[var(--primary)]">Prévia do disparo</p><p className="mt-1 text-lg font-bold">{selectedIds.size} de {preview.recipients.totalCards} contatos selecionados</p><p className="mt-1 text-xs text-[var(--text-muted)]">{preview.recipients.skippedInvalid + preview.recipients.skippedDuplicate} bloqueados por telefone ou duplicidade</p></div><div className="text-right"><p className="font-mono text-xl font-semibold">{preview.pricing.estimated ? brl(selectedEstimate) : '--'}</p><p className="text-[10px] text-[var(--text-muted)]">estimativa da Meta</p></div></div>
             <button type="button" onClick={() => setSelectionOpen(true)} className="mt-4 flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-semibold transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)]"><UsersRound className="h-4 w-4" />Pré-selecionar contatos</button>
             <label className="mt-4 block text-xs font-semibold"><span className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Tag após envio confirmado</span><input value={successTag} onChange={event => setSuccessTag(event.target.value)} maxLength={40} placeholder="Ex.: Campanha retorno" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-[var(--primary)]" /></label>
             <p className="mt-3 text-[10px] leading-relaxed text-[var(--text-muted)]">{preview.pricing.note}</p>
           </section>}
-          <button disabled={sending || !name.trim() || !selectedIds.size} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
+          <button disabled={sending || !name.trim() || !selectedIds.size || missingVariables.length > 0 || (tagFilterMode !== 'all' && !tagFilter)} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
         </main>
         <aside className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><h2 className="text-sm font-bold">Histórico recente</h2><div className="mt-3 space-y-2">{campaigns.length ? campaigns.map(campaign => <button key={campaign.id} onClick={() => void openReport(campaign)} className="w-full rounded-xl border border-[var(--border-subtle)] p-3 text-left transition hover:bg-[var(--surface-hover)]"><span className="block truncate text-xs font-semibold">{campaign.name}</span><span className="mt-1 block text-[10px] text-[var(--text-muted)]">{campaign.sent_count}/{campaign.total_recipients} enviados · ver relatório</span></button>) : <p className="py-8 text-center text-xs text-[var(--text-muted)]">Nenhuma campanha enviada</p>}</div></aside>
       </div>

@@ -4,7 +4,8 @@ import { fallbackSupabaseAnonKey } from './supabasePublicConfig.js';
 
 type Request = { method?: string; headers: Record<string, string | string[] | undefined>; body?: any };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void };
-type Opportunity = { id: string; patient_phone: string | null; patient_name: string | null; seller_name: string | null; title: string; amount_cents: number };
+type Opportunity = { id: string; patient_phone: string | null; patient_name: string | null; seller_name: string | null; title: string; amount_cents: number; tags?: string[] };
+type TagFilter = { mode: 'all' | 'include' | 'exclude'; tag: string };
 const url = process.env.VITE_SUPABASE_URL || 'https://dmslcvvjxfulsocksave.supabase.co';
 const anon = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || fallbackSupabaseAnonKey;
 const service = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -12,6 +13,17 @@ const graphVersion = process.env.META_GRAPH_VERSION || 'v23.0';
 const brazilRates: Record<string, number> = { MARKETING: 0.3217, UTILITY: 0.035, AUTHENTICATION: 0.035 };
 
 const normalizePhone = (value: string | null) => { const digits = String(value || '').replace(/\D/g, ''); return (digits.length === 10 || digits.length === 11) && !digits.startsWith('55') ? `55${digits}` : digits; };
+const normalizeTagValue = (value: unknown) => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
+const tagFilterFrom = (source: Record<string, unknown>): TagFilter => {
+  const tag = String(source.tagFilter || source.tag || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  const requestedMode = String(source.tagFilterMode || source.tagMode || 'all');
+  return tag && (requestedMode === 'include' || requestedMode === 'exclude') ? { mode: requestedMode, tag } : { mode: 'all', tag: '' };
+};
+const matchesTagFilter = (opportunity: Opportunity, filter: TagFilter) => {
+  if (filter.mode === 'all') return true;
+  const hasTag = (Array.isArray(opportunity.tags) ? opportunity.tags : []).some(tag => normalizeTagValue(tag) === normalizeTagValue(filter.tag));
+  return filter.mode === 'include' ? hasTag : !hasTag;
+};
 const header = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 async function auth(req: Request) {
   const token = header(req.headers.authorization)?.replace(/^Bearer\s+/i, '') || '';
@@ -21,7 +33,7 @@ async function auth(req: Request) {
   if (error || !user) throw new Error('Sessao invalida. Faca login novamente.');
   return { userId: user.id, db: createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } }) };
 }
-function value(key: string, item: Opportunity) { return ({ patient_name: item.patient_name || '', seller_name: item.seller_name || '', opportunity_title: item.title || '', amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((item.amount_cents || 0) / 100) } as Record<string, string>)[key] || ''; }
+function value(key: string, item: Opportunity) { return ({ patient_name: item.patient_name || '', patient_phone: item.patient_phone || '', seller_name: item.seller_name || '', opportunity_title: item.title || '', amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((item.amount_cents || 0) / 100) } as Record<string, string>)[key] || ''; }
 function components(mapping: string, item: Opportunity) {
   const parameters = String(mapping || '').split(/\r?\n/).map(line => line.match(/^\s*\{\{(\d+)\}\}\s*=\s*([a-z_]+)\s*$/i)).filter((match): match is RegExpMatchArray => Boolean(match)).sort((a, b) => Number(a[1]) - Number(b[1])).map(match => ({ type: 'text', text: value(match[2], item) }));
   return parameters.length ? [{ type: 'body', parameters }] : undefined;
@@ -66,13 +78,14 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
   return { sent, failed, pending: pending || 0, completed: !pending };
 }
 async function registerSkippedRecipients(db: SupabaseClient, campaign: any) {
-  let query = db.from('clinic_experts_opportunities').select('id,patient_phone').eq('user_id', campaign.user_id).eq('pipeline_id', campaign.pipeline_id);
+  let query = db.from('clinic_experts_opportunities').select('id,patient_phone,tags').eq('user_id', campaign.user_id).eq('pipeline_id', campaign.pipeline_id);
   if (campaign.stage_id) query = query.eq('stage_id', campaign.stage_id);
   const { data: opportunities, error } = await query; if (error) throw error;
   const { data: existing, error: existingError } = await db.from('whatsapp_bulk_campaign_recipients').select('opportunity_id,phone').eq('campaign_id', campaign.id);
   if (existingError) throw existingError;
   const existingIds = new Set((existing || []).map(item => item.opportunity_id)); const usedPhones = new Set((existing || []).map(item => item.phone).filter(Boolean));
-  const skipped = (opportunities || []).filter(item => !existingIds.has(item.id)).map(item => {
+  const tagFilter = tagFilterFrom({ tagFilterMode: campaign.tag_filter_mode, tagFilter: campaign.tag_filter_value });
+  const skipped = (opportunities || []).filter(item => matchesTagFilter(item as Opportunity, tagFilter) && !existingIds.has(item.id)).map(item => {
     const phone = normalizePhone(item.patient_phone);
     const duplicate = phone.length >= 12 && usedPhones.has(phone);
     if (phone.length >= 12) usedPhones.add(phone);
@@ -92,11 +105,13 @@ async function previewCampaign(db: SupabaseClient, userId: string, params: Recor
   const template = (body.data || []).find((item: any) => item.name === templateName && item.language === language && item.status === 'APPROVED');
   if (!template) throw new Error('O template aprovado nao foi encontrado na Meta. Atualize os templates e tente novamente.');
   const allowHistory = String(params.useHistoricalPhones || '') === 'true';
-  let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
+  const tagFilter = tagFilterFrom(params);
+  let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents,tags').eq('user_id', userId).eq('pipeline_id', pipelineId);
   if (stageId) query = query.eq('stage_id', stageId);
   if (opportunityId) query = query.eq('id', opportunityId);
   const { data: opportunities, error } = await query; if (error) throw error;
-  const resolved = await resolvePhones(db, userId, (opportunities || []) as any, allowHistory); const phones = new Set<string>(); let eligible = 0; let skippedInvalid = 0; let skippedDuplicate = 0; let awaitingConfirmation = 0; let sample: Opportunity | null = null;
+  const filteredOpportunities = (opportunities || []).filter(item => matchesTagFilter(item as Opportunity, tagFilter));
+  const resolved = await resolvePhones(db, userId, filteredOpportunities as any, allowHistory); const phones = new Set<string>(); let eligible = 0; let skippedInvalid = 0; let skippedDuplicate = 0; let awaitingConfirmation = 0; let sample: Opportunity | null = null;
   const contacts = resolved.map(item => { if (item.status === 'needs_confirmation') { awaitingConfirmation += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: item.status, reason: item.reason, phoneSource: item.phoneSource }; } if (item.status !== 'ready') { skippedInvalid += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: item.status, reason: item.reason, phoneSource: item.phoneSource }; } if (phones.has(item.phone)) { skippedDuplicate += 1; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: 'skipped', reason: 'Telefone duplicado nesta campanha.', phoneSource: item.phoneSource }; } phones.add(item.phone); eligible += 1; sample ||= item; return { id: item.id, patient_name: item.patient_name || 'Paciente sem nome', opportunity_title: item.title || 'Oportunidade', phone: item.phone, status: 'ready', reason: item.reason, phoneSource: item.phoneSource }; });
   const category = String(template.category || '').toUpperCase(); const unitPrice = brazilRates[category] || 0; const outsideBrazil = [...phones].filter(phone => !phone.startsWith('55')).length;
   const pricingNote = !unitPrice
@@ -104,7 +119,7 @@ async function previewCampaign(db: SupabaseClient, userId: string, params: Recor
     : outsideBrazil > 0
       ? `Estimativa calculada com a tarifa Brasil para o lote; ${outsideBrazil} numero(s) com outro DDI podem ter valor diferente. Descontos, creditos e isencoes nao estao incluidos.`
       : 'Estimativa maxima para mensagens entregues a numeros com DDI Brasil; descontos por volume, creditos e isencoes nao estao incluidos.';
-  return { template: { name: template.name, language: template.language, category, body: (template.components || []).find((item: any) => item.type === 'BODY')?.text || '' }, recipients: { totalCards: (opportunities || []).length, eligible, skippedInvalid, skippedDuplicate, awaitingConfirmation, contacts }, sample, pricing: { currency: 'BRL', unitPrice, total: unitPrice * eligible, estimated: Boolean(unitPrice), outsideBrazil, note: pricingNote } };
+  return { template: { name: template.name, language: template.language, category, body: (template.components || []).find((item: any) => item.type === 'BODY')?.text || '' }, filter: tagFilter, recipients: { totalCards: filteredOpportunities.length, eligible, skippedInvalid, skippedDuplicate, awaitingConfirmation, contacts }, sample, pricing: { currency: 'BRL', unitPrice, total: unitPrice * eligible, estimated: Boolean(unitPrice), outsideBrazil, note: pricingNote } };
 }
 export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
   try {
@@ -125,7 +140,9 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo nao permitido.' });
     if (req.body?.action === 'process') return res.status(200).json(await sendBatch(db, userId, String(req.body.campaignId || '')));
     const { name, templateName, language = 'pt_BR', variableMapping = '', pipelineId, stageId, useHistoricalPhones = false, selectedOpportunityIds, successTag } = req.body || {};
+    const tagFilter = tagFilterFrom(req.body || {});
     if (!name || !templateName || !pipelineId) return res.status(400).json({ error: 'Nome, template e funil sao obrigatorios.' });
+    if (['include', 'exclude'].includes(String(req.body?.tagFilterMode || '')) && !tagFilter.tag) return res.status(400).json({ error: 'Selecione a tag usada no filtro do público.' });
     const { data: config, error: configError } = await db.from('whatsapp_config').select('waba_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
     if (configError || !config || config.status !== 'connected' || !config.waba_id || !config.access_token_encrypted) throw new Error('Conecte o WhatsApp Business e informe o WABA ID antes de criar a campanha.');
     let templateUrl: string | null = `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(config.waba_id)}/message_templates?limit=100&fields=name,status,language`;
@@ -138,11 +155,12 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       templateUrl = typeof templateBody?.paging?.next === 'string' ? templateBody.paging.next : null; pages += 1;
     }
     if (!approved) throw new Error('Escolha um template atualmente aprovado pela Meta.');
-    let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents').eq('user_id', userId).eq('pipeline_id', pipelineId);
+    let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,seller_name,title,amount_cents,tags').eq('user_id', userId).eq('pipeline_id', pipelineId);
     if (stageId) query = query.eq('stage_id', stageId);
     const { data: opportunities, error } = await query; if (error) throw error;
-    const resolved = await resolvePhones(db, userId, (opportunities || []) as any, Boolean(useHistoricalPhones)); const usedPhones = new Set<string>();
-    const allowedIds = new Set((opportunities || []).map(item => item.id));
+    const filteredOpportunities = (opportunities || []).filter(item => matchesTagFilter(item as Opportunity, tagFilter));
+    const resolved = await resolvePhones(db, userId, filteredOpportunities as any, Boolean(useHistoricalPhones)); const usedPhones = new Set<string>();
+    const allowedIds = new Set(filteredOpportunities.map(item => item.id));
     const requestedIds = Array.isArray(selectedOpportunityIds) ? selectedOpportunityIds.map(String).filter(id => allowedIds.has(id)) : Array.from(allowedIds);
     const selectedIds = new Set(requestedIds);
     if (!selectedIds.size) return res.status(400).json({ error: 'Selecione ao menos um contato para o disparo.' });
@@ -153,8 +171,8 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       return { opportunity_id: item.id, phone: item.phone, status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' };
     });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
-    const normalizedTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;
-    const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, success_tag: normalizedTag, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
+    const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;
+    const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, success_tag: normalizedSuccessTag, tag_filter_mode: tagFilter.mode, tag_filter_value: tagFilter.tag || null, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
     if (createError || !campaign) throw createError || new Error('Falha ao criar campanha.');
     const { error: recipientsError } = await db.from('whatsapp_bulk_campaign_recipients').insert(recipients.map(item => ({ ...item, campaign_id: campaign.id }))); if (recipientsError) throw recipientsError;
     return res.status(201).json({ campaignId: campaign.id, totalRecipients: recipients.filter(item => item.status === 'pending').length });
