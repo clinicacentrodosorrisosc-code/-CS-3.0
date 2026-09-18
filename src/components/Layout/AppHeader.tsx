@@ -2,6 +2,7 @@ import React from 'react';
 import { Sun, Moon, ShieldCheck, ChevronRight, Menu } from 'lucide-react';
 import { Tab } from '../../types';
 import { NotificationBell } from '../ui/notification-bell';
+import BorderAvatar from '../ui/avatar-border';
 
 interface AppHeaderProps {
   activeTab: Tab;
@@ -90,8 +91,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
         )}
 
-        <button type="button" className="ml-1 grid size-8 place-items-center rounded-full border border-[var(--primary-border)] bg-[var(--primary-dim)] text-[10px] font-bold text-[var(--primary)]" title={userEmail || 'Perfil'}>
-          {(userEmail || 'CS').slice(0, 2).toUpperCase()}
+        <button type="button" className="ml-1 rounded-lg p-1 hover:bg-[var(--surface-hover)]" title={userEmail || 'Perfil'} aria-label={userEmail || 'Perfil'}>
+          <BorderAvatar fallback={(userEmail || 'CS').slice(0, 2).toUpperCase()} alt={userEmail ? `Perfil de ${userEmail}` : 'Perfil do usuário'} />
         </button>
       </div>
     </header>
