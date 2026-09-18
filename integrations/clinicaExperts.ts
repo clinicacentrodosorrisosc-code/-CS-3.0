@@ -173,6 +173,15 @@ export class ClinicaExpertsClient {
     const response = await this.get<{ data?: ExternalPatient } | ExternalPatient>(`/patients/${encodeURIComponent(patientId)}`);
     return 'data' in response && response.data ? response.data : response as ExternalPatient;
   }
+
+  async updateOpportunity(opportunity: ExternalOpportunity, observations: string) {
+    if (!opportunity.patient?.uuid || !opportunity.seller?.uuid || !opportunity.pipeline?.uuid || !opportunity.stage?.uuid) throw new Error('O card nao possui todos os identificadores obrigatorios para atualizacao.');
+    const response = await fetch(`${API_BASE_URL}/crm/opportunity/${encodeURIComponent(opportunity.uuid)}`, {
+      method: 'PUT', headers: { Authorization: `Bearer ${this.token}`, Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient_uuid: opportunity.patient.uuid, seller_uuid: opportunity.seller.uuid, pipeline_uuid: opportunity.pipeline.uuid, stage_uuid: opportunity.stage.uuid, title: opportunity.title || opportunity.patient.name || 'Oportunidade', priority: String(opportunity.priority || 1), amount: Number(opportunity.amount || 0), origin: opportunity.origin || null, observations }), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) throw new Error(`Clinica Experts nao atualizou observacoes: HTTP ${response.status} ${ (await response.text()).slice(0, 300) }`);
+  }
 }
 
 function normalizedPatientPhone(value?: string | null) {
@@ -423,7 +432,7 @@ export async function syncClinicaExperts(
     throwIfError(stageReadError, 'Erro ao reler etapas');
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
     const [{ data: previousOpportunities, error: previousOpportunitiesError }, { data: importedRows, error: importedRowsError }] = await Promise.all([
-      db.from('clinic_experts_opportunities').select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email,local_overrides').eq('user_id', userId),
+      db.from('clinic_experts_opportunities').select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email,observations,local_overrides').eq('user_id', userId),
       db.from('clinic_experts_imported_data').select('opportunity_external_id,patient_external_id,data').eq('user_id', userId),
     ]);
     throwIfError(previousOpportunitiesError, 'Erro ao consultar etapas anteriores das oportunidades');
@@ -435,6 +444,10 @@ export async function syncClinicaExperts(
     const localPhone = (row?: { patient_phone?: string | null; local_overrides?: unknown }) => {
       const overrides = row?.local_overrides && typeof row.local_overrides === 'object' ? row.local_overrides as Record<string, unknown> : {};
       return typeof overrides.patient_phone === 'string' && overrides.patient_phone.trim() ? overrides.patient_phone : row?.patient_phone || null;
+    };
+    const localObservations = (row?: { observations?: string | null; local_overrides?: unknown }) => {
+      const overrides = row?.local_overrides && typeof row.local_overrides === 'object' ? row.local_overrides as Record<string, unknown> : {};
+      return typeof overrides.observations === 'string' && overrides.observations.trim() ? overrides.observations : row?.observations || null;
     };
     const importedPhone = (data?: unknown) => data && typeof data === 'object' && typeof (data as Record<string, unknown>).patient_phone === 'string'
       ? String((data as Record<string, unknown>).patient_phone).trim() || null : null;
@@ -474,7 +487,7 @@ export async function syncClinicaExperts(
         priority: Number(opportunity.priority || 1),
         amount_cents: Number(opportunity.amount || 0),
         origin: opportunity.origin || null,
-        observations: opportunity.observations || null,
+        observations: localObservations(previous) || opportunity.observations || null,
         status: opportunity.status || opportunity.stage?.status || null,
         source_payload: opportunity,
         synced_at: now,
@@ -486,6 +499,21 @@ export async function syncClinicaExperts(
         .from('clinic_experts_opportunities')
         .upsert(opportunityRows.slice(index, index + 500), { onConflict: 'user_id,external_id' });
       throwIfError(error, 'Erro ao salvar oportunidades');
+    }
+
+    const { data: pendingObservationSync, error: pendingObservationSyncError } = await db.from('clinic_experts_observation_sync_queue').select('id,opportunity_id').eq('user_id', userId).eq('status', 'pending').limit(200);
+    throwIfError(pendingObservationSyncError, 'Erro ao consultar fila de observacoes');
+    const previousById = new Map((previousOpportunities || []).map(row => [row.id, row]));
+    const externalById = new Map(opportunities.map(opportunity => [opportunity.uuid, opportunity]));
+    for (const queued of pendingObservationSync || []) {
+      const local = previousById.get(queued.opportunity_id); const external = local ? externalById.get(local.external_id) : undefined;
+      try {
+        if (!local || !external) throw new Error('Card nao retornou na sincronizacao atual.');
+        await client.updateOpportunity(external, localObservations(local) || external.observations || '');
+        await db.from('clinic_experts_observation_sync_queue').update({ status: 'synced', attempts: 1, error_message: null, synced_at: now, updated_at: now }).eq('id', queued.id);
+      } catch (error) {
+        await db.from('clinic_experts_observation_sync_queue').update({ status: 'failed', attempts: 1, error_message: String(error instanceof Error ? error.message : error).slice(0, 1000), updated_at: now }).eq('id', queued.id);
+      }
     }
 
     for (const opportunity of opportunityRows) {
