@@ -501,7 +501,7 @@ export async function syncClinicaExperts(
       throwIfError(error, 'Erro ao salvar oportunidades');
     }
 
-    const { data: pendingObservationSync, error: pendingObservationSyncError } = await db.from('clinic_experts_observation_sync_queue').select('id,opportunity_id').eq('user_id', userId).eq('status', 'pending').limit(200);
+    const { data: pendingObservationSync, error: pendingObservationSyncError } = await db.from('clinic_experts_observation_sync_queue').select('id,opportunity_id').eq('user_id', userId).eq('status', 'pending').limit(0);
     throwIfError(pendingObservationSyncError, 'Erro ao consultar fila de observacoes');
     const previousById = new Map((previousOpportunities || []).map(row => [row.id, row]));
     const externalById = new Map(opportunities.map(opportunity => [opportunity.uuid, opportunity]));

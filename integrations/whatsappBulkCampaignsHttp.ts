@@ -67,17 +67,15 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
   let sent = 0; let failed = 0;
   for (const row of rows || []) {
     await db.from('whatsapp_bulk_campaign_recipients').update({ status: 'sending', attempts: 1 }).eq('id', row.id).eq('status', 'pending');
-    const { data: item } = await db.from('clinic_experts_opportunities').select('id,patient_phone,patient_name,seller_name,title,amount_cents,observations,local_overrides').eq('id', row.opportunity_id).single();
+    const { data: item } = await db.from('clinic_experts_opportunities').select('id,patient_phone,patient_name,seller_name,title,amount_cents,tags').eq('id', row.opportunity_id).single();
     try {
       if (!item) throw new Error('Oportunidade nao encontrada.');
       const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(config.phone_number_id)}/messages`, { method: 'POST', headers: { Authorization: `Bearer ${decryptWhatsAppAccessToken(config.access_token_encrypted)}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: row.phone, type: 'template', template: { name: campaign.template_name, language: { code: campaign.template_language }, components: components(campaign.variable_mapping, item as Opportunity) } }), signal: AbortSignal.timeout(15000) });
       const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou o envio.');
       sent += 1; await db.from('whatsapp_bulk_campaign_recipients').update({ status: 'sent', meta_message_id: String(body?.messages?.[0]?.id || ''), sent_at: new Date().toISOString() }).eq('id', row.id);
       if (campaign.success_tag) {
-        const observation = [item.observations, campaign.success_tag].filter(Boolean).join('\n');
-        const overrides = item.local_overrides && typeof item.local_overrides === 'object' ? item.local_overrides : {};
-        await db.from('clinic_experts_opportunities').update({ observations: observation, local_overrides: { ...overrides, observations: observation } }).eq('id', item.id).eq('user_id', userId);
-        await db.from('clinic_experts_observation_sync_queue').upsert({ user_id: userId, opportunity_id: item.id, status: 'pending', attempts: 0, error_message: null, synced_at: null, updated_at: new Date().toISOString() }, { onConflict: 'opportunity_id' });
+        const currentTags = Array.isArray(item.tags) ? item.tags.map(String) : [];
+        if (!currentTags.includes(campaign.success_tag)) await db.from('clinic_experts_opportunities').update({ tags: [...currentTags, campaign.success_tag] }).eq('id', item.id).eq('user_id', userId);
       }
     } catch (error) { failed += 1; await db.from('whatsapp_bulk_campaign_recipients').update({ status: 'failed', error_message: (error instanceof Error ? error.message : 'Falha ao enviar.').slice(0, 1000) }).eq('id', row.id); }
   }
@@ -181,7 +179,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       return { opportunity_id: item.id, phone: item.phone, status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' };
     });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
-    const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 240) || null;
+    const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;
     const { data: campaign, error: createError } = await db.from('whatsapp_bulk_campaigns').insert({ user_id: userId, name: String(name).slice(0, 120), template_name: templateName, template_language: language, variable_mapping: variableMapping, pipeline_id: pipelineId, stage_id: stageId || null, success_tag: normalizedSuccessTag, tag_filter_mode: tagFilter.mode, tag_filter_value: tagFilter.tags[0] || null, tag_filter_values: tagFilter.tags, status: 'sending', total_recipients: recipients.length, started_at: new Date().toISOString() }).select('id').single();
     if (createError || !campaign) throw createError || new Error('Falha ao criar campanha.');
     const { error: recipientsError } = await db.from('whatsapp_bulk_campaign_recipients').insert(recipients.map(item => ({ ...item, campaign_id: campaign.id }))); if (recipientsError) throw recipientsError;
