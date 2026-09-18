@@ -23,6 +23,7 @@ import { ChatWidget } from './components/Chat/ChatWidget';
 import { AppHeader } from './components/Layout/AppHeader';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
+import { LoadingPanel } from './components/ui/loading-panel';
 
 const TabContainer = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -408,8 +409,6 @@ const App: React.FC = () => {
           const state = channel.presenceState();
 
 
-          const activeSessions = Object.values(state).flatMap(presences => presences.map((p: any) => p.user_email || p.user_id));
-
           const users = Object.values(state).flatMap(presences => presences.map((p: any) => p.user_id));
           setOnlineUsers([...new Set(users)]);
         })
@@ -504,16 +503,12 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center text-white gap-4">
-        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-medium text-slate-300">Carregando OdontoManager Pro...</p>
-        <button
-          onClick={() => setLoading(false)}
-          className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-md active:scale-95"
-        >
-          Entrar no Sistema
-        </button>
-      </div>
+      <LoadingPanel
+        fullScreen
+        label="Preparando seu ambiente"
+        description="Estamos carregando os dados operacionais da clínica."
+        action={<button onClick={() => setLoading(false)} className="h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">Continuar sem aguardar</button>}
+      />
     );
   }
 
@@ -553,7 +548,7 @@ const App: React.FC = () => {
           openNotifications={() => setIsNotificationsOpen(true)}
         />
 
-        <main id="main-content" tabIndex={-1} className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+        <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent md:p-2 md:pl-0">
 
         <NotificationCenter
           isOpen={isNotificationsOpen}
@@ -565,7 +560,7 @@ const App: React.FC = () => {
           }}
         />
 
-        <div className="flex-1 min-h-0 relative overflow-hidden">
+        <div className="workspace-canvas flex-1 min-h-0 relative overflow-hidden bg-[var(--surface)] md:rounded-2xl md:border md:border-[var(--border-subtle)]">
           <AnimatePresence mode="wait">
             {activeTab === Tab.DASHBOARD && (
               <TabContainer key="dashboard">

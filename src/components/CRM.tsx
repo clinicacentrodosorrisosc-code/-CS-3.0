@@ -4,7 +4,6 @@ import {
   BarChart3,
   CheckCircle2,
   Filter,
-  Loader2,
   MessageCircle,
   GitMerge,
   Phone,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AnimatedNumber } from './ui/animated-number';
+import { LoadingPanel } from './ui/loading-panel';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { CRMAutomations } from './CRMAutomations';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
@@ -408,9 +408,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
             </div>
 
             {isLoading ? (
-              <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
-                <Loader2 className="h-4 w-4 animate-spin" /> Carregando CRM
-              </div>
+              <LoadingPanel label="Carregando CRM" description="Organizando funis, etapas e oportunidades." />
             ) : visibleStages.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
                 <UsersRound className="mb-3 h-8 w-8 text-[#1F6F5B] opacity-60" />

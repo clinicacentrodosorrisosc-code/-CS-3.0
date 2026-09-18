@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, CheckCircle2, CircleAlert, Loader2, Search, Send, Tag, UsersRound, X } from 'lucide-react';
+import { Check, CheckCircle2, CircleAlert, Search, Send, Tag, UsersRound, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { StepIndicator } from './ui/step-indicator';
+import { LoadingPanel } from './ui/loading-panel';
 
 type Pipeline = { id: string; name: string };
 type Stage = { id: string; pipeline_id: string; name: string };
@@ -145,7 +146,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [pipelineId, stageId, tagFilterMode, tagFilters, currentTemplate?.name, currentTemplate?.language]);
+  }, [pipelineId, stageId, tagFilterMode, tagFilters, currentTemplate]);
 
   const selectableContacts = preview?.recipients.contacts.filter(contact => contact.status !== 'skipped') || [];
   const selectedContacts = selectableContacts.filter(contact => selectedIds.has(contact.id));
@@ -198,7 +199,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Falha ao abrir o relatório.'); }
   };
 
-  if (loading) return <div className="flex h-full items-center justify-center gap-2 text-sm text-[var(--text-muted)]"><Loader2 className="h-4 w-4 animate-spin" />Carregando campanhas</div>;
+  if (loading) return <LoadingPanel label="Carregando campanhas" description="Preparando públicos, tags e templates aprovados." />;
 
   return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6">
     <div className="mx-auto max-w-6xl">

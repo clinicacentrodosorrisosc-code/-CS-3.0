@@ -16,6 +16,7 @@ import { Clock3, GitBranch, Loader2, MessageSquareText, Play, Plus, Save, Timer,
 import { supabase } from '../supabaseClient';
 import { ConfirmAction } from './ui/confirm-action';
 import { DurationPicker } from './ui/duration-picker';
+import { LoadingPanel } from './ui/loading-panel';
 
 type NodeKind = 'trigger' | 'wait' | 'schedule' | 'template';
 type FlowNodeData = {
@@ -328,7 +329,7 @@ export const CRMAutomations: React.FC = () => {
 
   const onConnect = useCallback((connection: Connection) => setEdges(current => addEdge({ ...connection, animated: true }, current)), [setEdges]);
 
-  if (loading) return <div className="flex h-full items-center justify-center gap-2 text-sm text-[var(--text-muted)]"><Loader2 className="h-4 w-4 animate-spin" /> Carregando automações</div>;
+  if (loading) return <LoadingPanel label="Carregando automações" description="Montando fluxos, etapas e conexões." />;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[var(--bg)] text-[var(--text)]">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, FileText, KeyRound, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { LoadingPanel } from './ui/loading-panel';
 
 type WhatsAppSettingsProps = { requestedSubTab?: string | null };
 type MetaTemplate = {
@@ -134,7 +135,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
     }
   };
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center gap-2 text-xs text-[var(--text-muted)]"><Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração</div>;
+  if (isLoading) return <LoadingPanel label="Carregando configuração" description="Consultando a conexão e os templates do WhatsApp." />;
 
   return (
     <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
