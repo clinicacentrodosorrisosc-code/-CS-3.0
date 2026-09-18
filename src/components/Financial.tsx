@@ -4,9 +4,10 @@ import { Transaction, Account, Service } from '../types';
 import { PricingSystem } from './PricingSystem';
 import { FinancialViability } from './FinancialViability';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
+  Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
 } from 'recharts';
+import { DonutChart } from './ui/donut-chart';
 import {
   Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit,
   Wallet, ShieldCheck, TrendingUp,
@@ -2263,67 +2264,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">{chart.title}</h3>
 
                                 <div className="h-[210px] w-full relative flex items-center justify-center">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                                            <RechartsTooltip
-                                                formatter={(value: number) => [
-                                                    `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-                                                    'Valor'
-                                                ]}
-                                                labelFormatter={(label) => String(label)}
-                                                contentStyle={{
-                                                    backgroundColor: 'var(--surface)',
-                                                    border: '1px solid var(--border)',
-                                                    borderRadius: '10px',
-                                                    color: 'var(--text)',
-                                                    fontSize: '11px'
-                                                }}
-                                                labelStyle={{ color: 'var(--text)', fontWeight: 700 }}
-                                                itemStyle={{ color: 'var(--primary)', fontWeight: 700 }}
-                                            />
-                                            <Pie
-                                                data={chart.data}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius="50%"
-                                                outerRadius="84%"
-                                                paddingAngle={3}
-                                                cornerRadius={5}
-                                                dataKey="value"
-                                                stroke="none"
-                                                onMouseEnter={(_, index) => chart.setActive(index)}
-                                                onMouseLeave={() => chart.setActive(null)}
-                                            >
-                                                {chart.data.map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={COLORS[index % COLORS.length]}
-                                                        opacity={chart.activeIndex === null || chart.activeIndex === index ? 1 : 0.45}
-                                                        className="transition-all duration-200 cursor-pointer"
-                                                    />
-                                                ))}
-                                                <Label
-                                                    position="center"
-                                                    content={({ viewBox }: any) => {
-                                                        const cx = viewBox?.cx || 0;
-                                                        const cy = viewBox?.cy || 0;
-                                                        if (chart.activeIndex === null || !chart.data?.[chart.activeIndex]) return null;
-                                                        const entry = chart.data[chart.activeIndex];
-                                                        return (
-                                                            <g>
-                                                                <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="middle" className="fill-white font-black text-sm font-mono">
-                                                                    R$ {entry.value?.toLocaleString('pt-BR', { notation: "compact", maximumFractionDigits: 1 })}
-                                                                </text>
-                                                                <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="middle" className="fill-slate-300 text-[9px] font-extrabold uppercase tracking-wider">
-                                                                    {entry.name?.length > 14 ? `${entry.name.slice(0, 12)}...` : entry.name}
-                                                                </text>
-                                                            </g>
-                                                        );
-                                                    }}
-                                                />
-                                            </Pie>
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                    <DonutChart
+                                        data={chart.data.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))}
+                                        size={210}
+                                        strokeWidth={28}
+                                        onSegmentHover={(segment) => chart.setActive(segment ? chart.data.findIndex((entry: any) => entry.name === segment.label) : null)}
+                                        centerContent={chart.activeIndex !== null && chart.data?.[chart.activeIndex] ? <><span className="text-sm font-black text-text">R$ {chart.data[chart.activeIndex].value?.toLocaleString('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })}</span><span className="max-w-[90px] truncate text-[9px] font-bold uppercase text-slate-400">{chart.data[chart.activeIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Total</span>}
+                                    />
                                     {chart.data.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">Sem dados no perÃ­odo</div>}
                                 </div>
 

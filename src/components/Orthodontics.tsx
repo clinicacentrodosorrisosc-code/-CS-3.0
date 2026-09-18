@@ -1,9 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
+  Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Label, LabelList, LineChart, Line
 } from 'recharts';
+import { DonutChart } from './ui/donut-chart';
 import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { OrthodonticsCalendar } from './OrthodonticsCalendar';
@@ -1608,48 +1609,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <div className="flex flex-col h-full w-full">
                       <h3 className="text-lg font-bold text-text mb-4">Pacientes Ativos por Aparelho</h3>
                       <div className="flex-1 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                              <Pie
-                                  data={applianceDistribution}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={60}
-                                  outerRadius={100}
-                                  paddingAngle={5}
-                                  cornerRadius={8} // Bordas arredondadas (UI Style)
-                                  dataKey="value"
-                                  stroke="none" // Remove contorno para visual mais limpo
-                                  onMouseEnter={(_, index) => setActiveApplianceIndex(index)}
-                                  onMouseLeave={() => setActiveApplianceIndex(null)}
-                              >
-                                  {applianceDistribution.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                                  <Label 
-                                    position="center"
-                                    content={({ viewBox }: any) => {
-                                        const cx = viewBox?.cx || 0;
-                                        const cy = viewBox?.cy || 0;
-                                        if (activeApplianceIndex === null || !applianceDistribution[activeApplianceIndex]) return null;
-                                        const entry = applianceDistribution[activeApplianceIndex];
-                                        return (
-                                            <g>
-                                                <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-3xl font-display">
-                                                    {entry.value}
-                                                </text>
-                                                <text x={cx} y={cy + 22} textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                                                    {entry.name}
-                                                </text>
-                                            </g>
-                                        );
-                                    }}
-                                  />
-                              </Pie>
-                              {/* RechartsTooltip removed as requested */}
-                              <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase ml-1">{value}</span>} />
-                          </PieChart>
-                      </ResponsiveContainer>
+                      <DonutChart data={applianceDistribution.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))} size={220} strokeWidth={30} onSegmentHover={(segment) => setActiveApplianceIndex(segment ? applianceDistribution.findIndex((entry: any) => entry.name === segment.label) : null)} centerContent={activeApplianceIndex !== null && applianceDistribution[activeApplianceIndex] ? <><span className="text-3xl font-bold text-text">{applianceDistribution[activeApplianceIndex].value}</span><span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-widest text-slate-400">{applianceDistribution[activeApplianceIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Pacientes</span>} />
                   </div>
                   </div>
               </SpotlightCard>

@@ -37,10 +37,10 @@ import {
     XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, 
     LineChart, Line,
-    PieChart, Pie,
     BarChart, Bar,
     LabelList
 } from 'recharts';
+import { DonutChart } from './ui/donut-chart';
 
 // Model to serialize 10 structured answers safely to existing database columns
 interface CommercialReportAnswers {
@@ -2549,24 +2549,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                 {ratingPieData.length === 0 ? (
                                                      <span className="text-[10px] text-slate-500 italic font-bold">Sem dados climáticos</span>
                                                 ) : (
-                                                     <ResponsiveContainer width="100%" height="100%">
-                                                          <PieChart>
-                                                               <Pie
-                                                                    data={ratingPieData}
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={45}
-                                                                    outerRadius={65}
-                                                                    paddingAngle={3}
-                                                                    dataKey="value"
-                                                               >
-                                                                    {ratingPieData.map((entry, index) => (
-                                                                         <Cell key={`cell-rating-${index}`} fill={entry.color} />
-                                                                    ))}
-                                                               </Pie>
-                                                               <Tooltip />
-                                                          </PieChart>
-                                                     </ResponsiveContainer>
+                                                     <DonutChart data={ratingPieData.map(entry => ({ ...entry, label: entry.label || 'Avaliação', color: entry.color }))} size={176} strokeWidth={20} centerContent={<span className="text-xs font-bold text-text">Avaliações</span>} />
                                                 )}
                                            </div>
                                       </div>
@@ -2610,24 +2593,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                 {arrivalPieData.length === 0 ? (
                                                      <span className="text-[10px] text-slate-500 italic font-bold">Sem dados logísticos</span>
                                                 ) : (
-                                                     <ResponsiveContainer width="100%" height="100%">
-                                                          <PieChart>
-                                                               <Pie
-                                                                    data={arrivalPieData}
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={45}
-                                                                    outerRadius={65}
-                                                                    paddingAngle={3}
-                                                                    dataKey="value"
-                                                               >
-                                                                    {arrivalPieData.map((entry, index) => (
-                                                                         <Cell key={`cell-arrival-${index}`} fill={entry.color} />
-                                                                    ))}
-                                                               </Pie>
-                                                               <Tooltip />
-                                                          </PieChart>
-                                                     </ResponsiveContainer>
+                                                     <DonutChart data={arrivalPieData.map(entry => ({ ...entry, label: entry.label || 'Pontualidade', color: entry.color }))} size={176} strokeWidth={20} centerContent={<span className="text-xs font-bold text-text">Pontualidade</span>} />
                                                 )}
                                            </div>
                                       </div>

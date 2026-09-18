@@ -5,8 +5,9 @@ import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  ResponsiveContainer, Cell, PieChart, Pie, Legend
+  ResponsiveContainer, Cell, Legend
 } from 'recharts';
+import { DonutChart } from './ui/donut-chart';
 import { 
   Briefcase, DollarSign, CheckCircle, TrendingUp, ArrowRight, Edit2, Trash2, 
   Flag, PlusCircle, ChevronLeft, ChevronRight, Plus, X, CreditCard,
@@ -1200,34 +1201,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-sm font-bold text-text mb-2">Distribuição (Status)</h3>
                     <div className="h-[250px] w-full flex items-center justify-center">
                         {stats.pieChartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                                    <Pie
-                                        data={stats.pieChartData}
-                                        cx="50%"
-                                        cy="40%"
-                                        innerRadius={36}
-                                        outerRadius={56}
-                                        paddingAngle={4}
-                                        dataKey="value"
-                                    >
-                                        {stats.pieChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="rgba(0,0,0,0.3)" strokeWidth={2} />
-                                        ))}
-                                    </Pie>
-                                    <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                        itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
-                                    />
-                                    <Legend 
-                                        verticalAlign="bottom"
-                                        align="center"
-                                        iconType="circle"
-                                        iconSize={8}
-                                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }} 
-                                    />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            <DonutChart data={stats.pieChartData.map((entry: any) => ({ ...entry, label: entry.name, color: entry.fill }))} size={170} strokeWidth={24} centerContent={<span className="text-xs font-bold text-text">Status</span>} />
                         ) : (
                             <div className="flex flex-col items-center justify-center text-slate-500 text-xs italic">
                                 Nenhum trabalho no período

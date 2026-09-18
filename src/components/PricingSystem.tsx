@@ -23,7 +23,7 @@ import {
     Zap,
     Download
 } from 'lucide-react';
-import { PieChart, Pie, Cell } from 'recharts';
+import { DonutChart } from './ui/donut-chart';
 import { Service } from '../types';
 import { initialRawMaterials, RawMaterial } from '../data/rawMaterials';
 import { toast } from 'sonner';
@@ -4416,21 +4416,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">
-                                                            <PieChart width={140} height={140}>
-                                                                <Pie
-                                                                    data={donutDataPracticed}
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={35}
-                                                                    outerRadius={55}
-                                                                    paddingAngle={2}
-                                                                    dataKey="value"
-                                                                >
-                                                                    {donutDataPracticed.map((entry, idx) => (
-                                                                        <Cell key={`cell-practiced-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                                                                    ))}
-                                                                </Pie>
-                                                            </PieChart>
+                                                            <DonutChart
+                                                                data={donutDataPracticed.map((entry, idx) => ({ ...entry, label: entry.name, color: COLORS[idx % COLORS.length] }))}
+                                                                size={140}
+                                                                strokeWidth={20}
+                                                                centerContent={<span className="text-lg font-black text-slate-700">{practicedMargemLucro >= 0 ? 'OK' : '!'}</span>}
+                                                            />
                                                         </div>
                                                         <div className="flex-1 space-y-1.5 w-full">
                                                             {donutDataPracticed.map((item, idx) => (
@@ -4506,21 +4497,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">
-                                                            <PieChart width={140} height={140}>
-                                                                <Pie
-                                                                    data={donutDataSuggested}
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={35}
-                                                                    outerRadius={55}
-                                                                    paddingAngle={2}
-                                                                    dataKey="value"
-                                                                >
-                                                                    {donutDataSuggested.map((entry, idx) => (
-                                                                        <Cell key={`cell-suggested-${idx}`} fill={COLORS[idx % COLORS.length]} />
-                                                                    ))}
-                                                                </Pie>
-                                                            </PieChart>
+                                                            <DonutChart
+                                                                data={donutDataSuggested.map((entry, idx) => ({ ...entry, label: entry.name, color: COLORS[idx % COLORS.length] }))}
+                                                                size={140}
+                                                                strokeWidth={20}
+                                                                centerContent={<span className="text-lg font-black text-slate-700">{suggestedMargemLucro >= 0 ? 'OK' : '!'}</span>}
+                                                            />
                                                         </div>
                                                         <div className="flex-1 space-y-1.5 w-full">
                                                             {donutDataSuggested.map((item, idx) => (
