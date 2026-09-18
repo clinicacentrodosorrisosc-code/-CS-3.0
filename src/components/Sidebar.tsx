@@ -261,13 +261,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     localStorage.setItem('profileScore', profileScore);
   }, [profileScore]);
 
-  // Keep accordion tab synced with active tab
-  useEffect(() => {
-    if (activeTab) {
-      setOpenAccordionTab(activeTab);
-    }
-  }, [activeTab]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -358,7 +351,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 group relative flex items-center min-h-11 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
                 ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
                 ${isActive
-                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-[0_6px_16px_rgba(0,122,255,0.18)] font-semibold'
+                  ? 'bg-[var(--primary-dim)] border-[var(--primary-border)] text-[var(--primary)] shadow-[0_6px_16px_rgba(0,122,255,0.08)] font-semibold'
                   : 'border-transparent text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] hover:border-[#E2E5EA] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.08] font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
@@ -367,7 +360,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className={`
                   w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
                   ${isActive
-                    ? 'bg-white/18 text-white'
+                    ? 'bg-[var(--surface)] text-[var(--primary)] shadow-sm'
                     : 'text-[#667085] group-hover:text-[#172033] dark:text-slate-400 dark:group-hover:text-slate-200'}
                 `}>
                   <IconComponent className="w-4 h-4" />
@@ -382,14 +375,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {isExpanded && hasSubItems && (
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[#8b3dff]' : ''}`}
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[var(--primary)]' : ''}`}
                 />
               )}
 
               {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="hidden"
+                  className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--primary)]"
+                  transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                 />
               )}
             </button>

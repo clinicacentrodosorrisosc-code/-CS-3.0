@@ -1,6 +1,7 @@
 import React from 'react';
-import { Bell, Sun, Moon, ShieldCheck, ChevronRight, Menu } from 'lucide-react';
+import { Sun, Moon, ShieldCheck, ChevronRight, Menu } from 'lucide-react';
 import { Tab } from '../../types';
+import { NotificationBell } from '../ui/notification-bell';
 
 interface AppHeaderProps {
   activeTab: Tab;
@@ -81,12 +82,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
         )}
 
-        {openNotifications && (
-          <button type="button" onClick={openNotifications} className="relative grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05]" aria-label="Notificacoes">
-            <Bell className="size-4" />
-            {notificationCount > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-[#151820]">{notificationCount > 99 ? '99+' : notificationCount}</span>}
-          </button>
-        )}
+        {openNotifications && <NotificationBell count={notificationCount} onClick={openNotifications} />}
 
         {toggleTheme && (
           <button type="button" onClick={toggleTheme} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05]" title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}>

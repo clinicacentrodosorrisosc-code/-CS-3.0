@@ -11,6 +11,7 @@ import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
 import { ClinicaExpertsAgenda } from './ClinicaExpertsAgenda';
+import { AnimatedNumber } from './ui/animated-number';
 
 // --- TYPES ---
 interface DailyData {
@@ -493,11 +494,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       <div className="flex flex-col gap-3.5 animate-in fade-in pb-6">
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* KPI 1: Faturamento Total */}
-                <div className="bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
+                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full relative overflow-hidden">
                     <div className="flex justify-between items-start mb-2.5 flex-wrap gap-2">
                         <div className="min-w-0">
                             <p className="text-[11px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400 truncate">Faturamento Total</p>
-                            <h3 className="text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums mt-1 tracking-tight truncate">{formatCurrency(totalRev)}</h3>
+                            <AnimatedNumber value={totalRev} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums mt-1 tracking-tight truncate" />
                         </div>
                         <div className="text-right flex flex-col items-end gap-1 min-w-0 max-w-[50%]">
                             {Object.entries(teamRevenues).map(([team, amount]) => (
@@ -520,10 +521,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                 </div>
 
                 {/* KPI 2: Falta para Meta */}
-                <div className="bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full">
+                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full">
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400 mb-1">Falta para a Meta</p>
-                      <h3 className="text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums tracking-tight">{formatCurrency(neededRevenueReal)}</h3>
+                      <AnimatedNumber value={neededRevenueReal} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums tracking-tight" />
                     </div>
                     <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#DFE6E2] dark:border-white/[0.08] text-[11px] text-[#5E6D66] dark:text-slate-400">
                         <span>Dias úteis totais</span>
@@ -532,10 +533,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                 </div>
 
                 {/* KPI 3: Meta Diária Necessária */}
-                <div className="bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm flex flex-col justify-between h-full">
+                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full">
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-wider text-[#1F6F5B] dark:text-[#63B596] mb-1">Meta Diária Necessária</p>
-                      <h3 className="text-2xl lg:text-3xl font-black text-[#1F6F5B] dark:text-[#63B596] tabular-nums tracking-tight">{formatCurrency(dailyMetaRequiredLocked)}</h3>
+                      <AnimatedNumber value={dailyMetaRequiredLocked} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#1F6F5B] dark:text-[#63B596] tabular-nums tracking-tight" />
                     </div>
                     <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#DFE6E2] dark:border-white/[0.08] text-[11px] text-[#5E6D66] dark:text-slate-400">
                         <span>Restam na operação</span>

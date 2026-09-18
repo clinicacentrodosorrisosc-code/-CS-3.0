@@ -12,8 +12,10 @@ import {
   useNodesState,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Clock3, GitBranch, Loader2, MessageSquareText, Play, Plus, Save, Timer, Trash2, Workflow } from 'lucide-react';
+import { Clock3, GitBranch, Loader2, MessageSquareText, Play, Plus, Save, Timer, Workflow } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { ConfirmAction } from './ui/confirm-action';
+import { DurationPicker } from './ui/duration-picker';
 
 type NodeKind = 'trigger' | 'wait' | 'schedule' | 'template';
 type FlowNodeData = {
@@ -239,7 +241,6 @@ export const CRMAutomations: React.FC = () => {
 
   const deleteSelectedNode = () => {
     if (!selectedNodeId || !selectedNode) return;
-    if (!window.confirm(`Excluir a etapa "${selectedNode.data.label}" deste fluxo?`)) return;
     setNodes(current => current.filter(node => node.id !== selectedNodeId));
     setEdges(current => current.filter(edge => edge.source !== selectedNodeId && edge.target !== selectedNodeId));
     setSelectedNodeId(null);
@@ -365,7 +366,7 @@ export const CRMAutomations: React.FC = () => {
           {!selectedNode ? <div className="mt-10 text-center"><Play className="mx-auto h-7 w-7 text-[var(--text-muted)]" /><p className="mt-2 text-xs text-[var(--text-muted)]">Selecione um bloco no quadro.</p></div> : <div className="mt-4 space-y-4">
             <label className="block text-xs font-semibold">Nome do bloco<input value={selectedNode.data.label} onChange={event => updateNode({ label: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none" /></label>
             {selectedNode.data.kind === 'trigger' && <><label className="block text-xs font-semibold">Funil<select value={selectedNode.data.pipelineId || ''} onChange={event => updateNode({ pipelineId: event.target.value, stageId: '' })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="block text-xs font-semibold">Etapa<select value={selectedNode.data.stageId || ''} onChange={event => { const stage = stages.find(item => item.id === event.target.value); updateNode({ stageId: event.target.value, label: stage ? `Entrou em ${stage.name}` : 'Entrou em uma etapa' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
-            {selectedNode.data.kind === 'wait' && <div className="grid grid-cols-[1fr_120px] gap-2"><label className="text-xs font-semibold">Tempo<input type="number" min="1" value={selectedNode.data.delayValue || 1} onChange={event => updateNode({ delayValue: Number(event.target.value) })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Unidade<select value={selectedNode.data.delayUnit || 'hours'} onChange={event => updateNode({ delayUnit: event.target.value as FlowNodeData['delayUnit'] })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></label></div>}
+            {selectedNode.data.kind === 'wait' && <DurationPicker value={selectedNode.data.delayValue || 1} unit={selectedNode.data.delayUnit || 'hours'} onChange={(delayValue, delayUnit) => updateNode({ delayValue, delayUnit })} />}
             {selectedNode.data.kind === 'schedule' && <><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Início<input type="time" value={selectedNode.data.startTime || '08:00'} onChange={event => updateNode({ startTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label><label className="text-xs font-semibold">Fim<input type="time" value={selectedNode.data.endTime || '18:00'} onChange={event => updateNode({ endTime: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2" /></label></div><div><p className="text-xs font-semibold">Dias permitidos</p><div className="mt-2 flex flex-wrap gap-1">{weekdays.map((day, index) => { const active = (selectedNode.data.weekdays || []).includes(index); return <button key={day} type="button" onClick={() => updateNode({ weekdays: active ? (selectedNode.data.weekdays || []).filter(value => value !== index) : [...(selectedNode.data.weekdays || []), index] })} className={`rounded-lg border px-2 py-1 text-[10px] font-bold ${active ? 'border-[var(--primary)] bg-[var(--primary-dim)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>{day}</button>; })}</div></div></>}
             {selectedNode.data.kind === 'template' && <>
               <label className="block text-xs font-semibold">Template aprovado<select value={selectedTemplate?.id || ''} onChange={event => { const template = templates.find(item => item.id === event.target.value); updateNode({ templateId: template?.id || '', templateName: template?.name || '', language: template?.language || '', variables: '' }); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={item.id} value={item.id}>{item.name} · {item.language}</option>)}</select></label>
@@ -373,7 +374,7 @@ export const CRMAutomations: React.FC = () => {
               {placeholderNumbers.length > 0 && <div><p className="text-xs font-semibold">Variáveis da mensagem</p><div className="mt-2 space-y-2">{placeholderNumbers.map(index => <label key={index} className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-2 text-xs"><span className="font-mono text-[var(--primary)]">{`{{${index}}}`}</span><select value={variableMappings[index] || ''} onChange={event => setVariableMapping(index, event.target.value)} className="h-9 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-2"><option value="">Selecione o dado do card</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}{variableMappings[index] === option.value ? `: ${sampleValue(option.value)}` : ''}</option>)}</select></label>)}</div></div>}
               {selectedTemplate && placeholderNumbers.length === 0 && <p className="rounded-lg bg-[var(--bg-subtle)] px-3 py-2 text-[10px] text-[var(--text-muted)]">Este template não possui variáveis no corpo da mensagem.</p>}
             </>}
-            <button type="button" onClick={deleteSelectedNode} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 text-xs font-bold text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"><Trash2 className="h-4 w-4" /> Excluir etapa</button>
+            <div className="flex justify-end"><ConfirmAction onConfirm={deleteSelectedNode} label={`Excluir ${selectedNode.data.label}`} /></div>
           </div>}
         </aside>
       </div>

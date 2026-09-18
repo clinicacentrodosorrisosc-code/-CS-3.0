@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, CheckCircle2, CircleAlert, Loader2, Search, Send, Tag, UsersRound, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { StepIndicator } from './ui/step-indicator';
 
 type Pipeline = { id: string; name: string };
 type Stage = { id: string; pipeline_id: string; name: string };
@@ -77,6 +78,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
   const placeholderNumbers = Array.from(new Set(Array.from(templateBody.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
   const variableMapping = Object.entries(variableMappings).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n');
   const missingVariables = placeholderNumbers.filter(position => !variableMappings[position]);
+  const campaignStep = !pipelineId ? 0 : !currentTemplate ? 1 : !selectedIds.size ? 2 : 3;
 
   useEffect(() => {
     if (!pipelineId) { setAvailableTags([]); return; }
@@ -201,6 +203,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
   return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6">
     <div className="mx-auto max-w-6xl">
       <header><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Disparador em massa</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Escolha exatamente quem receberá a mensagem antes do envio.</p></header>
+      <div className="mt-5"><StepIndicator steps={['Definir campanha', 'Escolher mensagem', 'Selecionar público', 'Revisar e enviar']} current={campaignStep} /></div>
       {notice && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">{notice}</p>}
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">

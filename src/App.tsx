@@ -523,6 +523,7 @@ const App: React.FC = () => {
 
   return (
     <div className="ce-app flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--text)] transition-colors duration-200">
+      <a href="#main-content" className="skip-link">Pular para o conteúdo</a>
       <AppHeader
           activeTab={activeTab}
           requestedSubTab={requestedSubTab}
@@ -552,7 +553,7 @@ const App: React.FC = () => {
           openNotifications={() => setIsNotificationsOpen(true)}
         />
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+        <main id="main-content" tabIndex={-1} className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
 
         <NotificationCenter
           isOpen={isNotificationsOpen}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, CalendarX2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, RefreshCw, RotateCcw, Trophy, UserCheck, UsersRound, UserX } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { AnimatedNumber } from './ui/animated-number';
 
 type AgendaEvent = {
   uuid: string;
@@ -240,7 +241,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
             { label: 'Canceladas', value: summary.canceled, icon: CalendarX2, tone: 'text-rose-600 dark:text-rose-400' },
             { label: 'Não compareceram', value: summary.noShow, icon: UserX, tone: 'text-amber-600 dark:text-amber-400' },
             { label: 'Reagendadas', value: summary.rescheduled, icon: RotateCcw, tone: 'text-sky-600 dark:text-sky-400' },
-          ].map(item => <div key={item.label} className={`rounded-2xl border p-4 shadow-sm ${item.featured ? 'border-[#CFE5DC] bg-[#EAF5F0] dark:border-[#1F6F5B]/35 dark:bg-[#1F6F5B]/10' : 'border-[#DFE6E2] bg-white dark:border-white/[0.08] dark:bg-[#19231F]'}`}><item.icon className={`size-4 ${item.tone}`} /><p className="mt-3 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
+          ].map(item => <div key={item.label} className={`metric-card rounded-2xl border p-4 ${item.featured ? 'border-[#CFE5DC] bg-[#EAF5F0] dark:border-[#1F6F5B]/35 dark:bg-[#1F6F5B]/10' : 'border-[#DFE6E2] bg-white dark:border-white/[0.08] dark:bg-[#19231F]'}`}><item.icon className={`size-4 ${item.tone}`} /><AnimatedNumber value={item.value} className="mt-3 block text-2xl font-black tabular-nums text-[#17211D] dark:text-white" /><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p></div>)}
         </section>
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[

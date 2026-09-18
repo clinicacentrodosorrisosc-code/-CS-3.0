@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { AnimatedNumber } from './ui/animated-number';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { CRMAutomations } from './CRMAutomations';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
@@ -355,7 +356,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold text-[var(--text-secondary)]">{label}</p>
-                    <strong className="mt-2 block font-mono text-3xl font-semibold tracking-[-0.04em] text-[var(--text)]">{value}</strong>
+                    <AnimatedNumber value={value} className="mt-2 block font-mono text-3xl font-semibold tracking-[-0.04em] text-[var(--text)]" />
                   </div>
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF5F0] text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]">
                     <Icon className="h-[18px] w-[18px]" />

@@ -108,6 +108,16 @@
   box-sizing: border-box;
 }
 
+html { scroll-behavior: smooth; }
+
+.skip-link { position: fixed; left: 1rem; top: 0.75rem; z-index: 200; transform: translateY(-160%); border-radius: 0.75rem; background: var(--primary); color: white; padding: 0.65rem 0.9rem; font-size: 0.75rem; font-weight: 700; transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+.skip-link:focus { transform: translateY(0); }
+
+.metric-card { box-shadow: 0 1px 2px rgba(24, 39, 32, 0.04), 0 10px 30px rgba(31, 111, 91, 0.055); transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease; }
+.metric-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(24, 39, 32, 0.05), 0 16px 34px rgba(31, 111, 91, 0.08); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+
 [class~="bg-purple-600"], [class~="bg-indigo-600"] {
   background-color: var(--primary) !important;
 }
@@ -140,14 +150,6 @@ input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--primary) !important;
-}
-
-[class~="bg-purple-600"], [class~="bg-indigo-600"] {
-  background-color: var(--primary) !important;
-}
-
-[class~="hover:bg-purple-500"]:hover, [class~="hover:bg-indigo-500"]:hover {
-  background-color: var(--primary-hover) !important;
 }
 
 body {
