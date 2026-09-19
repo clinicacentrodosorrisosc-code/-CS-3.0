@@ -12,15 +12,15 @@
   --border: rgba(60, 60, 67, 0.16);
   --border-subtle: rgba(60, 60, 67, 0.10);
   --border-hover: rgba(60, 60, 67, 0.25);
-  --border-focus: rgba(31, 111, 91, 0.24);
+  --border-focus: rgba(0, 122, 255, 0.22);
 
-  --primary: #1F6F5B;
-  --primary-hover: #185846;
-  --primary-dim: rgba(31, 111, 91, 0.10);
-  --primary-border: rgba(31, 111, 91, 0.22);
+  --primary: #007AFF;
+  --primary-hover: #0071E3;
+  --primary-dim: rgba(0, 122, 255, 0.10);
+  --primary-border: rgba(0, 122, 255, 0.20);
 
-  --secondary: #1F6F5B;
-  --secondary-dim: rgba(31, 111, 91, 0.10);
+  --secondary: #007AFF;
+  --secondary-dim: rgba(0, 122, 255, 0.1);
 
   --accent-sky: #007AFF;
   --accent-blue: #007AFF;
@@ -69,13 +69,13 @@
   --border-hover: rgba(255, 255, 255, 0.15);
   --border-focus: rgba(95, 179, 148, 0.38);
 
-  --primary: #63B596;
-  --primary-hover: #7BC5A9;
+  --primary: #60A5FA;
+  --primary-hover: #93C5FD;
   --primary-dim: rgba(99, 181, 150, 0.14);
   --primary-border: rgba(99, 181, 150, 0.3);
 
-  --secondary: #63B596;
-  --secondary-dim: rgba(99, 181, 150, 0.16);
+  --secondary: #60A5FA;
+  --secondary-dim: rgba(83, 71, 206, 0.2);
 
   --accent-sky: #3B82F6;
   --accent-blue: #3B82F6;
@@ -708,109 +708,6 @@ select option {
 .dark .ce-app :is([class*="bg-white"], [class*="bg-slate-50"])[class*="rounded-3xl"] {
   border-color: rgba(255, 255, 255, 0.09) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 36px rgba(0, 0, 0, 0.16);
-}
-
-/* Dashboard Geral visual language, shared by every authenticated module. */
-.ce-app {
-  --app-glass: rgba(255, 255, 255, 0.68);
-  --app-glass-strong: rgba(255, 255, 255, 0.82);
-  --app-glass-soft: rgba(240, 244, 242, 0.58);
-  --app-glass-border: rgba(255, 255, 255, 0.72);
-  --app-glass-shadow: 0 1px 2px rgba(24, 39, 32, 0.035), 0 16px 38px rgba(31, 111, 91, 0.065), inset 0 1px 0 rgba(255, 255, 255, 0.82);
-}
-
-.dark .ce-app {
-  --app-glass: rgba(25, 35, 31, 0.72);
-  --app-glass-strong: rgba(25, 35, 31, 0.88);
-  --app-glass-soft: rgba(255, 255, 255, 0.055);
-  --app-glass-border: rgba(255, 255, 255, 0.09);
-  --app-glass-shadow: 0 16px 38px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.065);
-}
-
-.ce-app main {
-  background-color: #edf3f0;
-  background-image:
-    radial-gradient(circle at 92% 4%, rgba(99, 181, 150, 0.16), transparent 25rem),
-    radial-gradient(circle at 8% 96%, rgba(31, 111, 91, 0.08), transparent 28rem),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.70), rgba(237, 243, 240, 0.84));
-}
-
-.dark .ce-app main {
-  background-color: #101713;
-  background-image:
-    radial-gradient(circle at 92% 4%, rgba(99, 181, 150, 0.15), transparent 28rem),
-    radial-gradient(circle at 8% 96%, rgba(31, 111, 91, 0.12), transparent 30rem);
-}
-
-.ce-app :is(.glass-panel, .nexus-card, .fintech-card, .bezel-outer, .bezel-inner, .dashboard-command-bar) {
-  border-color: var(--app-glass-border) !important;
-  background: var(--app-glass) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(145%);
-  backdrop-filter: blur(22px) saturate(145%);
-  box-shadow: var(--app-glass-shadow) !important;
-}
-
-.ce-app :is([class*="bg-white"], [class*="bg-surface"], [class*="bg-panel"])[class*="border"][class*="rounded"] {
-  border-color: var(--app-glass-border) !important;
-  background-color: var(--app-glass) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
-  backdrop-filter: blur(18px) saturate(135%);
-  box-shadow: var(--app-glass-shadow);
-}
-
-.ce-app :is(.dashboard-segmented-control, .pricing-tabs, [class*="bg-[var(--surface-high)]"], [class*="bg-slate-100"])[class*="flex"] {
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background: var(--app-glass-soft) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(135%);
-  backdrop-filter: blur(16px) saturate(135%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58), 0 8px 22px rgba(31, 111, 91, 0.045);
-}
-
-.dark .ce-app :is(.dashboard-segmented-control, .pricing-tabs, [class*="bg-[var(--surface-high)]"], [class*="bg-slate-100"])[class*="flex"] {
-  border-color: rgba(255, 255, 255, 0.075);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 8px 22px rgba(0, 0, 0, 0.14);
-}
-
-.ce-app :is(.glass-button, .btn, button[class*="border"]):not(:disabled) {
-  -webkit-backdrop-filter: blur(14px) saturate(135%);
-  backdrop-filter: blur(14px) saturate(135%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48), 0 4px 14px rgba(31, 111, 91, 0.045);
-}
-
-.ce-app :is(.glass-button, .btn, button[class*="border"]):not(:disabled):hover {
-  border-color: var(--primary-border) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 8px 20px rgba(31, 111, 91, 0.09);
-}
-
-.ce-app :is(.btn-primary, .glass-button-primary, button[class*="bg-[var(--primary)]"]) {
-  border-color: rgba(31, 111, 91, 0.82) !important;
-  background: linear-gradient(180deg, #267a65, #1f6f5b) !important;
-  color: #fff !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 8px 20px rgba(31, 111, 91, 0.20) !important;
-}
-
-.dark .ce-app :is(.btn-primary, .glass-button-primary, button[class*="bg-[var(--primary)]"]) {
-  border-color: rgba(99, 181, 150, 0.45) !important;
-  background: linear-gradient(180deg, #6fbea1, #55a98b) !important;
-  color: #101713 !important;
-}
-
-.ce-app :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="color"]) {
-  background-color: var(--app-glass-strong) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
-  backdrop-filter: blur(14px) saturate(130%);
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .ce-app {
-    --app-glass: var(--surface);
-    --app-glass-strong: var(--surface);
-    --app-glass-soft: var(--surface-high);
-  }
-  .ce-app :is(.glass-panel, .nexus-card, .fintech-card, .bezel-outer, .bezel-inner, .dashboard-command-bar, .glass-button, .btn, input, select, textarea) {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
