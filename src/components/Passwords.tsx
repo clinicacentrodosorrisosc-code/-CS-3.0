@@ -127,7 +127,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
     <div className="flex-1 flex flex-col w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       
       {/* Top Bar Navigation */}
-      <div className="px-6 py-4 border-b border-border bg-surface/50 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 z-20">
+      <div className="module-command-bar mx-4 mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 z-20">
         
         {/* Title & Badge */}
         <div className="flex items-center gap-3">
@@ -148,8 +148,9 @@ export const Passwords: React.FC<PasswordsProps> = ({
         {/* Sub-Tabs Nav Pill & Lock Button */}
         <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
           
-          <div className="flex items-center p-1 bg-panel border border-border rounded-2xl">
+          <div className="module-segmented-control !mb-0">
             <button
+              data-active={activeSubTab === 'docs'}
               onClick={() => setSelectedSubTab('docs')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeSubTab === 'docs'
@@ -162,6 +163,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
             </button>
 
             <button
+              data-active={activeSubTab === 'passwords'}
               onClick={() => setSelectedSubTab('passwords')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeSubTab === 'passwords'
@@ -174,6 +176,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
             </button>
 
             <button
+              data-active={activeSubTab === 'banking'}
               onClick={() => setSelectedSubTab('banking')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeSubTab === 'banking'
@@ -186,6 +189,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
             </button>
 
             <button
+              data-active={activeSubTab === 'projects'}
               onClick={() => setSelectedSubTab('projects')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeSubTab === 'projects'

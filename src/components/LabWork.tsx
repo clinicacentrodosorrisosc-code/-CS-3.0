@@ -1643,7 +1643,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
                {/* Visual spacing for title */}
-               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
                    <div>
                        <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
                           {viewMode === 'dashboard' ? 'Dashboard' : viewMode === 'kanban' ? 'Quadro Kanban' : 'Configuração de Lab'}
@@ -1667,7 +1667,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                </div>
 
                {/* SUB NAVIGATION BAR */}
-               <div className="flex items-center gap-1 overflow-x-auto pb-4 no-scrollbar border-b border-border mb-8">
+               <div className="module-segmented-control no-scrollbar">
                     {[
                         { id: 'dashboard', label: 'Dashboard', permission: 'lab_dashboard' },
                         { id: 'kanban', label: 'Kanban', permission: 'lab_kanban' },
@@ -1679,6 +1679,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     }).map(tab => (
                         <button
                             key={tab.id}
+                            data-active={viewMode === tab.id}
                             onClick={() => setViewMode(tab.id as ViewMode)}
                             className={`
                                 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button

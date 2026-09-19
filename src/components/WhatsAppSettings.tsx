@@ -140,7 +140,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   return (
     <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="module-command-bar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#1F6F5B] dark:text-[#63B596]"><span className="h-px w-6 bg-current" /> Integrações</div>
             <h1 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)]">WhatsApp Business API</h1>

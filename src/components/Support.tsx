@@ -148,7 +148,7 @@ export const Support: React.FC<SupportProps> = () => {
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
                
-               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-6">
                    <div>
                        <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
                           Chamados & Suporte

@@ -186,7 +186,7 @@ export const Biblioteca: React.FC = () => {
             <div className="space-y-8 animate-in fade-in duration-300">
               
               {/* Header Title section */}
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+              <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
                     Biblioteca de Manuais
@@ -210,10 +210,11 @@ export const Biblioteca: React.FC = () => {
               <div className="border-b border-border pb-6 space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   {/* Category Pills */}
-                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
+                  <div className="module-segmented-control no-scrollbar !mb-0">
                     {categories.map(cat => (
                       <button
                         key={cat}
+                        data-active={selectedCategory === cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`
                           px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button

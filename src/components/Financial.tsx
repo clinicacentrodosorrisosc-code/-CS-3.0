@@ -2180,7 +2180,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
            <div className="w-full h-full space-y-4">
 
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
+               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
                    <div>
                        <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
                           {visibleTabs.find(t => t.id === activeSubTab)?.label || 'Financeiro'}
@@ -2197,10 +2197,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                </div>
 
                 {/* SUB NAVIGATION BAR */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-[#EAEFF6] dark:border-white/[0.08]">
+                <div className="module-segmented-control no-scrollbar">
                      {visibleTabs.map(tab => (
                          <button
                              key={tab.id}
+                             data-active={activeSubTab === tab.id}
                              onClick={() => setActiveSubTab(tab.id as SubTab)}
                              className={`
                                  px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer

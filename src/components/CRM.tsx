@@ -310,7 +310,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
-          <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <header className="module-command-bar flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--primary)] dark:text-[var(--primary-hover)]">
                 <span className="h-px w-6 bg-current" />

@@ -203,7 +203,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6">
     <div className="mx-auto max-w-6xl">
-      <header><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Disparador em massa</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Escolha exatamente quem receberá a mensagem antes do envio.</p></header>
+      <header className="module-command-bar"><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Disparador em massa</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Escolha exatamente quem receberá a mensagem antes do envio.</p></header>
       <div className="mt-5"><StepIndicator steps={['Definir campanha', 'Escolher mensagem', 'Selecionar público', 'Revisar e enviar']} current={campaignStep} /></div>
       {notice && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">{notice}</p>}
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">

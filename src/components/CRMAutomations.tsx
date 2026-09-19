@@ -333,7 +333,7 @@ export const CRMAutomations: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[var(--bg)] text-[var(--text)]">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 lg:px-6">
+      <header className="module-command-bar mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 lg:mx-6">
         <div className="min-w-0"><div className="flex items-center gap-2"><Workflow className="h-5 w-5 text-[var(--primary)]" /><h1 className="text-base font-bold">Automações do CRM</h1></div><p className="mt-0.5 text-xs text-[var(--text-muted)]">Monte jornadas por etapa, tempo, horário e templates oficiais.</p></div>
         <div className="flex items-center gap-2"><label className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold"><input type="checkbox" checked={isActive} onChange={event => setIsActive(event.target.checked)} className="accent-[var(--primary)]" /> Ativo</label><button type="button" onClick={saveFlow} disabled={saving} className="flex h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar fluxo</button></div>
       </header>

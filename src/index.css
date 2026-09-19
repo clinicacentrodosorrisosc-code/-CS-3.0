@@ -669,6 +669,82 @@ select option {
 .dark .dashboard-command-bar { border-color: rgba(255, 255, 255, 0.08); background: linear-gradient(135deg, rgba(32, 35, 42, 0.98), rgba(21, 24, 32, 0.92)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px rgba(0, 0, 0, 0.18); }
 .dark .dashboard-segmented-control { background: rgba(255, 255, 255, 0.09); }
 
+/* The Dashboard Geral header and submenu language, reusable without changing
+   each module's palette, actions or internal content. */
+.module-command-bar {
+  position: relative;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.9)) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.025), 0 18px 40px rgba(29, 29, 31, 0.055), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.module-segmented-control {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem !important;
+  border: 0 !important;
+  border-radius: 999px;
+  background: rgba(118, 118, 128, 0.10);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.module-segmented-control > button,
+.module-segmented-control > [role="button"] {
+  flex: 0 0 auto;
+  min-height: 2rem;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  padding: 0.45rem 1rem !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  opacity: 1 !important;
+}
+
+.module-segmented-control > button:hover,
+.module-segmented-control > [role="button"]:hover {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.54) !important;
+}
+
+.module-segmented-control > [data-active="true"] {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--primary) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+}
+
+.dark .module-command-bar {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: linear-gradient(135deg, rgba(32, 35, 42, 0.98), rgba(21, 24, 32, 0.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.dark .module-segmented-control { background: rgba(255, 255, 255, 0.09); }
+.dark .module-segmented-control > button:hover { background: rgba(255, 255, 255, 0.06) !important; }
+.dark .module-segmented-control > [data-active="true"] { background: rgba(255, 255, 255, 0.12) !important; color: var(--text) !important; }
+
+@media (min-width: 768px) {
+  .module-command-bar { padding: 1.25rem; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .module-command-bar { background: var(--surface) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
 /* System-wide module treatment. Most feature screens predate the shared shell
    and use Tailwind utility combinations, so these selectors give them the same
    visual grammar without touching their calculations, forms or state. */

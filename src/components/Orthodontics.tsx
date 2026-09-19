@@ -2914,7 +2914,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
                {/* Visual spacing for title */}
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-2">
+               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
                    <div>
                        <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
                           {activeSubTab === 'vision' ? 'Visão Geral Ortodontia' : 
@@ -2957,10 +2957,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                </div>
 
                {/* SUB NAVIGATION BAR */}
-               <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 no-scrollbar border-b border-border/80 mb-4">
+               <div className="module-segmented-control no-scrollbar">
                     {visibleTabs.map(tab => (
                         <button
                             key={tab.id}
+                            data-active={activeSubTab === tab.id}
                             onClick={() => setActiveSubTab(tab.id as OrthoTab)}
                             className={`
                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer

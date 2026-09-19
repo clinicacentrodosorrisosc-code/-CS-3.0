@@ -53,7 +53,7 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 custom-scrollbar relative z-10 w-full space-y-6">
         
         {/* Top Header & Context */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-wider mb-1">
               <Sparkles className="w-3.5 h-3.5" />
@@ -75,7 +75,7 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
         </div>
 
         {/* Sub Navigation Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div className="module-segmented-control no-scrollbar">
           {SUB_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeSubTab === tab.id;
@@ -83,6 +83,7 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
             return (
               <button
                 key={tab.id}
+                data-active={isActive}
                 onClick={() => setSelectedSubTab(tab.id)}
                 className={`
                   flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap border
