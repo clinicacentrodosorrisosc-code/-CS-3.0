@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, CalendarX2, ChevronLeft, ChevronRight, ClipboardCheck, Clock3, RefreshCw, RotateCcw, Trophy, UserCheck, UsersRound, UserX } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { AnimatedNumber } from './ui/animated-number';
+import { DateRangePicker } from './ui/date-range-picker';
 
 type AgendaEvent = {
   uuid: string;
@@ -218,10 +219,11 @@ export const ClinicaExpertsAgenda: React.FC = () => {
             <div className="flex rounded-xl border border-[#DFE6E2] bg-[#F5F7F6] p-0.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
               {[{ id: 'day', label: 'Dia' }, { id: 'week', label: 'Semana' }, { id: 'month', label: 'Mês' }, { id: 'custom', label: 'Personalizado' }].map(option => <button key={option.id} type="button" onClick={() => selectPeriodMode(option.id as PeriodMode)} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${periodMode === option.id ? 'bg-[#1F6F5B] text-white shadow-sm dark:bg-[#63B596] dark:text-[#101217]' : 'text-[#5E6D66] hover:bg-white hover:text-[#17211D] dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white'}`}>{option.label}</button>)}
             </div>
-            {periodMode === 'custom' ? <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#DFE6E2] bg-[#F5F7F6] p-1.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
+            {periodMode === 'custom' ? <><DateRangePicker value={{ start: customStart, end: customEnd }} onChange={({ start, end }) => { setCustomStart(start); setCustomEnd(end); }} className="min-w-[220px] max-w-[280px]" />
+            {/*
               <label className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-[#5E6D66] dark:text-slate-400">De<input type="date" value={customStart} max={customEnd} onChange={event => setCustomStart(event.target.value)} className="rounded-lg border border-[#DFE6E2] bg-white px-2 py-1 text-xs font-semibold text-[#17211D] dark:border-white/[0.1] dark:bg-[#19231F] dark:text-white" /></label>
               <label className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-[#5E6D66] dark:text-slate-400">Até<input type="date" value={customEnd} min={customStart} onChange={event => setCustomEnd(event.target.value)} className="rounded-lg border border-[#DFE6E2] bg-white px-2 py-1 text-xs font-semibold text-[#17211D] dark:border-white/[0.1] dark:bg-[#19231F] dark:text-white" /></label>
-            </div> : <div className="flex items-center rounded-xl border border-[#DFE6E2] bg-[#F5F7F6] p-1 dark:border-white/[0.08] dark:bg-white/[0.04]">
+            </div> */}</> : <div className="flex items-center rounded-xl border border-[#DFE6E2] bg-[#F5F7F6] p-1 dark:border-white/[0.08] dark:bg-white/[0.04]">
               <button type="button" onClick={() => changePeriod(-1)} aria-label="Período anterior" className="rounded-lg p-1.5 text-[#5E6D66] hover:bg-white hover:text-[#17211D] dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"><ChevronLeft className="size-4" /></button>
               <button type="button" onClick={() => setSelectedDate(new Date())} className="px-2 text-xs font-bold capitalize text-[#17211D] dark:text-white">{periodLabel}</button>
               <button type="button" onClick={() => changePeriod(1)} aria-label="Próximo período" className="rounded-lg p-1.5 text-[#5E6D66] hover:bg-white hover:text-[#17211D] dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"><ChevronRight className="size-4" /></button>

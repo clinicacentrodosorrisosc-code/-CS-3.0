@@ -12,6 +12,7 @@ import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
 import { ClinicaExpertsAgenda } from './ClinicaExpertsAgenda';
 import { AnimatedNumber } from './ui/animated-number';
+import { DateRangePicker } from './ui/date-range-picker';
 
 // --- TYPES ---
 interface DailyData {
@@ -609,7 +610,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                       </div>
 
                       {trendViewMode === 'personalizado' && (
-                          <div className="flex items-center gap-1.5 bg-white dark:bg-white/[0.04] p-1 rounded-xl border border-[#DFE6E2] dark:border-white/[0.08] text-[11px]">
+                          <><DateRangePicker value={{ start: customStartDate, end: customEndDate }} onChange={({ start, end }) => { setCustomStartDate(start); setCustomEndDate(end); }} className="min-w-[220px] max-w-[280px]" />
+                          {/*
                               <input
                                   type="date"
                                   value={customStartDate}
@@ -623,7 +625,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                                   onChange={e => setCustomEndDate(e.target.value)}
                                   className="bg-[#F0F4F2] dark:bg-white/[0.06] border border-[#DFE6E2] dark:border-white/10 rounded-lg px-2 py-0.5 text-[#17211D] dark:text-white text-xs focus:outline-none focus:border-[#1F6F5B]"
                               />
-                          </div>
+                          </div> */}</>
                       )}
 
                       <div className="flex gap-3">
