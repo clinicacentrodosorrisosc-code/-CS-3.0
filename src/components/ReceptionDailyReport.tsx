@@ -23,6 +23,7 @@ import {
     Image
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { DateRangePicker } from './ui/date-range-picker';
 import { toast } from 'sonner';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
 
@@ -797,25 +798,11 @@ export const ReceptionDailyReport: React.FC = () => {
                             </div>
 
                             {dateRange === 'custom' && (
-                                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                                    <div className="flex flex-col gap-1">
-                                        <input
-                                            type="date"
-                                            value={customStartDate}
-                                            onChange={(e) => setCustomStartDate(e.target.value)}
-                                            className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-teal-500 cursor-pointer"
-                                        />
-                                    </div>
-                                    <span className="text-slate-600 text-xs">a</span>
-                                    <div className="flex flex-col gap-1">
-                                        <input
-                                            type="date"
-                                            value={customEndDate}
-                                            onChange={(e) => setCustomEndDate(e.target.value)}
-                                            className="bg-panel border border-border rounded-lg px-3 py-1 text-[11px] text-text outline-none focus:border-teal-500 cursor-pointer"
-                                        />
-                                    </div>
-                                </div>
+                                <DateRangePicker
+                                    value={{ start: customStartDate, end: customEndDate }}
+                                    onChange={({ start, end }) => { setCustomStartDate(start); setCustomEndDate(end); }}
+                                    className="min-w-[220px] max-w-[280px]"
+                                />
                             )}
 
                             <div className="ml-auto flex items-center gap-3">
