@@ -1640,10 +1640,13 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     }, [cHora, time, cDireto, cLaboratorio, mLiquida, tTributos, tFinanceira, cComissao]);
 
     return (
-        <div className="flex flex-col gap-6 p-6 animate-in fade-in h-full">
-            <h2 className="text-2xl font-bold text-text mb-4">Precificação Inteligente e Automatizada</h2>
+        <div className="pricing-system flex h-full flex-col gap-4 p-4 animate-in fade-in sm:p-5">
+            <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--primary)]">Gestão financeira</p>
+                <h2 className="text-xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-2xl">Precificação inteligente e automatizada</h2>
+            </div>
             
-            <div className="flex flex-wrap gap-2 mb-6 bg-slate-800 p-2 rounded-lg">
+            <div className="pricing-tabs flex flex-wrap gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-1.5">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
@@ -1651,8 +1654,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                             activeTab === tab.id 
-                                ? 'bg-indigo-600 text-text shadow-md shadow-indigo-600/10' 
-                                : 'text-slate-400 hover:text-text hover:bg-slate-700'
+                                ? 'bg-[var(--primary)] text-white shadow-sm'
+                                : 'text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text)]'
                         }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -1661,7 +1664,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 ))}
             </div>
 
-            <div className="flex-1 bg-surface border border-border rounded-2xl p-6 overflow-auto">
+            <div className="pricing-content min-h-0 flex-1 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(24,39,32,0.05)] sm:p-5">
                 {activeTab === 'produtos' && (
                     <div className="space-y-4 animate-in fade-in duration-300">
                         <div>
