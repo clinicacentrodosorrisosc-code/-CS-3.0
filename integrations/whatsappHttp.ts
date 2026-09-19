@@ -44,7 +44,7 @@ export function decryptWhatsAppAccessToken(encryptedValue: string) {
   const key = Buffer.from(credentialsEncryptionKey, 'base64');
   if (key.length !== 32) throw new Error('WHATSAPP_CREDENTIALS_ENCRYPTION_KEY deve ser uma chave base64 de 32 bytes.');
   const payload = Buffer.from(encryptedValue, 'base64');
-  if (payload.length < 29) throw new Error('O token criptografado do WhatsApp estÃ¡ invÃ¡lido. Reconecte a conta.');
+  if (payload.length < 29) throw new Error('O token criptografado do WhatsApp está inválido. Reconecte a conta.');
   const iv = payload.subarray(0, 12);
   const authTag = payload.subarray(12, 28);
   const ciphertext = payload.subarray(28);

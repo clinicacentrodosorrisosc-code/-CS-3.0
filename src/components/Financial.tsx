@@ -101,11 +101,11 @@ interface LocalTransaction extends Transaction {
 const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#16A34A', '#38BDF8', '#1D4ED8'];
 
 const ALL_TABS_CONFIG = [
-  { id: 'overview', label: 'VisÃ£o Geral', permissionId: 'financial_overview' },
+  { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
   { id: 'transactions', label: 'Receitas', permissionId: 'financial_transactions' },
-  { id: 'pricing', label: 'PrecificaÃ§Ã£o', permissionId: 'financial_pricing' },
-  { id: 'viability', label: 'Viabilidade & ComissÃµes', permissionId: 'financial_viability', adminOnly: true },
-  { id: 'settings', label: 'ConfiguraÃ§Ãµes', permissionId: 'financial_settings' }
+  { id: 'pricing', label: 'Precificação', permissionId: 'financial_pricing' },
+  { id: 'viability', label: 'Viabilidade & Comissões', permissionId: 'financial_viability', adminOnly: true },
+  { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' }
 ];
 
 interface FinancialProps {
@@ -135,7 +135,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       }
   }, [visibleTabs, activeSubTab]);
 
-  // Listener para mudanÃ§a de aba via Sidebar
+  // Listener para mudança de aba via Sidebar
   useEffect(() => {
       if (requestedSubTab) {
           const tabExists = visibleTabs.find(t => t.id === requestedSubTab);
@@ -226,11 +226,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           // ignore
       }
       return [
-          { id: 'b1', type: 'income', category: 'Ortodontia', description: 'ManutenÃ§Ãµes OrtodÃ´nticas Previstas', projectedAmount: 18000 },
-          { id: 'b2', type: 'income', category: 'ClÃ­nica Geral', description: 'Consultas e Limpezas', projectedAmount: 9500 },
-          { id: 'b3', type: 'income', category: 'PrÃ³tese', description: 'PrÃ³teses e Implantes', projectedAmount: 14000 },
-          { id: 'b4', type: 'expense', category: 'Aluguel', description: 'Aluguel da ClÃ­nica', projectedAmount: 4800 },
-          { id: 'b5', type: 'expense', category: 'SalÃ¡rios', description: 'Equipe e Auxiliares', projectedAmount: 7500 },
+          { id: 'b1', type: 'income', category: 'Ortodontia', description: 'Manutenções Ortodônticas Previstas', projectedAmount: 18000 },
+          { id: 'b2', type: 'income', category: 'Clínica Geral', description: 'Consultas e Limpezas', projectedAmount: 9500 },
+          { id: 'b3', type: 'income', category: 'Prótese', description: 'Próteses e Implantes', projectedAmount: 14000 },
+          { id: 'b4', type: 'expense', category: 'Aluguel', description: 'Aluguel da Clínica', projectedAmount: 4800 },
+          { id: 'b5', type: 'expense', category: 'Salários', description: 'Equipe e Auxiliares', projectedAmount: 7500 },
           { id: 'b6', type: 'expense', category: 'Materiais', description: 'Insumos e Ortodontia', projectedAmount: 4000 },
           { id: 'b7', type: 'expense', category: 'Impostos', description: 'Simples Nacional / DAS', projectedAmount: 2200 },
       ];
@@ -316,7 +316,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           setTransactions(prev => prev.filter(t => !selectedExpenses.includes(t.id)));
           setSelectedExpenses([]);
           setIsBulkDeleteExpensesConfirmOpen(false);
-          toast.success(`${selectedExpenses.length} despesas excluÃ­das.`);
+          toast.success(`${selectedExpenses.length} despesas excluídas.`);
       } else {
           console.error('Erro ao excluir despesas selecionadas.', error);
           toast.error('Erro ao excluir despesas: ' + error.message);
@@ -331,7 +331,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           setTransactions(prev => prev.filter(t => !selectedIncomes.includes(t.id)));
           setSelectedIncomes([]);
           setIsBulkDeleteConfirmOpen(false);
-          toast.success(`${selectedIncomes.length} receitas excluÃ­das.`);
+          toast.success(`${selectedIncomes.length} receitas excluídas.`);
       } else {
           console.error('Erro ao excluir receitas selecionadas.', error);
           toast.error('Erro ao excluir receitas: ' + error.message);
@@ -339,7 +339,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   };
 
   const deleteIncome = async (transaction: LocalTransaction) => {
-      const confirmed = window.confirm(`Excluir a receita de "${transaction.description}"? Esta aÃ§Ã£o nÃ£o pode ser desfeita.`);
+      const confirmed = window.confirm(`Excluir a receita de "${transaction.description}"? Esta ação não pode ser desfeita.`);
       if (!confirmed) return;
 
       const { error } = await supabase.from('transactions').delete().eq('id', transaction.id);
@@ -353,7 +353,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       setSelectedIncomes(prev => prev.filter(id => id !== transaction.id));
       setIsModalOpen(false);
       notifyDataChange('transactions');
-      toast.success('Receita excluÃ­da.');
+      toast.success('Receita excluída.');
   };
 
   const bulkChangeCategoryIncomes = async (newCategory: string) => {
@@ -693,26 +693,26 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       try {
           const amountVal = parseFloat((formData.amount || '0').toString().replace(',', '.'));
 
-          // ValidaÃ§Ã£o de Campos ObrigatÃ³rios
-          if (!formData.date) return toast.error('Selecione a data do lanÃ§amento.');
-          if (!formData.description?.trim()) return toast.error(modalType === 'income' ? 'Informe o nome do paciente.' : 'Informe a descriÃ§Ã£o da despesa.');
+          // Validação de Campos Obrigatórios
+          if (!formData.date) return toast.error('Selecione a data do lançamento.');
+          if (!formData.description?.trim()) return toast.error(modalType === 'income' ? 'Informe o nome do paciente.' : 'Informe a descrição da despesa.');
           if (!formData.category) return toast.error('Selecione uma categoria.');
 
           const currentCategoryObj = (modalType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === formData.category);
           const hasSubcategories = currentCategoryObj && currentCategoryObj.subcategories && currentCategoryObj.subcategories.length > 0;
           if (hasSubcategories && !formData.procedure) return toast.error('Selecione um sub-categoria / procedimento.');
 
-          if (isNaN(amountVal) || amountVal <= 0) return toast.error('Informe um valor vÃ¡lido maior que zero.');
+          if (isNaN(amountVal) || amountVal <= 0) return toast.error('Informe um valor válido maior que zero.');
           if (!formData.accountId) return toast.error('Selecione a conta de destino/origem.');
           if (!formData.paymentMethod) return toast.error('Selecione a forma de pagamento.');
 
           if (modalType === 'income') {
-              if (!formData.professional) return toast.error('Selecione o profissional responsÃ¡vel.');
+              if (!formData.professional) return toast.error('Selecione o profissional responsável.');
 
               const method = (formData.paymentMethod || '').toLowerCase();
-              const isCard = method.includes('cartÃ£o') || method.includes('crÃ©dito') || method.includes('dÃ©bito');
+              const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
               if (isCard && !formData.cardBrand) {
-                  return toast.error('Selecione a bandeira do cartÃ£o para cÃ¡lculo de taxas.');
+                  return toast.error('Selecione a bandeira do cartão para cálculo de taxas.');
               }
           }
 
@@ -746,7 +746,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   currentSettlementDate = tempSettlement.toISOString().split('T')[0];
               }
 
-              const isRestrictedProcedure = formData.procedure === 'PanorÃ¢mica' || formData.procedure === 'DocumentaÃ§Ã£o Inicial';
+              const isRestrictedProcedure = formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial';
 
               transactionsToInsert.push({
                   id: (i === 0 && formData.id) ? formData.id : 'tx_' + safeGenerateId(),
@@ -776,7 +776,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
               await fetchAllData();
               notifyDataChange(['transactions', 'accounts']);
               setIsModalOpen(false);
-              toast.success('LanÃ§amento salvo com sucesso!');
+              toast.success('Lançamento salvo com sucesso!');
           } else {
               toast.error('Erro ao salvar no banco de dados: ' + error.message);
           }
@@ -819,7 +819,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
     // Restriction rule for specific procedures
     if (field === 'procedure') {
-        if (value === 'PanorÃ¢mica' || value === 'DocumentaÃ§Ã£o Inicial') {
+        if (value === 'Panorâmica' || value === 'Documentação Inicial') {
             newRows[index].salesTeam = '';
         }
     }
@@ -827,7 +827,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     setBulkRows(newRows);
   };
 
-  // --- LOGICA DE BUSCA INTELIGENTE PARA IMPORTAÃ‡ÃƒO ---
+  // --- LOGICA DE BUSCA INTELIGENTE PARA IMPORTAÇÃO ---
 
   const findBestMatch = (input: string, list: {name: string}[]) => {
       if (!input) return '';
@@ -837,15 +837,15 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       let match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === search);
       if (match) return match.name;
 
-      // 2. Busca por InÃ­cio do texto
+      // 2. Busca por Início do texto
       match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(search));
       if (match) return match.name;
 
-      // 3. Busca por "ContÃ©m"
+      // 3. Busca por "Contém"
       match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(search));
       if (match) return match.name;
 
-      return input.trim(); // Se nÃ£o achar nada, retorna o texto original para o usuÃ¡rio ver o erro na grade
+      return input.trim(); // Se não achar nada, retorna o texto original para o usuário ver o erro na grade
   };
 
   const parseImportDate = (val: string) => {
@@ -931,11 +931,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   const handleSaveBulk = async () => {
     const validRows = bulkRows.filter(r => r.description.trim() && parseFloat(r.amount.toString().replace(',', '.')) > 0);
-    if (validRows.length === 0) return toast.error("Preencha ao menos um lanÃ§amento vÃ¡lido.");
+    if (validRows.length === 0) return toast.error("Preencha ao menos um lançamento válido.");
 
     setIsSaving(true);
     const toInsert = validRows.map(r => {
-        const isRestrictedProcedure = r.procedure === 'PanorÃ¢mica' || r.procedure === 'DocumentaÃ§Ã£o Inicial';
+        const isRestrictedProcedure = r.procedure === 'Panorâmica' || r.procedure === 'Documentação Inicial';
         return {
             id: 'tx_' + safeGenerateId(),
             description: r.description,
@@ -959,7 +959,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         await fetchAllData();
         notifyDataChange(['transactions', 'accounts']);
         setIsBulkModalOpen(false);
-        toast.success('Processamento concluÃ­do com sucesso!');
+        toast.success('Processamento concluído com sucesso!');
     }
     else toast.error("Erro ao salvar: " + error.message);
     setIsSaving(false);
@@ -999,7 +999,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   useEffect(() => {
       if (requestedAction === 'new_income') {
           setActiveSubTab('transactions');
-          // Precisa garantir que as categorias/contas jÃ¡ foram carregadas, mas openModal usa o estado atual
+          // Precisa garantir que as categorias/contas já foram carregadas, mas openModal usa o estado atual
           openModal('income');
       } else if (requestedAction === 'new_expense') {
           setActiveSubTab('transactions');
@@ -1049,7 +1049,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const currentCat = categories.find(c => c.name === formData.category);
     const sub = currentCat?.subcategories.find((s: any) => s.name === subName);
 
-    const isRestrictedProcedure = subName === 'PanorÃ¢mica' || subName === 'DocumentaÃ§Ã£o Inicial';
+    const isRestrictedProcedure = subName === 'Panorâmica' || subName === 'Documentação Inicial';
 
     setFormData(prev => ({
         ...prev,
@@ -1065,7 +1065,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         ...prev,
         paymentMethod: pmName,
         accountId: method?.defaultAccountId || prev.accountId,
-        installments: (pmName.toLowerCase().includes('cartÃ£o') || pmName.toLowerCase().includes('crÃ©dito')) ? prev.installments : 1
+        installments: (pmName.toLowerCase().includes('cartão') || pmName.toLowerCase().includes('crédito')) ? prev.installments : 1
     }));
   };
 
@@ -1077,12 +1077,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           return (tx.amount * 6.59) / 100;
       }
 
-      const isCard = method.includes('cartÃ£o') || method.includes('crÃ©dito') || method.includes('dÃ©bito');
+      const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
       if (isCard && cardFees.length > 0) {
           const feeConfig = cardFees.find(f => f && f.brand === tx.cardBrand) || cardFees[0];
           let rate = 0;
           if (feeConfig) {
-              if (method.includes('dÃ©bito')) rate = feeConfig.debit || 0;
+              if (method.includes('débito')) rate = feeConfig.debit || 0;
               else if (tx.installments && tx.installments > 1) rate = (feeConfig.installments && feeConfig.installments[tx.installments]) || 0;
               else rate = feeConfig.credit1x || 0;
           }
@@ -1092,7 +1092,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   };
 
   const handleExport = (data: LocalTransaction[]) => {
-    const headers = ['Data', 'DescriÃ§Ã£o', 'Categoria', 'Procedimento', 'Profissional', 'Forma Pagto', 'Valor', 'Status', 'Obs'];
+    const headers = ['Data', 'Descrição', 'Categoria', 'Procedimento', 'Profissional', 'Forma Pagto', 'Valor', 'Status', 'Obs'];
     const csvContent = [
       headers.join(','),
       ...data.map(row => [
@@ -1128,7 +1128,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
       const handleAddBudgetItem = (e: React.FormEvent) => {
           e.preventDefault();
-          if (!newBudgetDesc || !newBudgetAmount) return toast.error('Preencha a descriÃ§Ã£o e o valor previsto.');
+          if (!newBudgetDesc || !newBudgetAmount) return toast.error('Preencha a descrição e o valor previsto.');
           const amount = parseFloat(newBudgetAmount.replace(',', '.')) || 0;
           const newItem: BudgetItem = {
               id: 'bud_' + safeGenerateId(),
@@ -1142,19 +1142,19 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           setNewBudgetDesc('');
           setNewBudgetAmount('');
           setNewBudgetNotes('');
-          toast.success('Item adicionado ao orÃ§amento!');
+          toast.success('Item adicionado ao orçamento!');
       };
 
       const handleRemoveBudgetItem = (id: string) => {
           setBudgetItems(prev => prev.filter(item => item.id !== id));
-          toast.success('Item removido do orÃ§amento.');
+          toast.success('Item removido do orçamento.');
       };
 
       const handleExportBudget = () => {
           const wsData = [
-              ['Planejamento OrÃ§amentÃ¡rio - MÃªs: ' + budgetMonth],
+              ['Planejamento Orçamentário - Mês: ' + budgetMonth],
               [],
-              ['Tipo', 'Categoria', 'DescriÃ§Ã£o', 'Valor Previsto (R$)', 'ObservaÃ§Ãµes'],
+              ['Tipo', 'Categoria', 'Descrição', 'Valor Previsto (R$)', 'Observações'],
               ...budgetItems.map(b => [b.type === 'income' ? 'Receita' : 'Despesa', b.category, b.description, b.projectedAmount, b.notes || '']),
               [],
               ['Total Receitas Previstas', '', '', totalProjectedIncome],
@@ -1166,7 +1166,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'Orcamento_' + budgetMonth);
           XLSX.writeFile(wb, `Orcamento_${budgetMonth}.xlsx`);
-          toast.success('Planilha orÃ§amentÃ¡ria exportada com sucesso!');
+          toast.success('Planilha orçamentária exportada com sucesso!');
       };
 
       return (
@@ -1182,7 +1182,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                       <h3 className="text-2xl font-black text-red-400">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                   </SpotlightCard>
                   <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(59, 130, 246, 0.3)">
-                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Lucro Operacional LÃ­quido</span>
+                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Lucro Operacional Líquido</span>
                       <h3 className={`text-2xl font-black ${projectedNetProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>R$ {projectedNetProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
                   </SpotlightCard>
                   <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(168, 85, 247, 0.3)">
@@ -1195,14 +1195,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
               <div className="glass-panel p-5 rounded-2xl border border-border bg-surface flex flex-col gap-4">
                   <div className="flex justify-between items-center">
                       <div>
-                          <h3 className="text-sm font-black text-text uppercase tracking-wider">Adicionar Item ao OrÃ§amento</h3>
-                          <p className="text-xs text-slate-500 font-medium">Insira estimativas de receitas ou custos para planejar o mÃªs seguinte.</p>
+                          <h3 className="text-sm font-black text-text uppercase tracking-wider">Adicionar Item ao Orçamento</h3>
+                          <p className="text-xs text-slate-500 font-medium">Insira estimativas de receitas ou custos para planejar o mês seguinte.</p>
                       </div>
                       <button
                           onClick={handleExportBudget}
                           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
                       >
-                          <Download className="w-4 h-4" /> Exportar Planilha OrÃ§amentÃ¡ria
+                          <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
                       </button>
                   </div>
 
@@ -1219,7 +1219,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                               className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
                           >
                               <option value="income">Receita (Entrada)</option>
-                              <option value="expense">Despesa (SaÃ­da)</option>
+                              <option value="expense">Despesa (Saída)</option>
                           </select>
                       </div>
 
@@ -1237,10 +1237,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                       </div>
 
                       <div className="flex flex-col gap-1 col-span-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">DescriÃ§Ã£o / Item</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Descrição / Item</label>
                           <input
                               type="text"
-                              placeholder="Ex: ManutenÃ§Ãµes / Aluguel..."
+                              placeholder="Ex: Manutenções / Aluguel..."
                               value={newBudgetDesc}
                               onChange={e => setNewBudgetDesc(e.target.value)}
                               className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
@@ -1273,7 +1273,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   {/* Projected Incomes Table */}
                   <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
                       <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
-                          <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Receitas OrÃ§adas ({projectedIncomes.length})</h4>
+                          <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Receitas Orçadas ({projectedIncomes.length})</h4>
                           <span className="text-xs font-bold text-emerald-300">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="overflow-x-auto">
@@ -1281,14 +1281,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                               <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                   <tr>
                                       <th className="p-3">Categoria</th>
-                                      <th className="p-3">DescriÃ§Ã£o</th>
+                                      <th className="p-3">Descrição</th>
                                       <th className="p-3 text-right">Previsto</th>
-                                      <th className="p-3 text-center">AÃ§Ãµes</th>
+                                      <th className="p-3 text-center">Ações</th>
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-white/5 text-xs">
                                   {projectedIncomes.length === 0 ? (
-                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma receita orÃ§ada cadastrada.</td></tr>
+                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma receita orçada cadastrada.</td></tr>
                                   ) : (
                                       projectedIncomes.map(item => (
                                           <tr key={item.id} className="hover:bg-panel transition-colors">
@@ -1322,7 +1322,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                   {/* Projected Expenses Table */}
                   <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
                       <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
-                          <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">Despesas OrÃ§adas ({projectedExpenses.length})</h4>
+                          <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">Despesas Orçadas ({projectedExpenses.length})</h4>
                           <span className="text-xs font-bold text-red-300">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="overflow-x-auto">
@@ -1330,14 +1330,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                               <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                   <tr>
                                       <th className="p-3">Categoria</th>
-                                      <th className="p-3">DescriÃ§Ã£o</th>
+                                      <th className="p-3">Descrição</th>
                                       <th className="p-3 text-right">Previsto</th>
-                                      <th className="p-3 text-center">AÃ§Ãµes</th>
+                                      <th className="p-3 text-center">Ações</th>
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-white/5 text-xs">
                                   {projectedExpenses.length === 0 ? (
-                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma despesa orÃ§ada cadastrada.</td></tr>
+                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma despesa orçada cadastrada.</td></tr>
                                   ) : (
                                       projectedExpenses.map(item => (
                                           <tr key={item.id} className="hover:bg-panel transition-colors">
@@ -1412,18 +1412,18 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             onClick={() => setTransactionsViewMode('realizado')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'realizado' ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
                         >
-                            LanÃ§amentos Realizados
+                            Lançamentos Realizados
                         </button>
                         <button
                             onClick={() => setTransactionsViewMode('orcamento')}
                             className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'orcamento' ? 'bg-purple-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
                         >
-                            Planejamento OrÃ§amentÃ¡rio (PrÃ³ximo MÃªs)
+                            Planejamento Orçamentário (Próximo Mês)
                         </button>
                     </div>
                     {transactionsViewMode === 'orcamento' && (
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">MÃªs de ReferÃªncia:</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Mês de Referência:</span>
                             <input
                                 type="month"
                                 value={budgetMonth}
@@ -1456,7 +1456,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">PerÃ­odo</label>
+                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
                         <DateRangePicker
                             value={{ start: txFilters.start, end: txFilters.end }}
                             onChange={(range) => setTxFilters({...txFilters, start: range.start, end: range.end})}
@@ -1497,12 +1497,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Auditoria</label>
-                        <SelectMenu value={txFilters.auditStatus} onChange={value => setTxFilters({...txFilters, auditStatus: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'verified', label: 'Verificado' }, { value: 'error', label: 'DivergÃªncia' }, { value: 'pending', label: 'Pendente' }]} />
+                        <SelectMenu value={txFilters.auditStatus} onChange={value => setTxFilters({...txFilters, auditStatus: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'verified', label: 'Verificado' }, { value: 'error', label: 'Divergência' }, { value: 'pending', label: 'Pendente' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Nota Fiscal</label>
-                        <SelectMenu value={txFilters.hasNF} onChange={value => setTxFilters({...txFilters, hasNF: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'true', label: 'Emitida' }, { value: 'false', label: 'NÃ£o Emitida' }]} />
+                        <SelectMenu value={txFilters.hasNF} onChange={value => setTxFilters({...txFilters, hasNF: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'true', label: 'Emitida' }, { value: 'false', label: 'Não Emitida' }]} />
                     </div>
 
                     <div className="flex flex-col gap-0.5">
@@ -1526,7 +1526,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                     <span className="text-[10px] text-emerald-300 font-bold">R$ {selectedIncomesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex flex-col items-end border-l border-border pl-3">
-                                    <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0">LÃ­quido</span>
+                                    <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0">Líquido</span>
                                     <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesNetSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
@@ -1540,7 +1540,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                     }}
                                     className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
                                 >
-                                    AÃ§Ãµes em Massa <ChevronDown className="w-2.5 h-2.5" />
+                                    Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                                 </button>
 
                                 {activeBulkActionTab === 'income' && (
@@ -1564,7 +1564,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                                         {isBulkDeleteConfirmOpen && (
                                             <div className="p-2 flex flex-col gap-1.5">
-                                                <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusÃ£o?</span>
+                                                <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
                                                 <div className="flex gap-1">
                                                     <button
                                                         onClick={bulkDeleteIncomes}
@@ -1576,7 +1576,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                         onClick={() => setIsBulkDeleteConfirmOpen(false)}
                                                         className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
                                                     >
-                                                        NÃ£o
+                                                        Não
                                                     </button>
                                                 </div>
                                             </div>
@@ -1610,7 +1610,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     )}
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">Meta DiÃ¡ria</span>
+                        <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">Meta Diária</span>
                         <span className="text-[10px] text-amber-400 font-bold">R$ {dailyMetaRequired.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex flex-col items-end">
@@ -1623,8 +1623,8 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                 </div>
             </div>
-            {errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1"><AlertTriangle className="text-red-500 w-3 h-3" /><span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">AtenÃ§Ã£o: {errorCount} lanÃ§amentos com erro na auditoria.</span></div>)}
-            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">LÃ­quido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÃ‡Ã•ES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'ClÃ­nica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#8b5cf6' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-emerald-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / DivergÃªncia"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
+            {errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1"><AlertTriangle className="text-red-500 w-3 h-3" /><span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Atenção: {errorCount} lançamentos com erro na auditoria.</span></div>)}
+            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">Líquido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'Clínica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#8b5cf6' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-emerald-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / Divergência"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
                 </div>
             )}
         </div>
@@ -1679,7 +1679,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">PerÃ­odo</label>
+                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
                         <DateRangePicker
                             value={{ start: expFilters.start, end: expFilters.end }}
                             onChange={(range) => setExpFilters({...expFilters, start: range.start, end: range.end})}
@@ -1713,7 +1713,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
 
                     <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">DescriÃ§Ã£o</label>
+                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Descrição</label>
                         <input type="text" placeholder="Buscar..." value={expFilters.search} onChange={e => setExpFilters({...expFilters, search: e.target.value})} className="w-full h-[28px] bg-surface border border-border rounded-lg px-2.5 text-[10px] font-bold text-text outline-none focus:border-red-500 transition-colors placeholder-slate-600" />
                     </div>
                 </div>
@@ -1737,7 +1737,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             }}
                             className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
                         >
-                            AÃ§Ãµes em Massa <ChevronDown className="w-2.5 h-2.5" />
+                            Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                         </button>
 
                         {activeBulkActionTab === 'expense' && (
@@ -1761,7 +1761,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
                                 {isBulkDeleteExpensesConfirmOpen && (
                                     <div className="p-2 flex flex-col gap-1.5">
-                                        <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusÃ£o?</span>
+                                        <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
                                         <div className="flex gap-1">
                                             <button
                                                 onClick={bulkDeleteExpenses}
@@ -1773,7 +1773,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                                 onClick={() => setIsBulkDeleteExpensesConfirmOpen(false)}
                                                 className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
                                             >
-                                                NÃ£o
+                                                Não
                                             </button>
                                         </div>
                                     </div>
@@ -1806,7 +1806,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                 </div>
             )}
-            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { const pendingTxs = filtered.filter(tx => tx.status === 'Pending').map(tx => tx.id); if (e.target.checked) setSelectedExpenses(pendingTxs); else setSelectedExpenses([]); }} checked={selectedExpenses.length > 0 && selectedExpenses.length === filtered.filter(tx => tx.status === 'Pending').length} className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">DescriÃ§Ã£o</th><th className="p-4">Categoria</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th><th className="p-4 text-center">Status</th><th className="p-4 text-right">AÃ‡Ã•ES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => {
+            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { const pendingTxs = filtered.filter(tx => tx.status === 'Pending').map(tx => tx.id); if (e.target.checked) setSelectedExpenses(pendingTxs); else setSelectedExpenses([]); }} checked={selectedExpenses.length > 0 && selectedExpenses.length === filtered.filter(tx => tx.status === 'Pending').length} className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Descrição</th><th className="p-4">Categoria</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th><th className="p-4 text-center">Status</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => {
                 const displayDate = (tx.status === 'Paid' && tx.settlementDate) ? tx.settlementDate : tx.date;
                 return (
                 <tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 text-center">{tx.status === 'Pending' && <input type="checkbox" checked={selectedExpenses.includes(tx.id)} onChange={e => { if (e.target.checked) setSelectedExpenses(prev => [...prev, tx.id]); else setSelectedExpenses(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer" />}</td><td className="p-4 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4">{tx.paymentMethod}</td><td className="p-4 text-right font-bold text-red-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -1891,7 +1891,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         return (
             <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 <TrendingUp className="w-3 h-3" />
-                {diff >= 0 ? '+' : ''}{percent.toFixed(1)}% vs mÃªs anterior
+                {diff >= 0 ? '+' : ''}{percent.toFixed(1)}% vs mês anterior
             </span>
         );
     };
@@ -1913,7 +1913,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                 </div>
                 <div className="flex items-center gap-2 bg-panel p-1 rounded-xl border border-border">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">MÃªs:</label>
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">Mês:</label>
                     <input type="month" value={selectedDreMonth} onChange={e => setSelectedDreMonth(e.target.value)} className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                 </div>
             </div>
@@ -1925,19 +1925,19 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <div className="mt-2">{getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}</div>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total SaÃ­das</p>
+                    <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total Saídas</p>
                     <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">R$ {currentData.totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <div className="mt-2">{getDiffDisplay(currentData.totalExpense, prevData.totalExpense)}</div>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">Resultado LÃ­quido</p>
+                    <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">Resultado Líquido</p>
                     <p className={`text-3xl font-black tracking-tight group-hover:scale-105 transition-transform origin-left ${currentData.result >= 0 ? 'text-text' : 'text-rose-500'}`}>R$ {currentData.result.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                     <div className="mt-2">{getDiffDisplay(currentData.result, prevData.result)}</div>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition-all">
-                    <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">ProjeÃ§Ã£o {new Date(new Date(currentMonthDate).setMonth(currentMonthDate.getMonth() + 1)).toLocaleDateString('pt-BR', { month: 'short' })}</p>
+                    <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">Projeção {new Date(new Date(currentMonthDate).setMonth(currentMonthDate.getMonth() + 1)).toLocaleDateString('pt-BR', { month: 'short' })}</p>
                     <p className="text-3xl font-black tracking-tight text-text/90">R$ {((currentData.totalRevenue * 1.05) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <p className="text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1"><RefreshCw className="w-3 h-3 animate-spin-slow" /> Baseado em tendÃªncia (+5%)</p>
+                    <p className="text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1"><RefreshCw className="w-3 h-3 animate-spin-slow" /> Baseado em tendência (+5%)</p>
                 </div>
             </div>
 
@@ -1948,7 +1948,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </h3>
                     <div className="flex gap-4">
                         <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entradas</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">SaÃ­das</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Saídas</span></div>
                     </div>
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
@@ -2024,7 +2024,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
 
                     <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
-                        <TrendingUp className="w-4 h-4 text-indigo-400" /> SaÃºde Financeira
+                        <TrendingUp className="w-4 h-4 text-indigo-400" /> Saúde Financeira
                     </h3>
 
                     <div className="flex flex-col gap-8 relative z-10">
@@ -2061,12 +2061,12 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                                     <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
                                 </div>
-                                <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">RecomendaÃ§Ã£o EstratÃ©gica</p>
+                                <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">Recomendação Estratégica</p>
                             </div>
                             <p className="text-xs text-slate-300 leading-relaxed font-medium">
                                 {currentData.result > 0
-                                    ? "Sua clÃ­nica apresenta uma taxa de lucro saudÃ¡vel. Este Ã© o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente."
-                                    : "AtenÃ§Ã£o crÃ­tica: A operaÃ§Ã£o estÃ¡ consumindo mais do que gera. Ã‰ recomendÃ¡vel uma auditoria imediata nas despesas operacionais e revisÃ£o da tabela de procedimentos."}
+                                    ? "Sua clínica apresenta uma taxa de lucro saudável. Este é o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente."
+                                    : "Atenção crítica: A operação está consumindo mais do que gera. É recomendável uma auditoria imediata nas despesas operacionais e revisão da tabela de procedimentos."}
                             </p>
                         </div>
                     </div>
@@ -2097,7 +2097,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>))}</div></div>)}</div>))}</div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas</h3><div className="flex gap-2 mb-6"><input value={newExpenseCategory} onChange={e => setNewExpenseCategory(e.target.value)} placeholder="Nova categoria de despesa..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><select value={newExpenseType} onChange={e => setNewExpenseType(e.target.value as any)} className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"><option value="variable">VariÃ¡vel</option><option value="fixed">Fixa</option></select><button onClick={async () => { if(newExpenseCategory) { await supabase.from('expense_categories').insert({id: 'exp_'+Date.now(), name: newExpenseCategory, type: newExpenseType, subcategories: []}); fetchAllData(); setNewExpenseCategory(''); } }} className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500">Add</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{expenseCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === 'fixed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>{cat.type === 'fixed' ? 'Fixa' : 'VariÃ¡vel'}</span><input
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas</h3><div className="flex gap-2 mb-6"><input value={newExpenseCategory} onChange={e => setNewExpenseCategory(e.target.value)} placeholder="Nova categoria de despesa..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><select value={newExpenseType} onChange={e => setNewExpenseType(e.target.value as any)} className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"><option value="variable">Variável</option><option value="fixed">Fixa</option></select><button onClick={async () => { if(newExpenseCategory) { await supabase.from('expense_categories').insert({id: 'exp_'+Date.now(), name: newExpenseCategory, type: newExpenseType, subcategories: []}); fetchAllData(); setNewExpenseCategory(''); } }} className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500">Add</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{expenseCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === 'fixed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>{cat.type === 'fixed' ? 'Fixa' : 'Variável'}</span><input
                   className="text-sm font-black text-slate-200 uppercase bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
                   value={cat.name}
                   onChange={(e) => {
@@ -2154,7 +2154,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                 </button>
                 </div>))}</div></div>)}</div>))}</div></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#8b5cf6'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#8b5cf6' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento & Taxas</h3><div className="flex gap-2 mb-4"><input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova Forma de Pagamento..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newPaymentMethod) { await supabase.from('payment_methods').insert({id: 'pm_'+Date.now(), name: newPaymentMethod, days_to_receive: 0, default_account_id: accountsList[0]?.id || ''}); fetchAllData(); setNewPaymentMethod(''); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{paymentMethods.map(pm => (<div key={pm.id} className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"><div className="flex justify-between items-center"><span className="text-sm font-black text-text uppercase">{pm.name}</span><button onClick={async () => { await supabase.from('payment_methods').delete().eq('id', pm.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div><div className="flex flex-col gap-2"><div className="flex justify-between items-center text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO:</span><input type="number" value={pm.daysToReceive} onChange={async (e) => { await supabase.from('payment_methods').update({days_to_receive: parseInt(e.target.value)}).eq('id', pm.id); fetchAllData(); }} className="w-12 bg-panel border border-border rounded text-center text-text" /></div><div className="flex flex-col gap-1"><span className="text-[10px] font-bold text-slate-500 uppercase">CONTA PADRÃƒO:</span><select value={pm.defaultAccountId} onChange={async (e) => { await supabase.from('payment_methods').update({default_account_id: e.target.value}).eq('id', pm.id); fetchAllData(); }} className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}</select></div></div></div>))}</div><div className="border-t border-border pt-6"><h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2"><Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras</h4><div className="overflow-x-auto custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase"><tr><th className="p-3">Bandeira</th><th className="p-3">DÃ©bito</th><th className="p-3">CrÃ©dito 1x</th>{[2,3,4,5,6,7,8,9,10,11,12].map(n => <th key={n} className="p-3">{n}x</th>)}</tr></thead><tbody className="text-[11px] text-slate-300 divide-y divide-white/5">{cardFees.map(fee => (<tr key={fee.brand} className="hover:bg-panel"><td className="p-3 font-bold text-text whitespace-nowrap">{fee.brand}</td><td className="p-3"><input type="number" step="0.01" value={fee.debit} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, debit: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td><td className="p-3"><input type="number" step="0.01" value={fee.credit1x} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, credit1x: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>{[2,3,4,5,6,7,8,9,10,11,12].map(n => (<td key={n} className="p-3"><input type="number" step="0.01" value={fee.installments[n] || 0} onChange={async (e) => { const next = cardFees.map(f => { if (f.brand === fee.brand) { const newInst = { ...f.installments, [n]: parseFloat(e.target.value) }; return { ...f, installments: newInst }; } return f; }); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>))}</tr>))}</tbody></table></div></div></div></div>
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento & Taxas</h3><div className="flex gap-2 mb-4"><input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova Forma de Pagamento..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newPaymentMethod) { await supabase.from('payment_methods').insert({id: 'pm_'+Date.now(), name: newPaymentMethod, days_to_receive: 0, default_account_id: accountsList[0]?.id || ''}); fetchAllData(); setNewPaymentMethod(''); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{paymentMethods.map(pm => (<div key={pm.id} className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"><div className="flex justify-between items-center"><span className="text-sm font-black text-text uppercase">{pm.name}</span><button onClick={async () => { await supabase.from('payment_methods').delete().eq('id', pm.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div><div className="flex flex-col gap-2"><div className="flex justify-between items-center text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO:</span><input type="number" value={pm.daysToReceive} onChange={async (e) => { await supabase.from('payment_methods').update({days_to_receive: parseInt(e.target.value)}).eq('id', pm.id); fetchAllData(); }} className="w-12 bg-panel border border-border rounded text-center text-text" /></div><div className="flex flex-col gap-1"><span className="text-[10px] font-bold text-slate-500 uppercase">CONTA PADRÃO:</span><select value={pm.defaultAccountId} onChange={async (e) => { await supabase.from('payment_methods').update({default_account_id: e.target.value}).eq('id', pm.id); fetchAllData(); }} className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}</select></div></div></div>))}</div><div className="border-t border-border pt-6"><h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2"><Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras</h4><div className="overflow-x-auto custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase"><tr><th className="p-3">Bandeira</th><th className="p-3">Débito</th><th className="p-3">Crédito 1x</th>{[2,3,4,5,6,7,8,9,10,11,12].map(n => <th key={n} className="p-3">{n}x</th>)}</tr></thead><tbody className="text-[11px] text-slate-300 divide-y divide-white/5">{cardFees.map(fee => (<tr key={fee.brand} className="hover:bg-panel"><td className="p-3 font-bold text-text whitespace-nowrap">{fee.brand}</td><td className="p-3"><input type="number" step="0.01" value={fee.debit} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, debit: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td><td className="p-3"><input type="number" step="0.01" value={fee.credit1x} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, credit1x: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>{[2,3,4,5,6,7,8,9,10,11,12].map(n => (<td key={n} className="p-3"><input type="number" step="0.01" value={fee.installments[n] || 0} onChange={async (e) => { const next = cardFees.map(f => { if (f.brand === fee.brand) { const newInst = { ...f.installments, [n]: parseFloat(e.target.value) }; return { ...f, installments: newInst }; } return f; }); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>))}</tr>))}</tbody></table></div></div></div></div>
     </div>
   );
 
@@ -2185,7 +2185,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                        <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
                           {visibleTabs.find(t => t.id === activeSubTab)?.label || 'Financeiro'}
                        </h1>
-                       <p className="text-slate-400 text-xs">GestÃ£o de fluxo de caixa, DRE e auditoria.</p>
+                       <p className="text-slate-400 text-xs">Gestão de fluxo de caixa, DRE e auditoria.</p>
                    </div>
 
                    <div className="flex flex-wrap gap-2 text-xs justify-end">
@@ -2219,7 +2219,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                  <div className="flex flex-col gap-4 animate-in fade-in duration-300">
                      <div className="bg-white dark:bg-[#141A29] p-3 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
                          <div className="flex items-center gap-2">
-                             <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">PerÃ­odo:</span>
+                             <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">Período:</span>
                              <div className="w-60">
                                  <DateRangePicker
                                      value={{ start: overviewFilters.start, end: overviewFilters.end }}
@@ -2230,7 +2230,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                          </div>
                      </div>
 
-                     {overviewMetrics.errorCount > 0 && (<div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-500 text-sm">warning</span><span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">AtenÃ§Ã£o: Existem lanÃ§amentos com erro na auditoria para este perÃ­odo.</span></div>)}
+                     {overviewMetrics.errorCount > 0 && (<div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-500 text-sm">warning</span><span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
 
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
@@ -2238,13 +2238,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
                          </div>
                          <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket MÃ©dio Total</p>
+                             <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
                              <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                          </div>
                      </div>
 
                     <div className="flex flex-col gap-2">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Ticket MÃ©dio por Categoria</h3>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Ticket Médio por Categoria</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                             {overviewMetrics.categoryTicketAverage.map(cat => (
                                 <SpotlightCard key={cat.name} className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5 min-w-0 overflow-hidden" spotlightColor="rgba(56, 189, 248, 0.15)">
@@ -2255,7 +2255,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     </div>
 
-                    {/* GRÃFICOS FINANCEIROS UI REFINADA */}
+                    {/* GRÁFICOS FINANCEIROS UI REFINADA */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                         {[
                             { title: 'Por Categoria', data: overviewMetrics.categoryData, activeIndex: activeCategoryIndex, setActive: setActiveCategoryIndex },
@@ -2273,7 +2273,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         onSegmentHover={(segment) => chart.setActive(segment ? chart.data.findIndex((entry: any) => entry.name === segment.label) : null)}
                                         centerContent={chart.activeIndex !== null && chart.data?.[chart.activeIndex] ? <><span className="text-sm font-black text-text">R$ {chart.data[chart.activeIndex].value?.toLocaleString('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })}</span><span className="max-w-[90px] truncate text-[9px] font-bold uppercase text-slate-400">{chart.data[chart.activeIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Total</span>}
                                     />
-                                    {chart.data.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">Sem dados no perÃ­odo</div>}
+                                    {chart.data.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">Sem dados no período</div>}
                                 </div>
 
                                 {/* LEGENDA CUSTOMIZADA EM BADGES INTERATIVOS */}
@@ -2298,14 +2298,14 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         ))}
                     </div>
 
-                    {/* CRESCIMENTO DA RECEITA - ÃšLTIMOS 6 MESES */}
+                    {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
                     <div className="hidden">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                             <div>
                                 <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Crescimento da Receita (Ãšltimos 6 Meses)
+                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
                                 </h3>
-                                <p className="text-[9px] text-slate-400 uppercase tracking-wider">AnÃ¡lise de tendÃªncia comercial</p>
+                                <p className="text-[9px] text-slate-400 uppercase tracking-wider">Análise de tendência comercial</p>
                             </div>
                         </div>
 
@@ -2347,9 +2347,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         </div>
                     </div>
 
-                    {/* VISUALIZAÃ‡ÃƒO MENSAL (COM DADOS HISTÃ“RICOS 2025) */}
+                    {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
                     <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
-                        <h3 className="text-xs font-bold text-text uppercase tracking-wider">VisualizaÃ§Ã£o Mensal (Ãšltimos 12 Meses)</h3>
+                        <h3 className="text-xs font-bold text-text uppercase tracking-wider">Visualização Mensal (Últimos 12 Meses)</h3>
 
                         <div className="h-[210px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -2403,7 +2403,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                     />
                                     <RechartsTooltip
                                         contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                                        formatter={(value: number) => [`${value}%`, 'VariaÃ§Ã£o']}
+                                        formatter={(value: number) => [`${value}%`, 'Variação']}
                                         labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
                                     />
                                     <Bar dataKey="variance" radius={[3, 3, 0, 0]} maxBarSize={36}>
@@ -2430,10 +2430,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {isAccountModalOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
                 <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">Nova Conta BancÃ¡ria</h3><button onClick={() => setIsAccountModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
+                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">Nova Conta Bancária</h3><button onClick={() => setIsAccountModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
                     <div className="p-6 flex flex-col gap-4">
                         <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">NOME DA CONTA</label><input value={newAccount.name} onChange={e => setNewAccount({...newAccount, name: e.target.value})} placeholder="Ex: Conta Principal" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div>
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANCO / INSTITUIÃ‡ÃƒO</label><input value={newAccount.bank} onChange={e => setNewAccount({...newAccount, bank: e.target.value})} placeholder="Ex: Nubank, ItaÃº..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div>
+                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANCO / INSTITUIÇÃO</label><input value={newAccount.bank} onChange={e => setNewAccount({...newAccount, bank: e.target.value})} placeholder="Ex: Nubank, Itaú..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div>
                         <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SALDO INICIAL (R$)</label><input type="number" value={newAccount.initialBalance} onChange={e => setNewAccount({...newAccount, initialBalance: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" /></div>
                     </div>
                     <div className="p-6 border-t border-border bg-surface flex justify-end gap-4"><button onClick={() => setIsAccountModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button><button onClick={handleSaveAccount} disabled={isSaving} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text font-bold rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50">Criar Conta</button></div>
@@ -2441,13 +2441,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             </div>
         )}
 
-        {/* MODAL LANÃ‡AMENTO EM MASSA - FORMATO EXCEL */}
+        {/* MODAL LANÇAMENTO EM MASSA - FORMATO EXCEL */}
         {isBulkModalOpen && (
             <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
                 <div className="bg-surface border border-border w-full max-w-[95vw] h-[90vh] rounded-3xl shadow-3xl overflow-hidden flex flex-col">
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                         <div>
-                            <h3 className="text-xl font-black text-text uppercase tracking-tight">LanÃ§amentos em Massa (Grade Excel)</h3>
+                            <h3 className="text-xl font-black text-text uppercase tracking-tight">Lançamentos em Massa (Grade Excel)</h3>
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
                         </div>
                         <button onClick={() => setIsBulkModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button>
@@ -2469,7 +2469,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             <thead className="sticky top-0 bg-surface z-10 text-[9px] font-black text-slate-500 uppercase tracking-widest text-left">
                                 <tr>
                                     <th className="p-3 border border-border min-w-[120px]">Data Comp.</th>
-                                    <th className="p-3 border border-border min-w-[200px]">DescriÃ§Ã£o</th>
+                                    <th className="p-3 border border-border min-w-[200px]">Descrição</th>
                                     <th className="p-3 border border-border min-w-[150px]">Categoria</th>
                                     <th className="p-3 border border-border min-w-[150px]">Sub-Categoria</th>
                                     <th className="p-3 border border-border min-w-[150px]">Fornecedor</th>
@@ -2485,7 +2485,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 {bulkRows.map((row, idx) => (
                                     <tr key={idx} className="hover:bg-panel group">
                                         <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input type="date" value={row.date} onChange={e => handleBulkChange(idx, 'date', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input value={row.description} onChange={e => handleBulkChange(idx, 'description', e.target.value)} placeholder="DescriÃ§Ã£o..." className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
+                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input value={row.description} onChange={e => handleBulkChange(idx, 'description', e.target.value)} placeholder="Descrição..." className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
                                         <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
                                             <select value={row.category} onChange={e => handleBulkChange(idx, 'category', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">
                                                 {expenseCategories.map(c => <option key={c.id} value={c.name} className="bg-surface">{c.name}</option>)}
@@ -2518,7 +2518,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 ))}
                             </tbody>
                         </table>
-                        <button onClick={addBulkRow} className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest">+ Adicionar Nova Linha de CÃ©lula</button>
+                        <button onClick={addBulkRow} className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest">+ Adicionar Nova Linha de Célula</button>
                     </div>
 
                     <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center"><div className="mr-auto flex gap-6 text-[10px] font-black uppercase text-slate-500 tracking-tighter"><span>{bulkRows.length} linhas preparadas</span><span className="text-slate-700">|</span><span>Dica: Use [TAB] para navegar ou cole do Excel acima</span></div><button onClick={() => setIsBulkModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button><button onClick={handleSaveBulk} disabled={isSaving} className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest">Processar Planilha</button></div>
@@ -2526,21 +2526,21 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             </div>
         )}
 
-        {/* MODAL LANÃ‡AMENTO INDIVIDUAL */}
+        {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
             <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
                 <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-3xl overflow-hidden flex flex-col relative">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">{formData.id ? 'Editar LanÃ§amento' : (modalType === 'income' ? 'Nova Receita' : 'Nova Despesa')}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
+                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">{formData.id ? 'Editar Lançamento' : (modalType === 'income' ? 'Nova Receita' : 'Nova Despesa')}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
                     <div className="p-8 flex flex-col gap-6 overflow-y-auto max-h-[80vh] custom-scrollbar bg-surface">
                         {modalType === 'expense' ? (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DE COMPETÃŠNCIA</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DE COMPETÊNCIA</label>
                                         <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DESCRIÃ‡ÃƒO</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DESCRIÇÃO</label>
                                         <input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none" />
                                     </div>
                                 </div>
@@ -2574,7 +2574,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÃTICO)</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÁTICO)</label>
                                         <select value={formData.accountId} onChange={e => setFormData({...formData, accountId: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
                                             {accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}
                                         </select>
@@ -2604,9 +2604,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 {!formData.id && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
                                         <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RECORRÃŠNCIA (MESES)</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RECORRÊNCIA (MESES)</label>
                                             <select value={formData.recurrence} onChange={e => setFormData({...formData, recurrence: parseInt(e.target.value) || 1})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                                {[1,2,3,4,5,6,7,8,9,10,11,12,24,36,48,60].map(n => <option key={n} value={n}>{n === 1 ? 'LanÃ§amento Ãšnico' : `${n} Meses`}</option>)}
+                                                {[1,2,3,4,5,6,7,8,9,10,11,12,24,36,48,60].map(n => <option key={n} value={n}>{n === 1 ? 'Lançamento Único' : `${n} Meses`}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -2616,7 +2616,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA</label><input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PACIENTE</label><input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none" /></div></div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CATEGORIA</label><select value={formData.category} onChange={e => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{(modalType === 'income' ? incomeCategories : expenseCategories).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SUB-CATEGORIA / PROCEDIMENTO</label><select value={formData.procedure} onChange={e => handleSubCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"><option value="">Selecione...</option>{((modalType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === formData.category)?.subcategories || []).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VALOR (R$)</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" /></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÃTICO)</label><select value={formData.accountId} onChange={e => setFormData({...formData, accountId: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}</select></div></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VALOR (R$)</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" /></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÁTICO)</label><select value={formData.accountId} onChange={e => setFormData({...formData, accountId: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}</select></div></div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PROFISSIONAL</label>
@@ -2631,9 +2631,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                             <select
                                                 value={formData.salesTeam}
                                                 onChange={e => setFormData({...formData, salesTeam: e.target.value})}
-                                                disabled={formData.procedure === 'PanorÃ¢mica' || formData.procedure === 'DocumentaÃ§Ã£o Inicial'}
+                                                disabled={formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial'}
                                                 className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
-                                                    (formData.procedure === 'PanorÃ¢mica' || formData.procedure === 'DocumentaÃ§Ã£o Inicial') ? 'opacity-50 cursor-not-allowed' : ''
+                                                    (formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial') ? 'opacity-50 cursor-not-allowed' : ''
                                                 }`}
                                             >
                                                 <option value="">Selecione...</option>
@@ -2671,9 +2671,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                             <button type="button" onClick={() => setFormData({...formData, isPartial: true})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Parcial</button>
                                         </div>
                                     </div>
-                                    {(((formData.paymentMethod || '').toLowerCase().includes('cartÃ£o') || (formData.paymentMethod || '').toLowerCase().includes('crÃ©dito') || (formData.paymentMethod || '').toLowerCase().includes('dÃ©bito'))) && (
+                                    {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito') || (formData.paymentMethod || '').toLowerCase().includes('débito'))) && (
                                         <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANDEIRA DO CARTÃƒO</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANDEIRA DO CARTÃO</label>
                                             <select value={formData.cardBrand} onChange={e => setFormData({...formData, cardBrand: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold">
                                                 <option value="">Selecione...</option>
                                                 {cardFees.map(f => <option key={f.brand} value={f.brand}>{f.brand}</option>)}
@@ -2681,9 +2681,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                         </div>
                                     )}
                                 </div>
-                                {(((formData.paymentMethod || '').toLowerCase().includes('cartÃ£o') || (formData.paymentMethod || '').toLowerCase().includes('crÃ©dito'))) && !(formData.paymentMethod || '').toLowerCase().includes('dÃ©bito') && (
+                                {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito'))) && !(formData.paymentMethod || '').toLowerCase().includes('débito') && (
                                     <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">NÃšMERO DE PARCELAS</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">NÚMERO DE PARCELAS</label>
                                         <select value={formData.installments} onChange={e => setFormData({...formData, installments: parseInt(e.target.value) || 1})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold">
                                             {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
                                         </select>
@@ -2691,7 +2691,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 )}
                             </>
                         )}
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÃ‡Ã•ES / COMENTÃRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lanÃ§amento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
+                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÇÕES / COMENTÁRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lançamento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
                     </div>
                     <div className="p-8 border-t border-border bg-surface flex items-center gap-6">
                         {modalType === 'income' && formData.id && (
@@ -2702,7 +2702,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                 }}
                                 className="mr-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
                             >
-                                <Trash2 className="w-4 h-4" /> Excluir lanÃ§amento
+                                <Trash2 className="w-4 h-4" /> Excluir lançamento
                             </button>
                         )}
                         <button onClick={() => setIsModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button>
@@ -2712,10 +2712,10 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             </div>
         )}
 
-        {/* MODAL OBSERVAÃ‡ÃƒO RÃPIDA */}
+        {/* MODAL OBSERVAÇÃO RÁPIDA */}
         {isObsModalOpen && selectedTxForObs && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden"><div className="p-5 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-sm font-bold text-text uppercase">ObservaÃ§Ã£o do LanÃ§amento</h3><button onClick={() => setIsObsModalOpen(false)} className="text-slate-400 hover:text-text"><X className="w-5 h-5" /></button></div><div className="p-6"><p className="text-[10px] text-slate-500 font-bold uppercase mb-2">DESCRIÃ‡ÃƒO: {selectedTxForObs.description}</p><textarea value={tempObs} onChange={e => setTempObs(e.target.value)} placeholder="Escreva aqui..." className="w-full bg-surface border border-border rounded-xl p-4 text-sm text-text outline-none h-40 resize-none focus:border-amber-500 transition-colors" /></div><div className="p-4 border-t border-border bg-surface flex justify-end gap-3"><button onClick={() => setIsObsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-400">Cancelar</button><button onClick={handleSaveObservation} className="px-6 py-2 bg-amber-600 text-text rounded-lg text-xs font-bold uppercase shadow-lg">Salvar Nota</button></div></div>
+                <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden"><div className="p-5 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-sm font-bold text-text uppercase">Observação do Lançamento</h3><button onClick={() => setIsObsModalOpen(false)} className="text-slate-400 hover:text-text"><X className="w-5 h-5" /></button></div><div className="p-6"><p className="text-[10px] text-slate-500 font-bold uppercase mb-2">DESCRIÇÃO: {selectedTxForObs.description}</p><textarea value={tempObs} onChange={e => setTempObs(e.target.value)} placeholder="Escreva aqui..." className="w-full bg-surface border border-border rounded-xl p-4 text-sm text-text outline-none h-40 resize-none focus:border-amber-500 transition-colors" /></div><div className="p-4 border-t border-border bg-surface flex justify-end gap-3"><button onClick={() => setIsObsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-400">Cancelar</button><button onClick={handleSaveObservation} className="px-6 py-2 bg-amber-600 text-text rounded-lg text-xs font-bold uppercase shadow-lg">Salvar Nota</button></div></div>
             </div>
         )}
 
@@ -2724,7 +2724,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
                 <div className="bg-surface border border-border w-full max-w-5xl rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]">
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><div className="flex items-center gap-4"><div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10"><Wallet className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-text leading-none mb-1">Extrato: {selectedAccountForStatement.name}</h3><p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{selectedAccountForStatement.bank}</p></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">DescriÃ§Ã£o</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">LÃ­quido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} â€¢ {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lanÃ§amento encontrado para esta conta.</div>)}</div>
+                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">Líquido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} • {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>)}</div>
                     <div className="p-8 border-t border-border bg-surface flex justify-between items-center"><div className="flex gap-8"><div className="flex flex-col"><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saldo Atual Real</span><span className="text-2xl font-bold text-text">R$ {((selectedAccountForStatement.initialBalance || 0) + transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95">Fechar Extrato</button></div>
                 </div>
             </div>
