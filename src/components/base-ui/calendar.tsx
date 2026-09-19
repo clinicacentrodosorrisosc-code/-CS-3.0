@@ -10,7 +10,7 @@ export function Calendar({ className = '', classNames, components, ...props }: C
   return (
     <DayPicker
       {...props}
-      className={`${className} bg-surface text-text`}
+      className={`${className} text-text`}
       classNames={{
         ...defaults,
         months: `${defaults.months} flex flex-col`,

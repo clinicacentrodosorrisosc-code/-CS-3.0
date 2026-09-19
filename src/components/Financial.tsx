@@ -1460,6 +1460,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <DateRangePicker
                             value={{ start: txFilters.start, end: txFilters.end }}
                             onChange={(range) => setTxFilters({...txFilters, start: range.start, end: range.end})}
+                            periodSelector
                             className="h-7"
                         />
                     </div>
@@ -2223,6 +2224,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                  <DateRangePicker
                                      value={{ start: overviewFilters.start, end: overviewFilters.end }}
                                      onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))}
+                                     periodSelector
                                  />
                              </div>
                          </div>

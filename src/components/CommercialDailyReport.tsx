@@ -217,9 +217,12 @@ export const CommercialDailyReport: React.FC = () => {
         'Contatos', 'Agendamentos', 'Compareceram', 'Faltaram', 'Cancelados'
     ]);
 
-    const [dateRange, setDateRange] = useState<'today' | '7days' | '15days' | '30days' | 'custom'>('7days');
-    const [customStartDate, setCustomStartDate] = useState(today);
-    const [customEndDate, setCustomEndDate] = useState(today);
+    const [dateRange, setDateRange] = useState<'today' | '7days' | '15days' | '30days' | 'month' | 'custom'>('month');
+    const [customStartDate, setCustomStartDate] = useState(() => {
+        const date = new Date();
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+    });
+    const [customEndDate, setCustomEndDate] = useState(() => new Date().toISOString().slice(0, 10));
 
     // State for the 10 core questions
     const [answers, setAnswers] = useState<CommercialReportAnswers>(() => {
@@ -802,7 +805,7 @@ export const CommercialDailyReport: React.FC = () => {
                 limit.setDate(todayDate.getDate() - 30);
                 limit.setHours(0, 0, 0, 0);
                 return rDate >= limit;
-            } else if (dateRange === 'custom') {
+            } else if (dateRange === 'month' || dateRange === 'custom') {
                 const start = parseSafeDate(customStartDate);
                 const end = parseSafeDate(customEndDate);
                 start.setHours(0, 0, 0, 0);
@@ -1977,6 +1980,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 { id: '7days', label: '7 Dias' },
                                 { id: '15days', label: '15 Dias' },
                                 { id: '30days', label: '30 Dias' },
+                                { id: 'month', label: 'Mês' },
                                 { id: 'custom', label: 'Personalizado' }
                             ].map((range) => (
                                 <button
@@ -1993,10 +1997,12 @@ export const CommercialDailyReport: React.FC = () => {
                             ))}
                         </div>
 
-                        {dateRange === 'custom' && (
+                        {(dateRange === 'custom' || dateRange === 'month') && (
                             <DateRangePicker
                                 value={{ start: customStartDate, end: customEndDate }}
-                                onChange={({ start, end }) => { setCustomStartDate(start); setCustomEndDate(end); }}
+                                onChange={({ start, end }) => { setCustomStartDate(start); setCustomEndDate(end); setDateRange('custom'); }}
+                                onPeriodModeChange={(mode) => setDateRange(mode === 'month' ? 'month' : 'custom')}
+                                periodSelector
                                 className="min-w-[220px] max-w-[280px]"
                             />
                         )}
