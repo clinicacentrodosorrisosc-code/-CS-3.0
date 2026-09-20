@@ -76,6 +76,11 @@ const formatDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? value || '—' : date.toLocaleDateString('pt-BR');
 };
 
+const formatPeriod = (period: { start: string; end: string }) => {
+  if (!period.start || !period.end) return 'Selecione o período';
+  return `${formatDate(`${period.start}T12:00:00`)} a ${formatDate(`${period.end}T12:00:00`)}`;
+};
+
 const recordDate = (record: FinancialRecord) => textValue(record, [
   'due_date',
   'date',
@@ -233,6 +238,7 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<View>('overview');
+  const [loadedPeriod, setLoadedPeriod] = useState<{ start: string; end: string } | null>(null);
   const [period, setPeriod] = useState(() => {
     const today = new Date();
     return {
@@ -241,16 +247,16 @@ export const ClinicaExpertsFinancial: React.FC = () => {
     };
   });
 
-  const load = useCallback(async () => {
-    if (!period.start || !period.end) return;
+  const load = useCallback(async (range: { start: string; end: string }) => {
+    if (!range.start || !range.end) return;
     setLoading(true);
     setError(null);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente para consultar o financeiro.');
       const query = new URLSearchParams({
-        starts_at: `${period.start}T00:00:00-03:00`,
-        ends_at: `${period.end}T23:59:59-03:00`,
+        starts_at: `${range.start}T00:00:00-03:00`,
+        ends_at: `${range.end}T23:59:59-03:00`,
       });
       const response = await fetch(`/api/integrations/clinica-experts/financial?${query}`, {
         headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
@@ -258,17 +264,23 @@ export const ClinicaExpertsFinancial: React.FC = () => {
       const payload = await response.json() as { data?: FinancialData; error?: string };
       if (!response.ok || !payload.data) throw new Error(payload.error || 'Não foi possível carregar o financeiro da Clínica Experts.');
       setData(payload.data);
+      setLoadedPeriod(range);
     } catch (reason) {
       setData(null);
       setError(reason instanceof Error ? reason.message : 'Não foi possível carregar o financeiro da Clínica Experts.');
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, []);
+
+  const handlePeriodChange = useCallback((nextPeriod: { start: string; end: string }) => {
+    setPeriod(nextPeriod);
+    if (nextPeriod.start && nextPeriod.end) void load(nextPeriod);
+  }, [load]);
 
   useEffect(() => {
-    if (period.start && period.end) void load();
-  }, [load, period.end, period.start]);
+    void load(period);
+  }, [load]);
 
   const categoriesById = useMemo(() => new Map((data?.categories || []).map((category) => [textValue(category, ['uuid', 'id'], ''), category])), [data?.categories]);
   const movementRecords = useMemo(() => (data?.parcels.length ? data.parcels : data?.bills || []), [data?.bills, data?.parcels]);
@@ -305,7 +317,7 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   return <div className="mx-auto w-full max-w-7xl space-y-5 pb-10">
     <header className="module-command-bar relative z-20 flex flex-col gap-4 overflow-visible sm:flex-row sm:items-center sm:justify-between">
       <div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--primary)]">Integração financeira</p><h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">Clínica Experts</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Acompanhe os recebimentos, compromissos e o fluxo de caixa do período selecionado.</p></div>
-      <div className="relative z-30 flex w-full flex-col gap-2 sm:w-[330px] sm:items-stretch"><DateRangePicker value={period} onChange={setPeriod} periodSelector className="relative z-40 w-full [&>button]:h-11 [&>button]:border-[var(--primary)]/25 [&>button]:bg-white/90 [&>button]:shadow-[0_12px_30px_rgba(31,111,91,0.14)] dark:[&>button]:bg-[#17211D]/90" /><button type="button" onClick={() => void load()} disabled={loading || !period.start || !period.end} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition hover:brightness-105 disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar dados</button></div>
+      <div className="relative z-30 flex w-full flex-col gap-2 sm:w-[330px] sm:items-stretch"><DateRangePicker value={period} onChange={handlePeriodChange} periodSelector className="relative z-40 w-full [&>button]:h-11 [&>button]:border-[var(--primary)]/25 [&>button]:bg-white/90 [&>button]:shadow-[0_12px_30px_rgba(31,111,91,0.14)] dark:[&>button]:bg-[#17211D]/90" /><button type="button" onClick={() => void load(period)} disabled={loading || !period.start || !period.end} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition hover:brightness-105 disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar dados</button><p className="text-right text-[10px] font-medium text-[var(--text-muted)]" aria-live="polite">{loading ? `Atualizando: ${formatPeriod(period)}` : loadedPeriod ? `Dados exibidos: ${formatPeriod(loadedPeriod)}` : 'Nenhum período carregado'}</p></div>
     </header>
 
     <nav aria-label="Seções financeiras da Clínica Experts" className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-white/70 bg-white/50 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,.8)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.04]">

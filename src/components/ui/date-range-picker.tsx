@@ -60,6 +60,7 @@ export function DateRangePicker({ value, onChange, className = '', periodSelecto
     setPeriodMode(mode);
     onPeriodModeChange?.(mode);
     onChange(range);
+    setIsOpen(false);
   };
 
   const handleSelect = (range: DateRange | undefined) => {
