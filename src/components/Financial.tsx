@@ -1,170 +1,258 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
-import { Transaction, Account, Service } from '../types';
-import { PricingSystem } from './PricingSystem';
-import { FinancialViability } from './FinancialViability';
-import { ClinicaExpertsFinancial } from './ClinicaExpertsFinancial';
+import React, { useState, useMemo, useEffect } from "react";
+import { Transaction, Account, Service } from "../types";
+import { PricingSystem } from "./PricingSystem";
+import { FinancialViability } from "./FinancialViability";
+import { ClinicaExpertsFinancial } from "./ClinicaExpertsFinancial";
 import {
-  Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
-} from 'recharts';
-import { DonutChart } from './ui/donut-chart';
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ComposedChart,
+  Label,
+  Line,
+  ReferenceLine,
+  LabelList,
+  LineChart,
+} from "recharts";
+import { DonutChart } from "./ui/donut-chart";
 import {
-  Filter, AlertTriangle, RefreshCw, FileText, CheckCircle, StickyNote, Edit,
-  Wallet, ShieldCheck, TrendingUp,
-  Building2, ChevronDown, ChevronUp, Trash2, Banknote, Users, Factory, CreditCard,
-  Percent, List, Plus, Minus, Receipt, Upload, X, Download, Check
-} from 'lucide-react';
-import { motion } from 'motion/react';
-import * as XLSX from 'xlsx';
-import { supabase } from '../supabaseClient';
-import { DateRangePicker } from './ui/date-range-picker';
-import { MultiSelectMenu, SelectMenu } from './ui/select-menu';
-import { SpotlightCard } from './ui/spotlight-card';
-import { toast } from 'sonner';
-import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
-import { playCashRegisterSound } from '../lib/sound';
+  Filter,
+  AlertTriangle,
+  RefreshCw,
+  FileText,
+  CheckCircle,
+  StickyNote,
+  Edit,
+  Wallet,
+  ShieldCheck,
+  TrendingUp,
+  Building2,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Banknote,
+  Users,
+  Factory,
+  CreditCard,
+  Percent,
+  List,
+  Plus,
+  Minus,
+  Receipt,
+  Upload,
+  X,
+  Download,
+  Check,
+} from "lucide-react";
+import { motion } from "motion/react";
+import * as XLSX from "xlsx";
+import { supabase } from "../supabaseClient";
+import { DateRangePicker } from "./ui/date-range-picker";
+import { MultiSelectMenu, SelectMenu } from "./ui/select-menu";
+import { SpotlightCard } from "./ui/spotlight-card";
+import { toast } from "sonner";
+import { useRealtimeSubscription, notifyDataChange } from "../lib/realtime";
+import { playCashRegisterSound } from "../lib/sound";
 
 // --- TYPES & INTERFACES ---
 
-type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing' | 'viability' | 'clinica_experts';
+type SubTab =
+  | "overview"
+  | "transactions"
+  | "settings"
+  | "pricing"
+  | "viability"
+  | "clinica_experts";
 
 interface SubCategory {
-    id: string;
-    name: string;
-    defaultValue?: number;
+  id: string;
+  name: string;
+  defaultValue?: number;
 }
 
 interface IncomeCategory {
-    id: string;
-    name: string;
-    subcategories: SubCategory[];
-    type: 'income';
+  id: string;
+  name: string;
+  subcategories: SubCategory[];
+  type: "income";
 }
 
 interface ExpenseCategory {
-    id: string;
-    name: string;
-    type: 'fixed' | 'variable';
-    subcategories: SubCategory[];
+  id: string;
+  name: string;
+  type: "fixed" | "variable";
+  subcategories: SubCategory[];
 }
 
 interface Professional {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 interface SalesTeam {
-    id: string;
-    name: string;
-    color?: string;
+  id: string;
+  name: string;
+  color?: string;
 }
 
 interface Supplier {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 interface PaymentMethod {
-    id: string;
-    name: string;
-    daysToReceive: number;
-    defaultAccountId?: string;
+  id: string;
+  name: string;
+  daysToReceive: number;
+  defaultAccountId?: string;
 }
 
 interface CardFeeConfig {
-    brand: string;
-    debit: number;
-    credit1x: number;
-    installments: Record<number, number>;
+  brand: string;
+  debit: number;
+  credit1x: number;
+  installments: Record<number, number>;
 }
 
 interface LocalAccount extends Account {
-    initialBalance: number;
+  initialBalance: number;
 }
 
 interface LocalTransaction extends Transaction {
-    settlementDate?: string;
-    relatedTransferId?: string;
-    procedure?: string;
-    reconciliationStatus?: 'verified' | 'error' | 'pending';
-    reconciliationNote?: string;
-    invoiceEmitted?: boolean;
-    appliedFeeRate?: number;
-    explicitFeeAmount?: number;
-    observation?: string;
-    cardBrand?: string;
-    accountId?: string;
-    installments?: number;
-    isPartial?: boolean;
+  settlementDate?: string;
+  relatedTransferId?: string;
+  procedure?: string;
+  reconciliationStatus?: "verified" | "error" | "pending";
+  reconciliationNote?: string;
+  invoiceEmitted?: boolean;
+  appliedFeeRate?: number;
+  explicitFeeAmount?: number;
+  observation?: string;
+  cardBrand?: string;
+  accountId?: string;
+  installments?: number;
+  isPartial?: boolean;
 }
 
-const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#16A34A', '#38BDF8', '#1D4ED8'];
+const COLORS = [
+  "#2563EB",
+  "#60A5FA",
+  "#0F766E",
+  "#16A34A",
+  "#38BDF8",
+  "#1D4ED8",
+];
 
 const ALL_TABS_CONFIG = [
-  { id: 'overview', label: 'Visão Geral', permissionId: 'financial_overview' },
-  { id: 'transactions', label: 'Receitas', permissionId: 'financial_transactions' },
-  { id: 'pricing', label: 'Precificação', permissionId: 'financial_pricing' },
-  { id: 'viability', label: 'Viabilidade & Comissões', permissionId: 'financial_viability', adminOnly: true },
-  { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' },
-  { id: 'clinica_experts', label: 'Clínica Experts', permissionId: 'financial_clinica_experts' },
+  { id: "overview", label: "Visão Geral", permissionId: "financial_overview" },
+  {
+    id: "transactions",
+    label: "Receitas",
+    permissionId: "financial_transactions",
+  },
+  { id: "pricing", label: "Precificação", permissionId: "financial_pricing" },
+  {
+    id: "viability",
+    label: "Viabilidade & Comissões",
+    permissionId: "financial_viability",
+    adminOnly: true,
+  },
+  {
+    id: "settings",
+    label: "Configurações",
+    permissionId: "financial_settings",
+  },
+  {
+    id: "clinica_experts",
+    label: "Clínica Experts",
+    permissionId: "financial_clinica_experts",
+  },
 ];
 
 interface FinancialProps {
-    userRole: string;
-    allowedSubTabs?: string[];
-    requestedSubTab?: string | null;
-    requestedAction?: string | null;
+  userRole: string;
+  allowedSubTabs?: string[];
+  requestedSubTab?: string | null;
+  requestedAction?: string | null;
 }
 
-export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs = [], requestedSubTab, requestedAction }) => {
+export const Financial: React.FC<FinancialProps> = ({
+  userRole,
+  allowedSubTabs = [],
+  requestedSubTab,
+  requestedAction,
+}) => {
   const visibleTabs = useMemo(() => {
-      let tabs = ALL_TABS_CONFIG;
-      if (userRole !== 'admin') {
-          tabs = tabs.filter((tab: any) => !tab.adminOnly);
-      }
-      if (userRole === 'admin' || !allowedSubTabs || allowedSubTabs.length === 0) return tabs;
-      const filtered = tabs.filter(tab => Array.isArray(allowedSubTabs) && allowedSubTabs.includes(tab.permissionId));
-      return filtered.length > 0 ? filtered : tabs;
+    let tabs = ALL_TABS_CONFIG;
+    if (userRole !== "admin") {
+      tabs = tabs.filter((tab: any) => !tab.adminOnly);
+    }
+    if (userRole === "admin" || !allowedSubTabs || allowedSubTabs.length === 0)
+      return tabs;
+    const filtered = tabs.filter(
+      (tab) =>
+        Array.isArray(allowedSubTabs) &&
+        allowedSubTabs.includes(tab.permissionId),
+    );
+    return filtered.length > 0 ? filtered : tabs;
   }, [userRole, allowedSubTabs]);
 
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>(visibleTabs[0]?.id as SubTab || 'overview');
-  const [isPaymentMethodFilterOpen, setIsPaymentMethodFilterOpen] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>(
+    (visibleTabs[0]?.id as SubTab) || "overview",
+  );
+  const [isPaymentMethodFilterOpen, setIsPaymentMethodFilterOpen] =
+    useState(false);
 
   useEffect(() => {
-      if (visibleTabs.length > 0 && !visibleTabs.find(t => t.id === activeSubTab)) {
-          setActiveSubTab(visibleTabs[0].id as SubTab);
-      }
+    if (
+      visibleTabs.length > 0 &&
+      !visibleTabs.find((t) => t.id === activeSubTab)
+    ) {
+      setActiveSubTab(visibleTabs[0].id as SubTab);
+    }
   }, [visibleTabs, activeSubTab]);
 
   // Listener para mudança de aba via Sidebar
   useEffect(() => {
-      if (requestedSubTab) {
-          const tabExists = visibleTabs.find(t => t.id === requestedSubTab);
-          if (tabExists) {
-              setActiveSubTab(requestedSubTab as SubTab);
-          }
+    if (requestedSubTab) {
+      const tabExists = visibleTabs.find((t) => t.id === requestedSubTab);
+      if (tabExists) {
+        setActiveSubTab(requestedSubTab as SubTab);
       }
+    }
   }, [requestedSubTab, visibleTabs]);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   const safeGenerateId = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
       return crypto.randomUUID();
     }
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   };
 
   const [loading, setLoading] = useState(true);
-  const [userEmail, setUserEmail] = useState('');
+  const [userEmail, setUserEmail] = useState("");
   const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
   const [selectedIncomes, setSelectedIncomes] = useState<string[]>([]);
   const [accountsList, setAccountsList] = useState<LocalAccount[]>([]);
-  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>([]);
+  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>(
+    [],
+  );
   const [products, setProducts] = useState<Product[]>([]);
-  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>(
+    [],
+  );
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [salesTeams, setSalesTeams] = useState<SalesTeam[]>([]);
@@ -174,330 +262,483 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [cardFees, setCardFees] = useState<CardFeeConfig[]>([]);
 
   // Settings UI States
-  const [newIncomeCategory, setNewIncomeCategory] = useState('');
-  const [newExpenseCategory, setNewExpenseCategory] = useState('');
-  const [newExpenseType, setNewExpenseType] = useState<'fixed' | 'variable'>('variable');
-  const [newSupplier, setNewSupplier] = useState('');
-  const [newProfessional, setNewProfessional] = useState('');
-  const [newSalesTeam, setNewSalesTeam] = useState('');
-  const [newSalesTeamColor, setNewSalesTeamColor] = useState('#8b5cf6');
-  const [newPaymentMethod, setNewPaymentMethod] = useState('');
+  const [newIncomeCategory, setNewIncomeCategory] = useState("");
+  const [newExpenseCategory, setNewExpenseCategory] = useState("");
+  const [newExpenseType, setNewExpenseType] = useState<"fixed" | "variable">(
+    "variable",
+  );
+  const [newSupplier, setNewSupplier] = useState("");
+  const [newProfessional, setNewProfessional] = useState("");
+  const [newSalesTeam, setNewSalesTeam] = useState("");
+  const [newSalesTeamColor, setNewSalesTeamColor] = useState("#8b5cf6");
+  const [newPaymentMethod, setNewPaymentMethod] = useState("");
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
   const [expandedExpId, setExpandedExpId] = useState<string | null>(null);
-  const [newSubName, setNewSubName] = useState('');
-  const [newSubValue, setNewSubValue] = useState('');
+  const [newSubName, setNewSubName] = useState("");
+  const [newSubValue, setNewSubValue] = useState("");
 
   // States for Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<'income' | 'expense'>('income');
+  const [modalType, setModalType] = useState<"income" | "expense">("income");
   const [isSaving, setIsSaving] = useState(false);
 
   // Bulk States
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkChangeCatOpen, setIsBulkChangeCatOpen] = useState(false);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
-  const [isBulkChangeCatExpensesOpen, setIsBulkChangeCatExpensesOpen] = useState(false);
-  const [isBulkDeleteExpensesConfirmOpen, setIsBulkDeleteExpensesConfirmOpen] = useState(false);
-  const [activeBulkActionTab, setActiveBulkActionTab] = useState<'income' | 'expense' | null>(null);
+  const [isBulkChangeCatExpensesOpen, setIsBulkChangeCatExpensesOpen] =
+    useState(false);
+  const [isBulkDeleteExpensesConfirmOpen, setIsBulkDeleteExpensesConfirmOpen] =
+    useState(false);
+  const [activeBulkActionTab, setActiveBulkActionTab] = useState<
+    "income" | "expense" | null
+  >(null);
   const [isBulkEntryMenuOpen, setIsBulkEntryMenuOpen] = useState(false);
   const [isIncomeFiltersOpen, setIsIncomeFiltersOpen] = useState(false);
   const [bulkRows, setBulkRows] = useState<any[]>([]);
-  const [pastedData, setPastedData] = useState('');
-  const [selectedDreMonth, setSelectedDreMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [pastedData, setPastedData] = useState("");
+  const [selectedDreMonth, setSelectedDreMonth] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
 
   // Budget Planner States for Next Month
-  const [transactionsViewMode, setTransactionsViewMode] = useState<'realizado' | 'orcamento'>('realizado');
+  const [transactionsViewMode, setTransactionsViewMode] = useState<
+    "realizado" | "orcamento"
+  >("realizado");
   const [budgetMonth, setBudgetMonth] = useState(() => {
-      const d = new Date();
-      d.setMonth(d.getMonth() + 1);
-      return d.toISOString().slice(0, 7);
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().slice(0, 7);
   });
 
   interface BudgetItem {
-      id: string;
-      type: 'income' | 'expense';
-      category: string;
-      description: string;
-      projectedAmount: number;
-      notes?: string;
+    id: string;
+    type: "income" | "expense";
+    category: string;
+    description: string;
+    projectedAmount: number;
+    notes?: string;
   }
 
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(() => {
-      try {
-          const saved = localStorage.getItem('odontomanager_budget_items');
-          if (saved) return JSON.parse(saved);
-      } catch (e) {
-          // ignore
-      }
-      return [
-          { id: 'b1', type: 'income', category: 'Ortodontia', description: 'Manutenções Ortodônticas Previstas', projectedAmount: 18000 },
-          { id: 'b2', type: 'income', category: 'Clínica Geral', description: 'Consultas e Limpezas', projectedAmount: 9500 },
-          { id: 'b3', type: 'income', category: 'Prótese', description: 'Próteses e Implantes', projectedAmount: 14000 },
-          { id: 'b4', type: 'expense', category: 'Aluguel', description: 'Aluguel da Clínica', projectedAmount: 4800 },
-          { id: 'b5', type: 'expense', category: 'Salários', description: 'Equipe e Auxiliares', projectedAmount: 7500 },
-          { id: 'b6', type: 'expense', category: 'Materiais', description: 'Insumos e Ortodontia', projectedAmount: 4000 },
-          { id: 'b7', type: 'expense', category: 'Impostos', description: 'Simples Nacional / DAS', projectedAmount: 2200 },
-      ];
+    try {
+      const saved = localStorage.getItem("odontomanager_budget_items");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      // ignore
+    }
+    return [
+      {
+        id: "b1",
+        type: "income",
+        category: "Ortodontia",
+        description: "Manutenções Ortodônticas Previstas",
+        projectedAmount: 18000,
+      },
+      {
+        id: "b2",
+        type: "income",
+        category: "Clínica Geral",
+        description: "Consultas e Limpezas",
+        projectedAmount: 9500,
+      },
+      {
+        id: "b3",
+        type: "income",
+        category: "Prótese",
+        description: "Próteses e Implantes",
+        projectedAmount: 14000,
+      },
+      {
+        id: "b4",
+        type: "expense",
+        category: "Aluguel",
+        description: "Aluguel da Clínica",
+        projectedAmount: 4800,
+      },
+      {
+        id: "b5",
+        type: "expense",
+        category: "Salários",
+        description: "Equipe e Auxiliares",
+        projectedAmount: 7500,
+      },
+      {
+        id: "b6",
+        type: "expense",
+        category: "Materiais",
+        description: "Insumos e Ortodontia",
+        projectedAmount: 4000,
+      },
+      {
+        id: "b7",
+        type: "expense",
+        category: "Impostos",
+        description: "Simples Nacional / DAS",
+        projectedAmount: 2200,
+      },
+    ];
   });
 
   useEffect(() => {
-      try {
-          localStorage.setItem('odontomanager_budget_items', JSON.stringify(budgetItems));
-      } catch (e) {
-          // ignore
-      }
+    try {
+      localStorage.setItem(
+        "odontomanager_budget_items",
+        JSON.stringify(budgetItems),
+      );
+    } catch (e) {
+      // ignore
+    }
   }, [budgetItems]);
 
-  const [newBudgetType, setNewBudgetType] = useState<'income' | 'expense'>('income');
-  const [newBudgetCategory, setNewBudgetCategory] = useState('');
-  const [newBudgetDesc, setNewBudgetDesc] = useState('');
-  const [newBudgetAmount, setNewBudgetAmount] = useState('');
-  const [newBudgetNotes, setNewBudgetNotes] = useState('');
+  const [newBudgetType, setNewBudgetType] = useState<"income" | "expense">(
+    "income",
+  );
+  const [newBudgetCategory, setNewBudgetCategory] = useState("");
+  const [newBudgetDesc, setNewBudgetDesc] = useState("");
+  const [newBudgetAmount, setNewBudgetAmount] = useState("");
+  const [newBudgetNotes, setNewBudgetNotes] = useState("");
 
   // Observation Modal
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
-  const [selectedTxForObs, setSelectedTxForObs] = useState<LocalTransaction | null>(null);
-  const [tempObs, setTempObs] = useState('');
+  const [selectedTxForObs, setSelectedTxForObs] =
+    useState<LocalTransaction | null>(null);
+  const [tempObs, setTempObs] = useState("");
 
   // Account Statement Modal
-  const [selectedAccountForStatement, setSelectedAccountForStatement] = useState<LocalAccount | null>(null);
+  const [selectedAccountForStatement, setSelectedAccountForStatement] =
+    useState<LocalAccount | null>(null);
 
   // Account Creation Modal
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({ name: '', bank: '', initialBalance: '' });
+  const [newAccount, setNewAccount] = useState({
+    name: "",
+    bank: "",
+    initialBalance: "",
+  });
 
   const handleSaveAccount = async () => {
-      if (!newAccount.name || !newAccount.bank) return toast.error('Preencha nome e banco.');
-      setIsSaving(true);
-      const { error } = await supabase.from('accounts').insert({
-          id: 'acc_' + safeGenerateId(),
-          name: newAccount.name,
-          bank: newAccount.bank,
-          initial_balance: parseFloat(newAccount.initialBalance.replace(',', '.')) || 0,
-          type: 'checking',
-          color: '#3b82f6'
-      });
-      if (!error) {
-          await fetchAllData();
-          setIsAccountModalOpen(false);
-          setNewAccount({ name: '', bank: '', initialBalance: '' });
-          toast.success('Conta criada com sucesso!');
-      } else {
-          toast.error('Erro ao criar conta: ' + error.message);
-      }
-      setIsSaving(false);
+    if (!newAccount.name || !newAccount.bank)
+      return toast.error("Preencha nome e banco.");
+    setIsSaving(true);
+    const { error } = await supabase.from("accounts").insert({
+      id: "acc_" + safeGenerateId(),
+      name: newAccount.name,
+      bank: newAccount.bank,
+      initial_balance:
+        parseFloat(newAccount.initialBalance.replace(",", ".")) || 0,
+      type: "checking",
+      color: "#3b82f6",
+    });
+    if (!error) {
+      await fetchAllData();
+      setIsAccountModalOpen(false);
+      setNewAccount({ name: "", bank: "", initialBalance: "" });
+      toast.success("Conta criada com sucesso!");
+    } else {
+      toast.error("Erro ao criar conta: " + error.message);
+    }
+    setIsSaving(false);
   };
 
   // States for Charts Interaction
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(null);
-  const [activeProcedureIndex, setActiveProcedureIndex] = useState<number | null>(null);
-  const [activePaymentIndex, setActivePaymentIndex] = useState<number | null>(null);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(
+    null,
+  );
+  const [activeProcedureIndex, setActiveProcedureIndex] = useState<
+    number | null
+  >(null);
+  const [activePaymentIndex, setActivePaymentIndex] = useState<number | null>(
+    null,
+  );
 
   const [payingTxId, setPayingTxId] = useState<string | null>(null);
-  const [tempPaymentDate, setTempPaymentDate] = useState('');
+  const [tempPaymentDate, setTempPaymentDate] = useState("");
 
   const confirmPayment = async (tx: LocalTransaction) => {
-      if (!tempPaymentDate) return toast.error('Informe a data do pagamento.');
-      const { error } = await supabase.from('transactions').update({
-          status: 'Paid',
-          settlement_date: tempPaymentDate
-      }).eq('id', tx.id);
+    if (!tempPaymentDate) return toast.error("Informe a data do pagamento.");
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        status: "Paid",
+        settlement_date: tempPaymentDate,
+      })
+      .eq("id", tx.id);
 
-      if (!error) {
-          setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'Paid', settlementDate: tempPaymentDate } : t));
-          setPayingTxId(null);
-          toast.success('Pagamento confirmado com sucesso!');
-      } else {
-          toast.error('Erro ao confirmar pagamento: ' + error.message);
-      }
+    if (!error) {
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === tx.id
+            ? { ...t, status: "Paid", settlementDate: tempPaymentDate }
+            : t,
+        ),
+      );
+      setPayingTxId(null);
+      toast.success("Pagamento confirmado com sucesso!");
+    } else {
+      toast.error("Erro ao confirmar pagamento: " + error.message);
+    }
   };
 
   const bulkDeleteExpenses = async () => {
-      if (selectedExpenses.length === 0) return;
+    if (selectedExpenses.length === 0) return;
 
-      const { error } = await supabase.from('transactions').delete().in('id', selectedExpenses);
-      if (!error) {
-          setTransactions(prev => prev.filter(t => !selectedExpenses.includes(t.id)));
-          setSelectedExpenses([]);
-          setIsBulkDeleteExpensesConfirmOpen(false);
-          toast.success(`${selectedExpenses.length} despesas excluídas.`);
-      } else {
-          console.error('Erro ao excluir despesas selecionadas.', error);
-          toast.error('Erro ao excluir despesas: ' + error.message);
-      }
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .in("id", selectedExpenses);
+    if (!error) {
+      setTransactions((prev) =>
+        prev.filter((t) => !selectedExpenses.includes(t.id)),
+      );
+      setSelectedExpenses([]);
+      setIsBulkDeleteExpensesConfirmOpen(false);
+      toast.success(`${selectedExpenses.length} despesas excluídas.`);
+    } else {
+      console.error("Erro ao excluir despesas selecionadas.", error);
+      toast.error("Erro ao excluir despesas: " + error.message);
+    }
   };
 
   const bulkDeleteIncomes = async () => {
-      if (selectedIncomes.length === 0) return;
+    if (selectedIncomes.length === 0) return;
 
-      const { error } = await supabase.from('transactions').delete().in('id', selectedIncomes);
-      if (!error) {
-          setTransactions(prev => prev.filter(t => !selectedIncomes.includes(t.id)));
-          setSelectedIncomes([]);
-          setIsBulkDeleteConfirmOpen(false);
-          toast.success(`${selectedIncomes.length} receitas excluídas.`);
-      } else {
-          console.error('Erro ao excluir receitas selecionadas.', error);
-          toast.error('Erro ao excluir receitas: ' + error.message);
-      }
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .in("id", selectedIncomes);
+    if (!error) {
+      setTransactions((prev) =>
+        prev.filter((t) => !selectedIncomes.includes(t.id)),
+      );
+      setSelectedIncomes([]);
+      setIsBulkDeleteConfirmOpen(false);
+      toast.success(`${selectedIncomes.length} receitas excluídas.`);
+    } else {
+      console.error("Erro ao excluir receitas selecionadas.", error);
+      toast.error("Erro ao excluir receitas: " + error.message);
+    }
   };
 
   const deleteIncome = async (transaction: LocalTransaction) => {
-      const confirmed = window.confirm(`Excluir a receita de "${transaction.description}"? Esta ação não pode ser desfeita.`);
-      if (!confirmed) return;
+    const confirmed = window.confirm(
+      `Excluir a receita de "${transaction.description}"? Esta ação não pode ser desfeita.`,
+    );
+    if (!confirmed) return;
 
-      const { error } = await supabase.from('transactions').delete().eq('id', transaction.id);
-      if (error) {
-          console.error('Erro ao excluir receita.', error);
-          toast.error('Erro ao excluir receita: ' + error.message);
-          return;
-      }
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", transaction.id);
+    if (error) {
+      console.error("Erro ao excluir receita.", error);
+      toast.error("Erro ao excluir receita: " + error.message);
+      return;
+    }
 
-      setTransactions(prev => prev.filter(item => item.id !== transaction.id));
-      setSelectedIncomes(prev => prev.filter(id => id !== transaction.id));
-      setIsModalOpen(false);
-      notifyDataChange('transactions');
-      toast.success('Receita excluída.');
+    setTransactions((prev) =>
+      prev.filter((item) => item.id !== transaction.id),
+    );
+    setSelectedIncomes((prev) => prev.filter((id) => id !== transaction.id));
+    setIsModalOpen(false);
+    notifyDataChange("transactions");
+    toast.success("Receita excluída.");
   };
 
   const bulkChangeCategoryIncomes = async (newCategory: string) => {
-      if (selectedIncomes.length === 0) return;
+    if (selectedIncomes.length === 0) return;
 
-      const { error } = await supabase
-          .from('transactions')
-          .update({ category: newCategory })
-          .in('id', selectedIncomes);
+    const { error } = await supabase
+      .from("transactions")
+      .update({ category: newCategory })
+      .in("id", selectedIncomes);
 
-      if (!error) {
-          setTransactions(prev => prev.map(t => selectedIncomes.includes(t.id) ? { ...t, category: newCategory } : t));
-          setSelectedIncomes([]);
-          setIsBulkChangeCatOpen(false);
-          toast.success(`Categoria de ${selectedIncomes.length} receita(s) alterada para "${newCategory}".`);
-      } else {
-          console.error('Erro ao alterar categoria em lote.', error);
-          toast.error('Erro ao alterar categoria: ' + error.message);
-      }
+    if (!error) {
+      setTransactions((prev) =>
+        prev.map((t) =>
+          selectedIncomes.includes(t.id) ? { ...t, category: newCategory } : t,
+        ),
+      );
+      setSelectedIncomes([]);
+      setIsBulkChangeCatOpen(false);
+      toast.success(
+        `Categoria de ${selectedIncomes.length} receita(s) alterada para "${newCategory}".`,
+      );
+    } else {
+      console.error("Erro ao alterar categoria em lote.", error);
+      toast.error("Erro ao alterar categoria: " + error.message);
+    }
   };
 
   const bulkChangeCategoryExpenses = async (newCategory: string) => {
-      if (selectedExpenses.length === 0) return;
+    if (selectedExpenses.length === 0) return;
 
-      const { error } = await supabase
-          .from('transactions')
-          .update({ category: newCategory })
-          .in('id', selectedExpenses);
+    const { error } = await supabase
+      .from("transactions")
+      .update({ category: newCategory })
+      .in("id", selectedExpenses);
 
-      if (!error) {
-          setTransactions(prev => prev.map(t => selectedExpenses.includes(t.id) ? { ...t, category: newCategory } : t));
-          setSelectedExpenses([]);
-          setIsBulkChangeCatExpensesOpen(false);
-          toast.success(`Categoria de ${selectedExpenses.length} despesa(s) alterada para "${newCategory}".`);
-      } else {
-          console.error('Erro ao alterar categoria em lote.', error);
-          toast.error('Erro ao alterar categoria: ' + error.message);
-      }
+    if (!error) {
+      setTransactions((prev) =>
+        prev.map((t) =>
+          selectedExpenses.includes(t.id) ? { ...t, category: newCategory } : t,
+        ),
+      );
+      setSelectedExpenses([]);
+      setIsBulkChangeCatExpensesOpen(false);
+      toast.success(
+        `Categoria de ${selectedExpenses.length} despesa(s) alterada para "${newCategory}".`,
+      );
+    } else {
+      console.error("Erro ao alterar categoria em lote.", error);
+      toast.error("Erro ao alterar categoria: " + error.message);
+    }
   };
 
   const togglePaymentStatus = async (tx: LocalTransaction) => {
-      if (tx.status === 'Paid') {
-          if (!confirm('Marcar como pendente (A Pagar)?')) return;
-          const { error } = await supabase.from('transactions').update({
-              status: 'Pending',
-              settlement_date: null
-          }).eq('id', tx.id);
+    if (tx.status === "Paid") {
+      if (!confirm("Marcar como pendente (A Pagar)?")) return;
+      const { error } = await supabase
+        .from("transactions")
+        .update({
+          status: "Pending",
+          settlement_date: null,
+        })
+        .eq("id", tx.id);
 
-          if (!error) {
-              setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'Pending', settlementDate: undefined } : t));
-          }
+      if (!error) {
+        setTransactions((prev) =>
+          prev.map((t) =>
+            t.id === tx.id
+              ? { ...t, status: "Pending", settlementDate: undefined }
+              : t,
+          ),
+        );
       }
+    }
   };
 
   const [overviewFilters, setOverviewFilters] = useState({
-      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0],
   });
 
   const initialTxFilters = {
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-    category: 'all',
-    status: 'all',
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0],
+    category: "all",
+    status: "all",
     paymentMethods: [] as string[],
-    professional: 'all',
-    procedure: 'all',
-    auditStatus: 'all',
-    hasNF: 'all',
-    isPartial: 'all',
-    search: ''
+    professional: "all",
+    procedure: "all",
+    auditStatus: "all",
+    hasNF: "all",
+    isPartial: "all",
+    search: "",
   };
 
   const [txFilters, setTxFilters] = useState(initialTxFilters);
+  const [activeAuditMenuId, setActiveAuditMenuId] = useState<string | null>(
+    null,
+  );
 
   const [expFilters, setExpFilters] = useState({
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
-    category: 'all',
-    search: '',
-    statuses: ['Paid', 'Pending'] as string[]
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0],
+    category: "all",
+    search: "",
+    statuses: ["Paid", "Pending"] as string[],
   });
 
   const [formData, setFormData] = useState({
-    id: '', description: '', amount: '', category: '', procedure: '', accountId: '',
-    date: today, status: 'Paid' as 'Paid' | 'Pending', paymentMethod: 'Dinheiro', professional: '', installments: 1, observation: '',
+    id: "",
+    description: "",
+    amount: "",
+    category: "",
+    procedure: "",
+    accountId: "",
+    date: today,
+    status: "Paid" as "Paid" | "Pending",
+    paymentMethod: "Dinheiro",
+    professional: "",
+    installments: 1,
+    observation: "",
     isPartial: false,
-    cardBrand: '',
-    settlementDate: '',
-    supplier: '',
-    salesTeam: '',
-    recurrence: 1
+    cardBrand: "",
+    settlementDate: "",
+    supplier: "",
+    salesTeam: "",
+    recurrence: 1,
   });
 
   const overviewMetrics = useMemo(() => {
-    const periodIncome = transactions.filter(t => {
-      if (t.type !== 'income' || t.status !== 'Paid') return false;
+    const periodIncome = transactions.filter((t) => {
+      if (t.type !== "income" || t.status !== "Paid") return false;
       if (!t.date) return false;
       return t.date >= overviewFilters.start && t.date <= overviewFilters.end;
     });
 
-    const errorCount = transactions.filter(t =>
-        t.type === 'income' &&
-        t.reconciliationStatus === 'error' &&
+    const errorCount = transactions.filter(
+      (t) =>
+        t.type === "income" &&
+        t.reconciliationStatus === "error" &&
         t.date >= overviewFilters.start &&
-        t.date <= overviewFilters.end
+        t.date <= overviewFilters.end,
     ).length;
 
-    const currentMonthIncome = periodIncome.reduce((acc, curr) => acc + curr.amount, 0);
-    const ticketAverage = periodIncome.length > 0 ? currentMonthIncome / periodIncome.length : 0;
+    const currentMonthIncome = periodIncome.reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+    const ticketAverage =
+      periodIncome.length > 0 ? currentMonthIncome / periodIncome.length : 0;
 
     // --- AGGREGATION FOR CHARTS ---
-    const groupData = (key: keyof LocalTransaction, fallback: string = 'Outros') => {
-        const map: Record<string, number> = {};
-        periodIncome.forEach(t => {
-            const label = (t[key] as string) || fallback;
-            map[label] = (map[label] || 0) + t.amount;
-        });
-        return Object.entries(map)
-            .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 10); // Limit to Top 10 items
+    const groupData = (
+      key: keyof LocalTransaction,
+      fallback: string = "Outros",
+    ) => {
+      const map: Record<string, number> = {};
+      periodIncome.forEach((t) => {
+        const label = (t[key] as string) || fallback;
+        map[label] = (map[label] || 0) + t.amount;
+      });
+      return Object.entries(map)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10); // Limit to Top 10 items
     };
 
-    const categoryData = groupData('category');
-    const procedureData = groupData('procedure', 'Geral');
-    const paymentData = groupData('paymentMethod');
+    const categoryData = groupData("category");
+    const procedureData = groupData("procedure", "Geral");
+    const paymentData = groupData("paymentMethod");
 
     const categoryTicketAverage = (() => {
-        const map: Record<string, { total: number, count: number }> = {};
-        periodIncome.forEach(t => {
-            const label = t.category || 'Outros';
-            if (!map[label]) map[label] = { total: 0, count: 0 };
-            map[label].total += t.amount;
-            map[label].count += 1;
-        });
-        return Object.entries(map).map(([name, data]) => ({
-            name,
-            average: data.total / data.count
-        })).sort((a, b) => b.average - a.average);
+      const map: Record<string, { total: number; count: number }> = {};
+      periodIncome.forEach((t) => {
+        const label = t.category || "Outros";
+        if (!map[label]) map[label] = { total: 0, count: 0 };
+        map[label].total += t.amount;
+        map[label].count += 1;
+      });
+      return Object.entries(map)
+        .map(([name, data]) => ({
+          name,
+          average: data.total / data.count,
+        }))
+        .sort((a, b) => b.average - a.average);
     })();
 
     return {
@@ -507,75 +748,83 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       categoryData,
       procedureData,
       paymentData,
-      categoryTicketAverage
+      categoryTicketAverage,
     };
   }, [transactions, overviewFilters]);
 
   const monthlyRevenueData = useMemo(() => {
-      const data2025Map: Record<string, number> = {
-          '2025-01': 31864,
-          '2025-02': 50402,
-          '2025-03': 35091,
-          '2025-04': 41134,
-          '2025-05': 42382,
-          '2025-06': 42618,
-          '2025-07': 42679,
-          '2025-08': 52777,
-          '2025-09': 61995,
-          '2025-10': 67175,
-          '2025-11': 76109,
-          '2025-12': 47282,
-      };
+    const data2025Map: Record<string, number> = {
+      "2025-01": 31864,
+      "2025-02": 50402,
+      "2025-03": 35091,
+      "2025-04": 41134,
+      "2025-05": 42382,
+      "2025-06": 42618,
+      "2025-07": 42679,
+      "2025-08": 52777,
+      "2025-09": 61995,
+      "2025-10": 67175,
+      "2025-11": 76109,
+      "2025-12": 47282,
+    };
 
-      const systemDataMap: Record<string, number> = {};
-      transactions.forEach(t => {
-          if (t.type === 'income' && t.status === 'Paid' && t.date) {
-              const [year, month] = t.date.split('-');
-              const key = `${year}-${month}`;
-              systemDataMap[key] = (systemDataMap[key] || 0) + t.amount;
-          }
-      });
-
-      const last12Months: { month: string; monthRaw: string; revenue: number; goal: number }[] = [];
-      const now = new Date();
-      for (let i = 11; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, '0');
-          const mmText = d.toLocaleString('pt-BR', { month: 'short' });
-          const key = `${y}-${m}`;
-          const monthStr = `${mmText}/${String(y).substring(2)}`;
-
-          let revenue = 0;
-          if (y === 2025 && data2025Map[key]) {
-             revenue += data2025Map[key];
-          }
-          revenue += (systemDataMap[key] || 0);
-
-          last12Months.push({
-              month: monthStr,
-              monthRaw: key,
-              revenue: revenue,
-              goal: monthlyRevenueGoal
-          });
+    const systemDataMap: Record<string, number> = {};
+    transactions.forEach((t) => {
+      if (t.type === "income" && t.status === "Paid" && t.date) {
+        const [year, month] = t.date.split("-");
+        const key = `${year}-${month}`;
+        systemDataMap[key] = (systemDataMap[key] || 0) + t.amount;
       }
+    });
 
-      return last12Months.map((item, index) => {
-          let variance = 0;
-          if (index > 0) {
-              const prevRevenue = last12Months[index - 1].revenue;
-              if (prevRevenue > 0) {
-                  variance = ((item.revenue - prevRevenue) / prevRevenue) * 100;
-              } else if (item.revenue > 0) {
-                  variance = 100;
-              }
-          }
-          return {
-              ...item,
-              variance: Math.round(variance),
-              revenueLabel: item.revenue > 0 ? item.revenue.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '0'
-          };
+    const last12Months: {
+      month: string;
+      monthRaw: string;
+      revenue: number;
+      goal: number;
+    }[] = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const mmText = d.toLocaleString("pt-BR", { month: "short" });
+      const key = `${y}-${m}`;
+      const monthStr = `${mmText}/${String(y).substring(2)}`;
+
+      let revenue = 0;
+      if (y === 2025 && data2025Map[key]) {
+        revenue += data2025Map[key];
+      }
+      revenue += systemDataMap[key] || 0;
+
+      last12Months.push({
+        month: monthStr,
+        monthRaw: key,
+        revenue: revenue,
+        goal: monthlyRevenueGoal,
       });
+    }
+
+    return last12Months.map((item, index) => {
+      let variance = 0;
+      if (index > 0) {
+        const prevRevenue = last12Months[index - 1].revenue;
+        if (prevRevenue > 0) {
+          variance = ((item.revenue - prevRevenue) / prevRevenue) * 100;
+        } else if (item.revenue > 0) {
+          variance = 100;
+        }
+      }
+      return {
+        ...item,
+        variance: Math.round(variance),
+        revenueLabel:
+          item.revenue > 0
+            ? item.revenue.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+            : "0",
+      };
+    });
   }, [transactions, monthlyRevenueGoal]);
 
   const calculateRemainingWorkDays = () => {
@@ -585,11 +834,11 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     while (d <= lastDay) {
-        const dayOfWeek = d.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            count++;
-        }
-        d.setDate(d.getDate() + 1);
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        count++;
+      }
+      d.setDate(d.getDate() + 1);
     }
     return count;
   };
@@ -598,7 +847,13 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     const now = new Date();
     const currentMonthPrefix = now.toISOString().slice(0, 7);
     const currentMonthRealized = transactions
-      .filter(t => t.type === 'income' && t.status === 'Paid' && t.date && t.date.startsWith(currentMonthPrefix))
+      .filter(
+        (t) =>
+          t.type === "income" &&
+          t.status === "Paid" &&
+          t.date &&
+          t.date.startsWith(currentMonthPrefix),
+      )
       .reduce((acc, curr) => acc + curr.amount, 0);
 
     const remainingDays = calculateRemainingWorkDays();
@@ -608,203 +863,314 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   }, [transactions, monthlyRevenueGoal]);
 
   const fetchAllData = async () => {
-      setLoading(true);
-      try {
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          if (user && user.email) setUserEmail(user.email);
+    setLoading(true);
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (user && user.email) setUserEmail(user.email);
 
-          let allTxs: any[] = [];
+      let allTxs: any[] = [];
 
-          const { count } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
-          const totalCount = count || 0;
+      const { count } = await supabase
+        .from("transactions")
+        .select("*", { count: "exact", head: true });
+      const totalCount = count || 0;
 
-          if (totalCount > 0) {
-              const fetchPromises = [];
-              const pageSize = 1000;
-              for (let i = 0; i < totalCount; i += pageSize) {
-                  fetchPromises.push(
-                      supabase.from('transactions').select('*').order('date', { ascending: false }).range(i, i + pageSize - 1)
-                  );
-              }
-              const results = await Promise.all(fetchPromises);
-              results.forEach(res => {
-                  if (res.data) allTxs = [...allTxs, ...res.data];
-              });
-          }
-          const txData = allTxs;
-          if (txData) {
-              setTransactions(txData.map(t => ({
-                  id: t.id, date: t.date, description: t.description, category: t.category,
-                  type: t.type, amount: t.amount, status: t.status, payment_method: t.payment_method,
-                  paymentMethod: t.payment_method,
-                  professional: t.professional,
-                  installments: t.installments, accountId: t.account_id, reconciliationStatus: t.reconciliation_status,
-                  invoiceEmitted: t.invoice_emitted, observation: t.observation, procedure: t.procedure,
-                  isPartial: t.is_partial,
-                  appliedFeeRate: t.applied_fee_rate,
-                  explicitFeeAmount: t.explicit_fee_amount,
-                  cardBrand: t.card_brand,
-                  externalId: t.external_id,
-                  source: t.source,
-                  settlementDate: t.settlement_date,
-                  supplier: t.supplier,
-                  salesTeam: t.sales_team
-              })));
-          }
+      if (totalCount > 0) {
+        const fetchPromises = [];
+        const pageSize = 1000;
+        for (let i = 0; i < totalCount; i += pageSize) {
+          fetchPromises.push(
+            supabase
+              .from("transactions")
+              .select("*")
+              .order("date", { ascending: false })
+              .range(i, i + pageSize - 1),
+          );
+        }
+        const results = await Promise.all(fetchPromises);
+        results.forEach((res) => {
+          if (res.data) allTxs = [...allTxs, ...res.data];
+        });
+      }
+      const txData = allTxs;
+      if (txData) {
+        setTransactions(
+          txData.map((t) => ({
+            id: t.id,
+            date: t.date,
+            description: t.description,
+            category: t.category,
+            type: t.type,
+            amount: t.amount,
+            status: t.status,
+            payment_method: t.payment_method,
+            paymentMethod: t.payment_method,
+            professional: t.professional,
+            installments: t.installments,
+            accountId: t.account_id,
+            reconciliationStatus: t.reconciliation_status,
+            invoiceEmitted: t.invoice_emitted,
+            observation: t.observation,
+            procedure: t.procedure,
+            isPartial: t.is_partial,
+            appliedFeeRate: t.applied_fee_rate,
+            explicitFeeAmount: t.explicit_fee_amount,
+            cardBrand: t.card_brand,
+            externalId: t.external_id,
+            source: t.source,
+            settlementDate: t.settlement_date,
+            supplier: t.supplier,
+            salesTeam: t.sales_team,
+          })),
+        );
+      }
 
-          const currentKey = new Date().toISOString().slice(0, 7);
-          const { data: goalData } = await supabase.from('dashboard_configs').select('revenue_goal').eq('month_key', currentKey).maybeSingle();
-          if (goalData) setMonthlyRevenueGoal(Number(goalData.revenue_goal));
+      const currentKey = new Date().toISOString().slice(0, 7);
+      const { data: goalData } = await supabase
+        .from("dashboard_configs")
+        .select("revenue_goal")
+        .eq("month_key", currentKey)
+        .maybeSingle();
+      if (goalData) setMonthlyRevenueGoal(Number(goalData.revenue_goal));
 
-          const { data: accData } = await supabase.from('accounts').select('*');
-          if (accData) setAccountsList(accData.map(a => ({ ...a, initialBalance: a.initial_balance })));
-          const { data: incCats } = await supabase.from('income_categories').select('*');
-          if (incCats) setIncomeCategories(incCats.map(c => ({ ...c, subcategories: Array.isArray(c.subcategories) ? c.subcategories : [] })));
-          const { data: expCats } = await supabase.from('expense_categories').select('*');
-          if (expCats) setExpenseCategories(expCats.map(c => ({ ...c, subcategories: Array.isArray(c.subcategories) ? c.subcategories : [] })));
-          const { data: profs } = await supabase.from('professionals').select('*');
-          if (profs) setProfessionals(profs);
-          const { data: supps } = await supabase.from('suppliers').select('*');
-          if (supps) setSuppliers(supps);
-          const { data: teams } = await supabase.from('sales_teams').select('*');
-          if (teams) setSalesTeams(teams);
-          const { data: payMethods } = await supabase.from('payment_methods').select('*');
-          if (payMethods) setPaymentMethods(payMethods.map(p => ({ id: p.id, name: p.name, daysToReceive: p.days_to_receive, defaultAccountId: p.default_account_id })));
-          const { data: fees } = await supabase.from('card_fees').select('*');
-          if (fees && fees.length > 0) setCardFees(fees);
-      } catch (error) { console.error(error); } finally { setLoading(false); }
+      const { data: accData } = await supabase.from("accounts").select("*");
+      if (accData)
+        setAccountsList(
+          accData.map((a) => ({ ...a, initialBalance: a.initial_balance })),
+        );
+      const { data: incCats } = await supabase
+        .from("income_categories")
+        .select("*");
+      if (incCats)
+        setIncomeCategories(
+          incCats.map((c) => ({
+            ...c,
+            subcategories: Array.isArray(c.subcategories)
+              ? c.subcategories
+              : [],
+          })),
+        );
+      const { data: expCats } = await supabase
+        .from("expense_categories")
+        .select("*");
+      if (expCats)
+        setExpenseCategories(
+          expCats.map((c) => ({
+            ...c,
+            subcategories: Array.isArray(c.subcategories)
+              ? c.subcategories
+              : [],
+          })),
+        );
+      const { data: profs } = await supabase.from("professionals").select("*");
+      if (profs) setProfessionals(profs);
+      const { data: supps } = await supabase.from("suppliers").select("*");
+      if (supps) setSuppliers(supps);
+      const { data: teams } = await supabase.from("sales_teams").select("*");
+      if (teams) setSalesTeams(teams);
+      const { data: payMethods } = await supabase
+        .from("payment_methods")
+        .select("*");
+      if (payMethods)
+        setPaymentMethods(
+          payMethods.map((p) => ({
+            id: p.id,
+            name: p.name,
+            daysToReceive: p.days_to_receive,
+            defaultAccountId: p.default_account_id,
+          })),
+        );
+      const { data: fees } = await supabase.from("card_fees").select("*");
+      if (fees && fees.length > 0) setCardFees(fees);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchAllData();
   }, []);
 
-  useRealtimeSubscription([
-    'transactions',
-    'accounts',
-    'card_fees',
-    'income_categories',
-    'expense_categories',
-    'professionals',
-    'suppliers',
-    'sales_teams',
-    'payment_methods'
-  ], () => {
-    fetchAllData();
-  });
+  useRealtimeSubscription(
+    [
+      "transactions",
+      "accounts",
+      "card_fees",
+      "income_categories",
+      "expense_categories",
+      "professionals",
+      "suppliers",
+      "sales_teams",
+      "payment_methods",
+    ],
+    () => {
+      fetchAllData();
+    },
+  );
 
   const handleSaveTransaction = async () => {
-      try {
-          const amountVal = parseFloat((formData.amount || '0').toString().replace(',', '.'));
+    try {
+      const amountVal = parseFloat(
+        (formData.amount || "0").toString().replace(",", "."),
+      );
 
-          // Validação de Campos Obrigatórios
-          if (!formData.date) return toast.error('Selecione a data do lançamento.');
-          if (!formData.description?.trim()) return toast.error(modalType === 'income' ? 'Informe o nome do paciente.' : 'Informe a descrição da despesa.');
-          if (!formData.category) return toast.error('Selecione uma categoria.');
+      // Validação de Campos Obrigatórios
+      if (!formData.date) return toast.error("Selecione a data do lançamento.");
+      if (!formData.description?.trim())
+        return toast.error(
+          modalType === "income"
+            ? "Informe o nome do paciente."
+            : "Informe a descrição da despesa.",
+        );
+      if (!formData.category) return toast.error("Selecione uma categoria.");
 
-          const currentCategoryObj = (modalType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === formData.category);
-          const hasSubcategories = currentCategoryObj && currentCategoryObj.subcategories && currentCategoryObj.subcategories.length > 0;
-          if (hasSubcategories && !formData.procedure) return toast.error('Selecione um sub-categoria / procedimento.');
+      const currentCategoryObj = (
+        modalType === "income" ? incomeCategories : expenseCategories
+      ).find((c) => c.name === formData.category);
+      const hasSubcategories =
+        currentCategoryObj &&
+        currentCategoryObj.subcategories &&
+        currentCategoryObj.subcategories.length > 0;
+      if (hasSubcategories && !formData.procedure)
+        return toast.error("Selecione um sub-categoria / procedimento.");
 
-          if (isNaN(amountVal) || amountVal <= 0) return toast.error('Informe um valor válido maior que zero.');
-          if (!formData.accountId) return toast.error('Selecione a conta de destino/origem.');
-          if (!formData.paymentMethod) return toast.error('Selecione a forma de pagamento.');
+      if (isNaN(amountVal) || amountVal <= 0)
+        return toast.error("Informe um valor válido maior que zero.");
+      if (!formData.accountId)
+        return toast.error("Selecione a conta de destino/origem.");
+      if (!formData.paymentMethod)
+        return toast.error("Selecione a forma de pagamento.");
 
-          if (modalType === 'income') {
-              if (!formData.professional) return toast.error('Selecione o profissional responsável.');
+      if (modalType === "income") {
+        if (!formData.professional)
+          return toast.error("Selecione o profissional responsável.");
 
-              const method = (formData.paymentMethod || '').toLowerCase();
-              const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
-              if (isCard && !formData.cardBrand) {
-                  return toast.error('Selecione a bandeira do cartão para cálculo de taxas.');
-              }
-          }
-
-          setIsSaving(true);
-
-          const transactionsToInsert = [];
-          const baseDate = new Date(formData.date);
-          // Fix timezone offset issue when parsing YYYY-MM-DD
-          baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
-
-          let baseSettlementDate = null;
-          if (formData.settlementDate) {
-              baseSettlementDate = new Date(formData.settlementDate);
-              if (!isNaN(baseSettlementDate.getTime())) {
-                baseSettlementDate.setMinutes(baseSettlementDate.getMinutes() + baseSettlementDate.getTimezoneOffset());
-              } else {
-                baseSettlementDate = null;
-              }
-          }
-
-          const recurrenceCount = (modalType === 'expense' && !formData.id) ? (formData.recurrence || 1) : 1;
-
-          for (let i = 0; i < recurrenceCount; i++) {
-              const currentTxDate = new Date(baseDate);
-              currentTxDate.setMonth(currentTxDate.getMonth() + i);
-
-              let currentSettlementDate = null;
-              if (baseSettlementDate) {
-                  const tempSettlement = new Date(baseSettlementDate);
-                  tempSettlement.setMonth(tempSettlement.getMonth() + i);
-                  currentSettlementDate = tempSettlement.toISOString().split('T')[0];
-              }
-
-              const isRestrictedProcedure = formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial';
-
-              transactionsToInsert.push({
-                  id: (i === 0 && formData.id) ? formData.id : 'tx_' + safeGenerateId(),
-                  description: recurrenceCount > 1 ? `${formData.description} (${i + 1}/${recurrenceCount})` : formData.description,
-                  amount: amountVal,
-                  category: formData.category,
-                  procedure: formData.procedure,
-                  date: currentTxDate.toISOString().split('T')[0],
-                  type: modalType,
-                  status: formData.status,
-                  payment_method: formData.paymentMethod,
-                  account_id: formData.accountId,
-                  professional: formData.professional,
-                  installments: formData.installments,
-                  observation: formData.observation,
-                  is_partial: formData.isPartial,
-                  card_brand: formData.cardBrand,
-                  settlement_date: currentSettlementDate || null,
-                  supplier: formData.supplier,
-                  sales_team: isRestrictedProcedure ? '' : formData.salesTeam
-              });
-          }
-
-          const { error } = await supabase.from('transactions').upsert(transactionsToInsert);
-          if (!error) {
-              playCashRegisterSound();
-              await fetchAllData();
-              notifyDataChange(['transactions', 'accounts']);
-              setIsModalOpen(false);
-              toast.success('Lançamento salvo com sucesso!');
-          } else {
-              toast.error('Erro ao salvar no banco de dados: ' + error.message);
-          }
-      } catch (err: any) {
-          console.error("Erro no handleSaveTransaction:", err);
-          toast.error('Ocorreu um erro inesperado: ' + err.message);
-      } finally {
-          setIsSaving(false);
+        const method = (formData.paymentMethod || "").toLowerCase();
+        const isCard =
+          method.includes("cartão") ||
+          method.includes("crédito") ||
+          method.includes("débito");
+        if (isCard && !formData.cardBrand) {
+          return toast.error(
+            "Selecione a bandeira do cartão para cálculo de taxas.",
+          );
+        }
       }
+
+      setIsSaving(true);
+
+      const transactionsToInsert = [];
+      const baseDate = new Date(formData.date);
+      // Fix timezone offset issue when parsing YYYY-MM-DD
+      baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
+
+      let baseSettlementDate = null;
+      if (formData.settlementDate) {
+        baseSettlementDate = new Date(formData.settlementDate);
+        if (!isNaN(baseSettlementDate.getTime())) {
+          baseSettlementDate.setMinutes(
+            baseSettlementDate.getMinutes() +
+              baseSettlementDate.getTimezoneOffset(),
+          );
+        } else {
+          baseSettlementDate = null;
+        }
+      }
+
+      const recurrenceCount =
+        modalType === "expense" && !formData.id ? formData.recurrence || 1 : 1;
+
+      for (let i = 0; i < recurrenceCount; i++) {
+        const currentTxDate = new Date(baseDate);
+        currentTxDate.setMonth(currentTxDate.getMonth() + i);
+
+        let currentSettlementDate = null;
+        if (baseSettlementDate) {
+          const tempSettlement = new Date(baseSettlementDate);
+          tempSettlement.setMonth(tempSettlement.getMonth() + i);
+          currentSettlementDate = tempSettlement.toISOString().split("T")[0];
+        }
+
+        const isRestrictedProcedure =
+          formData.procedure === "Panorâmica" ||
+          formData.procedure === "Documentação Inicial";
+
+        transactionsToInsert.push({
+          id: i === 0 && formData.id ? formData.id : "tx_" + safeGenerateId(),
+          description:
+            recurrenceCount > 1
+              ? `${formData.description} (${i + 1}/${recurrenceCount})`
+              : formData.description,
+          amount: amountVal,
+          category: formData.category,
+          procedure: formData.procedure,
+          date: currentTxDate.toISOString().split("T")[0],
+          type: modalType,
+          status: formData.status,
+          payment_method: formData.paymentMethod,
+          account_id: formData.accountId,
+          professional: formData.professional,
+          installments: formData.installments,
+          observation: formData.observation,
+          is_partial: formData.isPartial,
+          card_brand: formData.cardBrand,
+          settlement_date: currentSettlementDate || null,
+          supplier: formData.supplier,
+          sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
+        });
+      }
+
+      const { error } = await supabase
+        .from("transactions")
+        .upsert(transactionsToInsert);
+      if (!error) {
+        playCashRegisterSound();
+        await fetchAllData();
+        notifyDataChange(["transactions", "accounts"]);
+        setIsModalOpen(false);
+        toast.success("Lançamento salvo com sucesso!");
+      } else {
+        toast.error("Erro ao salvar no banco de dados: " + error.message);
+      }
+    } catch (err: any) {
+      console.error("Erro no handleSaveTransaction:", err);
+      toast.error("Ocorreu um erro inesperado: " + err.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const openBulkModal = (type: 'income' | 'expense' = 'income') => {
-    const defaultAcc = accountsList[0]?.id || '';
-    setBulkRows([{
-        date: today, description: '', amount: '', category: (type === 'income' ? incomeCategories : expenseCategories)[0]?.name || '',
-        procedure: '', type: type, status: 'Paid', paymentMethod: 'Dinheiro', professional: '', salesTeam: '', accountId: defaultAcc
-    }]);
-    setPastedData('');
+  const openBulkModal = (type: "income" | "expense" = "income") => {
+    const defaultAcc = accountsList[0]?.id || "";
+    setBulkRows([
+      {
+        date: today,
+        description: "",
+        amount: "",
+        category:
+          (type === "income" ? incomeCategories : expenseCategories)[0]?.name ||
+          "",
+        procedure: "",
+        type: type,
+        status: "Paid",
+        paymentMethod: "Dinheiro",
+        professional: "",
+        salesTeam: "",
+        accountId: defaultAcc,
+      },
+    ]);
+    setPastedData("");
     setIsBulkModalOpen(true);
   };
 
   const addBulkRow = () => {
     const lastRow = bulkRows[bulkRows.length - 1];
-    setBulkRows([...bulkRows, { ...lastRow, description: '', amount: '' }]);
+    setBulkRows([...bulkRows, { ...lastRow, description: "", amount: "" }]);
   };
 
   const removeBulkRow = (index: number) => {
@@ -817,15 +1183,15 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
     newRows[index] = { ...newRows[index], [field]: value };
 
     // Auto-update procedural details if category changes
-    if (field === 'category') {
-        newRows[index].procedure = '';
+    if (field === "category") {
+      newRows[index].procedure = "";
     }
 
     // Restriction rule for specific procedures
-    if (field === 'procedure') {
-        if (value === 'Panorâmica' || value === 'Documentação Inicial') {
-            newRows[index].salesTeam = '';
-        }
+    if (field === "procedure") {
+      if (value === "Panorâmica" || value === "Documentação Inicial") {
+        newRows[index].salesTeam = "";
+      }
     }
 
     setBulkRows(newRows);
@@ -833,1302 +1199,2707 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
 
   // --- LOGICA DE BUSCA INTELIGENTE PARA IMPORTAÇÃO ---
 
-  const findBestMatch = (input: string, list: {name: string}[]) => {
-      if (!input) return '';
-      const search = input.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const findBestMatch = (input: string, list: { name: string }[]) => {
+    if (!input) return "";
+    const search = input
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
-      // 1. Busca Exata (sem acentos)
-      let match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === search);
-      if (match) return match.name;
+    // 1. Busca Exata (sem acentos)
+    let match = list.find(
+      (item) =>
+        item.name
+          .toLowerCase()
+          .trim()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") === search,
+    );
+    if (match) return match.name;
 
-      // 2. Busca por Início do texto
-      match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").startsWith(search));
-      if (match) return match.name;
+    // 2. Busca por Início do texto
+    match = list.find((item) =>
+      item.name
+        .toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .startsWith(search),
+    );
+    if (match) return match.name;
 
-      // 3. Busca por "Contém"
-      match = list.find(item => item.name.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(search));
-      if (match) return match.name;
+    // 3. Busca por "Contém"
+    match = list.find((item) =>
+      item.name
+        .toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .includes(search),
+    );
+    if (match) return match.name;
 
-      return input.trim(); // Se não achar nada, retorna o texto original para o usuário ver o erro na grade
+    return input.trim(); // Se não achar nada, retorna o texto original para o usuário ver o erro na grade
   };
 
   const parseImportDate = (val: string) => {
-      if (!val) return today;
-      const clean = val.trim();
-      if (clean.includes('/')) {
-          const parts = clean.split('/');
-          if (parts.length === 3) {
-              const day = parts[0].padStart(2, '0');
-              const month = parts[1].padStart(2, '0');
-              let year = parts[2];
-              if (year.length === 2) year = '20' + year;
-              return `${year}-${month}-${day}`;
-          }
+    if (!val) return today;
+    const clean = val.trim();
+    if (clean.includes("/")) {
+      const parts = clean.split("/");
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, "0");
+        const month = parts[1].padStart(2, "0");
+        let year = parts[2];
+        if (year.length === 2) year = "20" + year;
+        return `${year}-${month}-${day}`;
       }
-      if (clean.includes('-')) {
-          const parts = clean.split('-');
-          if (parts[0].length === 4) return clean;
-          if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-      }
-      return clean;
+    }
+    if (clean.includes("-")) {
+      const parts = clean.split("-");
+      if (parts[0].length === 4) return clean;
+      if (parts[2].length === 4)
+        return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+    }
+    return clean;
   };
 
-  const processImportRows = (lines: string[], separator: string = '\t') => {
-      const defaultAcc = accountsList[0]?.id || '';
-      return lines.map((line: any) => {
-          const cols = line.split(separator);
-          const importedType = cols[4]?.toLowerCase().includes('desp') ? 'expense' : 'income';
-          const importedCatText = cols[2]?.trim() || '';
+  const processImportRows = (lines: string[], separator: string = "\t") => {
+    const defaultAcc = accountsList[0]?.id || "";
+    return lines.map((line: any) => {
+      const cols = line.split(separator);
+      const importedType = cols[4]?.toLowerCase().includes("desp")
+        ? "expense"
+        : "income";
+      const importedCatText = cols[2]?.trim() || "";
 
-          // Mapeia Categoria
-          const matchedCatName = findBestMatch(importedCatText, importedType === 'income' ? incomeCategories : expenseCategories);
+      // Mapeia Categoria
+      const matchedCatName = findBestMatch(
+        importedCatText,
+        importedType === "income" ? incomeCategories : expenseCategories,
+      );
 
-          // Mapeia Profissional
-          const matchedProf = findBestMatch(cols[7]?.trim() || '', professionals);
+      // Mapeia Profissional
+      const matchedProf = findBestMatch(cols[7]?.trim() || "", professionals);
 
-          // Mapeia Forma de Pagamento
-          const matchedPayment = findBestMatch(cols[6]?.trim() || '', paymentMethods);
+      // Mapeia Forma de Pagamento
+      const matchedPayment = findBestMatch(
+        cols[6]?.trim() || "",
+        paymentMethods,
+      );
 
-          // Mapeia Procedimento (busca dentro da categoria mapeada)
-          const currentCatObj = (importedType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === matchedCatName);
-          const matchedProcedure = findBestMatch(cols[3]?.trim() || '', currentCatObj?.subcategories || []);
+      // Mapeia Procedimento (busca dentro da categoria mapeada)
+      const currentCatObj = (
+        importedType === "income" ? incomeCategories : expenseCategories
+      ).find((c) => c.name === matchedCatName);
+      const matchedProcedure = findBestMatch(
+        cols[3]?.trim() || "",
+        currentCatObj?.subcategories || [],
+      );
 
-          return {
-              date: parseImportDate(cols[0]),
-              description: cols[1]?.trim() || '',
-              category: matchedCatName || (importedType === 'income' ? incomeCategories[0]?.name : expenseCategories[0]?.name),
-              procedure: matchedProcedure,
-              type: importedType,
-              amount: cols[5]?.replace('R$', '').replace(/\./g, '').replace(',', '.').trim() || '',
-              paymentMethod: matchedPayment || 'Dinheiro',
-              professional: matchedProf,
-              salesTeam: '',
-              accountId: defaultAcc
-          };
-      });
+      return {
+        date: parseImportDate(cols[0]),
+        description: cols[1]?.trim() || "",
+        category:
+          matchedCatName ||
+          (importedType === "income"
+            ? incomeCategories[0]?.name
+            : expenseCategories[0]?.name),
+        procedure: matchedProcedure,
+        type: importedType,
+        amount:
+          cols[5]
+            ?.replace("R$", "")
+            .replace(/\./g, "")
+            .replace(",", ".")
+            .trim() || "",
+        paymentMethod: matchedPayment || "Dinheiro",
+        professional: matchedProf,
+        salesTeam: "",
+        accountId: defaultAcc,
+      };
+    });
   };
 
   const handleProcessPastedData = () => {
-      if (!pastedData.trim()) return;
-      const lines = pastedData.split('\n').filter(l => l.trim());
-      const newParsedRows = processImportRows(lines, '\t');
-      setBulkRows(newParsedRows);
-      setPastedData('');
-      toast.success(`${newParsedRows.length} linhas processadas.`);
+    if (!pastedData.trim()) return;
+    const lines = pastedData.split("\n").filter((l) => l.trim());
+    const newParsedRows = processImportRows(lines, "\t");
+    setBulkRows(newParsedRows);
+    setPastedData("");
+    toast.success(`${newParsedRows.length} linhas processadas.`);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-          const text = event.target?.result as string;
-          const lines = text.split('\n').filter(l => l.trim());
-          const startIdx = (lines[0].toLowerCase().includes('data') || lines[0].toLowerCase().includes('paciente')) ? 1 : 0;
-          const separator = lines[0].includes(';') ? ';' : ',';
-          const newParsedRows = processImportRows(lines.slice(startIdx), separator);
-          setBulkRows(newParsedRows);
-          toast.success(`${newParsedRows.length} linhas carregadas.`);
-      };
-      reader.readAsText(file);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").filter((l) => l.trim());
+      const startIdx =
+        lines[0].toLowerCase().includes("data") ||
+        lines[0].toLowerCase().includes("paciente")
+          ? 1
+          : 0;
+      const separator = lines[0].includes(";") ? ";" : ",";
+      const newParsedRows = processImportRows(lines.slice(startIdx), separator);
+      setBulkRows(newParsedRows);
+      toast.success(`${newParsedRows.length} linhas carregadas.`);
+    };
+    reader.readAsText(file);
   };
 
   const handleSaveBulk = async () => {
-    const validRows = bulkRows.filter(r => r.description.trim() && parseFloat(r.amount.toString().replace(',', '.')) > 0);
-    if (validRows.length === 0) return toast.error("Preencha ao menos um lançamento válido.");
+    const validRows = bulkRows.filter(
+      (r) =>
+        r.description.trim() &&
+        parseFloat(r.amount.toString().replace(",", ".")) > 0,
+    );
+    if (validRows.length === 0)
+      return toast.error("Preencha ao menos um lançamento válido.");
 
     setIsSaving(true);
-    const toInsert = validRows.map(r => {
-        const isRestrictedProcedure = r.procedure === 'Panorâmica' || r.procedure === 'Documentação Inicial';
-        return {
-            id: 'tx_' + safeGenerateId(),
-            description: r.description,
-            amount: parseFloat(r.amount.toString().replace(',', '.')),
-            category: r.category,
-            procedure: r.procedure,
-            date: r.date,
-            type: r.type,
-            status: r.status || (r.type === 'expense' ? 'Pending' : 'Paid'),
-            payment_method: r.paymentMethod,
-            account_id: r.accountId,
-            professional: r.professional,
-            sales_team: isRestrictedProcedure ? '' : r.salesTeam,
-            installments: 1
-        };
+    const toInsert = validRows.map((r) => {
+      const isRestrictedProcedure =
+        r.procedure === "Panorâmica" || r.procedure === "Documentação Inicial";
+      return {
+        id: "tx_" + safeGenerateId(),
+        description: r.description,
+        amount: parseFloat(r.amount.toString().replace(",", ".")),
+        category: r.category,
+        procedure: r.procedure,
+        date: r.date,
+        type: r.type,
+        status: r.status || (r.type === "expense" ? "Pending" : "Paid"),
+        payment_method: r.paymentMethod,
+        account_id: r.accountId,
+        professional: r.professional,
+        sales_team: isRestrictedProcedure ? "" : r.salesTeam,
+        installments: 1,
+      };
     });
 
-    const { error } = await supabase.from('transactions').insert(toInsert);
+    const { error } = await supabase.from("transactions").insert(toInsert);
     if (!error) {
-        playCashRegisterSound();
-        await fetchAllData();
-        notifyDataChange(['transactions', 'accounts']);
-        setIsBulkModalOpen(false);
-        toast.success('Processamento concluído com sucesso!');
-    }
-    else toast.error("Erro ao salvar: " + error.message);
+      playCashRegisterSound();
+      await fetchAllData();
+      notifyDataChange(["transactions", "accounts"]);
+      setIsBulkModalOpen(false);
+      toast.success("Processamento concluído com sucesso!");
+    } else toast.error("Erro ao salvar: " + error.message);
     setIsSaving(false);
   };
 
-  const openModal = (type: 'income' | 'expense', editData?: LocalTransaction) => {
+  const openModal = (
+    type: "income" | "expense",
+    editData?: LocalTransaction,
+  ) => {
     setModalType(type);
     if (editData) {
-        setFormData({
-            id: editData.id, description: editData.description,
-            amount: (editData.amount || 0).toString(), category: editData.category, procedure: editData.procedure || '',
-            accountId: editData.accountId || '', date: editData.date, status: editData.status as any,
-            paymentMethod: editData.paymentMethod || '', professional: editData.professional || '',
-            installments: editData.installments || 1, observation: editData.observation || '',
-            isPartial: !!editData.isPartial, cardBrand: editData.cardBrand || '',
-            settlementDate: editData.settlementDate || '',
-            supplier: editData.supplier || '',
-            salesTeam: editData.salesTeam || '',
-            recurrence: 1
-        });
+      setFormData({
+        id: editData.id,
+        description: editData.description,
+        amount: (editData.amount || 0).toString(),
+        category: editData.category,
+        procedure: editData.procedure || "",
+        accountId: editData.accountId || "",
+        date: editData.date,
+        status: editData.status as any,
+        paymentMethod: editData.paymentMethod || "",
+        professional: editData.professional || "",
+        installments: editData.installments || 1,
+        observation: editData.observation || "",
+        isPartial: !!editData.isPartial,
+        cardBrand: editData.cardBrand || "",
+        settlementDate: editData.settlementDate || "",
+        supplier: editData.supplier || "",
+        salesTeam: editData.salesTeam || "",
+        recurrence: 1,
+      });
     } else {
-        const defaultCat = (type === 'income' ? incomeCategories[0]?.name : expenseCategories[0]?.name) || '';
-        const defaultAcc = accountsList[0]?.id || '';
-        setFormData({
-            id: '', description: '', amount: '', category: defaultCat, procedure: '',
-            accountId: defaultAcc, date: today, status: type === 'expense' ? 'Pending' : 'Paid', paymentMethod: 'Dinheiro',
-            professional: '', installments: 1, observation: '', isPartial: false, cardBrand: '',
-            settlementDate: '',
-            supplier: '',
-            salesTeam: '',
-            recurrence: 1
-        });
+      const defaultCat =
+        (type === "income"
+          ? incomeCategories[0]?.name
+          : expenseCategories[0]?.name) || "";
+      const defaultAcc = accountsList[0]?.id || "";
+      setFormData({
+        id: "",
+        description: "",
+        amount: "",
+        category: defaultCat,
+        procedure: "",
+        accountId: defaultAcc,
+        date: today,
+        status: type === "expense" ? "Pending" : "Paid",
+        paymentMethod: "Dinheiro",
+        professional: "",
+        installments: 1,
+        observation: "",
+        isPartial: false,
+        cardBrand: "",
+        settlementDate: "",
+        supplier: "",
+        salesTeam: "",
+        recurrence: 1,
+      });
     }
     setIsModalOpen(true);
   };
 
   useEffect(() => {
-      if (requestedAction === 'new_income') {
-          setActiveSubTab('transactions');
-          // Precisa garantir que as categorias/contas já foram carregadas, mas openModal usa o estado atual
-          openModal('income');
-      } else if (requestedAction === 'new_expense') {
-          setActiveSubTab('transactions');
-          openModal('expense');
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (requestedAction === "new_income") {
+      setActiveSubTab("transactions");
+      // Precisa garantir que as categorias/contas já foram carregadas, mas openModal usa o estado atual
+      openModal("income");
+    } else if (requestedAction === "new_expense") {
+      setActiveSubTab("transactions");
+      openModal("expense");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedAction, accountsList]);
 
   const openObsModal = (tx: LocalTransaction) => {
-      setSelectedTxForObs(tx);
-      setTempObs(tx.observation || '');
-      setIsObsModalOpen(true);
+    setSelectedTxForObs(tx);
+    setTempObs(tx.observation || "");
+    setIsObsModalOpen(true);
   };
 
   const handleSaveObservation = async () => {
-      if (!selectedTxForObs) return;
-      const { error } = await supabase.from('transactions').update({ observation: tempObs }).eq('id', selectedTxForObs.id);
-      if (!error) {
-          setTransactions(prev => prev.map(t => t.id === selectedTxForObs.id ? { ...t, observation: tempObs } : t));
-          setIsObsModalOpen(false);
-      }
+    if (!selectedTxForObs) return;
+    const { error } = await supabase
+      .from("transactions")
+      .update({ observation: tempObs })
+      .eq("id", selectedTxForObs.id);
+    if (!error) {
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === selectedTxForObs.id ? { ...t, observation: tempObs } : t,
+        ),
+      );
+      setIsObsModalOpen(false);
+    }
   };
 
   const handleUpdateFee = async (txId: string, newFee: number) => {
-      const { error } = await supabase.from('transactions').update({ explicit_fee_amount: newFee }).eq('id', txId);
-      if (!error) setTransactions(prev => prev.map(t => t.id === txId ? { ...t, explicitFeeAmount: newFee } : t));
+    const { error } = await supabase
+      .from("transactions")
+      .update({ explicit_fee_amount: newFee })
+      .eq("id", txId);
+    if (!error)
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === txId ? { ...t, explicitFeeAmount: newFee } : t,
+        ),
+      );
   };
 
   const toggleNF = async (tx: LocalTransaction) => {
-      const nextValue = !tx.invoiceEmitted;
-      const { error } = await supabase.from('transactions').update({ invoice_emitted: nextValue }).eq('id', tx.id);
-      if (!error) setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, invoiceEmitted: nextValue } : t));
+    const nextValue = !tx.invoiceEmitted;
+    const { error } = await supabase
+      .from("transactions")
+      .update({ invoice_emitted: nextValue })
+      .eq("id", tx.id);
+    if (!error)
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === tx.id ? { ...t, invoiceEmitted: nextValue } : t,
+        ),
+      );
   };
 
-  const toggleAuditStatus = async (tx: LocalTransaction, nextStatus: 'verified' | 'error' | 'pending') => {
-      const finalStatus = tx.reconciliationStatus === nextStatus ? 'pending' : nextStatus;
-      const { error } = await supabase.from('transactions').update({ reconciliation_status: finalStatus }).eq('id', tx.id);
-      if (!error) setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, reconciliationStatus: finalStatus } : t));
+  const toggleAuditStatus = async (
+    tx: LocalTransaction,
+    nextStatus: "verified" | "error" | "pending",
+  ) => {
+    const finalStatus =
+      tx.reconciliationStatus === nextStatus ? "pending" : nextStatus;
+    const { error } = await supabase
+      .from("transactions")
+      .update({ reconciliation_status: finalStatus })
+      .eq("id", tx.id);
+    if (!error)
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === tx.id ? { ...t, reconciliationStatus: finalStatus } : t,
+        ),
+      );
   };
 
   const handleCategoryChange = (catName: string) => {
-    setFormData(prev => ({ ...prev, category: catName, procedure: '', amount: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      category: catName,
+      procedure: "",
+      amount: "",
+    }));
   };
 
   const handleSubCategoryChange = (subName: string) => {
-    const categories = modalType === 'income' ? incomeCategories : expenseCategories;
-    const currentCat = categories.find(c => c.name === formData.category);
+    const categories =
+      modalType === "income" ? incomeCategories : expenseCategories;
+    const currentCat = categories.find((c) => c.name === formData.category);
     const sub = currentCat?.subcategories.find((s: any) => s.name === subName);
 
-    const isRestrictedProcedure = subName === 'Panorâmica' || subName === 'Documentação Inicial';
+    const isRestrictedProcedure =
+      subName === "Panorâmica" || subName === "Documentação Inicial";
 
-    setFormData(prev => ({
-        ...prev,
-        procedure: subName,
-        amount: (sub && 'defaultValue' in sub && sub.defaultValue) ? sub.defaultValue.toString() : prev.amount,
-        salesTeam: isRestrictedProcedure ? '' : prev.salesTeam
+    setFormData((prev) => ({
+      ...prev,
+      procedure: subName,
+      amount:
+        sub && "defaultValue" in sub && sub.defaultValue
+          ? sub.defaultValue.toString()
+          : prev.amount,
+      salesTeam: isRestrictedProcedure ? "" : prev.salesTeam,
     }));
   };
 
   const handlePaymentMethodChange = (pmName: string) => {
-    const method = paymentMethods.find(m => m.name === pmName);
-    setFormData(prev => ({
-        ...prev,
-        paymentMethod: pmName,
-        accountId: method?.defaultAccountId || prev.accountId,
-        installments: (pmName.toLowerCase().includes('cartão') || pmName.toLowerCase().includes('crédito')) ? prev.installments : 1
+    const method = paymentMethods.find((m) => m.name === pmName);
+    setFormData((prev) => ({
+      ...prev,
+      paymentMethod: pmName,
+      accountId: method?.defaultAccountId || prev.accountId,
+      installments:
+        pmName.toLowerCase().includes("cartão") ||
+        pmName.toLowerCase().includes("crédito")
+          ? prev.installments
+          : 1,
     }));
   };
 
   const getEffectiveFee = (tx: LocalTransaction) => {
-      if (tx.explicitFeeAmount !== undefined && tx.explicitFeeAmount !== null && tx.explicitFeeAmount !== 0) return tx.explicitFeeAmount;
-      const method = (tx.paymentMethod || '').toLowerCase();
+    if (
+      tx.explicitFeeAmount !== undefined &&
+      tx.explicitFeeAmount !== null &&
+      tx.explicitFeeAmount !== 0
+    )
+      return tx.explicitFeeAmount;
+    const method = (tx.paymentMethod || "").toLowerCase();
 
-      if (method === 'financiamento dentalcred') {
-          return (tx.amount * 6.59) / 100;
-      }
+    if (method === "financiamento dentalcred") {
+      return (tx.amount * 6.59) / 100;
+    }
 
-      const isCard = method.includes('cartão') || method.includes('crédito') || method.includes('débito');
-      if (isCard && cardFees.length > 0) {
-          const feeConfig = cardFees.find(f => f && f.brand === tx.cardBrand) || cardFees[0];
-          let rate = 0;
-          if (feeConfig) {
-              if (method.includes('débito')) rate = feeConfig.debit || 0;
-              else if (tx.installments && tx.installments > 1) rate = (feeConfig.installments && feeConfig.installments[tx.installments]) || 0;
-              else rate = feeConfig.credit1x || 0;
-          }
-          return (tx.amount * rate) / 100;
+    const isCard =
+      method.includes("cartão") ||
+      method.includes("crédito") ||
+      method.includes("débito");
+    if (isCard && cardFees.length > 0) {
+      const feeConfig =
+        cardFees.find((f) => f && f.brand === tx.cardBrand) || cardFees[0];
+      let rate = 0;
+      if (feeConfig) {
+        if (method.includes("débito")) rate = feeConfig.debit || 0;
+        else if (tx.installments && tx.installments > 1)
+          rate =
+            (feeConfig.installments &&
+              feeConfig.installments[tx.installments]) ||
+            0;
+        else rate = feeConfig.credit1x || 0;
       }
-      return 0;
+      return (tx.amount * rate) / 100;
+    }
+    return 0;
   };
 
   const handleExport = (data: LocalTransaction[]) => {
-    const headers = ['Data', 'Descrição', 'Categoria', 'Procedimento', 'Profissional', 'Forma Pagto', 'Valor', 'Status', 'Obs'];
+    const headers = [
+      "Data",
+      "Descrição",
+      "Categoria",
+      "Procedimento",
+      "Profissional",
+      "Forma Pagto",
+      "Valor",
+      "Status",
+      "Obs",
+    ];
     const csvContent = [
-      headers.join(','),
-      ...data.map(row => [
-        row.date,
-        `"${row.description.replace(/"/g, '""')}"`,
-        `"${row.category}"`,
-        `"${row.procedure || ''}"`,
-        `"${row.professional || ''}"`,
-        `"${row.paymentMethod}"`,
-        row.amount.toFixed(2),
-        row.status,
-        `"${(row.observation || '').replace(/"/g, '""')}"`
-      ].join(','))
-    ].join('\n');
+      headers.join(","),
+      ...data.map((row) =>
+        [
+          row.date,
+          `"${row.description.replace(/"/g, '""')}"`,
+          `"${row.category}"`,
+          `"${row.procedure || ""}"`,
+          `"${row.professional || ""}"`,
+          `"${row.paymentMethod}"`,
+          row.amount.toFixed(2),
+          row.status,
+          `"${(row.observation || "").replace(/"/g, '""')}"`,
+        ].join(","),
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `receitas_export_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `receitas_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const renderBudgetPlanner = () => {
-      const projectedIncomes = budgetItems.filter(b => b.type === 'income');
-      const projectedExpenses = budgetItems.filter(b => b.type === 'expense');
-      const totalProjectedIncome = projectedIncomes.reduce((acc, curr) => acc + curr.projectedAmount, 0);
-      const totalProjectedExpense = projectedExpenses.reduce((acc, curr) => acc + curr.projectedAmount, 0);
-      const projectedNetProfit = totalProjectedIncome - totalProjectedExpense;
-      const projectedMargin = totalProjectedIncome > 0 ? (projectedNetProfit / totalProjectedIncome) * 100 : 0;
+    const projectedIncomes = budgetItems.filter((b) => b.type === "income");
+    const projectedExpenses = budgetItems.filter((b) => b.type === "expense");
+    const totalProjectedIncome = projectedIncomes.reduce(
+      (acc, curr) => acc + curr.projectedAmount,
+      0,
+    );
+    const totalProjectedExpense = projectedExpenses.reduce(
+      (acc, curr) => acc + curr.projectedAmount,
+      0,
+    );
+    const projectedNetProfit = totalProjectedIncome - totalProjectedExpense;
+    const projectedMargin =
+      totalProjectedIncome > 0
+        ? (projectedNetProfit / totalProjectedIncome) * 100
+        : 0;
 
-      const handleAddBudgetItem = (e: React.FormEvent) => {
-          e.preventDefault();
-          if (!newBudgetDesc || !newBudgetAmount) return toast.error('Preencha a descrição e o valor previsto.');
-          const amount = parseFloat(newBudgetAmount.replace(',', '.')) || 0;
-          const newItem: BudgetItem = {
-              id: 'bud_' + safeGenerateId(),
-              type: newBudgetType,
-              category: newBudgetCategory || (newBudgetType === 'income' ? 'Receita Geral' : 'Despesa Geral'),
-              description: newBudgetDesc,
-              projectedAmount: amount,
-              notes: newBudgetNotes
-          };
-          setBudgetItems(prev => [...prev, newItem]);
-          setNewBudgetDesc('');
-          setNewBudgetAmount('');
-          setNewBudgetNotes('');
-          toast.success('Item adicionado ao orçamento!');
+    const handleAddBudgetItem = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newBudgetDesc || !newBudgetAmount)
+        return toast.error("Preencha a descrição e o valor previsto.");
+      const amount = parseFloat(newBudgetAmount.replace(",", ".")) || 0;
+      const newItem: BudgetItem = {
+        id: "bud_" + safeGenerateId(),
+        type: newBudgetType,
+        category:
+          newBudgetCategory ||
+          (newBudgetType === "income" ? "Receita Geral" : "Despesa Geral"),
+        description: newBudgetDesc,
+        projectedAmount: amount,
+        notes: newBudgetNotes,
       };
+      setBudgetItems((prev) => [...prev, newItem]);
+      setNewBudgetDesc("");
+      setNewBudgetAmount("");
+      setNewBudgetNotes("");
+      toast.success("Item adicionado ao orçamento!");
+    };
 
-      const handleRemoveBudgetItem = (id: string) => {
-          setBudgetItems(prev => prev.filter(item => item.id !== id));
-          toast.success('Item removido do orçamento.');
-      };
+    const handleRemoveBudgetItem = (id: string) => {
+      setBudgetItems((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Item removido do orçamento.");
+    };
 
-      const handleExportBudget = () => {
-          const wsData = [
-              ['Planejamento Orçamentário - Mês: ' + budgetMonth],
-              [],
-              ['Tipo', 'Categoria', 'Descrição', 'Valor Previsto (R$)', 'Observações'],
-              ...budgetItems.map(b => [b.type === 'income' ? 'Receita' : 'Despesa', b.category, b.description, b.projectedAmount, b.notes || '']),
-              [],
-              ['Total Receitas Previstas', '', '', totalProjectedIncome],
-              ['Total Despesas Previstas', '', '', totalProjectedExpense],
-              ['Lucro Operacional Previsto', '', '', projectedNetProfit],
-              ['Margem Operacional', '', '', projectedMargin.toFixed(2) + '%']
-          ];
-          const ws = XLSX.utils.aoa_to_sheet(wsData);
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'Orcamento_' + budgetMonth);
-          XLSX.writeFile(wb, `Orcamento_${budgetMonth}.xlsx`);
-          toast.success('Planilha orçamentária exportada com sucesso!');
-      };
+    const handleExportBudget = () => {
+      const wsData = [
+        ["Planejamento Orçamentário - Mês: " + budgetMonth],
+        [],
+        [
+          "Tipo",
+          "Categoria",
+          "Descrição",
+          "Valor Previsto (R$)",
+          "Observações",
+        ],
+        ...budgetItems.map((b) => [
+          b.type === "income" ? "Receita" : "Despesa",
+          b.category,
+          b.description,
+          b.projectedAmount,
+          b.notes || "",
+        ]),
+        [],
+        ["Total Receitas Previstas", "", "", totalProjectedIncome],
+        ["Total Despesas Previstas", "", "", totalProjectedExpense],
+        ["Lucro Operacional Previsto", "", "", projectedNetProfit],
+        ["Margem Operacional", "", "", projectedMargin.toFixed(2) + "%"],
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Orcamento_" + budgetMonth);
+      XLSX.writeFile(wb, `Orcamento_${budgetMonth}.xlsx`);
+      toast.success("Planilha orçamentária exportada com sucesso!");
+    };
 
-      return (
-          <div className="flex flex-col gap-6 animate-in fade-in pb-12">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(16, 185, 129, 0.3)">
-                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Receita Prevista</span>
-                      <h3 className="text-2xl font-black text-emerald-400">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                  </SpotlightCard>
-                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(239, 68, 68, 0.3)">
-                      <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Despesas Previstas</span>
-                      <h3 className="text-2xl font-black text-red-400">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                  </SpotlightCard>
-                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(59, 130, 246, 0.3)">
-                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Lucro Operacional Líquido</span>
-                      <h3 className={`text-2xl font-black ${projectedNetProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>R$ {projectedNetProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                  </SpotlightCard>
-                  <SpotlightCard className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface" spotlightColor="rgba(168, 85, 247, 0.3)">
-                      <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Margem de Lucro</span>
-                      <h3 className="text-2xl font-black text-purple-400">{projectedMargin.toFixed(1)}%</h3>
-                  </SpotlightCard>
-              </div>
+    return (
+      <div className="flex flex-col gap-6 animate-in fade-in pb-12">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <SpotlightCard
+            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            spotlightColor="rgba(16, 185, 129, 0.3)"
+          >
+            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+              Receita Prevista
+            </span>
+            <h3 className="text-2xl font-black text-emerald-400">
+              R${" "}
+              {totalProjectedIncome.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </h3>
+          </SpotlightCard>
+          <SpotlightCard
+            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            spotlightColor="rgba(239, 68, 68, 0.3)"
+          >
+            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+              Despesas Previstas
+            </span>
+            <h3 className="text-2xl font-black text-red-400">
+              R${" "}
+              {totalProjectedExpense.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </h3>
+          </SpotlightCard>
+          <SpotlightCard
+            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            spotlightColor="rgba(59, 130, 246, 0.3)"
+          >
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+              Lucro Operacional Líquido
+            </span>
+            <h3
+              className={`text-2xl font-black ${projectedNetProfit >= 0 ? "text-blue-400" : "text-red-400"}`}
+            >
+              R${" "}
+              {projectedNetProfit.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </h3>
+          </SpotlightCard>
+          <SpotlightCard
+            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            spotlightColor="rgba(168, 85, 247, 0.3)"
+          >
+            <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">
+              Margem de Lucro
+            </span>
+            <h3 className="text-2xl font-black text-purple-400">
+              {projectedMargin.toFixed(1)}%
+            </h3>
+          </SpotlightCard>
+        </div>
 
-              {/* Add Item Form & Actions Bar */}
-              <div className="glass-panel p-5 rounded-2xl border border-border bg-surface flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                      <div>
-                          <h3 className="text-sm font-black text-text uppercase tracking-wider">Adicionar Item ao Orçamento</h3>
-                          <p className="text-xs text-slate-500 font-medium">Insira estimativas de receitas ou custos para planejar o mês seguinte.</p>
-                      </div>
-                      <button
-                          onClick={handleExportBudget}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
-                      >
-                          <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
-                      </button>
-                  </div>
-
-                  <form onSubmit={handleAddBudgetItem} className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end pt-2">
-                      <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Tipo</label>
-                          <select
-                              value={newBudgetType}
-                              onChange={e => {
-                                  const t = e.target.value as 'income' | 'expense';
-                                  setNewBudgetType(t);
-                                  setNewBudgetCategory(t === 'income' ? incomeCategories[0]?.name || 'Ortodontia' : expenseCategories[0]?.name || 'Aluguel');
-                              }}
-                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
-                          >
-                              <option value="income">Receita (Entrada)</option>
-                              <option value="expense">Despesa (Saída)</option>
-                          </select>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Categoria</label>
-                          <select
-                              value={newBudgetCategory}
-                              onChange={e => setNewBudgetCategory(e.target.value)}
-                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
-                          >
-                              {(newBudgetType === 'income' ? incomeCategories : expenseCategories).map(c => (
-                                  <option key={c.id} value={c.name}>{c.name}</option>
-                              ))}
-                          </select>
-                      </div>
-
-                      <div className="flex flex-col gap-1 col-span-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Descrição / Item</label>
-                          <input
-                              type="text"
-                              placeholder="Ex: Manutenções / Aluguel..."
-                              value={newBudgetDesc}
-                              onChange={e => setNewBudgetDesc(e.target.value)}
-                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
-                          />
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase">Valor Previsto (R$)</label>
-                          <input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              value={newBudgetAmount}
-                              onChange={e => setNewBudgetAmount(e.target.value)}
-                              className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500 font-mono"
-                          />
-                      </div>
-
-                      <button
-                          type="submit"
-                          className="py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-bold uppercase transition-all shadow-lg flex items-center justify-center gap-1.5"
-                      >
-                          <Plus className="w-4 h-4" /> Adicionar
-                      </button>
-                  </form>
-              </div>
-
-              {/* Detailed Budget Tables Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Projected Incomes Table */}
-                  <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
-                      <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
-                          <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">Receitas Orçadas ({projectedIncomes.length})</h4>
-                          <span className="text-xs font-bold text-emerald-300">R$ {totalProjectedIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
-                              <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  <tr>
-                                      <th className="p-3">Categoria</th>
-                                      <th className="p-3">Descrição</th>
-                                      <th className="p-3 text-right">Previsto</th>
-                                      <th className="p-3 text-center">Ações</th>
-                                  </tr>
-                              </thead>
-                              <tbody className="divide-y divide-white/5 text-xs">
-                                  {projectedIncomes.length === 0 ? (
-                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma receita orçada cadastrada.</td></tr>
-                                  ) : (
-                                      projectedIncomes.map(item => (
-                                          <tr key={item.id} className="hover:bg-panel transition-colors">
-                                              <td className="p-3 font-medium text-text">{item.category}</td>
-                                              <td className="p-3 text-slate-300">{item.description}</td>
-                                              <td className="p-3 text-right font-bold text-emerald-400 font-mono">
-                                                  <input
-                                                      type="number"
-                                                      step="0.01"
-                                                      value={item.projectedAmount}
-                                                      onChange={e => {
-                                                          const val = parseFloat(e.target.value) || 0;
-                                                          setBudgetItems(prev => prev.map(i => i.id === item.id ? { ...i, projectedAmount: val } : i));
-                                                      }}
-                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-emerald-500 text-right w-24 outline-none font-mono"
-                                                  />
-                                              </td>
-                                              <td className="p-3 text-center">
-                                                  <button onClick={() => handleRemoveBudgetItem(item.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
-                                                      <Trash2 className="w-3.5 h-3.5" />
-                                                  </button>
-                                              </td>
-                                          </tr>
-                                      ))
-                                  )}
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-
-                  {/* Projected Expenses Table */}
-                  <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
-                      <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
-                          <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">Despesas Orçadas ({projectedExpenses.length})</h4>
-                          <span className="text-xs font-bold text-red-300">R$ {totalProjectedExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
-                              <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  <tr>
-                                      <th className="p-3">Categoria</th>
-                                      <th className="p-3">Descrição</th>
-                                      <th className="p-3 text-right">Previsto</th>
-                                      <th className="p-3 text-center">Ações</th>
-                                  </tr>
-                              </thead>
-                              <tbody className="divide-y divide-white/5 text-xs">
-                                  {projectedExpenses.length === 0 ? (
-                                      <tr><td colSpan={4} className="p-6 text-center text-slate-500">Nenhuma despesa orçada cadastrada.</td></tr>
-                                  ) : (
-                                      projectedExpenses.map(item => (
-                                          <tr key={item.id} className="hover:bg-panel transition-colors">
-                                              <td className="p-3 font-medium text-text">{item.category}</td>
-                                              <td className="p-3 text-slate-300">{item.description}</td>
-                                              <td className="p-3 text-right font-bold text-red-400 font-mono">
-                                                  <input
-                                                      type="number"
-                                                      step="0.01"
-                                                      value={item.projectedAmount}
-                                                      onChange={e => {
-                                                          const val = parseFloat(e.target.value) || 0;
-                                                          setBudgetItems(prev => prev.map(i => i.id === item.id ? { ...i, projectedAmount: val } : i));
-                                                      }}
-                                                      className="bg-transparent border-b border-transparent hover:border-border focus:border-red-500 text-right w-24 outline-none font-mono"
-                                                  />
-                                              </td>
-                                              <td className="p-3 text-center">
-                                                  <button onClick={() => handleRemoveBudgetItem(item.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors">
-                                                      <Trash2 className="w-3.5 h-3.5" />
-                                                  </button>
-                                              </td>
-                                          </tr>
-                                      ))
-                                  )}
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-              </div>
+        {/* Add Item Form & Actions Bar */}
+        <div className="glass-panel p-5 rounded-2xl border border-border bg-surface flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-black text-text uppercase tracking-wider">
+                Adicionar Item ao Orçamento
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Insira estimativas de receitas ou custos para planejar o mês
+                seguinte.
+              </p>
+            </div>
+            <button
+              onClick={handleExportBudget}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
+            </button>
           </div>
-      );
+
+          <form
+            onSubmit={handleAddBudgetItem}
+            className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end pt-2"
+          >
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Tipo
+              </label>
+              <select
+                value={newBudgetType}
+                onChange={(e) => {
+                  const t = e.target.value as "income" | "expense";
+                  setNewBudgetType(t);
+                  setNewBudgetCategory(
+                    t === "income"
+                      ? incomeCategories[0]?.name || "Ortodontia"
+                      : expenseCategories[0]?.name || "Aluguel",
+                  );
+                }}
+                className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+              >
+                <option value="income">Receita (Entrada)</option>
+                <option value="expense">Despesa (Saída)</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Categoria
+              </label>
+              <select
+                value={newBudgetCategory}
+                onChange={(e) => setNewBudgetCategory(e.target.value)}
+                className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+              >
+                {(newBudgetType === "income"
+                  ? incomeCategories
+                  : expenseCategories
+                ).map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1 col-span-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Descrição / Item
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Manutenções / Aluguel..."
+                value={newBudgetDesc}
+                onChange={(e) => setNewBudgetDesc(e.target.value)}
+                className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Valor Previsto (R$)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={newBudgetAmount}
+                onChange={(e) => setNewBudgetAmount(e.target.value)}
+                className="bg-panel border border-border rounded-xl px-3 py-2.5 text-xs text-text font-bold outline-none focus:border-purple-500 font-mono"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-bold uppercase transition-all shadow-lg flex items-center justify-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Adicionar
+            </button>
+          </form>
+        </div>
+
+        {/* Detailed Budget Tables Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Projected Incomes Table */}
+          <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
+            <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
+              <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest">
+                Receitas Orçadas ({projectedIncomes.length})
+              </h4>
+              <span className="text-xs font-bold text-emerald-300">
+                R${" "}
+                {totalProjectedIncome.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th className="p-3">Categoria</th>
+                    <th className="p-3">Descrição</th>
+                    <th className="p-3 text-right">Previsto</th>
+                    <th className="p-3 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-xs">
+                  {projectedIncomes.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-6 text-center text-slate-500"
+                      >
+                        Nenhuma receita orçada cadastrada.
+                      </td>
+                    </tr>
+                  ) : (
+                    projectedIncomes.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-panel transition-colors"
+                      >
+                        <td className="p-3 font-medium text-text">
+                          {item.category}
+                        </td>
+                        <td className="p-3 text-slate-300">
+                          {item.description}
+                        </td>
+                        <td className="p-3 text-right font-bold text-emerald-400 font-mono">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.projectedAmount}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setBudgetItems((prev) =>
+                                prev.map((i) =>
+                                  i.id === item.id
+                                    ? { ...i, projectedAmount: val }
+                                    : i,
+                                ),
+                              );
+                            }}
+                            className="bg-transparent border-b border-transparent hover:border-border focus:border-emerald-500 text-right w-24 outline-none font-mono"
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleRemoveBudgetItem(item.id)}
+                            className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Projected Expenses Table */}
+          <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col bg-surface shadow-xl">
+            <div className="p-4 border-b border-border bg-panel flex justify-between items-center">
+              <h4 className="text-xs font-black text-red-400 uppercase tracking-widest">
+                Despesas Orçadas ({projectedExpenses.length})
+              </h4>
+              <span className="text-xs font-bold text-red-300">
+                R${" "}
+                {totalProjectedExpense.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-panel/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th className="p-3">Categoria</th>
+                    <th className="p-3">Descrição</th>
+                    <th className="p-3 text-right">Previsto</th>
+                    <th className="p-3 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-xs">
+                  {projectedExpenses.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-6 text-center text-slate-500"
+                      >
+                        Nenhuma despesa orçada cadastrada.
+                      </td>
+                    </tr>
+                  ) : (
+                    projectedExpenses.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-panel transition-colors"
+                      >
+                        <td className="p-3 font-medium text-text">
+                          {item.category}
+                        </td>
+                        <td className="p-3 text-slate-300">
+                          {item.description}
+                        </td>
+                        <td className="p-3 text-right font-bold text-red-400 font-mono">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.projectedAmount}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value) || 0;
+                              setBudgetItems((prev) =>
+                                prev.map((i) =>
+                                  i.id === item.id
+                                    ? { ...i, projectedAmount: val }
+                                    : i,
+                                ),
+                              );
+                            }}
+                            className="bg-transparent border-b border-transparent hover:border-border focus:border-red-500 text-right w-24 outline-none font-mono"
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleRemoveBudgetItem(item.id)}
+                            className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderTransactionsTable = () => {
-    const showFees = userEmail !== 'recepcao.centrodosorriso@gmail.com';
-    const isMyProfile = userEmail === 'clinica.centrodosorrisosc@gmail.com' || userRole === 'admin';
-    const filtered = transactions.filter(t => {
-        if (t.type !== 'income') return false;
+    const isMyProfile =
+      userEmail === "clinica.centrodosorrisosc@gmail.com" ||
+      userRole === "admin";
+    const filtered = transactions
+      .filter((t) => {
+        if (t.type !== "income") return false;
 
         // Debugging filter
-        const matches = (
-         (txFilters.category === 'all' || t.category === txFilters.category) &&
-         (txFilters.status === 'all' || t.status === txFilters.status) &&
-         (txFilters.paymentMethods.length === 0 || txFilters.paymentMethods.includes(t.paymentMethod)) &&
-         (txFilters.professional === 'all' || t.professional === txFilters.professional) &&
-         (txFilters.auditStatus === 'all' || t.reconciliationStatus === txFilters.auditStatus) &&
-         (txFilters.hasNF === 'all' || String(!!t.invoiceEmitted) === txFilters.hasNF) &&
-         (txFilters.isPartial === 'all' || String(!!t.isPartial) === txFilters.isPartial) &&
-         (txFilters.procedure === 'all' || t.procedure === txFilters.procedure) &&
-         (!txFilters.search || (t.description || '').toLowerCase().includes((txFilters.search || '').toLowerCase())) &&
-         (t.date >= txFilters.start && t.date <= txFilters.end)
-        );
+        const matches =
+          (txFilters.category === "all" || t.category === txFilters.category) &&
+          (txFilters.status === "all" || t.status === txFilters.status) &&
+          (txFilters.paymentMethods.length === 0 ||
+            txFilters.paymentMethods.includes(t.paymentMethod)) &&
+          (txFilters.professional === "all" ||
+            t.professional === txFilters.professional) &&
+          (txFilters.auditStatus === "all" ||
+            t.reconciliationStatus === txFilters.auditStatus) &&
+          (txFilters.hasNF === "all" ||
+            String(!!t.invoiceEmitted) === txFilters.hasNF) &&
+          (txFilters.isPartial === "all" ||
+            String(!!t.isPartial) === txFilters.isPartial) &&
+          (txFilters.procedure === "all" ||
+            t.procedure === txFilters.procedure) &&
+          (!txFilters.search ||
+            (t.description || "")
+              .toLowerCase()
+              .includes((txFilters.search || "").toLowerCase())) &&
+          t.date >= txFilters.start &&
+          t.date <= txFilters.end;
 
         if (!matches) {
-            // commented out to avoid performance issues
+          // commented out to avoid performance issues
         }
 
         return matches;
-    }).sort((a, b) => b.date.localeCompare(a.date));
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
     const totalRevenue = filtered.reduce((acc, curr) => acc + curr.amount, 0);
-    const selectedIncomesSum = filtered.filter(t => selectedIncomes.includes(t.id)).reduce((acc, curr) => acc + curr.amount, 0);
-    const selectedIncomesNetSum = filtered.filter(t => selectedIncomes.includes(t.id)).reduce((acc, curr) => acc + (curr.amount - getEffectiveFee(curr)), 0);
-    const totalNF = filtered.filter(t => t.invoiceEmitted).reduce((acc, curr) => acc + curr.amount, 0);
-    const errorCount = filtered.filter(t => t.reconciliationStatus === 'error').length;
+    const selectedIncomesSum = filtered
+      .filter((t) => selectedIncomes.includes(t.id))
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const totalNF = filtered
+      .filter((t) => t.invoiceEmitted)
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const errorCount = filtered.filter(
+      (t) => t.reconciliationStatus === "error",
+    ).length;
     return (
-        <div className="flex flex-col gap-4 animate-in fade-in h-full">
-            {isMyProfile && (
-                <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setTransactionsViewMode('realizado')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'realizado' ? 'bg-blue-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
-                        >
-                            Lançamentos Realizados
-                        </button>
-                        <button
-                            onClick={() => setTransactionsViewMode('orcamento')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === 'orcamento' ? 'bg-purple-600 text-text shadow-lg' : 'text-slate-400 hover:text-text hover:bg-panel'}`}
-                        >
-                            Planejamento Orçamentário (Próximo Mês)
-                        </button>
-                    </div>
-                    {transactionsViewMode === 'orcamento' && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Mês de Referência:</span>
-                            <input
-                                type="month"
-                                value={budgetMonth}
-                                onChange={(e) => setBudgetMonth(e.target.value)}
-                                className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text font-bold outline-none focus:border-purple-500"
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {isMyProfile && transactionsViewMode === 'orcamento' ? (
-                renderBudgetPlanner()
-            ) : (
-                <div className="flex flex-col gap-4 flex-1">
-            <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                            <Filter className="text-blue-400 w-3 h-3" /> Filtros
-                        </h3>
-                        <div className="flex gap-2">
-                            <button onClick={() => setIsIncomeFiltersOpen(value => !value)} className="text-[9px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10">
-                                {isIncomeFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
-                            </button>
-                            <button onClick={() => handleExport(filtered)} className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1">
-                            <Download className="w-3 h-3" /> Exportar
-                        </button>
-                        <button onClick={() => setTxFilters(initialTxFilters)} className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel">
-                            Limpar Filtros
-                        </button>
-                    </div>
-                </div>
-
-                {isIncomeFiltersOpen && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
-                        <DateRangePicker
-                            value={{ start: txFilters.start, end: txFilters.end }}
-                            onChange={(range) => setTxFilters({...txFilters, start: range.start, end: range.end})}
-                            periodSelector
-                            className="h-7"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Categoria</label>
-                        <SelectMenu value={txFilters.category} onChange={value => setTxFilters({...txFilters, category: value, procedure: 'all'})} options={[{ value: 'all', label: 'Todas' }, ...incomeCategories.map(c => ({ value: c.name, label: c.name }))]} searchPlaceholder="Buscar categoria..." />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Procedimento</label>
-                        <SelectMenu value={txFilters.procedure} onChange={value => setTxFilters({...txFilters, procedure: value})} options={[{ value: 'all', label: 'Todos' }, ...(txFilters.category !== 'all' ? (incomeCategories.find(c => c.name === txFilters.category)?.subcategories || []).map(s => ({ value: s.name, label: s.name })) : Array.from(new Set(incomeCategories.flatMap(c => c.subcategories.map(s => s.name)))).sort().map(name => ({ value: name, label: name })))]} searchPlaceholder="Buscar procedimento..." />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Profissional</label>
-                        <SelectMenu value={txFilters.professional} onChange={value => setTxFilters({...txFilters, professional: value})} options={[{ value: 'all', label: 'Todos' }, ...professionals.map(p => ({ value: p.name, label: p.name }))]} searchPlaceholder="Buscar profissional..." />
-                    </div>
-
-                                        <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Forma Pagto</label>
-                        <MultiSelectMenu
-                            values={txFilters.paymentMethods}
-                            onChange={paymentMethods => setTxFilters({...txFilters, paymentMethods})}
-                            options={paymentMethods.map(pm => ({ value: pm.name, label: pm.name }))}
-                            placeholder="Todas"
-                            searchPlaceholder="Buscar forma..."
-                        />
-                    </div>
-<div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Recebimento</label>
-                        <SelectMenu value={txFilters.status} onChange={value => setTxFilters({...txFilters, status: value})} options={[{ value: 'all', label: 'Todos' }, { value: 'Paid', label: 'Recebido' }, { value: 'Pending', label: 'Pendente' }]} />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Auditoria</label>
-                        <SelectMenu value={txFilters.auditStatus} onChange={value => setTxFilters({...txFilters, auditStatus: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'verified', label: 'Verificado' }, { value: 'error', label: 'Divergência' }, { value: 'pending', label: 'Pendente' }]} />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Nota Fiscal</label>
-                        <SelectMenu value={txFilters.hasNF} onChange={value => setTxFilters({...txFilters, hasNF: value})} options={[{ value: 'all', label: 'Todas' }, { value: 'true', label: 'Emitida' }, { value: 'false', label: 'Não Emitida' }]} />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Tipo</label>
-                        <SelectMenu value={txFilters.isPartial} onChange={value => setTxFilters({...txFilters, isPartial: value})} options={[{ value: 'all', label: 'Todos' }, { value: 'false', label: 'Integral' }, { value: 'true', label: 'Parcial' }]} />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Paciente</label>
-                        <input type="text" placeholder="Buscar..." value={txFilters.search} onChange={e => setTxFilters({...txFilters, search: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none focus:border-blue-500 transition-colors placeholder-slate-600" />
-                    </div>
-                </div>}
-
-                <div className="flex gap-4 justify-end border-t border-border pt-2 mt-0.5">
-                    {selectedIncomes.length > 0 && (
-                        <div className="flex gap-4 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 mr-auto animate-in fade-in slide-in-from-left-2 duration-200">
-                            <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedIncomes.length})</span>
-                            <div className="flex gap-3">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">Bruto</span>
-                                    <span className="text-[10px] text-emerald-300 font-bold">R$ {selectedIncomesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="flex flex-col items-end border-l border-border pl-3">
-                                    <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0">Líquido</span>
-                                    <span className="text-[10px] text-blue-300 font-bold">R$ {selectedIncomesNetSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-
-                            <div className="relative border-l border-border pl-3 flex items-center">
-                                <button
-                                    onClick={() => {
-                                        setIsBulkChangeCatOpen(false);
-                                        setIsBulkDeleteConfirmOpen(false);
-                                        setActiveBulkActionTab(activeBulkActionTab === 'income' ? null : 'income');
-                                    }}
-                                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
-                                >
-                                    Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
-                                </button>
-
-                                {activeBulkActionTab === 'income' && (
-                                    <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                                        {!isBulkDeleteConfirmOpen && !isBulkChangeCatOpen && (
-                                            <>
-                                                <button
-                                                    onClick={() => setIsBulkChangeCatOpen(true)}
-                                                    className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
-                                                >
-                                                    <Edit className="w-3 h-3 text-indigo-400" /> Alterar Categoria
-                                                </button>
-                                                <button
-                                                    onClick={() => setIsBulkDeleteConfirmOpen(true)}
-                                                    className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
-                                                >
-                                                    <Trash2 className="w-3 h-3 text-red-400" /> Excluir Selecionados
-                                                </button>
-                                            </>
-                                        )}
-
-                                        {isBulkDeleteConfirmOpen && (
-                                            <div className="p-2 flex flex-col gap-1.5">
-                                                <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        onClick={bulkDeleteIncomes}
-                                                        className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
-                                                    >
-                                                        Sim
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setIsBulkDeleteConfirmOpen(false)}
-                                                        className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
-                                                    >
-                                                        Não
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {isBulkChangeCatOpen && (
-                                            <div className="p-2 flex flex-col gap-1.5">
-                                                <span className="text-[8px] font-extrabold text-text uppercase mb-1">Selecionar Categoria:</span>
-                                                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar">
-                                                    {incomeCategories.map(cat => (
-                                                        <button
-                                                            key={cat.id}
-                                                            onClick={() => bulkChangeCategoryIncomes(cat.name)}
-                                                            className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
-                                                        >
-                                                            {cat.name}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <button
-                                                    onClick={() => setIsBulkChangeCatOpen(false)}
-                                                    className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
-                                                >
-                                                    Voltar
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">Meta Diária</span>
-                        <span className="text-[10px] text-amber-400 font-bold">R$ {dailyMetaRequired.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">Receita</span>
-                        <span className="text-[10px] text-emerald-400 font-bold">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">Total NF</span>
-                        <span className="text-[10px] text-blue-400 font-bold">R$ {totalNF.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                </div>
+      <div className="flex flex-col gap-4 animate-in fade-in h-full">
+        {isMyProfile && (
+          <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTransactionsViewMode("realizado")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === "realizado" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+              >
+                Lançamentos Realizados
+              </button>
+              <button
+                onClick={() => setTransactionsViewMode("orcamento")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === "orcamento" ? "bg-purple-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+              >
+                Planejamento Orçamentário (Próximo Mês)
+              </button>
             </div>
-            {errorCount > 0 && (<div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1"><AlertTriangle className="text-red-500 w-3 h-3" /><span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Atenção: {errorCount} lançamentos com erro na auditoria.</span></div>)}
-            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelectedIncomes(filtered.map(tx => tx.id)); else setSelectedIncomes([]); }} checked={filtered.length > 0 && selectedIncomes.length === filtered.length} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Paciente</th><th className="p-4">Categoria</th><th className="p-4">Profissional</th><th className="p-4">Time de Venda</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th>{showFees && <th className="p-4 text-right">Taxa</th>}{showFees && <th className="p-4 text-right">Líquido</th>}<th className="p-4 text-center">Auditoria</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => { const isSelected = selectedIncomes.includes(tx.id); return (<tr key={tx.id} className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500/20' : tx.reconciliationStatus === 'error' ? 'bg-red-500/20' : ''} ${isSelected ? 'bg-blue-500/10' : ''}`}><td className="p-4 text-center"><input type="checkbox" checked={isSelected} onChange={e => { if (e.target.checked) setSelectedIncomes(prev => [...prev, tx.id]); else setSelectedIncomes(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer" /></td><td className="p-4 font-mono">{tx.date.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.isPartial && <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">Parcial</span>}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4 text-slate-400">{tx.professional || 'Clínica'}</td><td className="p-4 text-slate-400">{tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find(t => t.name === tx.salesTeam)?.color || '#8b5cf6' }}></div><span>{tx.salesTeam}</span></div> : '-'}</td><td className="p-4">{tx.paymentMethod} {tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ''}</td><td className="p-4 text-right font-bold text-emerald-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>{showFees && (<td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={getEffectiveFee(tx).toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td>)}{showFees && (<td className="p-4 text-right font-bold text-blue-400">R$ {(tx.amount - getEffectiveFee(tx)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>)}<td className="p-4"><div className="flex justify-center gap-1.5"><button onClick={() => toggleNF(tx)} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.invoiceEmitted ? 'bg-blue-600 border-blue-500 text-text' : 'bg-panel border-border text-slate-600'}`} title="NF Emitida"><FileText className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'verified')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'verified' ? 'bg-emerald-500 border-emerald-400 text-black' : 'bg-panel border-border text-slate-600'}`} title="Verificado"><CheckCircle className="w-3.5 h-3.5" /></button><button onClick={() => toggleAuditStatus(tx, 'error')} className={`size-7 rounded-lg flex items-center justify-center border transition-all ${tx.reconciliationStatus === 'error' ? 'bg-red-500 border-red-400 text-text' : 'bg-panel border-border text-slate-600'}`} title="Erro / Divergência"><AlertTriangle className="w-3.5 h-3.5" /></button></div></td><td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('income', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>)})}</tbody></table></div></div>
-                </div>
+            {transactionsViewMode === "orcamento" && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">
+                  Mês de Referência:
+                </span>
+                <input
+                  type="month"
+                  value={budgetMonth}
+                  onChange={(e) => setBudgetMonth(e.target.value)}
+                  className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                />
+              </div>
             )}
-        </div>
+          </div>
+        )}
+
+        {isMyProfile && transactionsViewMode === "orcamento" ? (
+          renderBudgetPlanner()
+        ) : (
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
+                  <Filter className="text-blue-400 w-3 h-3" /> Filtros
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsIncomeFiltersOpen((value) => !value)}
+                    className="text-[9px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10"
+                  >
+                    {isIncomeFiltersOpen
+                      ? "Ocultar filtros"
+                      : "Mostrar filtros"}
+                  </button>
+                  <button
+                    onClick={() => handleExport(filtered)}
+                    className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> Exportar
+                  </button>
+                  <button
+                    onClick={() => setTxFilters(initialTxFilters)}
+                    className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel"
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+              </div>
+
+              {isIncomeFiltersOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Período
+                    </label>
+                    <DateRangePicker
+                      value={{ start: txFilters.start, end: txFilters.end }}
+                      onChange={(range) =>
+                        setTxFilters({
+                          ...txFilters,
+                          start: range.start,
+                          end: range.end,
+                        })
+                      }
+                      periodSelector
+                      className="h-7"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Categoria
+                    </label>
+                    <SelectMenu
+                      value={txFilters.category}
+                      onChange={(value) =>
+                        setTxFilters({
+                          ...txFilters,
+                          category: value,
+                          procedure: "all",
+                        })
+                      }
+                      options={[
+                        { value: "all", label: "Todas" },
+                        ...incomeCategories.map((c) => ({
+                          value: c.name,
+                          label: c.name,
+                        })),
+                      ]}
+                      searchPlaceholder="Buscar categoria..."
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Procedimento
+                    </label>
+                    <SelectMenu
+                      value={txFilters.procedure}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, procedure: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todos" },
+                        ...(txFilters.category !== "all"
+                          ? (
+                              incomeCategories.find(
+                                (c) => c.name === txFilters.category,
+                              )?.subcategories || []
+                            ).map((s) => ({ value: s.name, label: s.name }))
+                          : Array.from(
+                              new Set(
+                                incomeCategories.flatMap((c) =>
+                                  c.subcategories.map((s) => s.name),
+                                ),
+                              ),
+                            )
+                              .sort()
+                              .map((name) => ({ value: name, label: name }))),
+                      ]}
+                      searchPlaceholder="Buscar procedimento..."
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Profissional
+                    </label>
+                    <SelectMenu
+                      value={txFilters.professional}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, professional: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todos" },
+                        ...professionals.map((p) => ({
+                          value: p.name,
+                          label: p.name,
+                        })),
+                      ]}
+                      searchPlaceholder="Buscar profissional..."
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Forma Pagto
+                    </label>
+                    <MultiSelectMenu
+                      values={txFilters.paymentMethods}
+                      onChange={(paymentMethods) =>
+                        setTxFilters({ ...txFilters, paymentMethods })
+                      }
+                      options={paymentMethods.map((pm) => ({
+                        value: pm.name,
+                        label: pm.name,
+                      }))}
+                      placeholder="Todas"
+                      searchPlaceholder="Buscar forma..."
+                    />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Recebimento
+                    </label>
+                    <SelectMenu
+                      value={txFilters.status}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, status: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todos" },
+                        { value: "Paid", label: "Recebido" },
+                        { value: "Pending", label: "Pendente" },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Auditoria
+                    </label>
+                    <SelectMenu
+                      value={txFilters.auditStatus}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, auditStatus: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todas" },
+                        { value: "verified", label: "Verificado" },
+                        { value: "error", label: "Divergência" },
+                        { value: "pending", label: "Pendente" },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Nota Fiscal
+                    </label>
+                    <SelectMenu
+                      value={txFilters.hasNF}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, hasNF: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todas" },
+                        { value: "true", label: "Emitida" },
+                        { value: "false", label: "Não Emitida" },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Tipo
+                    </label>
+                    <SelectMenu
+                      value={txFilters.isPartial}
+                      onChange={(value) =>
+                        setTxFilters({ ...txFilters, isPartial: value })
+                      }
+                      options={[
+                        { value: "all", label: "Todos" },
+                        { value: "false", label: "Integral" },
+                        { value: "true", label: "Parcial" },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                      Paciente
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Buscar..."
+                      value={txFilters.search}
+                      onChange={(e) =>
+                        setTxFilters({ ...txFilters, search: e.target.value })
+                      }
+                      className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none focus:border-blue-500 transition-colors placeholder-slate-600"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 justify-end border-t border-border pt-2 mt-0.5">
+                {selectedIncomes.length > 0 && (
+                  <div className="flex gap-4 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 mr-auto animate-in fade-in slide-in-from-left-2 duration-200">
+                    <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest">
+                      Selecionados ({selectedIncomes.length})
+                    </span>
+                    <div className="flex gap-3">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">
+                          Bruto
+                        </span>
+                        <span className="text-[10px] text-emerald-300 font-bold">
+                          R${" "}
+                          {selectedIncomesSum.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="relative border-l border-border pl-3 flex items-center">
+                      <button
+                        onClick={() => {
+                          setIsBulkChangeCatOpen(false);
+                          setIsBulkDeleteConfirmOpen(false);
+                          setActiveBulkActionTab(
+                            activeBulkActionTab === "income" ? null : "income",
+                          );
+                        }}
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+                      >
+                        Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
+                      </button>
+
+                      {activeBulkActionTab === "income" && (
+                        <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                          {!isBulkDeleteConfirmOpen && !isBulkChangeCatOpen && (
+                            <>
+                              <button
+                                onClick={() => setIsBulkChangeCatOpen(true)}
+                                className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
+                              >
+                                <Edit className="w-3 h-3 text-indigo-400" />{" "}
+                                Alterar Categoria
+                              </button>
+                              <button
+                                onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                                className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
+                              >
+                                <Trash2 className="w-3 h-3 text-red-400" />{" "}
+                                Excluir Selecionados
+                              </button>
+                            </>
+                          )}
+
+                          {isBulkDeleteConfirmOpen && (
+                            <div className="p-2 flex flex-col gap-1.5">
+                              <span className="text-[8px] font-extrabold text-text uppercase text-center">
+                                Confirmar exclusão?
+                              </span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={bulkDeleteIncomes}
+                                  className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
+                                >
+                                  Sim
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setIsBulkDeleteConfirmOpen(false)
+                                  }
+                                  className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {isBulkChangeCatOpen && (
+                            <div className="p-2 flex flex-col gap-1.5">
+                              <span className="text-[8px] font-extrabold text-text uppercase mb-1">
+                                Selecionar Categoria:
+                              </span>
+                              <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar">
+                                {incomeCategories.map((cat) => (
+                                  <button
+                                    key={cat.id}
+                                    onClick={() =>
+                                      bulkChangeCategoryIncomes(cat.name)
+                                    }
+                                    className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
+                                  >
+                                    {cat.name}
+                                  </button>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => setIsBulkChangeCatOpen(false)}
+                                className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
+                              >
+                                Voltar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-col items-end">
+                  <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">
+                    Meta Diária
+                  </span>
+                  <span className="text-[10px] text-amber-400 font-bold">
+                    R${" "}
+                    {dailyMetaRequired.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">
+                    Receita
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-bold">
+                    R${" "}
+                    {totalRevenue.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">
+                    Total NF
+                  </span>
+                  <span className="text-[10px] text-blue-400 font-bold">
+                    R${" "}
+                    {totalNF.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {errorCount > 0 && (
+              <div className="bg-red-500/20 border border-red-500/30 p-1.5 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-1">
+                <AlertTriangle className="text-red-500 w-3 h-3" />
+                <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">
+                  Atenção: {errorCount} lançamentos com erro na auditoria.
+                </span>
+              </div>
+            )}
+            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface">
+              <div className="overflow-auto flex-1 custom-scrollbar">
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10">
+                    <tr>
+                      <th className="p-4 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            if (e.target.checked)
+                              setSelectedIncomes(filtered.map((tx) => tx.id));
+                            else setSelectedIncomes([]);
+                          }}
+                          checked={
+                            filtered.length > 0 &&
+                            selectedIncomes.length === filtered.length
+                          }
+                          className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer"
+                        />
+                      </th>
+                      <th className="p-4">Data</th>
+                      <th className="p-4">Paciente</th>
+                      <th className="p-4">Categoria</th>
+                      <th className="p-4">Profissional</th>
+                      <th className="p-4">Time de Venda</th>
+                      <th className="p-4">Forma Pagto</th>
+                      <th className="p-4 text-right">Valor</th>
+                      <th className="p-4 text-center">Auditoria</th>
+                      <th className="p-4 text-right">AÇÕES</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs text-slate-300 divide-y divide-white/5">
+                    {filtered.map((tx) => {
+                      const isSelected = selectedIncomes.includes(tx.id);
+                      return (
+                        <tr
+                          key={tx.id}
+                          className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === "verified" ? "bg-emerald-500/20" : tx.reconciliationStatus === "error" ? "bg-red-500/20" : ""} ${isSelected ? "bg-blue-500/10" : ""}`}
+                        >
+                          <td className="p-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setSelectedIncomes((prev) => [
+                                    ...prev,
+                                    tx.id,
+                                  ]);
+                                else
+                                  setSelectedIncomes((prev) =>
+                                    prev.filter((id) => id !== tx.id),
+                                  );
+                              }}
+                              className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="p-4 font-mono">
+                            {tx.date.split("-").reverse().join("/")}
+                          </td>
+                          <td className="p-4 font-bold text-text">
+                            <div className="flex items-center gap-2">
+                              {tx.description}
+                              {tx.isPartial && (
+                                <span className="bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase border border-amber-500/20 px-1 rounded">
+                                  Parcial
+                                </span>
+                              )}
+                              {tx.externalId && (
+                                <RefreshCw className="w-3 h-3 text-blue-400" />
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-text">
+                                {tx.category}
+                              </span>
+                              {tx.procedure && (
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  {tx.procedure}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-slate-400">
+                            {tx.professional || "Clínica"}
+                          </td>
+                          <td className="p-4 text-slate-400">
+                            {tx.salesTeam ? (
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{
+                                    backgroundColor:
+                                      salesTeams.find(
+                                        (t) => t.name === tx.salesTeam,
+                                      )?.color || "#8b5cf6",
+                                  }}
+                                ></div>
+                                <span>{tx.salesTeam}</span>
+                              </div>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {tx.paymentMethod}{" "}
+                            {tx.installments && tx.installments > 1
+                              ? `(${tx.installments}x)`
+                              : ""}
+                          </td>
+                          <td className="p-4 text-right font-bold text-emerald-400">
+                            R${" "}
+                            {tx.amount.toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="p-4">
+                            <div className="relative flex justify-center">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setActiveAuditMenuId((current) =>
+                                    current === tx.id ? null : tx.id,
+                                  )
+                                }
+                                aria-label="Abrir ações de auditoria"
+                                aria-expanded={activeAuditMenuId === tx.id}
+                                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2 text-[10px] font-bold transition-all ${tx.reconciliationStatus === "verified" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : tx.reconciliationStatus === "error" ? "border-red-500/30 bg-red-500/15 text-red-400" : "border-border bg-panel text-slate-400 hover:text-text"}`}
+                              >
+                                {tx.reconciliationStatus === "verified" ? (
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                ) : tx.reconciliationStatus === "error" ? (
+                                  <AlertTriangle className="w-3.5 h-3.5" />
+                                ) : (
+                                  <FileText className="w-3.5 h-3.5" />
+                                )}
+                                Auditoria
+                                <ChevronDown className="w-3 h-3" />
+                              </button>
+                              {activeAuditMenuId === tx.id && (
+                                <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-2xl">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void toggleNF(tx);
+                                      setActiveAuditMenuId(null);
+                                    }}
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-text"
+                                  >
+                                    <FileText className="h-3.5 w-3.5 text-blue-400" />
+                                    {tx.invoiceEmitted
+                                      ? "Remover NF emitida"
+                                      : "Marcar NF emitida"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void toggleAuditStatus(tx, "verified");
+                                      setActiveAuditMenuId(null);
+                                    }}
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
+                                  >
+                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
+                                    Marcar como verificado
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void toggleAuditStatus(tx, "error");
+                                      setActiveAuditMenuId(null);
+                                    }}
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-red-400"
+                                  >
+                                    <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                                    Marcar divergência
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => openObsModal(tx)}
+                                className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
+                                title="Ver/Escrever Nota"
+                              >
+                                <StickyNote className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => openModal("income", tx)}
+                                className="text-slate-500 hover:text-text p-1.5"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
   const renderExpensesTable = () => {
-    const filtered = transactions.filter(t => {
-        if (t.type !== 'expense') return false;
+    const filtered = transactions
+      .filter((t) => {
+        if (t.type !== "expense") return false;
         if (!expFilters.statuses.includes(t.status)) return false;
-        if (expFilters.category !== 'all' && t.category !== expFilters.category) return false;
-        if (expFilters.search && !(t.description || '').toLowerCase().includes((expFilters.search || '').toLowerCase())) return false;
+        if (expFilters.category !== "all" && t.category !== expFilters.category)
+          return false;
+        if (
+          expFilters.search &&
+          !(t.description || "")
+            .toLowerCase()
+            .includes((expFilters.search || "").toLowerCase())
+        )
+          return false;
 
-        const effectiveDate = (t.status === 'Paid' && t.settlementDate) ? t.settlementDate : t.date;
-        return effectiveDate >= expFilters.start && effectiveDate <= expFilters.end;
-    }).sort((a, b) => {
-        const dateA = (a.status === 'Paid' && a.settlementDate) ? a.settlementDate : a.date;
-        const dateB = (b.status === 'Paid' && b.settlementDate) ? b.settlementDate : b.date;
+        const effectiveDate =
+          t.status === "Paid" && t.settlementDate ? t.settlementDate : t.date;
+        return (
+          effectiveDate >= expFilters.start && effectiveDate <= expFilters.end
+        );
+      })
+      .sort((a, b) => {
+        const dateA =
+          a.status === "Paid" && a.settlementDate ? a.settlementDate : a.date;
+        const dateB =
+          b.status === "Paid" && b.settlementDate ? b.settlementDate : b.date;
         return dateB.localeCompare(dateA);
-    });
+      });
 
     const totalExpense = filtered.reduce((acc, curr) => acc + curr.amount, 0);
-    const totalPaid = filtered.filter(t => t.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
-    const totalPending = filtered.filter(t => t.status === 'Pending').reduce((acc, curr) => acc + curr.amount, 0);
-    const selectedExpensesSum = filtered.filter(t => selectedExpenses.includes(t.id)).reduce((acc, curr) => acc + curr.amount, 0);
+    const totalPaid = filtered
+      .filter((t) => t.status === "Paid")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const totalPending = filtered
+      .filter((t) => t.status === "Pending")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const selectedExpensesSum = filtered
+      .filter((t) => selectedExpenses.includes(t.id))
+      .reduce((acc, curr) => acc + curr.amount, 0);
 
     return (
-        <div className="flex flex-col gap-4 animate-in fade-in h-full">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <SpotlightCard className="glass-panel p-4 rounded-2xl flex flex-col gap-1" spotlightColor="rgba(255, 255, 255, 0.2)">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Despesas</span>
-                    <h3 className="text-2xl font-black text-text">R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                </SpotlightCard>
-                <SpotlightCard className="glass-panel p-4 rounded-2xl flex flex-col gap-1" spotlightColor="rgba(16, 185, 129, 0.4)">
-                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Total Pago</span>
-                    <h3 className="text-2xl font-black text-emerald-400">R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                </SpotlightCard>
-                <SpotlightCard className="glass-panel p-4 rounded-2xl flex flex-col gap-1" spotlightColor="rgba(239, 68, 68, 0.4)">
-                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Total Pendente</span>
-                    <h3 className="text-2xl font-black text-red-400">R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                </SpotlightCard>
-            </div>
-            <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                        <Filter className="text-red-400 w-3 h-3" /> Filtros Despesas
-                    </h3>
-                    <button onClick={() => setExpFilters({start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0], category: 'all', search: '', statuses: ['Paid', 'Pending']})} className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel">
-                        Limpar Filtros
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
-                    <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
-                        <DateRangePicker
-                            value={{ start: expFilters.start, end: expFilters.end }}
-                            onChange={(range) => setExpFilters({...expFilters, start: range.start, end: range.end})}
-                            className="h-7"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Status</label>
-                        <div className="flex bg-surface rounded-lg border border-border p-0.5 h-[28px]">
-                            <button
-                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Paid') ? prev.statuses.filter(s => s !== 'Paid') : [...prev.statuses, 'Paid'] }))}
-                                className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes('Paid') ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
-                            >Pago</button>
-                            <button
-                                onClick={() => setExpFilters(prev => ({ ...prev, statuses: prev.statuses.includes('Pending') ? prev.statuses.filter(s => s !== 'Pending') : [...prev.statuses, 'Pending'] }))}
-                                className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes('Pending') ? 'bg-red-500/20 text-red-400' : 'text-slate-500 hover:text-slate-300'}`}
-                            >Pendente</button>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Categoria</label>
-                        <div className="relative h-[28px]">
-                            <select value={expFilters.category} onChange={e => setExpFilters({...expFilters, category: e.target.value})} className="w-full h-full bg-surface border border-border rounded-lg px-2.5 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text">
-                                <option value="all">Todas</option>
-                                {expenseCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-0.5">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Descrição</label>
-                        <input type="text" placeholder="Buscar..." value={expFilters.search} onChange={e => setExpFilters({...expFilters, search: e.target.value})} className="w-full h-[28px] bg-surface border border-border rounded-lg px-2.5 text-[10px] font-bold text-text outline-none focus:border-red-500 transition-colors placeholder-slate-600" />
-                    </div>
-                </div>
-            </div>
-            {selectedExpenses.length > 0 && (
-                <div className="flex gap-4 items-center bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 mr-auto animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
-                    <span className="text-[9px] text-red-400 font-extrabold uppercase tracking-widest">Selecionados ({selectedExpenses.length})</span>
-                    <div className="flex gap-3">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">Total</span>
-                            <span className="text-[10px] text-red-300 font-bold">R$ {selectedExpensesSum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                    </div>
-
-                    <div className="relative border-l border-border pl-3 flex items-center">
-                        <button
-                            onClick={() => {
-                                setIsBulkChangeCatExpensesOpen(false);
-                                setIsBulkDeleteExpensesConfirmOpen(false);
-                                setActiveBulkActionTab(activeBulkActionTab === 'expense' ? null : 'expense');
-                            }}
-                            className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
-                        >
-                            Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
-                        </button>
-
-                        {activeBulkActionTab === 'expense' && (
-                            <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                                {!isBulkDeleteExpensesConfirmOpen && !isBulkChangeCatExpensesOpen && (
-                                    <>
-                                        <button
-                                            onClick={() => setIsBulkChangeCatExpensesOpen(true)}
-                                            className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
-                                        >
-                                            <Edit className="w-3 h-3 text-indigo-400" /> Alterar Categoria
-                                        </button>
-                                        <button
-                                            onClick={() => setIsBulkDeleteExpensesConfirmOpen(true)}
-                                            className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
-                                        >
-                                            <Trash2 className="w-3 h-3 text-red-400" /> Excluir Selecionados
-                                        </button>
-                                    </>
-                                )}
-
-                                {isBulkDeleteExpensesConfirmOpen && (
-                                    <div className="p-2 flex flex-col gap-1.5">
-                                        <span className="text-[8px] font-extrabold text-text uppercase text-center">Confirmar exclusão?</span>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={bulkDeleteExpenses}
-                                                className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
-                                            >
-                                                Sim
-                                            </button>
-                                            <button
-                                                onClick={() => setIsBulkDeleteExpensesConfirmOpen(false)}
-                                                className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
-                                            >
-                                                Não
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {isBulkChangeCatExpensesOpen && (
-                                    <div className="p-2 flex flex-col gap-1.5">
-                                        <span className="text-[8px] font-extrabold text-text uppercase mb-1">Selecionar Categoria:</span>
-                                        <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar">
-                                            {expenseCategories.map(cat => (
-                                                <button
-                                                    key={cat.id}
-                                                    onClick={() => bulkChangeCategoryExpenses(cat.name)}
-                                                    className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
-                                                >
-                                                    {cat.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <button
-                                            onClick={() => setIsBulkChangeCatExpensesOpen(false)}
-                                            className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
-                                        >
-                                            Voltar
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-            <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface"><div className="overflow-auto flex-1 custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 w-10 text-center"><input type="checkbox" onChange={(e) => { const pendingTxs = filtered.filter(tx => tx.status === 'Pending').map(tx => tx.id); if (e.target.checked) setSelectedExpenses(pendingTxs); else setSelectedExpenses([]); }} checked={selectedExpenses.length > 0 && selectedExpenses.length === filtered.filter(tx => tx.status === 'Pending').length} className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer" /></th><th className="p-4">Data</th><th className="p-4">Descrição</th><th className="p-4">Categoria</th><th className="p-4">Forma Pagto</th><th className="p-4 text-right">Valor</th><th className="p-4 text-center">Status</th><th className="p-4 text-right">AÇÕES</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5">{filtered.map(tx => {
-                const displayDate = (tx.status === 'Paid' && tx.settlementDate) ? tx.settlementDate : tx.date;
-                return (
-                <tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 text-center">{tx.status === 'Pending' && <input type="checkbox" checked={selectedExpenses.includes(tx.id)} onChange={e => { if (e.target.checked) setSelectedExpenses(prev => [...prev, tx.id]); else setSelectedExpenses(prev => prev.filter(id => id !== tx.id)); }} className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer" />}</td><td className="p-4 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4 font-bold text-text"><div className="flex items-center gap-2">{tx.description}{tx.externalId && <RefreshCw className="w-3 h-3 text-blue-400" />}</div></td><td className="p-4"><div className="flex flex-col"><span className="font-medium text-text">{tx.category}</span>{tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}</div></td><td className="p-4">{tx.paymentMethod}</td><td className="p-4 text-right font-bold text-red-400">R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-            <td className="p-4 text-center">
-                {payingTxId === tx.id ? (
-                    <div className="flex items-center justify-center gap-2 animate-in fade-in">
-                        <input type="date" value={tempPaymentDate} onChange={e => setTempPaymentDate(e.target.value)} className="bg-panel border border-border rounded px-2 py-1 text-[10px] text-text outline-none w-24" />
-                        <button onClick={() => confirmPayment(tx)} className="text-emerald-400 hover:text-emerald-300"><CheckCircle className="w-4 h-4" /></button>
-                        <button onClick={() => setPayingTxId(null)} className="text-red-400 hover:text-red-300"><X className="w-4 h-4" /></button>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center">
-                        <button onClick={() => { if (tx.status === 'Pending') { setPayingTxId(tx.id); setTempPaymentDate(today); } else { togglePaymentStatus(tx); } }} className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition-all ${tx.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'}`}>{tx.status === 'Paid' ? 'Pago' : 'A Pagar'}</button>
-                        {tx.status === 'Paid' && tx.settlementDate && (<span className="text-[9px] text-slate-500 mt-1 font-mono">{tx.settlementDate.split('-').reverse().join('/')}</span>)}
-                    </div>
-                )}
-            </td>
-            <td className="p-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openObsModal(tx)} className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? 'text-amber-400' : 'text-slate-600 hover:text-text'}`} title="Ver/Escrever Nota"><StickyNote className="w-3.5 h-3.5" /></button><button onClick={() => openModal('expense', tx)} className="text-slate-500 hover:text-text p-1.5"><Edit className="w-3.5 h-3.5" /></button></div></td></tr>
-            );})}</tbody></table></div></div>
+      <div className="flex flex-col gap-4 animate-in fade-in h-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <SpotlightCard
+            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            spotlightColor="rgba(255, 255, 255, 0.2)"
+          >
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              Total Despesas
+            </span>
+            <h3 className="text-2xl font-black text-text">
+              R${" "}
+              {totalExpense.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </h3>
+          </SpotlightCard>
+          <SpotlightCard
+            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            spotlightColor="rgba(16, 185, 129, 0.4)"
+          >
+            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+              Total Pago
+            </span>
+            <h3 className="text-2xl font-black text-emerald-400">
+              R${" "}
+              {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </h3>
+          </SpotlightCard>
+          <SpotlightCard
+            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            spotlightColor="rgba(239, 68, 68, 0.4)"
+          >
+            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+              Total Pendente
+            </span>
+            <h3 className="text-2xl font-black text-red-400">
+              R${" "}
+              {totalPending.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </h3>
+          </SpotlightCard>
         </div>
+        <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
+              <Filter className="text-red-400 w-3 h-3" /> Filtros Despesas
+            </h3>
+            <button
+              onClick={() =>
+                setExpFilters({
+                  start: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(),
+                    1,
+                  )
+                    .toISOString()
+                    .split("T")[0],
+                  end: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth() + 1,
+                    0,
+                  )
+                    .toISOString()
+                    .split("T")[0],
+                  category: "all",
+                  search: "",
+                  statuses: ["Paid", "Pending"],
+                })
+              }
+              className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel"
+            >
+              Limpar Filtros
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
+            <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
+              <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                Período
+              </label>
+              <DateRangePicker
+                value={{ start: expFilters.start, end: expFilters.end }}
+                onChange={(range) =>
+                  setExpFilters({
+                    ...expFilters,
+                    start: range.start,
+                    end: range.end,
+                  })
+                }
+                className="h-7"
+              />
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                Status
+              </label>
+              <div className="flex bg-surface rounded-lg border border-border p-0.5 h-[28px]">
+                <button
+                  onClick={() =>
+                    setExpFilters((prev) => ({
+                      ...prev,
+                      statuses: prev.statuses.includes("Paid")
+                        ? prev.statuses.filter((s) => s !== "Paid")
+                        : [...prev.statuses, "Paid"],
+                    }))
+                  }
+                  className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes("Paid") ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}
+                >
+                  Pago
+                </button>
+                <button
+                  onClick={() =>
+                    setExpFilters((prev) => ({
+                      ...prev,
+                      statuses: prev.statuses.includes("Pending")
+                        ? prev.statuses.filter((s) => s !== "Pending")
+                        : [...prev.statuses, "Pending"],
+                    }))
+                  }
+                  className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes("Pending") ? "bg-red-500/20 text-red-400" : "text-slate-500 hover:text-slate-300"}`}
+                >
+                  Pendente
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                Categoria
+              </label>
+              <div className="relative h-[28px]">
+                <select
+                  value={expFilters.category}
+                  onChange={(e) =>
+                    setExpFilters({ ...expFilters, category: e.target.value })
+                  }
+                  className="w-full h-full bg-surface border border-border rounded-lg px-2.5 text-[10px] font-bold text-text outline-none appearance-none cursor-pointer hover:bg-panel transition-colors [&>option]:bg-surface [&>option]:text-text"
+                >
+                  <option value="all">Todas</option>
+                  {expenseCategories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
+                Descrição
+              </label>
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={expFilters.search}
+                onChange={(e) =>
+                  setExpFilters({ ...expFilters, search: e.target.value })
+                }
+                className="w-full h-[28px] bg-surface border border-border rounded-lg px-2.5 text-[10px] font-bold text-text outline-none focus:border-red-500 transition-colors placeholder-slate-600"
+              />
+            </div>
+          </div>
+        </div>
+        {selectedExpenses.length > 0 && (
+          <div className="flex gap-4 items-center bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 mr-auto animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+            <span className="text-[9px] text-red-400 font-extrabold uppercase tracking-widest">
+              Selecionados ({selectedExpenses.length})
+            </span>
+            <div className="flex gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mb-0">
+                  Total
+                </span>
+                <span className="text-[10px] text-red-300 font-bold">
+                  R${" "}
+                  {selectedExpensesSum.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>
+
+            <div className="relative border-l border-border pl-3 flex items-center">
+              <button
+                onClick={() => {
+                  setIsBulkChangeCatExpensesOpen(false);
+                  setIsBulkDeleteExpensesConfirmOpen(false);
+                  setActiveBulkActionTab(
+                    activeBulkActionTab === "expense" ? null : "expense",
+                  );
+                }}
+                className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+              >
+                Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
+              </button>
+
+              {activeBulkActionTab === "expense" && (
+                <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                  {!isBulkDeleteExpensesConfirmOpen &&
+                    !isBulkChangeCatExpensesOpen && (
+                      <>
+                        <button
+                          onClick={() => setIsBulkChangeCatExpensesOpen(true)}
+                          className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
+                        >
+                          <Edit className="w-3 h-3 text-indigo-400" /> Alterar
+                          Categoria
+                        </button>
+                        <button
+                          onClick={() =>
+                            setIsBulkDeleteExpensesConfirmOpen(true)
+                          }
+                          className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-400" /> Excluir
+                          Selecionados
+                        </button>
+                      </>
+                    )}
+
+                  {isBulkDeleteExpensesConfirmOpen && (
+                    <div className="p-2 flex flex-col gap-1.5">
+                      <span className="text-[8px] font-extrabold text-text uppercase text-center">
+                        Confirmar exclusão?
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={bulkDeleteExpenses}
+                          className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
+                        >
+                          Sim
+                        </button>
+                        <button
+                          onClick={() =>
+                            setIsBulkDeleteExpensesConfirmOpen(false)
+                          }
+                          className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
+                        >
+                          Não
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isBulkChangeCatExpensesOpen && (
+                    <div className="p-2 flex flex-col gap-1.5">
+                      <span className="text-[8px] font-extrabold text-text uppercase mb-1">
+                        Selecionar Categoria:
+                      </span>
+                      <div className="flex flex-col gap-1 max-h-32 overflow-y-auto custom-scrollbar">
+                        {expenseCategories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => bulkChangeCategoryExpenses(cat.name)}
+                            className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setIsBulkChangeCatExpensesOpen(false)}
+                        className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
+                      >
+                        Voltar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="glass-panel rounded-2xl border border-border overflow-hidden flex flex-col flex-1 bg-surface">
+          <div className="overflow-auto flex-1 custom-scrollbar">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10">
+                <tr>
+                  <th className="p-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      onChange={(e) => {
+                        const pendingTxs = filtered
+                          .filter((tx) => tx.status === "Pending")
+                          .map((tx) => tx.id);
+                        if (e.target.checked) setSelectedExpenses(pendingTxs);
+                        else setSelectedExpenses([]);
+                      }}
+                      checked={
+                        selectedExpenses.length > 0 &&
+                        selectedExpenses.length ===
+                          filtered.filter((tx) => tx.status === "Pending")
+                            .length
+                      }
+                      className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-4">Data</th>
+                  <th className="p-4">Descrição</th>
+                  <th className="p-4">Categoria</th>
+                  <th className="p-4">Forma Pagto</th>
+                  <th className="p-4 text-right">Valor</th>
+                  <th className="p-4 text-center">Status</th>
+                  <th className="p-4 text-right">AÇÕES</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs text-slate-300 divide-y divide-white/5">
+                {filtered.map((tx) => {
+                  const displayDate =
+                    tx.status === "Paid" && tx.settlementDate
+                      ? tx.settlementDate
+                      : tx.date;
+                  return (
+                    <tr
+                      key={tx.id}
+                      className="hover:bg-panel transition-colors"
+                    >
+                      <td className="p-4 text-center">
+                        {tx.status === "Pending" && (
+                          <input
+                            type="checkbox"
+                            checked={selectedExpenses.includes(tx.id)}
+                            onChange={(e) => {
+                              if (e.target.checked)
+                                setSelectedExpenses((prev) => [...prev, tx.id]);
+                              else
+                                setSelectedExpenses((prev) =>
+                                  prev.filter((id) => id !== tx.id),
+                                );
+                            }}
+                            className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer"
+                          />
+                        )}
+                      </td>
+                      <td className="p-4 font-mono">
+                        {displayDate.split("-").reverse().join("/")}
+                      </td>
+                      <td className="p-4 font-bold text-text">
+                        <div className="flex items-center gap-2">
+                          {tx.description}
+                          {tx.externalId && (
+                            <RefreshCw className="w-3 h-3 text-blue-400" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-text">
+                            {tx.category}
+                          </span>
+                          {tx.procedure && (
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              {tx.procedure}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">{tx.paymentMethod}</td>
+                      <td className="p-4 text-right font-bold text-red-400">
+                        R${" "}
+                        {tx.amount.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="p-4 text-center">
+                        {payingTxId === tx.id ? (
+                          <div className="flex items-center justify-center gap-2 animate-in fade-in">
+                            <input
+                              type="date"
+                              value={tempPaymentDate}
+                              onChange={(e) =>
+                                setTempPaymentDate(e.target.value)
+                              }
+                              className="bg-panel border border-border rounded px-2 py-1 text-[10px] text-text outline-none w-24"
+                            />
+                            <button
+                              onClick={() => confirmPayment(tx)}
+                              className="text-emerald-400 hover:text-emerald-300"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setPayingTxId(null)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={() => {
+                                if (tx.status === "Pending") {
+                                  setPayingTxId(tx.id);
+                                  setTempPaymentDate(today);
+                                } else {
+                                  togglePaymentStatus(tx);
+                                }
+                              }}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition-all ${tx.status === "Paid" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
+                            >
+                              {tx.status === "Paid" ? "Pago" : "A Pagar"}
+                            </button>
+                            {tx.status === "Paid" && tx.settlementDate && (
+                              <span className="text-[9px] text-slate-500 mt-1 font-mono">
+                                {tx.settlementDate
+                                  .split("-")
+                                  .reverse()
+                                  .join("/")}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => openObsModal(tx)}
+                            className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
+                            title="Ver/Escrever Nota"
+                          >
+                            <StickyNote className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => openModal("expense", tx)}
+                            className="text-slate-500 hover:text-text p-1.5"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     );
   };
 
   const renderDRE = () => {
-    const [year, month] = selectedDreMonth.split('-');
+    const [year, month] = selectedDreMonth.split("-");
     const currentMonthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
 
     // Calculate 12-month data for chart
     const monthlyData = [];
     for (let i = 11; i >= 0; i--) {
-        const d = new Date(currentMonthDate);
-        d.setMonth(d.getMonth() - i);
-        const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const d = new Date(currentMonthDate);
+      d.setMonth(d.getMonth() - i);
+      const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
-        const monthTxs = transactions.filter(t => {
-            if (t.status !== 'Paid') return false;
-            const effectiveDate = t.settlementDate || t.date;
-            return effectiveDate?.startsWith(mKey);
-        });
+      const monthTxs = transactions.filter((t) => {
+        if (t.status !== "Paid") return false;
+        const effectiveDate = t.settlementDate || t.date;
+        return effectiveDate?.startsWith(mKey);
+      });
 
-        const income = monthTxs.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-        const expense = monthTxs.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const income = monthTxs
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0);
+      const expense = monthTxs
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0);
 
-        monthlyData.push({ month: d.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase(), income, expense });
+      monthlyData.push({
+        month: d.toLocaleDateString("pt-BR", { month: "short" }).toUpperCase(),
+        income,
+        expense,
+      });
     }
 
     const prevMonthDate = new Date(currentMonthDate);
     prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-    const prevYearMonth = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+    const prevYearMonth = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
     const getMonthData = (monthKey: string) => {
-        const monthTxs = transactions.filter(t => {
-            if (t.status !== 'Paid') return false;
-            const effectiveDate = t.settlementDate || t.date;
-            return effectiveDate?.startsWith(monthKey);
-        });
+      const monthTxs = transactions.filter((t) => {
+        if (t.status !== "Paid") return false;
+        const effectiveDate = t.settlementDate || t.date;
+        return effectiveDate?.startsWith(monthKey);
+      });
 
-        const incomeByCategory = incomeCategories.map(cat => ({
-            name: cat.name,
-            amount: monthTxs.filter(t => t.type === 'income' && t.category === cat.name).reduce((sum, t) => sum + t.amount, 0)
-        })).filter(c => c.amount > 0);
+      const incomeByCategory = incomeCategories
+        .map((cat) => ({
+          name: cat.name,
+          amount: monthTxs
+            .filter((t) => t.type === "income" && t.category === cat.name)
+            .reduce((sum, t) => sum + t.amount, 0),
+        }))
+        .filter((c) => c.amount > 0);
 
-        const expenseByCategory = expenseCategories.map(cat => ({
-            name: cat.name,
-            amount: monthTxs.filter(t => t.type === 'expense' && t.category === cat.name).reduce((sum, t) => sum + t.amount, 0)
-        })).filter(c => c.amount > 0);
+      const expenseByCategory = expenseCategories
+        .map((cat) => ({
+          name: cat.name,
+          amount: monthTxs
+            .filter((t) => t.type === "expense" && t.category === cat.name)
+            .reduce((sum, t) => sum + t.amount, 0),
+        }))
+        .filter((c) => c.amount > 0);
 
-        const totalRevenue = incomeByCategory.reduce((sum, c) => sum + c.amount, 0);
-        const totalExpense = expenseByCategory.reduce((sum, c) => sum + c.amount, 0);
-        const result = totalRevenue - totalExpense;
+      const totalRevenue = incomeByCategory.reduce(
+        (sum, c) => sum + c.amount,
+        0,
+      );
+      const totalExpense = expenseByCategory.reduce(
+        (sum, c) => sum + c.amount,
+        0,
+      );
+      const result = totalRevenue - totalExpense;
 
-        return { incomeByCategory, expenseByCategory, totalRevenue, totalExpense, result };
+      return {
+        incomeByCategory,
+        expenseByCategory,
+        totalRevenue,
+        totalExpense,
+        result,
+      };
     };
 
     const currentData = getMonthData(selectedDreMonth);
     const prevData = getMonthData(prevYearMonth);
 
     const getDiffDisplay = (current: number, prev: number) => {
-        if (prev === 0) return null;
-        const diff = current - prev;
-        const percent = (diff / prev) * 100;
-        return (
-            <span className={`text-[10px] uppercase font-bold flex items-center gap-1 ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                <TrendingUp className="w-3 h-3" />
-                {diff >= 0 ? '+' : ''}{percent.toFixed(1)}% vs mês anterior
-            </span>
-        );
+      if (prev === 0) return null;
+      const diff = current - prev;
+      const percent = (diff / prev) * 100;
+      return (
+        <span
+          className={`text-[10px] uppercase font-bold flex items-center gap-1 ${diff >= 0 ? "text-emerald-500" : "text-red-500"}`}
+        >
+          <TrendingUp className="w-3 h-3" />
+          {diff >= 0 ? "+" : ""}
+          {percent.toFixed(1)}% vs mês anterior
+        </span>
+      );
     };
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in h-full p-4 text-text relative overflow-hidden">
-            {/* Decorative background glows */}
-            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="flex flex-col gap-6 animate-in fade-in h-full p-4 text-text relative overflow-hidden">
+        {/* Decorative background glows */}
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-panel border border-primary text-primary flex items-center justify-center shadow-lg shadow-primary/10">
-                        <LineChart className="w-5 h-5 text-text" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-text uppercase tracking-tight">Demonstrativo de Resultados</h2>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">{currentMonthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 bg-panel p-1 rounded-xl border border-border">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">Mês:</label>
-                    <input type="month" value={selectedDreMonth} onChange={e => setSelectedDreMonth(e.target.value)} className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-panel border border-primary text-primary flex items-center justify-center shadow-lg shadow-primary/10">
+              <LineChart className="w-5 h-5 text-text" />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-                <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total Entradas</p>
-                    <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">R$ {currentData.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <div className="mt-2">{getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}</div>
-                </div>
-                <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">Total Saídas</p>
-                    <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">R$ {currentData.totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <div className="mt-2">{getDiffDisplay(currentData.totalExpense, prevData.totalExpense)}</div>
-                </div>
-                <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
-                    <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">Resultado Líquido</p>
-                    <p className={`text-3xl font-black tracking-tight group-hover:scale-105 transition-transform origin-left ${currentData.result >= 0 ? 'text-text' : 'text-rose-500'}`}>R$ {currentData.result.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <div className="mt-2">{getDiffDisplay(currentData.result, prevData.result)}</div>
-                </div>
-                <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition-all">
-                    <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">Projeção {new Date(new Date(currentMonthDate).setMonth(currentMonthDate.getMonth() + 1)).toLocaleDateString('pt-BR', { month: 'short' })}</p>
-                    <p className="text-3xl font-black tracking-tight text-text/90">R$ {((currentData.totalRevenue * 1.05) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                    <p className="text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1"><RefreshCw className="w-3 h-3 animate-spin-slow" /> Baseado em tendência (+5%)</p>
-                </div>
+            <div>
+              <h2 className="text-xl font-bold text-text uppercase tracking-tight">
+                Demonstrativo de Resultados
+              </h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+                {currentMonthDate.toLocaleDateString("pt-BR", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
             </div>
-
-            <div className="glass-panel p-6 rounded-2xl border border-border bg-surface h-[350px] shadow-2xl flex flex-col relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-blue-500" /> Fluxo de Caixa (12 Meses)
-                    </h3>
-                    <div className="flex gap-4">
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entradas</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div><span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Saídas</span></div>
-                    </div>
-                </div>
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" />
-                        <XAxis dataKey="month" fontSize={10} axisLine={false} tickLine={false} stroke="#64748b" dy={10} />
-                        <YAxis axisLine={false} tickLine={false} fontSize={10} stroke="#64748b" />
-                        <RechartsTooltip
-                            cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)' }}
-                            itemStyle={{ color: '#fff', fontSize: '12px' }}
-                        />
-                        <Bar dataKey="income" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
-                        <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={24} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pb-4">
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
-                        <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
-                            <Plus className="w-4 h-4 text-emerald-500" /> Receitas Detalhadas
-                        </h3>
-                        <div className="flex flex-col gap-5">
-                            {currentData.incomeByCategory.map(cat => (
-                                <div key={cat.name} className="flex flex-col gap-1.5">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">{cat.name}</span>
-                                        <span className="text-emerald-400 font-black text-sm">R$ {cat.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(cat.amount / currentData.totalRevenue) * 100}%` }}
-                                            className="h-full bg-emerald-500"
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                            {currentData.incomeByCategory.length === 0 && <p className="text-slate-500 text-xs italic">Nenhuma receita registrada.</p>}
-                        </div>
-                    </div>
-
-                    <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
-                        <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
-                            <Minus className="w-4 h-4 text-rose-500" /> Despesas Detalhadas
-                        </h3>
-                        <div className="flex flex-col gap-5">
-                            {currentData.expenseByCategory.map(cat => (
-                                <div key={cat.name} className="flex flex-col gap-1.5">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">{cat.name}</span>
-                                        <span className="text-rose-400 font-black text-sm">R$ {cat.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                    </div>
-                                    <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${(cat.amount / currentData.totalExpense) * 100}%` }}
-                                            className="h-full bg-rose-500"
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                            {currentData.expenseByCategory.length === 0 && <p className="text-slate-500 text-xs italic">Nenhuma despesa registrada.</p>}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <ShieldCheck className="w-24 h-24 text-text" />
-                    </div>
-
-                    <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
-                        <TrendingUp className="w-4 h-4 text-indigo-400" /> Saúde Financeira
-                    </h3>
-
-                    <div className="flex flex-col gap-8 relative z-10">
-                        <div>
-                            <div className="flex justify-between items-end mb-2">
-                                <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">Margem de Lucro</p>
-                                <p className="text-2xl font-black text-text">{(currentData.totalRevenue > 0 ? (currentData.result / currentData.totalRevenue * 100).toFixed(1) : 0)}%</p>
-                            </div>
-                            <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.result / currentData.totalRevenue * 100) : 0))}%` }}
-                                    className={`h-full rounded-full ${currentData.result > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-end mb-2">
-                                <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">Comprometimento de Receita</p>
-                                <p className="text-2xl font-black text-text">{(currentData.totalRevenue > 0 ? (currentData.totalExpense / currentData.totalRevenue * 100).toFixed(1) : 0)}%</p>
-                            </div>
-                            <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.totalExpense / currentData.totalRevenue * 100) : 0))}%` }}
-                                    className="h-full bg-primary rounded-full"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="bg-indigo-600/10 p-5 rounded-2xl border border-indigo-500/20 shadow-inner group hover:bg-indigo-600/15 transition-colors">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-                                </div>
-                                <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">Recomendação Estratégica</p>
-                            </div>
-                            <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                                {currentData.result > 0
-                                    ? "Sua clínica apresenta uma taxa de lucro saudável. Este é o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente."
-                                    : "Atenção crítica: A operação está consumindo mais do que gera. É recomendável uma auditoria imediata nas despesas operacionais e revisão da tabela de procedimentos."}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-panel p-1 rounded-xl border border-border">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2">
+              Mês:
+            </label>
+            <input
+              type="month"
+              value={selectedDreMonth}
+              onChange={(e) => setSelectedDreMonth(e.target.value)}
+              className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+            />
+          </div>
         </div>
-    );
 
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+            <p className="text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+              Total Entradas
+            </p>
+            <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
+              R${" "}
+              {currentData.totalRevenue.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+            <div className="mt-2">
+              {getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}
+            </div>
+          </div>
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+            <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+              Total Saídas
+            </p>
+            <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
+              R${" "}
+              {currentData.totalExpense.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+            <div className="mt-2">
+              {getDiffDisplay(currentData.totalExpense, prevData.totalExpense)}
+            </div>
+          </div>
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+            <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+              Resultado Líquido
+            </p>
+            <p
+              className={`text-3xl font-black tracking-tight group-hover:scale-105 transition-transform origin-left ${currentData.result >= 0 ? "text-text" : "text-rose-500"}`}
+            >
+              R${" "}
+              {currentData.result.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+            <div className="mt-2">
+              {getDiffDisplay(currentData.result, prevData.result)}
+            </div>
+          </div>
+          <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition-all">
+            <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">
+              Projeção{" "}
+              {new Date(
+                new Date(currentMonthDate).setMonth(
+                  currentMonthDate.getMonth() + 1,
+                ),
+              ).toLocaleDateString("pt-BR", { month: "short" })}
+            </p>
+            <p className="text-3xl font-black tracking-tight text-text/90">
+              R${" "}
+              {(currentData.totalRevenue * 1.05 || 0).toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1">
+              <RefreshCw className="w-3 h-3 animate-spin-slow" /> Baseado em
+              tendência (+5%)
+            </p>
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 rounded-2xl border border-border bg-surface h-[350px] shadow-2xl flex flex-col relative z-10">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-500" /> Fluxo de Caixa
+              (12 Meses)
+            </h3>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  Entradas
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  Saídas
+                </span>
+              </div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={monthlyData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" />
+              <XAxis
+                dataKey="month"
+                fontSize={10}
+                axisLine={false}
+                tickLine={false}
+                stroke="#64748b"
+                dy={10}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                fontSize={10}
+                stroke="#64748b"
+              />
+              <RechartsTooltip
+                cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                contentStyle={{
+                  backgroundColor: "#1e293b",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
+                }}
+                itemStyle={{ color: "#fff", fontSize: "12px" }}
+              />
+              <Bar
+                dataKey="income"
+                fill="#3b82f6"
+                radius={[4, 4, 0, 0]}
+                barSize={24}
+              />
+              <Bar
+                dataKey="expense"
+                fill="#f43f5e"
+                radius={[4, 4, 0, 0]}
+                barSize={24}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pb-4">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
+              <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-emerald-500" /> Receitas
+                Detalhadas
+              </h3>
+              <div className="flex flex-col gap-5">
+                {currentData.incomeByCategory.map((cat) => (
+                  <div key={cat.name} className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">
+                        {cat.name}
+                      </span>
+                      <span className="text-emerald-400 font-black text-sm">
+                        R${" "}
+                        {cat.amount.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${(cat.amount / currentData.totalRevenue) * 100}%`,
+                        }}
+                        className="h-full bg-emerald-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {currentData.incomeByCategory.length === 0 && (
+                  <p className="text-slate-500 text-xs italic">
+                    Nenhuma receita registrada.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
+              <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+                <Minus className="w-4 h-4 text-rose-500" /> Despesas Detalhadas
+              </h3>
+              <div className="flex flex-col gap-5">
+                {currentData.expenseByCategory.map((cat) => (
+                  <div key={cat.name} className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-tight">
+                        {cat.name}
+                      </span>
+                      <span className="text-rose-400 font-black text-sm">
+                        R${" "}
+                        {cat.amount.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="w-full bg-panel h-1 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${(cat.amount / currentData.totalExpense) * 100}%`,
+                        }}
+                        className="h-full bg-rose-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {currentData.expenseByCategory.length === 0 && (
+                  <p className="text-slate-500 text-xs italic">
+                    Nenhuma despesa registrada.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-8 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <ShieldCheck className="w-24 h-24 text-text" />
+            </div>
+
+            <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
+              <TrendingUp className="w-4 h-4 text-indigo-400" /> Saúde
+              Financeira
+            </h3>
+
+            <div className="flex flex-col gap-8 relative z-10">
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
+                    Margem de Lucro
+                  </p>
+                  <p className="text-2xl font-black text-text">
+                    {currentData.totalRevenue > 0
+                      ? (
+                          (currentData.result / currentData.totalRevenue) *
+                          100
+                        ).toFixed(1)
+                      : 0}
+                    %
+                  </p>
+                </div>
+                <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.result / currentData.totalRevenue) * 100 : 0))}%`,
+                    }}
+                    className={`h-full rounded-full ${currentData.result > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
+                    Comprometimento de Receita
+                  </p>
+                  <p className="text-2xl font-black text-text">
+                    {currentData.totalRevenue > 0
+                      ? (
+                          (currentData.totalExpense /
+                            currentData.totalRevenue) *
+                          100
+                        ).toFixed(1)
+                      : 0}
+                    %
+                  </p>
+                </div>
+                <div className="w-full bg-panel h-2.5 rounded-full overflow-hidden border border-border">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{
+                      width: `${Math.min(100, Math.max(0, currentData.totalRevenue > 0 ? (currentData.totalExpense / currentData.totalRevenue) * 100 : 0))}%`,
+                    }}
+                    className="h-full bg-primary rounded-full"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-indigo-600/10 p-5 rounded-2xl border border-indigo-500/20 shadow-inner group hover:bg-indigo-600/15 transition-colors">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">
+                    Recomendação Estratégica
+                  </p>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {currentData.result > 0
+                    ? "Sua clínica apresenta uma taxa de lucro saudável. Este é o momento ideal para investir em tecnologias ou treinamento de equipe para aumentar o valor percebido pelo paciente."
+                    : "Atenção crítica: A operação está consumindo mais do que gera. É recomendável uma auditoria imediata nas despesas operacionais e revisão da tabela de procedimentos."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-
   const renderPricing = () => {
-      const allServices: Service[] = incomeCategories.flatMap(c => c.subcategories.map(s => ({
-          id: s.id,
-          name: s.name,
-          defaultValue: s.defaultValue || 0
-      })));
-      return <PricingSystem services={allServices} />;
+    const allServices: Service[] = incomeCategories.flatMap((c) =>
+      c.subcategories.map((s) => ({
+        id: s.id,
+        name: s.name,
+        defaultValue: s.defaultValue || 0,
+      })),
+    );
+    return <PricingSystem services={allServices} />;
   };
 
   const renderSettings = () => (
     <div className="flex flex-col gap-10 pb-20 animate-in fade-in custom-scrollbar">
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Building2 className="text-emerald-500 w-4 h-4" /> Categorias de Receita & Procedimentos</h3><div className="flex gap-2 mb-4"><input value={newIncomeCategory} onChange={e => setNewIncomeCategory(e.target.value)} placeholder="Nova categoria (ex: Ortodontia)..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newIncomeCategory) { await supabase.from('income_categories').insert({id: 'inc_'+Date.now(), name: newIncomeCategory, subcategories: [], type: 'income'}); fetchAllData(); setNewIncomeCategory(''); } }} className="px-6 py-2 bg-emerald-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-emerald-500">Add</button></div><div className="flex flex-col gap-3">{incomeCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><span className="text-sm font-black text-slate-200 uppercase">{cat.name}</span><div className="flex gap-2"><button onClick={() => setExpandedCatId(expandedCatId === cat.id ? null : cat.id)} className="text-slate-500 hover:text-text transition-colors">{expandedCatId === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button><button onClick={async () => { if(confirm("Excluir categoria?")) { await supabase.from('income_categories').delete().eq('id', cat.id); fetchAllData(); } }} className="text-slate-700 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button></div></div>{expandedCatId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Novo procedimento..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><input type="number" value={newSubValue} onChange={e => setNewSubValue(e.target.value)} placeholder="R$ 0,00" className="w-24 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text font-mono" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName, defaultValue: parseFloat(newSubValue) || 0 }; await supabase.from('income_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); setNewSubValue(''); fetchAllData(); }} className="bg-emerald-600/20 text-emerald-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><span className="text-xs text-slate-400">{sub.name}</span><span className="text-xs font-mono font-bold text-slate-300">R$ {sub.defaultValue?.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span><button onClick={async () => {
-                        const newSubs = cat.subcategories.filter(s => s.id !== sub.id);
-                        await supabase.from('income_categories').update({ subcategories: newSubs }).eq('id', cat.id);
-                        fetchAllData();
-                      }} className="text-slate-600 hover:text-red-500 transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>))}</div></div>)}</div>))}</div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas</h3><div className="flex gap-2 mb-6"><input value={newExpenseCategory} onChange={e => setNewExpenseCategory(e.target.value)} placeholder="Nova categoria de despesa..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><select value={newExpenseType} onChange={e => setNewExpenseType(e.target.value as any)} className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"><option value="variable">Variável</option><option value="fixed">Fixa</option></select><button onClick={async () => { if(newExpenseCategory) { await supabase.from('expense_categories').insert({id: 'exp_'+Date.now(), name: newExpenseCategory, type: newExpenseType, subcategories: []}); fetchAllData(); setNewExpenseCategory(''); } }} className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500">Add</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{expenseCategories.map(cat => (<div key={cat.id} className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === 'fixed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>{cat.type === 'fixed' ? 'Fixa' : 'Variável'}</span><input
-                  className="text-sm font-black text-slate-200 uppercase bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
-                  value={cat.name}
-                  onChange={(e) => {
-                    const nextCategories = expenseCategories.map(c =>
-                      c.id === cat.id ? { ...c, name: e.target.value } : c
-                    );
-                    setExpenseCategories(nextCategories);
-                  }}
-                  onBlur={async () => {
-                    await supabase.from('expense_categories').update({ name: cat.name }).eq('id', cat.id);
-                    fetchAllData();
-                  }}
-                /></div>
-                <div className="flex gap-2 items-center">
+      <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+        <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+          <Building2 className="text-emerald-500 w-4 h-4" /> Categorias de
+          Receita & Procedimentos
+        </h3>
+        <div className="flex gap-2 mb-4">
+          <input
+            value={newIncomeCategory}
+            onChange={(e) => setNewIncomeCategory(e.target.value)}
+            placeholder="Nova categoria (ex: Ortodontia)..."
+            className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+          />
+          <button
+            onClick={async () => {
+              if (newIncomeCategory) {
+                await supabase
+                  .from("income_categories")
+                  .insert({
+                    id: "inc_" + Date.now(),
+                    name: newIncomeCategory,
+                    subcategories: [],
+                    type: "income",
+                  });
+                fetchAllData();
+                setNewIncomeCategory("");
+              }
+            }}
+            className="px-6 py-2 bg-emerald-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-emerald-500"
+          >
+            Add
+          </button>
+        </div>
+        <div className="flex flex-col gap-3">
+          {incomeCategories.map((cat) => (
+            <div
+              key={cat.id}
+              className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-black text-slate-200 uppercase">
+                  {cat.name}
+                </span>
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setExpandedExpId(expandedExpId === cat.id ? null : cat.id)}
+                    onClick={() =>
+                      setExpandedCatId(expandedCatId === cat.id ? null : cat.id)
+                    }
                     className="text-slate-500 hover:text-text transition-colors"
                   >
-                    {expandedExpId === cat.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {expandedCatId === cat.id ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
                   </button>
                   <button
                     onClick={async () => {
-                      if(confirm("Deseja realmente excluir esta categoria de despesas?")) {
-                        await supabase.from('expense_categories').delete().eq('id', cat.id);
+                      if (confirm("Excluir categoria?")) {
+                        await supabase
+                          .from("income_categories")
+                          .delete()
+                          .eq("id", cat.id);
+                        fetchAllData();
+                      }
+                    }}
+                    className="text-slate-700 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              {expandedCatId === cat.id && (
+                <div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1">
+                  <div className="flex gap-2">
+                    <input
+                      value={newSubName}
+                      onChange={(e) => setNewSubName(e.target.value)}
+                      placeholder="Novo procedimento..."
+                      className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text"
+                    />
+                    <input
+                      type="number"
+                      value={newSubValue}
+                      onChange={(e) => setNewSubValue(e.target.value)}
+                      placeholder="R$ 0,00"
+                      className="w-24 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text font-mono"
+                    />
+                    <button
+                      onClick={async () => {
+                        const newSub = {
+                          id: "sub_" + Date.now(),
+                          name: newSubName,
+                          defaultValue: parseFloat(newSubValue) || 0,
+                        };
+                        await supabase
+                          .from("income_categories")
+                          .update({
+                            subcategories: [...cat.subcategories, newSub],
+                          })
+                          .eq("id", cat.id);
+                        setNewSubName("");
+                        setNewSubValue("");
+                        fetchAllData();
+                      }}
+                      className="bg-emerald-600/20 text-emerald-400 px-3 rounded text-[10px] font-bold uppercase"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    {cat.subcategories.map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"
+                      >
+                        <span className="text-xs text-slate-400">
+                          {sub.name}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-300">
+                          R${" "}
+                          {sub.defaultValue?.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                        <button
+                          onClick={async () => {
+                            const newSubs = cat.subcategories.filter(
+                              (s) => s.id !== sub.id,
+                            );
+                            await supabase
+                              .from("income_categories")
+                              .update({ subcategories: newSubs })
+                              .eq("id", cat.id);
+                            fetchAllData();
+                          }}
+                          className="text-slate-600 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+        <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+          <Banknote className="text-red-500 w-4 h-4" /> Categorias de Despesas
+        </h3>
+        <div className="flex gap-2 mb-6">
+          <input
+            value={newExpenseCategory}
+            onChange={(e) => setNewExpenseCategory(e.target.value)}
+            placeholder="Nova categoria de despesa..."
+            className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+          />
+          <select
+            value={newExpenseType}
+            onChange={(e) => setNewExpenseType(e.target.value as any)}
+            className="bg-panel border border-border rounded-lg px-2 text-xs text-text outline-none [&>option]:bg-surface [&>option]:text-text"
+          >
+            <option value="variable">Variável</option>
+            <option value="fixed">Fixa</option>
+          </select>
+          <button
+            onClick={async () => {
+              if (newExpenseCategory) {
+                await supabase
+                  .from("expense_categories")
+                  .insert({
+                    id: "exp_" + Date.now(),
+                    name: newExpenseCategory,
+                    type: newExpenseType,
+                    subcategories: [],
+                  });
+                fetchAllData();
+                setNewExpenseCategory("");
+              }
+            }}
+            className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500"
+          >
+            Add
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {expenseCategories.map((cat) => (
+            <div
+              key={cat.id}
+              className="flex flex-col gap-2 p-3 bg-panel rounded-xl border border-border"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${cat.type === "fixed" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-orange-500/10 text-orange-400 border-orange-500/20"}`}
+                  >
+                    {cat.type === "fixed" ? "Fixa" : "Variável"}
+                  </span>
+                  <input
+                    className="text-sm font-black text-slate-200 uppercase bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
+                    value={cat.name}
+                    onChange={(e) => {
+                      const nextCategories = expenseCategories.map((c) =>
+                        c.id === cat.id ? { ...c, name: e.target.value } : c,
+                      );
+                      setExpenseCategories(nextCategories);
+                    }}
+                    onBlur={async () => {
+                      await supabase
+                        .from("expense_categories")
+                        .update({ name: cat.name })
+                        .eq("id", cat.id);
+                      fetchAllData();
+                    }}
+                  />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={() =>
+                      setExpandedExpId(expandedExpId === cat.id ? null : cat.id)
+                    }
+                    className="text-slate-500 hover:text-text transition-colors"
+                  >
+                    {expandedExpId === cat.id ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (
+                        confirm(
+                          "Deseja realmente excluir esta categoria de despesas?",
+                        )
+                      ) {
+                        await supabase
+                          .from("expense_categories")
+                          .delete()
+                          .eq("id", cat.id);
                         fetchAllData();
                       }
                     }}
@@ -2138,45 +3909,487 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-              </div>{expandedExpId === cat.id && (<div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1"><div className="flex gap-2"><input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Subcategoria..." className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text" /><button onClick={async () => { const newSub = { id: 'sub_'+Date.now(), name: newSubName }; await supabase.from('expense_categories').update({ subcategories: [...cat.subcategories, newSub] }).eq('id', cat.id); setNewSubName(''); fetchAllData(); }} className="bg-red-600/20 text-red-400 px-3 rounded text-[10px] font-bold uppercase">Add</button></div><div className="flex flex-col gap-1.5">{cat.subcategories.map(sub => (<div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"><input
-                  className="text-xs text-slate-400 bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
-                  value={sub.name}
-                  onChange={(e) => {
-                    const nextCategories = expenseCategories.map(c =>
-                        c.id === cat.id ? { ...c, subcategories: c.subcategories.map(s => s.id === sub.id ? {...s, name: e.target.value} : s) } : c
-                    );
-                    setExpenseCategories(nextCategories);
-                  }}
-                  onBlur={async () => {
-                    await supabase.from('expense_categories').update({ subcategories: cat.subcategories }).eq('id', cat.id);
+              </div>
+              {expandedExpId === cat.id && (
+                <div className="mt-4 pl-4 border-l-2 border-border flex flex-col gap-3 animate-in slide-in-from-top-1">
+                  <div className="flex gap-2">
+                    <input
+                      value={newSubName}
+                      onChange={(e) => setNewSubName(e.target.value)}
+                      placeholder="Subcategoria..."
+                      className="flex-1 bg-panel border border-border rounded px-3 py-1.5 text-xs text-text"
+                    />
+                    <button
+                      onClick={async () => {
+                        const newSub = {
+                          id: "sub_" + Date.now(),
+                          name: newSubName,
+                        };
+                        await supabase
+                          .from("expense_categories")
+                          .update({
+                            subcategories: [...cat.subcategories, newSub],
+                          })
+                          .eq("id", cat.id);
+                        setNewSubName("");
+                        fetchAllData();
+                      }}
+                      className="bg-red-600/20 text-red-400 px-3 rounded text-[10px] font-bold uppercase"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    {cat.subcategories.map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="flex justify-between items-center py-1.5 px-3 bg-panel rounded border border-border"
+                      >
+                        <input
+                          className="text-xs text-slate-400 bg-transparent border border-transparent hover:border-white/20 focus:border-white focus:outline-none rounded px-1"
+                          value={sub.name}
+                          onChange={(e) => {
+                            const nextCategories = expenseCategories.map((c) =>
+                              c.id === cat.id
+                                ? {
+                                    ...c,
+                                    subcategories: c.subcategories.map((s) =>
+                                      s.id === sub.id
+                                        ? { ...s, name: e.target.value }
+                                        : s,
+                                    ),
+                                  }
+                                : c,
+                            );
+                            setExpenseCategories(nextCategories);
+                          }}
+                          onBlur={async () => {
+                            await supabase
+                              .from("expense_categories")
+                              .update({ subcategories: cat.subcategories })
+                              .eq("id", cat.id);
+                            fetchAllData();
+                          }}
+                        />
+                        <button
+                          onClick={async () => {
+                            const newSubs = cat.subcategories.filter(
+                              (s) => s.id !== sub.id,
+                            );
+                            await supabase
+                              .from("expense_categories")
+                              .update({ subcategories: newSubs })
+                              .eq("id", cat.id);
+                            fetchAllData();
+                          }}
+                          className="text-slate-600 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+          <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+            <Users className="text-blue-500 w-4 h-4" /> Profissionais
+          </h3>
+          <div className="flex gap-2 mb-4">
+            <input
+              value={newProfessional}
+              onChange={(e) => setNewProfessional(e.target.value)}
+              placeholder="Nome..."
+              className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+            />
+            <button
+              onClick={async () => {
+                if (newProfessional) {
+                  await supabase
+                    .from("professionals")
+                    .insert({
+                      id: "prof_" + Date.now(),
+                      name: newProfessional,
+                    });
+                  fetchAllData();
+                  setNewProfessional("");
+                }
+              }}
+              className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+            {professionals.map((p) => (
+              <div
+                key={p.id}
+                className="p-3 bg-panel rounded-xl border border-border flex justify-between group"
+              >
+                <span className="text-sm text-slate-300">{p.name}</span>
+                <button
+                  onClick={async () => {
+                    await supabase
+                      .from("professionals")
+                      .delete()
+                      .eq("id", p.id);
                     fetchAllData();
                   }}
-                />
-                <button onClick={async () => {
-                  const newSubs = cat.subcategories.filter(s => s.id !== sub.id);
-                  await supabase.from('expense_categories').update({ subcategories: newSubs }).eq('id', cat.id);
-                  fetchAllData();
-                }} className="text-slate-600 hover:text-red-500 transition-colors">
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
-                </div>))}</div></div>)}</div>))}</div></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-blue-500 w-4 h-4" /> Profissionais</h3><div className="flex gap-2 mb-4"><input value={newProfessional} onChange={e => setNewProfessional(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newProfessional) { await supabase.from('professionals').insert({id: 'prof_'+Date.now(), name: newProfessional}); fetchAllData(); setNewProfessional(''); } }} className="px-6 py-2 bg-blue-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{professionals.map(p => (<div key={p.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{p.name}</span><button onClick={async () => { await supabase.from('professionals').delete().eq('id', p.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Factory className="text-orange-500 w-4 h-4" /> Fornecedores</h3><div className="flex gap-2 mb-4"><input value={newSupplier} onChange={e => setNewSupplier(e.target.value)} placeholder="Nome..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSupplier) { await supabase.from('suppliers').insert({id: 'supp_'+Date.now(), name: newSupplier}); fetchAllData(); setNewSupplier(''); } }} className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{suppliers.map(s => (<div key={s.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group"><span className="text-sm text-slate-300">{s.name}</span><button onClick={async () => { await supabase.from('suppliers').delete().eq('id', s.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div><div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><Users className="text-purple-500 w-4 h-4" /> Times de Venda</h3><div className="flex gap-2 mb-4"><input type="color" value={newSalesTeamColor} onChange={e => setNewSalesTeamColor(e.target.value)} className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0" title="Cor do Time" /><input value={newSalesTeam} onChange={e => setNewSalesTeam(e.target.value)} placeholder="Nome do time..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newSalesTeam) { await supabase.from('sales_teams').insert({id: 'team_'+Date.now(), name: newSalesTeam, color: newSalesTeamColor}); fetchAllData(); setNewSalesTeam(''); setNewSalesTeamColor('#8b5cf6'); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">{salesTeams.map(t => (<div key={t.id} className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"><div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || '#8b5cf6' }}></div><span className="text-sm text-slate-300">{t.name}</span></div><button onClick={async () => { await supabase.from('sales_teams').delete().eq('id', t.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div>))}</div></div></div>
-        <div className="glass-panel rounded-2xl border border-border bg-surface p-6"><h3 className="text-base font-bold text-text mb-6 flex items-center gap-2"><CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento & Taxas</h3><div className="flex gap-2 mb-4"><input value={newPaymentMethod} onChange={e => setNewPaymentMethod(e.target.value)} placeholder="Nova Forma de Pagamento..." className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text" /><button onClick={async () => { if(newPaymentMethod) { await supabase.from('payment_methods').insert({id: 'pm_'+Date.now(), name: newPaymentMethod, days_to_receive: 0, default_account_id: accountsList[0]?.id || ''}); fetchAllData(); setNewPaymentMethod(''); } }} className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase">Add</button></div><div className="flex flex-col gap-8"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{paymentMethods.map(pm => (<div key={pm.id} className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"><div className="flex justify-between items-center"><span className="text-sm font-black text-text uppercase">{pm.name}</span><button onClick={async () => { await supabase.from('payment_methods').delete().eq('id', pm.id); fetchAllData(); }} className="text-slate-600 hover:text-red-400 transition-all"><Trash2 className="w-3.5 h-3.5" /></button></div><div className="flex flex-col gap-2"><div className="flex justify-between items-center text-[10px] font-bold text-slate-500"><span>DIAS PARA RECEBIMENTO:</span><input type="number" value={pm.daysToReceive} onChange={async (e) => { await supabase.from('payment_methods').update({days_to_receive: parseInt(e.target.value)}).eq('id', pm.id); fetchAllData(); }} className="w-12 bg-panel border border-border rounded text-center text-text" /></div><div className="flex flex-col gap-1"><span className="text-[10px] font-bold text-slate-500 uppercase">CONTA PADRÃO:</span><select value={pm.defaultAccountId} onChange={async (e) => { await supabase.from('payment_methods').update({default_account_id: e.target.value}).eq('id', pm.id); fetchAllData(); }} className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}</select></div></div></div>))}</div><div className="border-t border-border pt-6"><h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2"><Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras</h4><div className="overflow-x-auto custom-scrollbar"><table className="w-full text-left border-collapse"><thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase"><tr><th className="p-3">Bandeira</th><th className="p-3">Débito</th><th className="p-3">Crédito 1x</th>{[2,3,4,5,6,7,8,9,10,11,12].map(n => <th key={n} className="p-3">{n}x</th>)}</tr></thead><tbody className="text-[11px] text-slate-300 divide-y divide-white/5">{cardFees.map(fee => (<tr key={fee.brand} className="hover:bg-panel"><td className="p-3 font-bold text-text whitespace-nowrap">{fee.brand}</td><td className="p-3"><input type="number" step="0.01" value={fee.debit} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, debit: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td><td className="p-3"><input type="number" step="0.01" value={fee.credit1x} onChange={async (e) => { const next = cardFees.map(f => f.brand === fee.brand ? {...f, credit1x: parseFloat(e.target.value)} : f); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>{[2,3,4,5,6,7,8,9,10,11,12].map(n => (<td key={n} className="p-3"><input type="number" step="0.01" value={fee.installments[n] || 0} onChange={async (e) => { const next = cardFees.map(f => { if (f.brand === fee.brand) { const newInst = { ...f.installments, [n]: parseFloat(e.target.value) }; return { ...f, installments: newInst }; } return f; }); setCardFees(next); await supabase.from('card_fees').upsert(next[cardFees.findIndex(f=>f.brand===fee.brand)]); }} className="w-12 bg-panel border border-border rounded px-1 text-center" /> %</td>))}</tr>))}</tbody></table></div></div></div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+          <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+            <Factory className="text-orange-500 w-4 h-4" /> Fornecedores
+          </h3>
+          <div className="flex gap-2 mb-4">
+            <input
+              value={newSupplier}
+              onChange={(e) => setNewSupplier(e.target.value)}
+              placeholder="Nome..."
+              className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+            />
+            <button
+              onClick={async () => {
+                if (newSupplier) {
+                  await supabase
+                    .from("suppliers")
+                    .insert({ id: "supp_" + Date.now(), name: newSupplier });
+                  fetchAllData();
+                  setNewSupplier("");
+                }
+              }}
+              className="px-6 py-2 bg-orange-600 text-text rounded-lg text-xs font-bold uppercase"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+            {suppliers.map((s) => (
+              <div
+                key={s.id}
+                className="p-3 bg-panel rounded-xl border border-border flex justify-between group"
+              >
+                <span className="text-sm text-slate-300">{s.name}</span>
+                <button
+                  onClick={async () => {
+                    await supabase.from("suppliers").delete().eq("id", s.id);
+                    fetchAllData();
+                  }}
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+          <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+            <Users className="text-purple-500 w-4 h-4" /> Times de Venda
+          </h3>
+          <div className="flex gap-2 mb-4">
+            <input
+              type="color"
+              value={newSalesTeamColor}
+              onChange={(e) => setNewSalesTeamColor(e.target.value)}
+              className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0"
+              title="Cor do Time"
+            />
+            <input
+              value={newSalesTeam}
+              onChange={(e) => setNewSalesTeam(e.target.value)}
+              placeholder="Nome do time..."
+              className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+            />
+            <button
+              onClick={async () => {
+                if (newSalesTeam) {
+                  await supabase
+                    .from("sales_teams")
+                    .insert({
+                      id: "team_" + Date.now(),
+                      name: newSalesTeam,
+                      color: newSalesTeamColor,
+                    });
+                  fetchAllData();
+                  setNewSalesTeam("");
+                  setNewSalesTeamColor("#8b5cf6");
+                }
+              }}
+              className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+            {salesTeams.map((t) => (
+              <div
+                key={t.id}
+                className="p-3 bg-panel rounded-xl border border-border flex justify-between group items-center"
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: t.color || "#8b5cf6" }}
+                  ></div>
+                  <span className="text-sm text-slate-300">{t.name}</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    await supabase.from("sales_teams").delete().eq("id", t.id);
+                    fetchAllData();
+                  }}
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
+        <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
+          <CreditCard className="text-purple-500 w-4 h-4" /> Formas de Pagamento
+          & Taxas
+        </h3>
+        <div className="flex gap-2 mb-4">
+          <input
+            value={newPaymentMethod}
+            onChange={(e) => setNewPaymentMethod(e.target.value)}
+            placeholder="Nova Forma de Pagamento..."
+            className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
+          />
+          <button
+            onClick={async () => {
+              if (newPaymentMethod) {
+                await supabase
+                  .from("payment_methods")
+                  .insert({
+                    id: "pm_" + Date.now(),
+                    name: newPaymentMethod,
+                    days_to_receive: 0,
+                    default_account_id: accountsList[0]?.id || "",
+                  });
+                fetchAllData();
+                setNewPaymentMethod("");
+              }
+            }}
+            className="px-6 py-2 bg-purple-600 text-text rounded-lg text-xs font-bold uppercase"
+          >
+            Add
+          </button>
+        </div>
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paymentMethods.map((pm) => (
+              <div
+                key={pm.id}
+                className="p-4 bg-panel border border-border rounded-2xl flex flex-col gap-3"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-black text-text uppercase">
+                    {pm.name}
+                  </span>
+                  <button
+                    onClick={async () => {
+                      await supabase
+                        .from("payment_methods")
+                        .delete()
+                        .eq("id", pm.id);
+                      fetchAllData();
+                    }}
+                    className="text-slate-600 hover:text-red-400 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                    <span>DIAS PARA RECEBIMENTO:</span>
+                    <input
+                      type="number"
+                      value={pm.daysToReceive}
+                      onChange={async (e) => {
+                        await supabase
+                          .from("payment_methods")
+                          .update({ days_to_receive: parseInt(e.target.value) })
+                          .eq("id", pm.id);
+                        fetchAllData();
+                      }}
+                      className="w-12 bg-panel border border-border rounded text-center text-text"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      CONTA PADRÃO:
+                    </span>
+                    <select
+                      value={pm.defaultAccountId}
+                      onChange={async (e) => {
+                        await supabase
+                          .from("payment_methods")
+                          .update({ default_account_id: e.target.value })
+                          .eq("id", pm.id);
+                        fetchAllData();
+                      }}
+                      className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text"
+                    >
+                      {accountsList.map((acc) => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border pt-6">
+            <h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex items-center gap-2">
+              <Percent className="w-3.5 h-3.5" /> Tabela de Taxas das Bandeiras
+            </h4>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-panel text-[9px] font-bold text-slate-500 uppercase">
+                  <tr>
+                    <th className="p-3">Bandeira</th>
+                    <th className="p-3">Débito</th>
+                    <th className="p-3">Crédito 1x</th>
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                      <th key={n} className="p-3">
+                        {n}x
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="text-[11px] text-slate-300 divide-y divide-white/5">
+                  {cardFees.map((fee) => (
+                    <tr key={fee.brand} className="hover:bg-panel">
+                      <td className="p-3 font-bold text-text whitespace-nowrap">
+                        {fee.brand}
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={fee.debit}
+                          onChange={async (e) => {
+                            const next = cardFees.map((f) =>
+                              f.brand === fee.brand
+                                ? { ...f, debit: parseFloat(e.target.value) }
+                                : f,
+                            );
+                            setCardFees(next);
+                            await supabase
+                              .from("card_fees")
+                              .upsert(
+                                next[
+                                  cardFees.findIndex(
+                                    (f) => f.brand === fee.brand,
+                                  )
+                                ],
+                              );
+                          }}
+                          className="w-12 bg-panel border border-border rounded px-1 text-center"
+                        />{" "}
+                        %
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={fee.credit1x}
+                          onChange={async (e) => {
+                            const next = cardFees.map((f) =>
+                              f.brand === fee.brand
+                                ? { ...f, credit1x: parseFloat(e.target.value) }
+                                : f,
+                            );
+                            setCardFees(next);
+                            await supabase
+                              .from("card_fees")
+                              .upsert(
+                                next[
+                                  cardFees.findIndex(
+                                    (f) => f.brand === fee.brand,
+                                  )
+                                ],
+                              );
+                          }}
+                          className="w-12 bg-panel border border-border rounded px-1 text-center"
+                        />{" "}
+                        %
+                      </td>
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                        <td key={n} className="p-3">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={fee.installments[n] || 0}
+                            onChange={async (e) => {
+                              const next = cardFees.map((f) => {
+                                if (f.brand === fee.brand) {
+                                  const newInst = {
+                                    ...f.installments,
+                                    [n]: parseFloat(e.target.value),
+                                  };
+                                  return { ...f, installments: newInst };
+                                }
+                                return f;
+                              });
+                              setCardFees(next);
+                              await supabase
+                                .from("card_fees")
+                                .upsert(
+                                  next[
+                                    cardFees.findIndex(
+                                      (f) => f.brand === fee.brand,
+                                    )
+                                  ],
+                                );
+                            }}
+                            className="w-12 bg-panel border border-border rounded px-1 text-center"
+                          />{" "}
+                          %
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
-  if (loading) return (
-    <div className="flex-1 w-full h-full p-8 flex flex-col gap-6 animate-pulse bg-transparent">
-      <div className="h-10 w-48 bg-panel rounded-lg mb-4"></div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="h-32 bg-panel rounded-2xl border border-border"></div>
-        <div className="h-32 bg-panel rounded-2xl border border-border"></div>
-        <div className="h-32 bg-panel rounded-2xl border border-border"></div>
-        <div className="h-32 bg-panel rounded-2xl border border-border"></div>
+  if (loading)
+    return (
+      <div className="flex-1 w-full h-full p-8 flex flex-col gap-6 animate-pulse bg-transparent">
+        <div className="h-10 w-48 bg-panel rounded-lg mb-4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="h-32 bg-panel rounded-2xl border border-border"></div>
+          <div className="h-32 bg-panel rounded-2xl border border-border"></div>
+          <div className="h-32 bg-panel rounded-2xl border border-border"></div>
+          <div className="h-32 bg-panel rounded-2xl border border-border"></div>
+        </div>
+        <div className="flex-1 w-full bg-panel rounded-2xl border border-border mt-4"></div>
       </div>
-      <div className="flex-1 w-full bg-panel rounded-2xl border border-border mt-4"></div>
-    </div>
-  );
+    );
 
   return (
     <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
@@ -2184,571 +4397,1828 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         {/* View Content */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar">
+          <div className="w-full h-full space-y-4">
+            <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
+                  {visibleTabs.find((t) => t.id === activeSubTab)?.label ||
+                    "Financeiro"}
+                </h1>
+                <p className="text-slate-400 text-xs">
+                  Gestão de fluxo de caixa, DRE e auditoria.
+                </p>
+              </div>
 
-           <div className="w-full h-full space-y-4">
+              <div className="flex flex-wrap gap-2 text-xs justify-end">
+                <div className="relative">
+                  <button
+                    onClick={() => setIsBulkEntryMenuOpen((value) => !value)}
+                    className="px-3 py-1.5 glass-button text-text rounded-xl font-bold flex items-center gap-1.5 transition-all"
+                    aria-expanded={isBulkEntryMenuOpen}
+                  >
+                    <List className="w-3.5 h-3.5" /> Ações em massa{" "}
+                    <ChevronDown
+                      className={`w-2.5 h-2.5 transition-transform ${isBulkEntryMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isBulkEntryMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <button
+                        onClick={() => {
+                          setIsBulkEntryMenuOpen(false);
+                          openBulkModal("income");
+                        }}
+                        className="w-full text-left px-3 py-2 text-[10px] font-bold text-sky-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all"
+                      >
+                        <List className="w-3.5 h-3.5" /> Receita em massa
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsBulkEntryMenuOpen(false);
+                          openBulkModal("expense");
+                        }}
+                        className="w-full text-left px-3 py-2 text-[10px] font-bold text-rose-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all border-t border-border"
+                      >
+                        <List className="w-3.5 h-3.5" /> Despesa em massa
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => openModal("income")}
+                  className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Receita
+                </button>
+              </div>
+            </div>
 
-               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
-                   <div>
-                       <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
-                          {visibleTabs.find(t => t.id === activeSubTab)?.label || 'Financeiro'}
-                       </h1>
-                       <p className="text-slate-400 text-xs">Gestão de fluxo de caixa, DRE e auditoria.</p>
-                   </div>
-
-                   <div className="flex flex-wrap gap-2 text-xs justify-end">
-                      <div className="relative">
-                        <button onClick={() => setIsBulkEntryMenuOpen(value => !value)} className="px-3 py-1.5 glass-button text-text rounded-xl font-bold flex items-center gap-1.5 transition-all" aria-expanded={isBulkEntryMenuOpen}>
-                          <List className="w-3.5 h-3.5" /> Ações em massa <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isBulkEntryMenuOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        {isBulkEntryMenuOpen && (
-                          <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-                            <button onClick={() => { setIsBulkEntryMenuOpen(false); openBulkModal('income'); }} className="w-full text-left px-3 py-2 text-[10px] font-bold text-sky-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all">
-                              <List className="w-3.5 h-3.5" /> Receita em massa
-                            </button>
-                            <button onClick={() => { setIsBulkEntryMenuOpen(false); openBulkModal('expense'); }} className="w-full text-left px-3 py-2 text-[10px] font-bold text-rose-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all border-t border-border">
-                              <List className="w-3.5 h-3.5" /> Despesa em massa
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
-
-                   </div>
-               </div>
-
-                {/* SUB NAVIGATION BAR */}
-                <div className="module-segmented-control no-scrollbar">
-                     {visibleTabs.map(tab => (
-                         <button
-                             key={tab.id}
-                             data-active={activeSubTab === tab.id}
-                             onClick={() => setActiveSubTab(tab.id as SubTab)}
-                             className={`
+            {/* SUB NAVIGATION BAR */}
+            <div className="module-segmented-control no-scrollbar">
+              {visibleTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  data-active={activeSubTab === tab.id}
+                  onClick={() => setActiveSubTab(tab.id as SubTab)}
+                  className={`
                                  px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                 ${activeSubTab === tab.id
-                                     ? 'bg-[#5347CE]/10 text-[#5347CE] dark:bg-[#887CFD]/15 dark:text-[#887CFD] border border-[#5347CE]/30 dark:border-[#887CFD]/30 shadow-sm'
-                                     : 'text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent'}
+                                 ${
+                                   activeSubTab === tab.id
+                                     ? "bg-[#5347CE]/10 text-[#5347CE] dark:bg-[#887CFD]/15 dark:text-[#887CFD] border border-[#5347CE]/30 dark:border-[#887CFD]/30 shadow-sm"
+                                     : "text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent"
+                                 }
                              `}
-                         >
-                             {tab.label}
-                         </button>
-                     ))}
-                </div>
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                <div className="flex-1 w-full pb-10">
-             {activeSubTab === 'overview' && (
-                 <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                     <div className="bg-white dark:bg-[#141A29] p-3 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
-                         <div className="flex items-center gap-2">
-                             <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">Período:</span>
-                             <div className="w-60">
-                                 <DateRangePicker
-                                     value={{ start: overviewFilters.start, end: overviewFilters.end }}
-                                     onChange={(range) => setOverviewFilters(p => ({...p, start: range.start, end: range.end}))}
-                                     periodSelector
-                                 />
-                             </div>
-                         </div>
-                     </div>
+            <div className="flex-1 w-full pb-10">
+              {activeSubTab === "overview" && (
+                <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+                  <div className="bg-white dark:bg-[#141A29] p-3 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">
+                        Período:
+                      </span>
+                      <div className="w-60">
+                        <DateRangePicker
+                          value={{
+                            start: overviewFilters.start,
+                            end: overviewFilters.end,
+                          }}
+                          onChange={(range) =>
+                            setOverviewFilters((p) => ({
+                              ...p,
+                              start: range.start,
+                              end: range.end,
+                            }))
+                          }
+                          periodSelector
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                     {overviewMetrics.errorCount > 0 && (<div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse"><span className="material-symbols-outlined text-rose-500 text-sm">warning</span><span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">Atenção: Existem lançamentos com erro na auditoria para este período.</span></div>)}
+                  {overviewMetrics.errorCount > 0 && (
+                    <div className="bg-[#FEECEF] dark:bg-rose-500/15 border border-[#FCD4DC] dark:border-rose-500/30 p-2.5 rounded-xl flex items-center gap-2.5 animate-pulse">
+                      <span className="material-symbols-outlined text-rose-500 text-sm">
+                        warning
+                      </span>
+                      <span className="text-xs font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider">
+                        Atenção: Existem lançamentos com erro na auditoria para
+                        este período.
+                      </span>
+                    </div>
+                  )}
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#16C8C7] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">Receita Realizada</p>
-                             <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.currentMonthIncome.toLocaleString('pt-BR')}</span>
-                         </div>
-                         <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                             <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">Ticket Médio Total</p>
-                             <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">R$ {overviewMetrics.ticketAverage.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                         </div>
-                     </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
+                      <p className="text-[#16C8C7] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">
+                        Receita Realizada
+                      </p>
+                      <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">
+                        R${" "}
+                        {overviewMetrics.currentMonthIncome.toLocaleString(
+                          "pt-BR",
+                        )}
+                      </span>
+                    </div>
+                    <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
+                      <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">
+                        Ticket Médio Total
+                      </p>
+                      <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">
+                        R${" "}
+                        {overviewMetrics.ticketAverage.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
 
-                    <div className="flex flex-col gap-2">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Ticket Médio por Categoria</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
-                            {overviewMetrics.categoryTicketAverage.map(cat => (
-                                <SpotlightCard key={cat.name} className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5 min-w-0 overflow-hidden" spotlightColor="rgba(56, 189, 248, 0.15)">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase truncate w-full" title={cat.name}>{cat.name}</p>
-                                    <span className="text-sm font-bold font-mono text-text truncate w-full">R$ {cat.average.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</span>
-                                </SpotlightCard>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
+                      Ticket Médio por Categoria
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                      {overviewMetrics.categoryTicketAverage.map((cat) => (
+                        <SpotlightCard
+                          key={cat.name}
+                          className="glass-panel rounded-xl p-3 bg-panel/30 border border-border flex flex-col gap-0.5 min-w-0 overflow-hidden"
+                          spotlightColor="rgba(56, 189, 248, 0.15)"
+                        >
+                          <p
+                            className="text-[9px] font-bold text-slate-400 uppercase truncate w-full"
+                            title={cat.name}
+                          >
+                            {cat.name}
+                          </p>
+                          <span className="text-sm font-bold font-mono text-text truncate w-full">
+                            R${" "}
+                            {cat.average.toLocaleString("pt-BR", {
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
+                        </SpotlightCard>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* GRÁFICOS FINANCEIROS UI REFINADA */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    {[
+                      {
+                        title: "Por Categoria",
+                        data: overviewMetrics.categoryData,
+                        activeIndex: activeCategoryIndex,
+                        setActive: setActiveCategoryIndex,
+                      },
+                      {
+                        title: "Por Procedimento",
+                        data: overviewMetrics.procedureData,
+                        activeIndex: activeProcedureIndex,
+                        setActive: setActiveProcedureIndex,
+                      },
+                      {
+                        title: "Por Pagamento",
+                        data: overviewMetrics.paymentData,
+                        activeIndex: activePaymentIndex,
+                        setActive: setActivePaymentIndex,
+                      },
+                    ].map((chart, idx) => (
+                      <div
+                        key={idx}
+                        className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between"
+                      >
+                        <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">
+                          {chart.title}
+                        </h3>
+
+                        <div className="h-[210px] w-full relative flex items-center justify-center">
+                          <DonutChart
+                            data={chart.data.map(
+                              (entry: any, index: number) => ({
+                                ...entry,
+                                label: entry.name,
+                                color: COLORS[index % COLORS.length],
+                              }),
+                            )}
+                            size={210}
+                            strokeWidth={28}
+                            onSegmentHover={(segment) =>
+                              chart.setActive(
+                                segment
+                                  ? chart.data.findIndex(
+                                      (entry: any) =>
+                                        entry.name === segment.label,
+                                    )
+                                  : null,
+                              )
+                            }
+                            centerContent={
+                              chart.activeIndex !== null &&
+                              chart.data?.[chart.activeIndex] ? (
+                                <>
+                                  <span className="text-sm font-black text-text">
+                                    R${" "}
+                                    {chart.data[
+                                      chart.activeIndex
+                                    ].value?.toLocaleString("pt-BR", {
+                                      notation: "compact",
+                                      maximumFractionDigits: 1,
+                                    })}
+                                  </span>
+                                  <span className="max-w-[90px] truncate text-[9px] font-bold uppercase text-slate-400">
+                                    {chart.data[chart.activeIndex].name}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-xs font-bold text-slate-400">
+                                  Total
+                                </span>
+                              )
+                            }
+                          />
+                          {chart.data.length === 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">
+                              Sem dados no período
+                            </div>
+                          )}
+                        </div>
+
+                        {/* LEGENDA CUSTOMIZADA EM BADGES INTERATIVOS */}
+                        <div className="pt-2 border-t border-white/5 flex flex-wrap justify-center items-center gap-1.5 max-h-[75px] overflow-y-auto custom-scrollbar">
+                          {chart.data.map((entry, index) => (
+                            <button
+                              key={index}
+                              onMouseEnter={() => chart.setActive(index)}
+                              onMouseLeave={() => chart.setActive(null)}
+                              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                                chart.activeIndex === index
+                                  ? "bg-sky-500/20 border-sky-400 text-sky-300 scale-105 shadow-sm"
+                                  : "bg-panel/60 border-border/60 text-slate-400 hover:text-text hover:bg-panel"
+                              }`}
+                            >
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{
+                                  backgroundColor:
+                                    COLORS[index % COLORS.length],
+                                }}
+                              ></span>
+                              <span
+                                className="truncate max-w-[100px]"
+                                title={entry.name}
+                              >
+                                {entry.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
+                  <div className="hidden">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
+                          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />{" "}
+                          Crescimento da Receita (Últimos 6 Meses)
+                        </h3>
+                        <p className="text-[9px] text-slate-400 uppercase tracking-wider">
+                          Análise de tendência comercial
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="hidden" aria-hidden="true">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={monthlyRevenueData.slice(-6)}
+                          margin={{ top: 15, right: 20, bottom: 20, left: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(255,255,255,0.05)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="month"
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickMargin={8}
+                          />
+                          <YAxis
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickFormatter={(value) =>
+                              `R$ ${(value / 1000).toFixed(0)}k`
+                            }
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: "#0f172a",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "8px",
+                              color: "#fff",
+                              fontSize: "11px",
+                            }}
+                            formatter={(value: number, name: string) => [
+                              `R$ ${value.toLocaleString("pt-BR")}`,
+                              name === "revenue" ? "Receita Realizada" : "Meta",
+                            ]}
+                            labelStyle={{
+                              color: "#94a3b8",
+                              marginBottom: "2px",
+                            }}
+                          />
+                          <Legend
+                            verticalAlign="top"
+                            height={28}
+                            formatter={(value) => (
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                {value === "revenue"
+                                  ? "Receita Realizada"
+                                  : "Meta Mensal"}
+                              </span>
+                            )}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="revenue"
+                            name="revenue"
+                            stroke="#10b981"
+                            strokeWidth={2.5}
+                            dot={{
+                              fill: "#10b981",
+                              r: 3.5,
+                              strokeWidth: 1.5,
+                              stroke: "#fff",
+                            }}
+                            activeDot={{
+                              r: 6,
+                              strokeWidth: 1.5,
+                              stroke: "#fff",
+                            }}
+                          >
+                            <LabelList
+                              dataKey="revenueLabel"
+                              position="top"
+                              fill="#10b981"
+                              fontSize={9}
+                              offset={8}
+                            />
+                          </Line>
+                          <Line
+                            type="monotone"
+                            dataKey="goal"
+                            name="goal"
+                            stroke="#f59e0b"
+                            strokeWidth={1.5}
+                            strokeDasharray="4 4"
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
+                  <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
+                    <h3 className="text-xs font-bold text-text uppercase tracking-wider">
+                      Visualização Mensal (Últimos 12 Meses)
+                    </h3>
+
+                    <div className="h-[210px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart
+                          data={monthlyRevenueData}
+                          margin={{ top: 15, right: 20, bottom: 40, left: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(255,255,255,0.05)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="month"
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickMargin={10}
+                            angle={-45}
+                            textAnchor="end"
+                          />
+                          <YAxis
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickFormatter={(value) =>
+                              `R$ ${(value / 1000).toFixed(0)}k`
+                            }
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: "#0f172a",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "8px",
+                              color: "#fff",
+                              fontSize: "11px",
+                            }}
+                            formatter={(value: number, name: string) => [
+                              `R$ ${value.toLocaleString("pt-BR")}`,
+                              name === "revenue" ? "Receita" : "Meta",
+                            ]}
+                            labelStyle={{
+                              color: "#94a3b8",
+                              marginBottom: "2px",
+                            }}
+                          />
+                          <Legend
+                            verticalAlign="top"
+                            height={28}
+                            formatter={(value) => (
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                {value === "revenue"
+                                  ? "Receita"
+                                  : "Meta Mensal"}
+                              </span>
+                            )}
+                          />
+                          <Bar
+                            dataKey="revenue"
+                            name="revenue"
+                            fill="#0ea5e9"
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={36}
+                          >
+                            <LabelList
+                              dataKey="revenueLabel"
+                              position="top"
+                              fill="#94a3b8"
+                              fontSize={8}
+                              offset={6}
+                            />
+                          </Bar>
+                          <Line
+                            type="monotone"
+                            dataKey="goal"
+                            name="goal"
+                            stroke="#f59e0b"
+                            strokeWidth={1.5}
+                            strokeDasharray="4 4"
+                            dot={false}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="h-[140px] w-full border-t border-border pt-3">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">
+                        Variance (%)
+                      </h4>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={monthlyRevenueData}
+                          margin={{ top: 15, right: 15, bottom: 25, left: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(255,255,255,0.05)"
+                            vertical={false}
+                          />
+                          <ReferenceLine y={0} stroke="#94a3b8" />
+                          <XAxis
+                            dataKey="month"
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickMargin={8}
+                            angle={-45}
+                            textAnchor="end"
+                          />
+                          <YAxis
+                            stroke="#94a3b8"
+                            fontSize={9}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: "#0f172a",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "8px",
+                              color: "#fff",
+                              fontSize: "11px",
+                            }}
+                            formatter={(value: number) => [
+                              `${value}%`,
+                              "Variação",
+                            ]}
+                            labelStyle={{
+                              color: "#94a3b8",
+                              marginBottom: "2px",
+                            }}
+                          />
+                          <Bar
+                            dataKey="variance"
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={36}
+                          >
+                            {monthlyRevenueData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill="#38bdf8"
+                                opacity={entry.variance >= 0 ? 0.8 : 0.4}
+                              />
                             ))}
-                        </div>
+                            <LabelList
+                              dataKey="variance"
+                              position="top"
+                              fill="#94a3b8"
+                              fontSize={8}
+                              formatter={(val: number) => `${val}%`}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-
-                    {/* GRÁFICOS FINANCEIROS UI REFINADA */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                        {[
-                            { title: 'Por Categoria', data: overviewMetrics.categoryData, activeIndex: activeCategoryIndex, setActive: setActiveCategoryIndex },
-                            { title: 'Por Procedimento', data: overviewMetrics.procedureData, activeIndex: activeProcedureIndex, setActive: setActiveProcedureIndex },
-                            { title: 'Por Pagamento', data: overviewMetrics.paymentData, activeIndex: activePaymentIndex, setActive: setActivePaymentIndex }
-                        ].map((chart, idx) => (
-                            <div key={idx} className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between">
-                                <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">{chart.title}</h3>
-
-                                <div className="h-[210px] w-full relative flex items-center justify-center">
-                                    <DonutChart
-                                        data={chart.data.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))}
-                                        size={210}
-                                        strokeWidth={28}
-                                        onSegmentHover={(segment) => chart.setActive(segment ? chart.data.findIndex((entry: any) => entry.name === segment.label) : null)}
-                                        centerContent={chart.activeIndex !== null && chart.data?.[chart.activeIndex] ? <><span className="text-sm font-black text-text">R$ {chart.data[chart.activeIndex].value?.toLocaleString('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })}</span><span className="max-w-[90px] truncate text-[9px] font-bold uppercase text-slate-400">{chart.data[chart.activeIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Total</span>}
-                                    />
-                                    {chart.data.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-600 italic">Sem dados no período</div>}
-                                </div>
-
-                                {/* LEGENDA CUSTOMIZADA EM BADGES INTERATIVOS */}
-                                <div className="pt-2 border-t border-white/5 flex flex-wrap justify-center items-center gap-1.5 max-h-[75px] overflow-y-auto custom-scrollbar">
-                                    {chart.data.map((entry, index) => (
-                                        <button
-                                            key={index}
-                                            onMouseEnter={() => chart.setActive(index)}
-                                            onMouseLeave={() => chart.setActive(null)}
-                                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition-all cursor-pointer ${
-                                                chart.activeIndex === index
-                                                    ? 'bg-sky-500/20 border-sky-400 text-sky-300 scale-105 shadow-sm'
-                                                    : 'bg-panel/60 border-border/60 text-slate-400 hover:text-text hover:bg-panel'
-                                            }`}
-                                        >
-                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                                            <span className="truncate max-w-[100px]" title={entry.name}>{entry.name}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* CRESCIMENTO DA RECEITA - ÚLTIMOS 6 MESES */}
-                    <div className="hidden">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                            <div>
-                                <h3 className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
-                                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Crescimento da Receita (Últimos 6 Meses)
-                                </h3>
-                                <p className="text-[9px] text-slate-400 uppercase tracking-wider">Análise de tendência comercial</p>
-                            </div>
-                        </div>
-
-                        <div className="hidden" aria-hidden="true">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={monthlyRevenueData.slice(-6)} margin={{ top: 15, right: 20, bottom: 20, left: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={8}
-                                    />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-                                    />
-                                    <RechartsTooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                                        formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita Realizada' : 'Meta']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
-                                    />
-                                    <Legend verticalAlign="top" height={28} formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita Realizada' : 'Meta Mensal'}</span>} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="revenue"
-                                        name="revenue"
-                                        stroke="#10b981"
-                                        strokeWidth={2.5}
-                                        dot={{ fill: '#10b981', r: 3.5, strokeWidth: 1.5, stroke: '#fff' }}
-                                        activeDot={{ r: 6, strokeWidth: 1.5, stroke: '#fff' }}
-                                    >
-                                        <LabelList dataKey="revenueLabel" position="top" fill="#10b981" fontSize={9} offset={8} />
-                                    </Line>
-                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
-                    <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
-                        <h3 className="text-xs font-bold text-text uppercase tracking-wider">Visualização Mensal (Últimos 12 Meses)</h3>
-
-                        <div className="h-[210px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={monthlyRevenueData} margin={{ top: 15, right: 20, bottom: 40, left: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={10}
-                                        angle={-45}
-                                        textAnchor="end"
-                                    />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-                                    />
-                                    <RechartsTooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                                        formatter={(value: number, name: string) => [`R$ ${value.toLocaleString('pt-BR')}`, name === 'revenue' ? 'Receita' : 'Meta']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
-                                    />
-                                    <Legend verticalAlign="top" height={28} formatter={(value) => <span className="text-[10px] text-slate-400 font-bold uppercase">{value === 'revenue' ? 'Receita' : 'Meta Mensal'}</span>} />
-                                    <Bar dataKey="revenue" name="revenue" fill="#0ea5e9" radius={[3, 3, 0, 0]} maxBarSize={36}>
-                                        <LabelList dataKey="revenueLabel" position="top" fill="#94a3b8" fontSize={8} offset={6} />
-                                    </Bar>
-                                    <Line type="monotone" dataKey="goal" name="goal" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        <div className="h-[140px] w-full border-t border-border pt-3">
-                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Variance (%)</h4>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={monthlyRevenueData} margin={{ top: 15, right: 15, bottom: 25, left: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                                    <ReferenceLine y={0} stroke="#94a3b8" />
-                                    <XAxis
-                                        dataKey="month"
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickMargin={8}
-                                        angle={-45}
-                                        textAnchor="end"
-                                    />
-                                    <YAxis
-                                        stroke="#94a3b8"
-                                        fontSize={9}
-                                        tickFormatter={(value) => `${value}%`}
-                                    />
-                                    <RechartsTooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                                        formatter={(value: number) => [`${value}%`, 'Variação']}
-                                        labelStyle={{ color: '#94a3b8', marginBottom: '2px' }}
-                                    />
-                                    <Bar dataKey="variance" radius={[3, 3, 0, 0]} maxBarSize={36}>
-                                        {monthlyRevenueData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill="#38bdf8" opacity={entry.variance >= 0 ? 0.8 : 0.4} />
-                                        ))}
-                                        <LabelList dataKey="variance" position="top" fill="#94a3b8" fontSize={8} formatter={(val: number) => `${val}%`} />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                  </div>
                 </div>
-            )}
-            {activeSubTab === 'transactions' && renderTransactionsTable()}
-            {activeSubTab === 'pricing' && renderPricing()}
-            {activeSubTab === 'viability' && <FinancialViability transactions={transactions} userRole={userRole} />}
-            {activeSubTab === 'clinica_experts' && <ClinicaExpertsFinancial />}
-            {activeSubTab === 'settings' && renderSettings()}
+              )}
+              {activeSubTab === "transactions" && renderTransactionsTable()}
+              {activeSubTab === "pricing" && renderPricing()}
+              {activeSubTab === "viability" && (
+                <FinancialViability
+                  transactions={transactions}
+                  userRole={userRole}
+                />
+              )}
+              {activeSubTab === "clinica_experts" && (
+                <ClinicaExpertsFinancial />
+              )}
+              {activeSubTab === "settings" && renderSettings()}
+            </div>
           </div>
         </div>
-      </div>
 
         {/* MODAL NOVA CONTA */}
         {isAccountModalOpen && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">Nova Conta Bancária</h3><button onClick={() => setIsAccountModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="p-6 flex flex-col gap-4">
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">NOME DA CONTA</label><input value={newAccount.name} onChange={e => setNewAccount({...newAccount, name: e.target.value})} placeholder="Ex: Conta Principal" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div>
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANCO / INSTITUIÇÃO</label><input value={newAccount.bank} onChange={e => setNewAccount({...newAccount, bank: e.target.value})} placeholder="Ex: Nubank, Itaú..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div>
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SALDO INICIAL (R$)</label><input type="number" value={newAccount.initialBalance} onChange={e => setNewAccount({...newAccount, initialBalance: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" /></div>
-                    </div>
-                    <div className="p-6 border-t border-border bg-surface flex justify-end gap-4"><button onClick={() => setIsAccountModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button><button onClick={handleSaveAccount} disabled={isSaving} className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text font-bold rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50">Criar Conta</button></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
+            <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
+                <h3 className="text-xl font-bold text-text font-display">
+                  Nova Conta Bancária
+                </h3>
+                <button
+                  onClick={() => setIsAccountModalOpen(false)}
+                  className="text-slate-400 hover:text-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-6 flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    NOME DA CONTA
+                  </label>
+                  <input
+                    value={newAccount.name}
+                    onChange={(e) =>
+                      setNewAccount({ ...newAccount, name: e.target.value })
+                    }
+                    placeholder="Ex: Conta Principal"
+                    className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                  />
                 </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    BANCO / INSTITUIÇÃO
+                  </label>
+                  <input
+                    value={newAccount.bank}
+                    onChange={(e) =>
+                      setNewAccount({ ...newAccount, bank: e.target.value })
+                    }
+                    placeholder="Ex: Nubank, Itaú..."
+                    className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    SALDO INICIAL (R$)
+                  </label>
+                  <input
+                    type="number"
+                    value={newAccount.initialBalance}
+                    onChange={(e) =>
+                      setNewAccount({
+                        ...newAccount,
+                        initialBalance: e.target.value,
+                      })
+                    }
+                    placeholder="0.00"
+                    className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold"
+                  />
+                </div>
+              </div>
+              <div className="p-6 border-t border-border bg-surface flex justify-end gap-4">
+                <button
+                  onClick={() => setIsAccountModalOpen(false)}
+                  className="text-sm font-semibold text-slate-400 hover:text-text transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveAccount}
+                  disabled={isSaving}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text font-bold rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                >
+                  Criar Conta
+                </button>
+              </div>
             </div>
+          </div>
         )}
 
         {/* MODAL LANÇAMENTO EM MASSA - FORMATO EXCEL */}
         {isBulkModalOpen && (
-            <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
-                <div className="bg-surface border border-border w-full max-w-[95vw] h-[90vh] rounded-3xl shadow-3xl overflow-hidden flex flex-col">
-                    <div className="p-4 sm:px-5 border-b border-white/60 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] flex justify-between items-center shrink-0">
-                        <div>
-                            <h3 className="text-xl font-black text-text uppercase tracking-tight">Lançamentos em Massa (Grade Excel)</h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
-                        </div>
-                        <button onClick={() => setIsBulkModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button>
-                    </div>
-
-                    <div className="p-4 bg-panel border-b border-border flex flex-col md:flex-row gap-4">
-                        <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">Copiar e Colar do Excel (Data | Desc | Cat | SubCat | Forn | Valor | Conta | Pagto | Status | DataPagto)</label>
-                            <div className="flex gap-2">
-                                <textarea value={pastedData} onChange={(e) => setPastedData(e.target.value)} placeholder="Cole aqui as linhas copiadas do seu Excel..." className="flex-1 h-10 bg-panel border border-border rounded-lg px-3 py-1.5 text-xs text-text outline-none focus:border-blue-500 resize-none font-mono" />
-                                <button onClick={handleProcessPastedData} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-xs font-bold uppercase transition-all">Processar Cola</button>
-                            </div>
-                        </div>
-                        <div className="w-full md:w-auto flex flex-col justify-end"><label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">Ou subir arquivo CSV</label><label className="cursor-pointer px-4 py-2 bg-panel border border-border hover:bg-panel/80 text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-2 transition-all"><Upload className="w-4 h-4" />Selecionar .CSV<input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" /></label></div>
-                    </div>
-
-                    <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-surface">
-                        <table className="w-full border-collapse border border-border">
-                            <thead className="sticky top-0 bg-surface z-10 text-[9px] font-black text-slate-500 uppercase tracking-widest text-left">
-                                <tr>
-                                    <th className="p-3 border border-border min-w-[120px]">Data Comp.</th>
-                                    <th className="p-3 border border-border min-w-[200px]">Descrição</th>
-                                    <th className="p-3 border border-border min-w-[150px]">Categoria</th>
-                                    <th className="p-3 border border-border min-w-[150px]">Sub-Categoria</th>
-                                    <th className="p-3 border border-border min-w-[150px]">Fornecedor</th>
-                                    <th className="p-3 border border-border min-w-[100px]">Valor (R$)</th>
-                                    <th className="p-3 border border-border min-w-[150px]">Conta / Banco</th>
-                                    <th className="p-3 border border-border min-w-[120px]">Forma de Pagto</th>
-                                    <th className="p-3 border border-border min-w-[100px]">Status</th>
-                                    <th className="p-3 border border-border min-w-[120px]">Data Pagto</th>
-                                    <th className="p-3 border border-border w-[40px]"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {bulkRows.map((row, idx) => (
-                                    <tr key={idx} className="hover:bg-panel group">
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input type="date" value={row.date} onChange={e => handleBulkChange(idx, 'date', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input value={row.description} onChange={e => handleBulkChange(idx, 'description', e.target.value)} placeholder="Descrição..." className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
-                                            <select value={row.category} onChange={e => handleBulkChange(idx, 'category', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">
-                                                {expenseCategories.map(c => <option key={c.id} value={c.name} className="bg-surface">{c.name}</option>)}
-                                            </select>
-                                        </td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
-                                            <select value={row.procedure} onChange={e => handleBulkChange(idx, 'procedure', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">
-                                                <option value="" className="bg-surface">Selecione...</option>
-                                                {(expenseCategories.find(c => c.name === row.category)?.subcategories || []).map(s => <option key={s.id} value={s.name} className="bg-surface">{s.name}</option>)}
-                                            </select>
-                                        </td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input value={row.supplier || ''} onChange={e => handleBulkChange(idx, 'supplier', e.target.value)} placeholder="Fornecedor..." className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input value={row.amount} onChange={e => handleBulkChange(idx, 'amount', e.target.value)} placeholder="0.00" className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 font-mono font-bold text-right" /></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><select value={row.accountId} onChange={e => handleBulkChange(idx, 'accountId', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">{accountsList.map(acc => <option key={acc.id} value={acc.id} className="bg-surface">{acc.name}</option>)}</select></td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
-                                            <select value={row.paymentMethod} onChange={e => handleBulkChange(idx, 'paymentMethod', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">
-                                                {paymentMethods.map(pm => <option key={pm.id} value={pm.name} className="bg-surface">{pm.name}</option>)}
-                                            </select>
-                                        </td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
-                                            <select value={row.status} onChange={e => handleBulkChange(idx, 'status', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none">
-                                                <option value="Paid" className="bg-surface">Pago</option>
-                                                <option value="Pending" className="bg-surface">A Pagar</option>
-                                            </select>
-                                        </td>
-                                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative"><input type="date" value={row.paymentDate || ''} onChange={e => handleBulkChange(idx, 'paymentDate', e.target.value)} className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors" /></td>
-                                        <td className="p-0 border border-border text-center"><button onClick={() => removeBulkRow(idx)} className="w-full h-full flex items-center justify-center text-slate-700 hover:text-red-400 transition-colors p-2.5"><Trash2 className="w-3.5 h-3.5" /></button></td>
-
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <button onClick={addBulkRow} className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest">+ Adicionar Nova Linha de Célula</button>
-                    </div>
-
-                    <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center"><div className="mr-auto flex gap-6 text-[10px] font-black uppercase text-slate-500 tracking-tighter"><span>{bulkRows.length} linhas preparadas</span><span className="text-slate-700">|</span><span>Dica: Use [TAB] para navegar ou cole do Excel acima</span></div><button onClick={() => setIsBulkModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text">Cancelar</button><button onClick={handleSaveBulk} disabled={isSaving} className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest">Processar Planilha</button></div>
+          <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
+            <div className="bg-surface border border-border w-full max-w-[95vw] h-[90vh] rounded-3xl shadow-3xl overflow-hidden flex flex-col">
+              <div className="p-4 sm:px-5 border-b border-white/60 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="text-xl font-black text-text uppercase tracking-tight">
+                    Lançamentos em Massa (Grade Excel)
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                    A busca inteligente agora mapeia Profissionais, Pagamentos e
+                    Procedimentos do Excel.
+                  </p>
                 </div>
+                <button
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="text-slate-400 hover:text-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-panel border-b border-border flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">
+                    Copiar e Colar do Excel (Data | Desc | Cat | SubCat | Forn |
+                    Valor | Conta | Pagto | Status | DataPagto)
+                  </label>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={pastedData}
+                      onChange={(e) => setPastedData(e.target.value)}
+                      placeholder="Cole aqui as linhas copiadas do seu Excel..."
+                      className="flex-1 h-10 bg-panel border border-border rounded-lg px-3 py-1.5 text-xs text-text outline-none focus:border-blue-500 resize-none font-mono"
+                    />
+                    <button
+                      onClick={handleProcessPastedData}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-xs font-bold uppercase transition-all"
+                    >
+                      Processar Cola
+                    </button>
+                  </div>
+                </div>
+                <div className="w-full md:w-auto flex flex-col justify-end">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">
+                    Ou subir arquivo CSV
+                  </label>
+                  <label className="cursor-pointer px-4 py-2 bg-panel border border-border hover:bg-panel/80 text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-2 transition-all">
+                    <Upload className="w-4 h-4" />
+                    Selecionar .CSV
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-surface">
+                <table className="w-full border-collapse border border-border">
+                  <thead className="sticky top-0 bg-surface z-10 text-[9px] font-black text-slate-500 uppercase tracking-widest text-left">
+                    <tr>
+                      <th className="p-3 border border-border min-w-[120px]">
+                        Data Comp.
+                      </th>
+                      <th className="p-3 border border-border min-w-[200px]">
+                        Descrição
+                      </th>
+                      <th className="p-3 border border-border min-w-[150px]">
+                        Categoria
+                      </th>
+                      <th className="p-3 border border-border min-w-[150px]">
+                        Sub-Categoria
+                      </th>
+                      <th className="p-3 border border-border min-w-[150px]">
+                        Fornecedor
+                      </th>
+                      <th className="p-3 border border-border min-w-[100px]">
+                        Valor (R$)
+                      </th>
+                      <th className="p-3 border border-border min-w-[150px]">
+                        Conta / Banco
+                      </th>
+                      <th className="p-3 border border-border min-w-[120px]">
+                        Forma de Pagto
+                      </th>
+                      <th className="p-3 border border-border min-w-[100px]">
+                        Status
+                      </th>
+                      <th className="p-3 border border-border min-w-[120px]">
+                        Data Pagto
+                      </th>
+                      <th className="p-3 border border-border w-[40px]"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {bulkRows.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-panel group">
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <input
+                            type="date"
+                            value={row.date}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "date", e.target.value)
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors"
+                          />
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <input
+                            value={row.description}
+                            onChange={(e) =>
+                              handleBulkChange(
+                                idx,
+                                "description",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Descrição..."
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors"
+                          />
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <select
+                            value={row.category}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "category", e.target.value)
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none"
+                          >
+                            {expenseCategories.map((c) => (
+                              <option
+                                key={c.id}
+                                value={c.name}
+                                className="bg-surface"
+                              >
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <select
+                            value={row.procedure}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "procedure", e.target.value)
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none"
+                          >
+                            <option value="" className="bg-surface">
+                              Selecione...
+                            </option>
+                            {(
+                              expenseCategories.find(
+                                (c) => c.name === row.category,
+                              )?.subcategories || []
+                            ).map((s) => (
+                              <option
+                                key={s.id}
+                                value={s.name}
+                                className="bg-surface"
+                              >
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <input
+                            value={row.supplier || ""}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "supplier", e.target.value)
+                            }
+                            placeholder="Fornecedor..."
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors"
+                          />
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <input
+                            value={row.amount}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "amount", e.target.value)
+                            }
+                            placeholder="0.00"
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 font-mono font-bold text-right"
+                          />
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <select
+                            value={row.accountId}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "accountId", e.target.value)
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none"
+                          >
+                            {accountsList.map((acc) => (
+                              <option
+                                key={acc.id}
+                                value={acc.id}
+                                className="bg-surface"
+                              >
+                                {acc.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <select
+                            value={row.paymentMethod}
+                            onChange={(e) =>
+                              handleBulkChange(
+                                idx,
+                                "paymentMethod",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none"
+                          >
+                            {paymentMethods.map((pm) => (
+                              <option
+                                key={pm.id}
+                                value={pm.name}
+                                className="bg-surface"
+                              >
+                                {pm.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <select
+                            value={row.status}
+                            onChange={(e) =>
+                              handleBulkChange(idx, "status", e.target.value)
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 cursor-pointer appearance-none"
+                          >
+                            <option value="Paid" className="bg-surface">
+                              Pago
+                            </option>
+                            <option value="Pending" className="bg-surface">
+                              A Pagar
+                            </option>
+                          </select>
+                        </td>
+                        <td className="p-0 border border-border focus-within:ring-1 focus-within:ring-blue-500 focus-within:z-20 relative">
+                          <input
+                            type="date"
+                            value={row.paymentDate || ""}
+                            onChange={(e) =>
+                              handleBulkChange(
+                                idx,
+                                "paymentDate",
+                                e.target.value,
+                              )
+                            }
+                            className="w-full h-full bg-transparent border-none p-2.5 text-xs text-text outline-none focus:bg-blue-500/5 transition-colors"
+                          />
+                        </td>
+                        <td className="p-0 border border-border text-center">
+                          <button
+                            onClick={() => removeBulkRow(idx)}
+                            className="w-full h-full flex items-center justify-center text-slate-700 hover:text-red-400 transition-colors p-2.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <button
+                  onClick={addBulkRow}
+                  className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest"
+                >
+                  + Adicionar Nova Linha de Célula
+                </button>
+              </div>
+
+              <div className="p-8 border-t border-border bg-surface flex justify-end gap-6 items-center">
+                <div className="mr-auto flex gap-6 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
+                  <span>{bulkRows.length} linhas preparadas</span>
+                  <span className="text-slate-700">|</span>
+                  <span>
+                    Dica: Use [TAB] para navegar ou cole do Excel acima
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="text-sm font-semibold text-slate-400 hover:text-text"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveBulk}
+                  disabled={isSaving}
+                  className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                >
+                  Processar Planilha
+                </button>
+              </div>
             </div>
+          </div>
         )}
 
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
-            <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl max-h-[calc(100dvh-2rem)] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">{formData.id ? 'Editar Lançamento' : (modalType === 'income' ? 'Nova Receita' : 'Nova Despesa')}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto min-h-0 max-h-[calc(100dvh-8rem)] custom-scrollbar bg-transparent">
-                        {modalType === 'expense' ? (
-                            <>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DE COMPETÊNCIA</label>
-                                        <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DESCRIÇÃO</label>
-                                        <input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CATEGORIA</label>
-                                        <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            {expenseCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SUB-CATEGORIA / PROCEDIMENTO</label>
-                                        <select value={formData.procedure} onChange={e => handleSubCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            <option value="">Selecione...</option>
-                                            {(expenseCategories.find(c => c.name === formData.category)?.subcategories || []).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">FORNECEDOR</label>
-                                        <select value={formData.supplier} onChange={e => setFormData({...formData, supplier: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            <option value="">Selecione...</option>
-                                            {suppliers.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VALOR (R$)</label>
-                                        <input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÁTICO)</label>
-                                        <select value={formData.accountId} onChange={e => setFormData({...formData, accountId: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            {accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">FORMA PAGTO</label>
-                                        <select value={formData.paymentMethod} onChange={e => handlePaymentMethodChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            {paymentMethods.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
-                                        </select>
-                                    </div>
+          <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
+            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl max-h-[calc(100dvh-2rem)] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
+              <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
+                <h3 className="text-xl font-bold text-text font-display">
+                  {formData.id
+                    ? "Editar Lançamento"
+                    : modalType === "income"
+                      ? "Nova Receita"
+                      : "Nova Despesa"}
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-slate-400 hover:text-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto min-h-0 max-h-[calc(100dvh-8rem)] custom-scrollbar bg-transparent">
+                {modalType === "expense" ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          DATA DE COMPETÊNCIA
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.date}
+                          onChange={(e) =>
+                            setFormData({ ...formData, date: e.target.value })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          DESCRIÇÃO
+                        </label>
+                        <input
+                          value={formData.description}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              description: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          CATEGORIA
+                        </label>
+                        <select
+                          value={formData.category}
+                          onChange={(e) => handleCategoryChange(e.target.value)}
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {expenseCategories.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          SUB-CATEGORIA / PROCEDIMENTO
+                        </label>
+                        <select
+                          value={formData.procedure}
+                          onChange={(e) =>
+                            handleSubCategoryChange(e.target.value)
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          <option value="">Selecione...</option>
+                          {(
+                            expenseCategories.find(
+                              (c) => c.name === formData.category,
+                            )?.subcategories || []
+                          ).map((s) => (
+                            <option key={s.id} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          FORNECEDOR
+                        </label>
+                        <select
+                          value={formData.supplier}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              supplier: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          <option value="">Selecione...</option>
+                          {suppliers.map((s) => (
+                            <option key={s.id} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          VALOR (R$)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.amount}
+                          onChange={(e) =>
+                            setFormData({ ...formData, amount: e.target.value })
+                          }
+                          placeholder="0.00"
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          CONTA / BANCO (AUTOMÁTICO)
+                        </label>
+                        <select
+                          value={formData.accountId}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              accountId: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {accountsList.map((acc) => (
+                            <option key={acc.id} value={acc.id}>
+                              {acc.name} ({acc.bank})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          FORMA PAGTO
+                        </label>
+                        <select
+                          value={formData.paymentMethod}
+                          onChange={(e) =>
+                            handlePaymentMethodChange(e.target.value)
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {paymentMethods.map((pm) => (
+                            <option key={pm.id} value={pm.name}>
+                              {pm.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STATUS DO PAGAMENTO</label>
-                                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Pending', settlementDate: ''})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Pending' ? 'bg-red-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>A Pagar</button>
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Pago</button>
-                                        </div>
-                                    </div>
-                                    {formData.status === 'Paid' && (
-                                        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DO PAGAMENTO</label>
-                                            <input type="date" value={formData.settlementDate} onChange={e => setFormData({...formData, settlementDate: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
-                                        </div>
-                                    )}
-                                </div>
-                                {!formData.id && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">RECORRÊNCIA (MESES)</label>
-                                            <select value={formData.recurrence} onChange={e => setFormData({...formData, recurrence: parseInt(e.target.value) || 1})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                                {[1,2,3,4,5,6,7,8,9,10,11,12,24,36,48,60].map(n => <option key={n} value={n}>{n === 1 ? 'Lançamento Único' : `${n} Meses`}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA</label><input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" /></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PACIENTE</label><input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none" /></div></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CATEGORIA</label><select value={formData.category} onChange={e => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{(modalType === 'income' ? incomeCategories : expenseCategories).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SUB-CATEGORIA / PROCEDIMENTO</label><select value={formData.procedure} onChange={e => handleSubCategoryChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"><option value="">Selecione...</option>{((modalType === 'income' ? incomeCategories : expenseCategories).find(c => c.name === formData.category)?.subcategories || []).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">VALOR (R$)</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="0.00" className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold" /></div><div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CONTA / BANCO (AUTOMÁTICO)</label><select value={formData.accountId} onChange={e => setFormData({...formData, accountId: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{accountsList.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.bank})</option>)}</select></div></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PROFISSIONAL</label>
-                                        <select value={formData.professional} onChange={e => setFormData({...formData, professional: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                            <option value="">Selecione...</option>
-                                            {professionals.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                                        </select>
-                                    </div>
-                                    {(!(formData.date >= '2026-06-01') || formData.salesTeam) && (
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TIME DE VENDA</label>
-                                            <select
-                                                value={formData.salesTeam}
-                                                onChange={e => setFormData({...formData, salesTeam: e.target.value})}
-                                                disabled={formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial'}
-                                                className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
-                                                    (formData.procedure === 'Panorâmica' || formData.procedure === 'Documentação Inicial') ? 'opacity-50 cursor-not-allowed' : ''
-                                                }`}
-                                            >
-                                                <option value="">Selecione...</option>
-                                                {salesTeams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-                                                {formData.salesTeam && !salesTeams.find(t => t.name === formData.salesTeam) && (
-                                                    <option value={formData.salesTeam}>{formData.salesTeam}</option>
-                                                )}
-                                            </select>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
-                                    <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">FORMA PAGTO</label><select value={formData.paymentMethod} onChange={e => handlePaymentMethodChange(e.target.value)} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">{paymentMethods.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}</select></div>
-                                    {formData.status === 'Paid' && (
-                                        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DO RECEBIMENTO</label>
-                                            <input type="date" value={formData.settlementDate} onChange={e => setFormData({...formData, settlementDate: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STATUS DO RECEBIMENTO</label>
-                                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Pending', settlementDate: ''})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Pending' ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>A Receber</button>
-                                            <button type="button" onClick={() => setFormData({...formData, status: 'Paid', settlementDate: today})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === 'Paid' ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Recebido</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">TIPO DE RECEBIMENTO</label>
-                                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
-                                            <button type="button" onClick={() => setFormData({...formData, isPartial: false})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${!formData.isPartial ? 'bg-emerald-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Integral</button>
-                                            <button type="button" onClick={() => setFormData({...formData, isPartial: true})} className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? 'bg-amber-600 text-text shadow-lg' : 'text-slate-400 hover:text-text'}`}>Parcial</button>
-                                        </div>
-                                    </div>
-                                    {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito') || (formData.paymentMethod || '').toLowerCase().includes('débito'))) && (
-                                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">BANDEIRA DO CARTÃO</label>
-                                            <select value={formData.cardBrand} onChange={e => setFormData({...formData, cardBrand: e.target.value})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold">
-                                                <option value="">Selecione...</option>
-                                                {cardFees.map(f => <option key={f.brand} value={f.brand}>{f.brand}</option>)}
-                                            </select>
-                                        </div>
-                                    )}
-                                </div>
-                                {(((formData.paymentMethod || '').toLowerCase().includes('cartão') || (formData.paymentMethod || '').toLowerCase().includes('crédito'))) && !(formData.paymentMethod || '').toLowerCase().includes('débito') && (
-                                    <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">NÚMERO DE PARCELAS</label>
-                                        <select value={formData.installments} onChange={e => setFormData({...formData, installments: parseInt(e.target.value) || 1})} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold">
-                                            {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
-                                        </select>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                        <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÇÕES / COMENTÁRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lançamento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          STATUS DO PAGAMENTO
+                        </label>
+                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                status: "Pending",
+                                settlementDate: "",
+                              })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Pending" ? "bg-red-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            A Pagar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                status: "Paid",
+                                settlementDate: today,
+                              })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            Pago
+                          </button>
+                        </div>
+                      </div>
+                      {formData.status === "Paid" && (
+                        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            DATA DO PAGAMENTO
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.settlementDate}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                settlementDate: e.target.value,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="p-4 sm:px-5 border-t border-white/60 dark:border-white/10 bg-white/25 dark:bg-white/[0.03] flex items-center gap-4 shrink-0">
-                        {modalType === 'income' && formData.id && (
-                            <button
-                                onClick={() => {
-                                    const transaction = transactions.find(item => item.id === formData.id);
-                                    if (transaction) void deleteIncome(transaction);
-                                }}
-                                className="mr-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
-                            >
-                                <Trash2 className="w-4 h-4" /> Excluir lançamento
-                            </button>
-                        )}
-                        <button onClick={() => setIsModalOpen(false)} className="text-sm font-semibold text-slate-400 hover:text-text transition-colors">Cancelar</button>
-                        <button onClick={handleSaveTransaction} disabled={isSaving} className={`px-10 py-3 rounded-xl ${modalType === 'income' ? 'bg-surface' : 'bg-surface'} text-text font-bold text-sm shadow-xl transition-all active:scale-95`}>Confirmar</button>
+                    {!formData.id && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            RECORRÊNCIA (MESES)
+                          </label>
+                          <select
+                            value={formData.recurrence}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                recurrence: parseInt(e.target.value) || 1,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                          >
+                            {[
+                              1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36, 48,
+                              60,
+                            ].map((n) => (
+                              <option key={n} value={n}>
+                                {n === 1 ? "Lançamento Único" : `${n} Meses`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          DATA
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.date}
+                          onChange={(e) =>
+                            setFormData({ ...formData, date: e.target.value })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          PACIENTE
+                        </label>
+                        <input
+                          value={formData.description}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              description: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none"
+                        />
+                      </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          CATEGORIA
+                        </label>
+                        <select
+                          value={formData.category}
+                          onChange={(e) => handleCategoryChange(e.target.value)}
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {(modalType === "income"
+                            ? incomeCategories
+                            : expenseCategories
+                          ).map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          SUB-CATEGORIA / PROCEDIMENTO
+                        </label>
+                        <select
+                          value={formData.procedure}
+                          onChange={(e) =>
+                            handleSubCategoryChange(e.target.value)
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          <option value="">Selecione...</option>
+                          {(
+                            (modalType === "income"
+                              ? incomeCategories
+                              : expenseCategories
+                            ).find((c) => c.name === formData.category)
+                              ?.subcategories || []
+                          ).map((s) => (
+                            <option key={s.id} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          VALOR (R$)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.amount}
+                          onChange={(e) =>
+                            setFormData({ ...formData, amount: e.target.value })
+                          }
+                          placeholder="0.00"
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          CONTA / BANCO (AUTOMÁTICO)
+                        </label>
+                        <select
+                          value={formData.accountId}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              accountId: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {accountsList.map((acc) => (
+                            <option key={acc.id} value={acc.id}>
+                              {acc.name} ({acc.bank})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          PROFISSIONAL
+                        </label>
+                        <select
+                          value={formData.professional}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              professional: e.target.value,
+                            })
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          <option value="">Selecione...</option>
+                          {professionals.map((p) => (
+                            <option key={p.id} value={p.name}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {(!(formData.date >= "2026-06-01") ||
+                        formData.salesTeam) && (
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            TIME DE VENDA
+                          </label>
+                          <select
+                            value={formData.salesTeam}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                salesTeam: e.target.value,
+                              })
+                            }
+                            disabled={
+                              formData.procedure === "Panorâmica" ||
+                              formData.procedure === "Documentação Inicial"
+                            }
+                            className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
+                              formData.procedure === "Panorâmica" ||
+                              formData.procedure === "Documentação Inicial"
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                          >
+                            <option value="">Selecione...</option>
+                            {salesTeams.map((t) => (
+                              <option key={t.id} value={t.name}>
+                                {t.name}
+                              </option>
+                            ))}
+                            {formData.salesTeam &&
+                              !salesTeams.find(
+                                (t) => t.name === formData.salesTeam,
+                              ) && (
+                                <option value={formData.salesTeam}>
+                                  {formData.salesTeam}
+                                </option>
+                              )}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          FORMA PAGTO
+                        </label>
+                        <select
+                          value={formData.paymentMethod}
+                          onChange={(e) =>
+                            handlePaymentMethodChange(e.target.value)
+                          }
+                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                        >
+                          {paymentMethods.map((pm) => (
+                            <option key={pm.id} value={pm.name}>
+                              {pm.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {formData.status === "Paid" && (
+                        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            DATA DO RECEBIMENTO
+                          </label>
+                          <input
+                            type="date"
+                            value={formData.settlementDate}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                settlementDate: e.target.value,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          STATUS DO RECEBIMENTO
+                        </label>
+                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                status: "Pending",
+                                settlementDate: "",
+                              })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Pending" ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            A Receber
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                status: "Paid",
+                                settlementDate: today,
+                              })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            Recebido
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          TIPO DE RECEBIMENTO
+                        </label>
+                        <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({ ...formData, isPartial: false })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${!formData.isPartial ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            Integral
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({ ...formData, isPartial: true })
+                            }
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                          >
+                            Parcial
+                          </button>
+                        </div>
+                      </div>
+                      {((formData.paymentMethod || "")
+                        .toLowerCase()
+                        .includes("cartão") ||
+                        (formData.paymentMethod || "")
+                          .toLowerCase()
+                          .includes("crédito") ||
+                        (formData.paymentMethod || "")
+                          .toLowerCase()
+                          .includes("débito")) && (
+                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            BANDEIRA DO CARTÃO
+                          </label>
+                          <select
+                            value={formData.cardBrand}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                cardBrand: e.target.value,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                          >
+                            <option value="">Selecione...</option>
+                            {cardFees.map((f) => (
+                              <option key={f.brand} value={f.brand}>
+                                {f.brand}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    {((formData.paymentMethod || "")
+                      .toLowerCase()
+                      .includes("cartão") ||
+                      (formData.paymentMethod || "")
+                        .toLowerCase()
+                        .includes("crédito")) &&
+                      !(formData.paymentMethod || "")
+                        .toLowerCase()
+                        .includes("débito") && (
+                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            NÚMERO DE PARCELAS
+                          </label>
+                          <select
+                            value={formData.installments}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                installments: parseInt(e.target.value) || 1,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                          >
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
+                              (n) => (
+                                <option key={n} value={n}>
+                                  {n}x
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </div>
+                      )}
+                  </>
+                )}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    OBSERVAÇÕES / COMENTÁRIOS
+                  </label>
+                  <textarea
+                    value={formData.observation}
+                    onChange={(e) =>
+                      setFormData({ ...formData, observation: e.target.value })
+                    }
+                    placeholder="Notas internas sobre este lançamento..."
+                    className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none"
+                  />
                 </div>
+              </div>
+              <div className="p-4 sm:px-5 border-t border-white/60 dark:border-white/10 bg-white/25 dark:bg-white/[0.03] flex items-center gap-4 shrink-0">
+                {modalType === "income" && formData.id && (
+                  <button
+                    onClick={() => {
+                      const transaction = transactions.find(
+                        (item) => item.id === formData.id,
+                      );
+                      if (transaction) void deleteIncome(transaction);
+                    }}
+                    className="mr-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" /> Excluir lançamento
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-sm font-semibold text-slate-400 hover:text-text transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveTransaction}
+                  disabled={isSaving}
+                  className={`px-10 py-3 rounded-xl ${modalType === "income" ? "bg-surface" : "bg-surface"} text-text font-bold text-sm shadow-xl transition-all active:scale-95`}
+                >
+                  Confirmar
+                </button>
+              </div>
             </div>
+          </div>
         )}
 
         {/* MODAL OBSERVAÇÃO RÁPIDA */}
         {isObsModalOpen && selectedTxForObs && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden"><div className="p-5 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-sm font-bold text-text uppercase">Observação do Lançamento</h3><button onClick={() => setIsObsModalOpen(false)} className="text-slate-400 hover:text-text"><X className="w-5 h-5" /></button></div><div className="p-6"><p className="text-[10px] text-slate-500 font-bold uppercase mb-2">DESCRIÇÃO: {selectedTxForObs.description}</p><textarea value={tempObs} onChange={e => setTempObs(e.target.value)} placeholder="Escreva aqui..." className="w-full bg-surface border border-border rounded-xl p-4 text-sm text-text outline-none h-40 resize-none focus:border-amber-500 transition-colors" /></div><div className="p-4 border-t border-border bg-surface flex justify-end gap-3"><button onClick={() => setIsObsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-400">Cancelar</button><button onClick={handleSaveObservation} className="px-6 py-2 bg-amber-600 text-text rounded-lg text-xs font-bold uppercase shadow-lg">Salvar Nota</button></div></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
+            <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden">
+              <div className="p-5 border-b border-border bg-surface flex justify-between items-center">
+                <h3 className="text-sm font-bold text-text uppercase">
+                  Observação do Lançamento
+                </h3>
+                <button
+                  onClick={() => setIsObsModalOpen(false)}
+                  className="text-slate-400 hover:text-text"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-[10px] text-slate-500 font-bold uppercase mb-2">
+                  DESCRIÇÃO: {selectedTxForObs.description}
+                </p>
+                <textarea
+                  value={tempObs}
+                  onChange={(e) => setTempObs(e.target.value)}
+                  placeholder="Escreva aqui..."
+                  className="w-full bg-surface border border-border rounded-xl p-4 text-sm text-text outline-none h-40 resize-none focus:border-amber-500 transition-colors"
+                />
+              </div>
+              <div className="p-4 border-t border-border bg-surface flex justify-end gap-3">
+                <button
+                  onClick={() => setIsObsModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveObservation}
+                  className="px-6 py-2 bg-amber-600 text-text rounded-lg text-xs font-bold uppercase shadow-lg"
+                >
+                  Salvar Nota
+                </button>
+              </div>
             </div>
+          </div>
         )}
 
         {/* MODAL EXTRATO DE CONTA */}
         {selectedAccountForStatement && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-surface border border-border w-full max-w-5xl rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><div className="flex items-center gap-4"><div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10"><Wallet className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-text leading-none mb-1">Extrato: {selectedAccountForStatement.name}</h3><p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{selectedAccountForStatement.bank}</p></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface"><table className="w-full text-left border-collapse"><thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10"><tr><th className="p-4 pl-8">Data</th><th className="p-4">Descrição</th><th className="p-4 text-right">Valor Bruto</th><th className="p-4 text-right">Taxas</th><th className="p-4 text-right pr-8">Líquido (Saldo)</th></tr></thead><tbody className="text-xs text-slate-300 divide-y divide-white/5"><tr className="bg-panel"><td className="p-4 pl-8 font-mono text-slate-500 italic">Inicial</td><td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Saldo Inicial da Conta</td><td className="p-4 text-right">-</td><td className="p-4 text-right">-</td><td className="p-4 text-right font-bold text-text pr-8">R$ {selectedAccountForStatement.initialBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').sort((a, b) => { const dateA = a.settlementDate || a.date; const dateB = b.settlementDate || b.date; return dateB.localeCompare(dateA); }).map(tx => { const isIncome = tx.type === 'income'; const gross = tx.amount; const fee = getEffectiveFee(tx); const net = gross - fee; const displayDate = tx.settlementDate || tx.date; return (<tr key={tx.id} className="hover:bg-panel transition-colors"><td className="p-4 pl-8 font-mono">{displayDate.split('-').reverse().join('/')}</td><td className="p-4"><div className="flex flex-col"><span className="font-bold text-text">{tx.description}</span><span className="text-[10px] text-slate-500 uppercase font-medium">{tx.category} • {tx.paymentMethod}</span></div></td><td className="p-4 text-right text-slate-400">R$ {gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td className="p-4 text-right"><div className="flex items-center justify-end text-red-400/60 group/fee"><span className="text-[10px] mr-1">- R$</span><input type="number" step="0.01" value={fee.toFixed(2)} onChange={(e) => { const val = parseFloat(e.target.value) || 0; setTransactions(prev => prev.map(item => item.id === tx.id ? {...item, explicitFeeAmount: val} : item)); }} onBlur={(e) => { const val = parseFloat(e.target.value) || 0; handleUpdateFee(tx.id, val); }} className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono" /></div></td><td className={`p-4 text-right font-black pr-8 ${isIncome ? 'text-emerald-400' : 'text-red-400'}`}>{isIncome ? '+' : '-'} R$ {(isIncome ? net : gross).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>); })}</tbody></table>{transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').length === 0 && (<div className="p-20 text-center text-slate-500 italic">Nenhum lançamento encontrado para esta conta.</div>)}</div>
-                    <div className="p-8 border-t border-border bg-surface flex justify-between items-center"><div className="flex gap-8"><div className="flex flex-col"><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saldo Atual Real</span><span className="text-2xl font-bold text-text">R$ {((selectedAccountForStatement.initialBalance || 0) + transactions.filter(t => t.accountId === selectedAccountForStatement.id && t.status === 'Paid').reduce((sum, t) => { const isIncome = t.type === 'income'; const gross = t.amount; const fee = getEffectiveFee(t); const net = gross - fee; return sum + (isIncome ? net : -gross); }, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div></div><button onClick={() => setSelectedAccountForStatement(null)} className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95">Fechar Extrato</button></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
+            <div className="bg-surface border border-border w-full max-w-5xl rounded-3xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="size-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/10">
+                    <Wallet className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-text leading-none mb-1">
+                      Extrato: {selectedAccountForStatement.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                      {selectedAccountForStatement.bank}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setSelectedAccountForStatement(null)}
+                  className="text-slate-400 hover:text-text transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-0 custom-scrollbar bg-surface">
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10">
+                    <tr>
+                      <th className="p-4 pl-8">Data</th>
+                      <th className="p-4">Descrição</th>
+                      <th className="p-4 text-right">Valor Bruto</th>
+                      <th className="p-4 text-right">Taxas</th>
+                      <th className="p-4 text-right pr-8">Líquido (Saldo)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs text-slate-300 divide-y divide-white/5">
+                    <tr className="bg-panel">
+                      <td className="p-4 pl-8 font-mono text-slate-500 italic">
+                        Inicial
+                      </td>
+                      <td className="p-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">
+                        Saldo Inicial da Conta
+                      </td>
+                      <td className="p-4 text-right">-</td>
+                      <td className="p-4 text-right">-</td>
+                      <td className="p-4 text-right font-bold text-text pr-8">
+                        R${" "}
+                        {selectedAccountForStatement.initialBalance.toLocaleString(
+                          "pt-BR",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </td>
+                    </tr>
+                    {transactions
+                      .filter(
+                        (t) =>
+                          t.accountId === selectedAccountForStatement.id &&
+                          t.status === "Paid",
+                      )
+                      .sort((a, b) => {
+                        const dateA = a.settlementDate || a.date;
+                        const dateB = b.settlementDate || b.date;
+                        return dateB.localeCompare(dateA);
+                      })
+                      .map((tx) => {
+                        const isIncome = tx.type === "income";
+                        const gross = tx.amount;
+                        const fee = getEffectiveFee(tx);
+                        const net = gross - fee;
+                        const displayDate = tx.settlementDate || tx.date;
+                        return (
+                          <tr
+                            key={tx.id}
+                            className="hover:bg-panel transition-colors"
+                          >
+                            <td className="p-4 pl-8 font-mono">
+                              {displayDate.split("-").reverse().join("/")}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-text">
+                                  {tx.description}
+                                </span>
+                                <span className="text-[10px] text-slate-500 uppercase font-medium">
+                                  {tx.category} • {tx.paymentMethod}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-right text-slate-400">
+                              R${" "}
+                              {gross.toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end text-red-400/60 group/fee">
+                                <span className="text-[10px] mr-1">- R$</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={fee.toFixed(2)}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    setTransactions((prev) =>
+                                      prev.map((item) =>
+                                        item.id === tx.id
+                                          ? { ...item, explicitFeeAmount: val }
+                                          : item,
+                                      ),
+                                    );
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    handleUpdateFee(tx.id, val);
+                                  }}
+                                  className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono"
+                                />
+                              </div>
+                            </td>
+                            <td
+                              className={`p-4 text-right font-black pr-8 ${isIncome ? "text-emerald-400" : "text-red-400"}`}
+                            >
+                              {isIncome ? "+" : "-"} R${" "}
+                              {(isIncome ? net : gross).toLocaleString(
+                                "pt-BR",
+                                { minimumFractionDigits: 2 },
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+                {transactions.filter(
+                  (t) =>
+                    t.accountId === selectedAccountForStatement.id &&
+                    t.status === "Paid",
+                ).length === 0 && (
+                  <div className="p-20 text-center text-slate-500 italic">
+                    Nenhum lançamento encontrado para esta conta.
+                  </div>
+                )}
+              </div>
+              <div className="p-8 border-t border-border bg-surface flex justify-between items-center">
+                <div className="flex gap-8">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                      Saldo Atual Real
+                    </span>
+                    <span className="text-2xl font-bold text-text">
+                      R${" "}
+                      {(
+                        (selectedAccountForStatement.initialBalance || 0) +
+                        transactions
+                          .filter(
+                            (t) =>
+                              t.accountId === selectedAccountForStatement.id &&
+                              t.status === "Paid",
+                          )
+                          .reduce((sum, t) => {
+                            const isIncome = t.type === "income";
+                            const gross = t.amount;
+                            const fee = getEffectiveFee(t);
+                            const net = gross - fee;
+                            return sum + (isIncome ? net : -gross);
+                          }, 0)
+                      ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedAccountForStatement(null)}
+                  className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95"
+                >
+                  Fechar Extrato
+                </button>
+              </div>
             </div>
+          </div>
         )}
       </div>
     </div>
