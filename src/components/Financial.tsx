@@ -197,6 +197,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [isBulkChangeCatExpensesOpen, setIsBulkChangeCatExpensesOpen] = useState(false);
   const [isBulkDeleteExpensesConfirmOpen, setIsBulkDeleteExpensesConfirmOpen] = useState(false);
   const [activeBulkActionTab, setActiveBulkActionTab] = useState<'income' | 'expense' | null>(null);
+  const [isBulkEntryMenuOpen, setIsBulkEntryMenuOpen] = useState(false);
   const [bulkRows, setBulkRows] = useState<any[]>([]);
   const [pastedData, setPastedData] = useState('');
   const [selectedDreMonth, setSelectedDreMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -2189,10 +2190,23 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                    </div>
 
                    <div className="flex flex-wrap gap-2 text-xs justify-end">
-                      <button onClick={() => openBulkModal('income')} className="px-3 py-1.5 glass-button text-sky-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-3.5 h-3.5" /> Massa Receita</button>
-                      <button onClick={() => openBulkModal('expense')} className="px-3 py-1.5 glass-button text-rose-400 rounded-xl font-bold flex items-center gap-1.5 transition-all"><List className="w-4 h-4" /> Massa Despesa</button>
+                      <div className="relative">
+                        <button onClick={() => setIsBulkEntryMenuOpen(value => !value)} className="px-3 py-1.5 glass-button text-text rounded-xl font-bold flex items-center gap-1.5 transition-all" aria-expanded={isBulkEntryMenuOpen}>
+                          <List className="w-3.5 h-3.5" /> Ações em massa <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isBulkEntryMenuOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isBulkEntryMenuOpen && (
+                          <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <button onClick={() => { setIsBulkEntryMenuOpen(false); openBulkModal('income'); }} className="w-full text-left px-3 py-2 text-[10px] font-bold text-sky-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all">
+                              <List className="w-3.5 h-3.5" /> Receita em massa
+                            </button>
+                            <button onClick={() => { setIsBulkEntryMenuOpen(false); openBulkModal('expense'); }} className="w-full text-left px-3 py-2 text-[10px] font-bold text-rose-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all border-t border-border">
+                              <List className="w-3.5 h-3.5" /> Despesa em massa
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button onClick={() => openModal('income')} className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"><Plus className="w-3.5 h-3.5" /> Receita</button>
-                      <button onClick={() => openModal('expense')} className="px-3 py-1.5 bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 rounded-xl font-bold flex items-center gap-1.5 transition-all"><Minus className="w-3.5 h-3.5" /> Despesa</button>
+
                    </div>
                </div>
 
@@ -2446,7 +2460,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {isBulkModalOpen && (
             <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
                 <div className="bg-surface border border-border w-full max-w-[95vw] h-[90vh] rounded-3xl shadow-3xl overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
+                    <div className="p-6 border-b border-white/60 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] flex justify-between items-center">
                         <div>
                             <h3 className="text-xl font-black text-text uppercase tracking-tight">Lançamentos em Massa (Grade Excel)</h3>
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
@@ -2530,9 +2544,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
             <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-surface border border-border w-full max-w-2xl rounded-2xl shadow-3xl overflow-hidden flex flex-col relative">
+                <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">{formData.id ? 'Editar Lançamento' : (modalType === 'income' ? 'Nova Receita' : 'Nova Despesa')}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="p-8 flex flex-col gap-6 overflow-y-auto max-h-[80vh] custom-scrollbar bg-surface">
+                    <div className="p-8 flex flex-col gap-6 overflow-y-auto max-h-[80vh] custom-scrollbar bg-transparent">
                         {modalType === 'expense' ? (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2586,8 +2600,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                                             {paymentMethods.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
                                         </select>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">STATUS DO PAGAMENTO</label>
                                         <div className="flex bg-surface p-1 rounded-xl border border-border w-fit">
@@ -2694,7 +2707,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         )}
                         <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÇÕES / COMENTÁRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lançamento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
                     </div>
-                    <div className="p-8 border-t border-border bg-surface flex items-center gap-6">
+                    <div className="p-8 border-t border-white/60 dark:border-white/10 bg-white/25 dark:bg-white/[0.03] flex items-center gap-6">
                         {modalType === 'income' && formData.id && (
                             <button
                                 onClick={() => {
