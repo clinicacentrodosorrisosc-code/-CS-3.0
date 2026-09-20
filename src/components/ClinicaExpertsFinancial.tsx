@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Building2, CircleAlert, FolderTree, ReceiptText, RefreshCw, WalletCards } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { DateRangePicker } from './ui/date-range-picker';
 
 type FinancialRecord = Record<string, unknown>;
 type FinancialData = { accounts: FinancialRecord[]; categories: FinancialRecord[]; bills: FinancialRecord[]; parcels: FinancialRecord[]; fetchedAt: string };
@@ -46,20 +47,25 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   const [data, setData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState(() => {
+    const today = new Date();
+    return { start: `${today.getFullYear()}-01-01`, end: today.toISOString().slice(0, 10) };
+  });
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.access_token) throw new Error('Sua sessão expirou. Entre novamente para consultar o financeiro.');
-      const response = await fetch('/api/integrations/clinica-experts/financial', { headers: { Authorization: `Bearer ${sessionData.session.access_token}` } });
+      const query = new URLSearchParams({ starts_at: `${period.start}T00:00:00-03:00`, ends_at: `${period.end}T23:59:59-03:00` });
+      const response = await fetch(`/api/integrations/clinica-experts/financial?${query}`, { headers: { Authorization: `Bearer ${sessionData.session.access_token}` } });
       const payload = await response.json() as { data?: FinancialData; error?: string };
       if (!response.ok || !payload.data) throw new Error(payload.error || 'Não foi possível carregar o financeiro da Clínica Experts.');
       setData(payload.data);
     } catch (reason) {
       setData(null); setError(reason instanceof Error ? reason.message : 'Não foi possível carregar o financeiro da Clínica Experts.');
     } finally { setLoading(false); }
-  }, []);
+  }, [period]);
 
   useEffect(() => { void load(); }, [load]);
   const bills = data?.bills || [];
@@ -69,7 +75,7 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   return <div className="mx-auto w-full max-w-7xl space-y-5 pb-10">
     <header className="module-command-bar flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--primary)]">Integração financeira</p><h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">Clínica Experts</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Consulta segura e somente leitura dos dados financeiros da clínica.</p></div>
-      <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition hover:brightness-105 disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar</button>
+      <div className="flex flex-col gap-2 sm:items-end"><div className="w-full sm:w-[300px]"><DateRangePicker value={period} onChange={setPeriod} periodSelector className="h-10" /></div><button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition hover:brightness-105 disabled:opacity-60"><RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar</button></div>
     </header>
     {error ? <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/75 p-4 text-sm text-rose-800 backdrop-blur-xl dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-100"><CircleAlert className="mt-0.5 size-4 shrink-0" />{error}</div> : <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={WalletCards} label="Contas financeiras" value={data?.accounts.length || 0} /><Metric icon={FolderTree} label="Categorias" value={data?.categories.length || 0} /><Metric icon={ReceiptText} label="Títulos" value={bills.length} /><Metric icon={Building2} label="Parcelas" value={parcels.length} /></div>

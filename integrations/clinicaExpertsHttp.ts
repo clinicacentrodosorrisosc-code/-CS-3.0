@@ -183,11 +183,21 @@ export async function handleClinicaExpertsFinancial(req: ApiRequest, res: ApiRes
   try {
     await resolveContext(req);
     const client = new ClinicaExpertsClient(apiToken);
-    // Bills and parcels require a date range. These bounds deliberately cover
-    // the full historical and future operational period without exposing data
-    // to the browser until the authenticated request completes.
-    const startsAt = '2000-01-01T00:00:00-03:00';
-    const endsAt = '2100-12-31T23:59:59-03:00';
+    const queryValue = (key: string) => headerValue(req.query?.[key]);
+    const today = new Date();
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    const startsAt = queryValue('starts_at') || startOfYear.toISOString();
+    const endsAt = queryValue('ends_at') || today.toISOString();
+    const startsAtMs = Date.parse(startsAt);
+    const endsAtMs = Date.parse(endsAt);
+    if (Number.isNaN(startsAtMs) || Number.isNaN(endsAtMs) || endsAtMs < startsAtMs) {
+      res.status(400).json({ error: 'Informe um período financeiro válido.' });
+      return;
+    }
+    if (endsAtMs - startsAtMs > 366 * 24 * 60 * 60 * 1000) {
+      res.status(400).json({ error: 'A Clínica Experts permite consultar títulos e parcelas em períodos de até 1 ano.' });
+      return;
+    }
     const [accounts, categories, bills, parcels] = await Promise.all([
       client.listFinancialAccounts(),
       client.listFinancialCategories(),
