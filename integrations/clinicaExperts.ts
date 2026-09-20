@@ -27,6 +27,8 @@ type ExternalOpportunity = {
   stage?: { uuid?: string; name?: string; status?: string } | null;
 };
 
+export type ExternalFinancialRecord = Record<string, unknown>;
+
 export type ExternalCalendarEvent = {
   uuid: string;
   title?: string | null;
@@ -156,6 +158,34 @@ export class ClinicaExpertsClient {
       starts_at: startsAt,
       ends_at: endsAt,
       sort_column: 'starts_at',
+      sort_direction: 'asc',
+    });
+  }
+
+  listFinancialAccounts() {
+    return this.listAll<ExternalFinancialRecord>('/financial-accounts', {
+      sort_column: 'name',
+      sort_direction: 'asc',
+    });
+  }
+
+  listFinancialCategories() {
+    return this.listAll<ExternalFinancialRecord>('/financial-categories', {
+      sort_column: 'name',
+      sort_direction: 'asc',
+    });
+  }
+
+  listBills() {
+    return this.listAll<ExternalFinancialRecord>('/bills', {
+      sort_column: 'created_at',
+      sort_direction: 'desc',
+    });
+  }
+
+  listParcels() {
+    return this.listAll<ExternalFinancialRecord>('/parcels', {
+      sort_column: 'due_date',
       sort_direction: 'asc',
     });
   }

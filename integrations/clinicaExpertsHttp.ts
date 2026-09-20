@@ -170,6 +170,32 @@ export async function handleClinicaExpertsAgenda(req: ApiRequest, res: ApiRespon
   }
 }
 
+export async function handleClinicaExpertsFinancial(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  if (!apiToken) {
+    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+    return;
+  }
+  try {
+    await resolveContext(req);
+    const client = new ClinicaExpertsClient(apiToken);
+    const [accounts, categories, bills, parcels] = await Promise.all([
+      client.listFinancialAccounts(),
+      client.listFinancialCategories(),
+      client.listBills(),
+      client.listParcels(),
+    ]);
+    res.status(200).json({ data: { accounts, categories, bills, parcels, fetchedAt: new Date().toISOString() } });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao consultar o financeiro da Clinica Experts.';
+    res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
+  }
+}
+
 export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ error: 'Metodo nao permitido.' });

@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Transaction, Account, Service } from '../types';
 import { PricingSystem } from './PricingSystem';
 import { FinancialViability } from './FinancialViability';
+import { ClinicaExpertsFinancial } from './ClinicaExpertsFinancial';
 import {
   Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, Label, Line, ReferenceLine, LabelList, LineChart
@@ -26,7 +27,7 @@ import { playCashRegisterSound } from '../lib/sound';
 
 // --- TYPES & INTERFACES ---
 
-type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing' | 'viability';
+type SubTab = 'overview' | 'transactions' | 'settings' | 'pricing' | 'viability' | 'clinica_experts';
 
 interface SubCategory {
     id: string;
@@ -105,7 +106,8 @@ const ALL_TABS_CONFIG = [
   { id: 'transactions', label: 'Receitas', permissionId: 'financial_transactions' },
   { id: 'pricing', label: 'Precificação', permissionId: 'financial_pricing' },
   { id: 'viability', label: 'Viabilidade & Comissões', permissionId: 'financial_viability', adminOnly: true },
-  { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' }
+  { id: 'settings', label: 'Configurações', permissionId: 'financial_settings' },
+  { id: 'clinica_experts', label: 'Clínica Experts', permissionId: 'financial_clinica_experts' },
 ];
 
 interface FinancialProps {
@@ -2440,6 +2442,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             {activeSubTab === 'transactions' && renderTransactionsTable()}
             {activeSubTab === 'pricing' && renderPricing()}
             {activeSubTab === 'viability' && <FinancialViability transactions={transactions} userRole={userRole} />}
+            {activeSubTab === 'clinica_experts' && <ClinicaExpertsFinancial />}
             {activeSubTab === 'settings' && renderSettings()}
           </div>
         </div>
