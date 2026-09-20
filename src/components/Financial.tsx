@@ -2460,7 +2460,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {isBulkModalOpen && (
             <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in">
                 <div className="bg-surface border border-border w-full max-w-[95vw] h-[90vh] rounded-3xl shadow-3xl overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-white/60 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] flex justify-between items-center">
+                    <div className="p-4 sm:px-5 border-b border-white/60 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] flex justify-between items-center shrink-0">
                         <div>
                             <h3 className="text-xl font-black text-text uppercase tracking-tight">Lançamentos em Massa (Grade Excel)</h3>
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">A busca inteligente agora mapeia Profissionais, Pagamentos e Procedimentos do Excel.</p>
@@ -2544,9 +2544,9 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
             <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-                <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
+                <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl max-h-[calc(100dvh-2rem)] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
                     <div className="p-6 border-b border-border bg-surface flex justify-between items-center"><h3 className="text-xl font-bold text-text font-display">{formData.id ? 'Editar Lançamento' : (modalType === 'income' ? 'Nova Receita' : 'Nova Despesa')}</h3><button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-text transition-colors"><X className="w-6 h-6" /></button></div>
-                    <div className="p-8 flex flex-col gap-6 overflow-y-auto max-h-[80vh] custom-scrollbar bg-transparent">
+                    <div className="p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto min-h-0 max-h-[calc(100dvh-8rem)] custom-scrollbar bg-transparent">
                         {modalType === 'expense' ? (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2707,7 +2707,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         )}
                         <div className="flex flex-col gap-2"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">OBSERVAÇÕES / COMENTÁRIOS</label><textarea value={formData.observation} onChange={e => setFormData({...formData, observation: e.target.value})} placeholder="Notas internas sobre este lançamento..." className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text outline-none h-20 resize-none" /></div>
                     </div>
-                    <div className="p-8 border-t border-white/60 dark:border-white/10 bg-white/25 dark:bg-white/[0.03] flex items-center gap-6">
+                    <div className="p-4 sm:px-5 border-t border-white/60 dark:border-white/10 bg-white/25 dark:bg-white/[0.03] flex items-center gap-4 shrink-0">
                         {modalType === 'income' && formData.id && (
                             <button
                                 onClick={() => {
