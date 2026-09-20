@@ -61,7 +61,8 @@ const numericValue = (value: unknown) => {
 const moneyValue = (record: FinancialRecord, keys = ['amount', 'value', 'total', 'original_amount', 'gross_amount']) => {
   for (const key of keys) {
     const value = numericValue(record[key]);
-    if (value !== null) return value;
+    // A API da Clínica Experts retorna todos os valores financeiros em centavos.
+    if (value !== null) return value / 100;
   }
   return 0;
 };
@@ -84,6 +85,7 @@ const formatPeriod = (period: { start: string; end: string }) => {
 const recordDate = (record: FinancialRecord) => textValue(record, [
   'due_date',
   'date',
+  'emission_date',
   'competence_date',
   'payment_date',
   'received_at',
@@ -102,12 +104,25 @@ const isSettled = (record: FinancialRecord) => {
   return /paid|received|settled|liquidated|completed|pago|recebid|quitado|baixado/.test(status);
 };
 
+const isDiscarded = (record: FinancialRecord) => /loss|cancel|void|perda/.test(
+  textValue(record, ['status', 'payment_status', 'settlement_status'], '').toLowerCase(),
+);
+
 const categoryId = (record: FinancialRecord) => textValue(record, [
   'financial_category_uuid',
   'financial_category_id',
   'category_uuid',
   'category_id',
 ], '');
+
+const relatedCategory = (record: FinancialRecord, categoriesById: Map<string, FinancialRecord>) => {
+  const directCategory = recordValue(record, ['category', 'financial_category']);
+  if (directCategory && typeof directCategory === 'object') {
+    const linkedId = textValue(directCategory as FinancialRecord, ['uuid', 'id'], '');
+    if (linkedId && categoriesById.has(linkedId)) return categoriesById.get(linkedId);
+  }
+  return categoriesById.get(categoryId(record));
+};
 
 const categoryName = (record: FinancialRecord, categoriesById: Map<string, FinancialRecord>) => {
   const directCategory = recordValue(record, ['category', 'financial_category']);
@@ -116,7 +131,7 @@ const categoryName = (record: FinancialRecord, categoriesById: Map<string, Finan
     if (name) return name;
   }
   if (typeof directCategory === 'string' && directCategory.trim()) return directCategory;
-  const linked = categoriesById.get(categoryId(record));
+  const linked = relatedCategory(record, categoriesById);
   return linked ? textValue(linked, ['name', 'description', 'title'], 'Sem categoria') : textValue(record, ['category_name', 'financial_category_name'], 'Sem categoria');
 };
 
@@ -124,6 +139,30 @@ const directionFromText = (value: string): FlowDirection => {
   const normalized = value.toLocaleLowerCase('pt-BR');
   if (/receb|receita|entrada|income|revenue|credit|receivable/.test(normalized)) return 'income';
   if (/pagar|despesa|saída|saida|expense|debit|payable|fornecedor/.test(normalized)) return 'expense';
+  return 'unknown';
+};
+
+const directionFromIncomeStatementCategory = (value: string): FlowDirection => {
+  const normalized = value.toLocaleLowerCase('pt-BR');
+  if (/products_services|revenue|income|receita/.test(normalized)) return 'income';
+  if (/expense|cost|commercial|administrative|financial|tax|personnel|payroll|despesa|custo/.test(normalized)) return 'expense';
+  return 'unknown';
+};
+
+const categoryDirection = (category: FinancialRecord | undefined, categoriesById: Map<string, FinancialRecord>): FlowDirection => {
+  const visited = new Set<string>();
+  let current = category;
+  while (current) {
+    const direct = directionFromText(textValue(current, ['type', 'direction', 'nature', 'name', 'description'], ''));
+    if (direct !== 'unknown') return direct;
+    const statement = directionFromIncomeStatementCategory(textValue(current, ['income_statement_category'], ''));
+    if (statement !== 'unknown') return statement;
+    const id = textValue(current, ['uuid', 'id'], '');
+    if (!id || visited.has(id)) break;
+    visited.add(id);
+    const parentId = textValue(current, ['parent_uuid', 'parent_id'], '');
+    current = parentId ? categoriesById.get(parentId) : undefined;
+  }
   return 'unknown';
 };
 
@@ -138,11 +177,10 @@ const directionOf = (record: FinancialRecord, categoriesById: Map<string, Financ
   ], ''));
   if (ownDirection !== 'unknown') return ownDirection;
 
-  const linkedCategory = categoriesById.get(categoryId(record));
-  const categoryDirection = linkedCategory
-    ? directionFromText(textValue(linkedCategory, ['type', 'direction', 'nature', 'name', 'description'], ''))
+  const linkedCategory = relatedCategory(record, categoriesById);
+  return linkedCategory
+    ? categoryDirection(linkedCategory, categoriesById)
     : directionFromText(categoryName(record, categoriesById));
-  return categoryDirection;
 };
 
 const settledAmount = (record: FinancialRecord) => moneyValue(record, [
@@ -168,6 +206,18 @@ const outstandingAmount = (record: FinancialRecord) => moneyValue(record, [
 ]);
 
 const sumValues = (records: FinancialRecord[], resolver: (record: FinancialRecord) => number) => records.reduce((total, record) => total + resolver(record), 0);
+
+const billParcels = (bill: FinancialRecord): FinancialRecord[] => {
+  const methods = Array.isArray(bill.payment_methods) ? bill.payment_methods : [];
+  const parcels = methods.flatMap((method) => {
+    if (!method || typeof method !== 'object') return [] as FinancialRecord[];
+    const nestedParcels = (method as FinancialRecord).parcels;
+    return Array.isArray(nestedParcels) ? nestedParcels.filter((parcel): parcel is FinancialRecord => Boolean(parcel && typeof parcel === 'object')) : [];
+  });
+  return parcels.length > 0
+    ? parcels.map((parcel) => ({ ...bill, ...parcel, category: bill.category, description: bill.description, bill_uuid: bill.uuid }))
+    : [bill];
+};
 
 const Metric: React.FC<{
   icon: React.ElementType;
@@ -229,7 +279,7 @@ const FinancialList: React.FC<{
   </div>;
 };
 
-const AccountsTable: React.FC<{ accounts: FinancialRecord[] }> = ({ accounts }) => <SectionCard title="Contas e saldos" subtitle="Saldos retornados pela Clínica Experts" icon={Landmark}>
+const AccountsTable: React.FC<{ accounts: FinancialRecord[] }> = ({ accounts }) => <SectionCard title="Contas e saldos" subtitle="Saldo atual retornado pela Clínica Experts" icon={Landmark}>
   {accounts.length === 0 ? <p className="p-5 text-sm text-[var(--text-muted)]">Nenhuma conta financeira retornada.</p> : <div className="overflow-auto custom-scrollbar"><table className="w-full min-w-[620px] text-left text-xs"><thead className="bg-white/35 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] dark:bg-white/[0.03]"><tr><th className="px-4 py-3">Conta</th><th className="px-4 py-3">Instituição</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3 text-right">Saldo</th></tr></thead><tbody className="divide-y divide-[var(--border-subtle)]">{accounts.map((account, index) => <tr key={textValue(account, ['uuid', 'id'], String(index))} className="transition-colors hover:bg-white/40 dark:hover:bg-white/[0.035]"><td className="px-4 py-3 font-semibold text-[var(--text)]">{textValue(account, ['name', 'description', 'title'])}</td><td className="px-4 py-3 text-[var(--text-secondary)]">{textValue(account, ['bank_name', 'bank', 'institution', 'institution_name'], '—')}</td><td className="px-4 py-3 text-[var(--text-secondary)]">{textValue(account, ['type', 'account_type'], '—')}</td><td className="px-4 py-3 text-right font-bold tabular-nums text-[var(--text)]">{formatMoney(moneyValue(account, ['current_balance', 'balance', 'available_balance', 'amount']))}</td></tr>)}</tbody></table></div>}
 </SectionCard>;
 
@@ -283,9 +333,9 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   }, [load]);
 
   const categoriesById = useMemo(() => new Map((data?.categories || []).map((category) => [textValue(category, ['uuid', 'id'], ''), category])), [data?.categories]);
-  const movementRecords = useMemo(() => (data?.parcels.length ? data.parcels : data?.bills || []), [data?.bills, data?.parcels]);
-  const incomeRecords = useMemo(() => movementRecords.filter((record) => directionOf(record, categoriesById) === 'income'), [categoriesById, movementRecords]);
-  const expenseRecords = useMemo(() => movementRecords.filter((record) => directionOf(record, categoriesById) === 'expense'), [categoriesById, movementRecords]);
+  const movementRecords = useMemo(() => (data?.bills || []).flatMap(billParcels), [data?.bills]);
+  const incomeRecords = useMemo(() => movementRecords.filter((record) => !isDiscarded(record) && directionOf(record, categoriesById) === 'income'), [categoriesById, movementRecords]);
+  const expenseRecords = useMemo(() => movementRecords.filter((record) => !isDiscarded(record) && directionOf(record, categoriesById) === 'expense'), [categoriesById, movementRecords]);
   const receivedRecords = useMemo(() => incomeRecords.filter(isSettled), [incomeRecords]);
   const receivableRecords = useMemo(() => incomeRecords.filter((record) => !isSettled(record)), [incomeRecords]);
   const paidRecords = useMemo(() => expenseRecords.filter(isSettled), [expenseRecords]);
@@ -295,7 +345,7 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   const paid = useMemo(() => sumValues(paidRecords, settledAmount), [paidRecords]);
   const payable = useMemo(() => sumValues(payableRecords, outstandingAmount), [payableRecords]);
   const netCashFlow = received - paid;
-  const unclassified = movementRecords.filter((record) => directionOf(record, categoriesById) === 'unknown').length;
+  const unclassified = movementRecords.filter((record) => !isDiscarded(record) && directionOf(record, categoriesById) === 'unknown').length;
   const cashFlowLines = useMemo(() => {
     const groups = new Map<string, { income: number; expense: number }>();
     for (const record of [...receivedRecords, ...paidRecords]) {
