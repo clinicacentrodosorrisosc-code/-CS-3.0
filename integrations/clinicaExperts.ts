@@ -176,15 +176,19 @@ export class ClinicaExpertsClient {
     });
   }
 
-  listBills() {
+  listBills(startsAt: string, endsAt: string) {
     return this.listAll<ExternalFinancialRecord>('/bills', {
+      starts_at: startsAt,
+      ends_at: endsAt,
       sort_column: 'created_at',
       sort_direction: 'desc',
     });
   }
 
-  listParcels() {
+  listParcels(startsAt: string, endsAt: string) {
     return this.listAll<ExternalFinancialRecord>('/parcels', {
+      starts_at: startsAt,
+      ends_at: endsAt,
       sort_column: 'due_date',
       sort_direction: 'asc',
     });

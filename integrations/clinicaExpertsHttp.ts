@@ -183,11 +183,16 @@ export async function handleClinicaExpertsFinancial(req: ApiRequest, res: ApiRes
   try {
     await resolveContext(req);
     const client = new ClinicaExpertsClient(apiToken);
+    // Bills and parcels require a date range. These bounds deliberately cover
+    // the full historical and future operational period without exposing data
+    // to the browser until the authenticated request completes.
+    const startsAt = '2000-01-01T00:00:00-03:00';
+    const endsAt = '2100-12-31T23:59:59-03:00';
     const [accounts, categories, bills, parcels] = await Promise.all([
       client.listFinancialAccounts(),
       client.listFinancialCategories(),
-      client.listBills(),
-      client.listParcels(),
+      client.listBills(startsAt, endsAt),
+      client.listParcels(startsAt, endsAt),
     ]);
     res.status(200).json({ data: { accounts, categories, bills, parcels, fetchedAt: new Date().toISOString() } });
   } catch (error) {
