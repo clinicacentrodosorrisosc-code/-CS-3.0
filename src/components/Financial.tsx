@@ -198,6 +198,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
   const [isBulkDeleteExpensesConfirmOpen, setIsBulkDeleteExpensesConfirmOpen] = useState(false);
   const [activeBulkActionTab, setActiveBulkActionTab] = useState<'income' | 'expense' | null>(null);
   const [isBulkEntryMenuOpen, setIsBulkEntryMenuOpen] = useState(false);
+  const [isIncomeFiltersOpen, setIsIncomeFiltersOpen] = useState(false);
   const [bulkRows, setBulkRows] = useState<any[]>([]);
   const [pastedData, setPastedData] = useState('');
   const [selectedDreMonth, setSelectedDreMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -1441,12 +1442,15 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
             ) : (
                 <div className="flex flex-col gap-4 flex-1">
             <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                        <Filter className="text-blue-400 w-3 h-3" /> Filtros
-                    </h3>
-                    <div className="flex gap-2">
-                        <button onClick={() => handleExport(filtered)} className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
+                            <Filter className="text-blue-400 w-3 h-3" /> Filtros
+                        </h3>
+                        <div className="flex gap-2">
+                            <button onClick={() => setIsIncomeFiltersOpen(value => !value)} className="text-[9px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10">
+                                {isIncomeFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+                            </button>
+                            <button onClick={() => handleExport(filtered)} className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1">
                             <Download className="w-3 h-3" /> Exportar
                         </button>
                         <button onClick={() => setTxFilters(initialTxFilters)} className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel">
@@ -1455,7 +1459,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                {isIncomeFiltersOpen && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Período</label>
                         <DateRangePicker
@@ -1515,7 +1519,7 @@ export const Financial: React.FC<FinancialProps> = ({ userRole, allowedSubTabs =
                         <label className="text-[9px] font-bold text-slate-500 uppercase px-1">Paciente</label>
                         <input type="text" placeholder="Buscar..." value={txFilters.search} onChange={e => setTxFilters({...txFilters, search: e.target.value})} className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none focus:border-blue-500 transition-colors placeholder-slate-600" />
                     </div>
-                </div>
+                </div>}
 
                 <div className="flex gap-4 justify-end border-t border-border pt-2 mt-0.5">
                     {selectedIncomes.length > 0 && (
