@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, FileText, KeyRound, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
+import { CheckCircle2, FileText, KeyRound, Link2, Loader2, MessageCircle, PhoneCall, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { LoadingPanel } from './ui/loading-panel';
 
@@ -42,6 +42,8 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [templates, setTemplates] = useState<MetaTemplate[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [templatesMessage, setTemplatesMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isCheckingCalling, setIsCheckingCalling] = useState(false);
+  const [callingMessage, setCallingMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -113,6 +115,22 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
     }
   };
 
+  const checkCallingEligibility = async () => {
+    setIsCheckingCalling(true);
+    setCallingMessage(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('SessÃ£o expirada.');
+      const response = await fetch('/api/integrations/whatsapp/calling-eligibility', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      await readApiResponse(response);
+      setCallingMessage({ type: 'success', text: 'Este nÃºmero estÃ¡ elegÃ­vel para configurar as chamadas oficiais do WhatsApp.' });
+    } catch (error) {
+      setCallingMessage({ type: 'error', text: error instanceof Error ? error.message : 'Falha ao verificar elegibilidade para chamadas.' });
+    } finally {
+      setIsCheckingCalling(false);
+    }
+  };
+
   const connectWaha = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsConnectingWaha(true);
@@ -174,6 +192,14 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
           {!connected && <p className="mt-4 text-xs text-[var(--text-muted)]">Conecte a conta e informe o WABA ID para consultar os templates.</p>}
           {templatesMessage && <div className={`mt-4 rounded-xl border px-4 py-3 text-xs ${templatesMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200'}`}>{templatesMessage.text}</div>}
           {templates.length > 0 && <div className="mt-4 overflow-hidden rounded-xl border border-[var(--border)]"><div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]"><span>Template</span><span>Status</span><span>Idioma</span></div>{templates.map(template => <div key={template.id || `${template.name}-${template.language}`} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-[var(--border)] px-4 py-3 text-xs last:border-b-0"><div className="min-w-0"><p className="truncate font-semibold text-[var(--text)]">{template.name}</p><p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{template.category || 'Sem categoria'}</p></div><span className="rounded-md bg-[var(--bg-subtle)] px-2 py-1 text-[10px] font-bold text-[var(--text-secondary)]">{template.status}</span><span className="text-[11px] text-[var(--text-secondary)]">{template.language}</span></div>)}</div>}
+        </section>
+        <section className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5F0] text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]"><PhoneCall className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-[var(--text)]">Chamadas oficiais</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Consulte a Meta para verificar se o nÃºmero pode usar a API oficial de chamadas.</p></div></div>
+            <button type="button" onClick={checkCallingEligibility} disabled={!connected || isCheckingCalling} className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#1F6F5B]/30 px-4 text-xs font-bold text-[#1F6F5B] transition hover:bg-[#EAF5F0] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-[#63B596]/10"><RefreshCw className={`h-4 w-4 ${isCheckingCalling ? 'animate-spin' : ''}`} />{isCheckingCalling ? 'Verificando...' : 'Verificar elegibilidade'}</button>
+          </div>
+          {!connected && <p className="mt-4 text-xs text-[var(--text-muted)]">Conecte o WhatsApp Business para consultar a elegibilidade do nÃºmero.</p>}
+          {callingMessage && <div className={`mt-4 rounded-xl border px-4 py-3 text-xs ${callingMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200'}`}>{callingMessage.text}</div>}
         </section>
         <form onSubmit={connectWaha} className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-bold text-[var(--text)]">Conexão WAHA</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Alternativa por WhatsApp Web. As credenciais ficam somente no servidor; configure o webhook e escaneie o QR no painel WAHA.</p></div><span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Canal alternativo</span></div>

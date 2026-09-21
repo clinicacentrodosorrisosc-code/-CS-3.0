@@ -187,3 +187,41 @@ export async function handleWhatsAppTemplates(req: ApiRequest, res: ApiResponse)
     res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
   }
 }
+
+export async function handleWhatsAppCallingEligibility(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+
+  try {
+    const { userId, db } = await authenticate(req);
+    const { data: config, error } = await db
+      .from('whatsapp_config')
+      .select('phone_number_id,access_token_encrypted,status')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!config || config.status !== 'connected') throw new Error('Conecte o WhatsApp Business antes de consultar chamadas.');
+    if (!config.access_token_encrypted) throw new Error('O token da Meta nao esta disponivel. Reconecte o WhatsApp Business.');
+
+    const accessToken = decryptWhatsAppAccessToken(config.access_token_encrypted);
+    const response = await fetch(`https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(config.phone_number_id)}/settings`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(body?.error?.message || 'A Meta nao liberou a consulta de chamadas para este numero.');
+    }
+
+    res.status(200).json({
+      eligible: true,
+      settings: body,
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    const message = errorMessage(error, 'Falha ao verificar chamadas do WhatsApp.');
+    res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
+  }
+}

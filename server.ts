@@ -8,7 +8,7 @@ import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
 import crypto from "crypto";
 import { ClinicaExpertsClient, createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
-import { handleWhatsAppConfig } from "./integrations/whatsappHttp";
+import { handleWhatsAppCallingEligibility, handleWhatsAppConfig } from "./integrations/whatsappHttp";
 import { handleWhatsAppBulkCampaigns } from "./integrations/whatsappBulkCampaignsHttp";
 import { handleWahaConfig, handleWahaWebhook } from "./integrations/wahaHttp";
 import { handleMetaWebhook, verifyMetaWebhook } from "./integrations/metaWebhookHttp";
@@ -621,6 +621,7 @@ async function startServer() {
   });
 
   app.all('/api/integrations/whatsapp/config', (req, res) => handleWhatsAppConfig(req, res));
+  app.all('/api/integrations/whatsapp/calling-eligibility', (req, res) => handleWhatsAppCallingEligibility(req, res));
   app.all('/api/integrations/whatsapp/bulk-campaigns', (req, res) => handleWhatsAppBulkCampaigns(req, res));
   app.all('/api/integrations/whatsapp/waha', (req, res) => handleWahaConfig(req, res));
 
