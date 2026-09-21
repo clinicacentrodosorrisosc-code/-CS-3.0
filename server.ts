@@ -620,8 +620,9 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  app.all('/api/integrations/whatsapp/config', (req, res) => handleWhatsAppConfig(req, res));
-  app.all('/api/integrations/whatsapp/calling-eligibility', (req, res) => handleWhatsAppCallingEligibility(req, res));
+  app.all('/api/integrations/whatsapp/config', (req, res) =>
+    req.query.check === 'calling' ? handleWhatsAppCallingEligibility(req, res) : handleWhatsAppConfig(req, res),
+  );
   app.all('/api/integrations/whatsapp/bulk-campaigns', (req, res) => handleWhatsAppBulkCampaigns(req, res));
   app.all('/api/integrations/whatsapp/waha', (req, res) => handleWahaConfig(req, res));
 

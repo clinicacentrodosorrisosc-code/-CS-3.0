@@ -121,7 +121,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('SessÃ£o expirada.');
-      const response = await fetch('/api/integrations/whatsapp/calling-eligibility', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const response = await fetch('/api/integrations/whatsapp/config?check=calling', { headers: { Authorization: `Bearer ${session.access_token}` } });
       await readApiResponse(response);
       setCallingMessage({ type: 'success', text: 'Este nÃºmero estÃ¡ elegÃ­vel para configurar as chamadas oficiais do WhatsApp.' });
     } catch (error) {
