@@ -9,6 +9,7 @@ import {
   Phone,
   RefreshCw,
   Search,
+  Tag,
   UserRoundPlus,
   UsersRound,
   Upload,
@@ -111,6 +112,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [selectedPipelineId, setSelectedPipelineId] = useState('');
   const [query, setQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+  const [tagOpportunityId, setTagOpportunityId] = useState<string | null>(null);
+  const [newTag, setNewTag] = useState('');
   const [quickOpportunity, setQuickOpportunity] = useState<Opportunity | null>(null);
   const [phoneImportOpen, setPhoneImportOpen] = useState(false);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
@@ -212,6 +215,33 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     setSelectedTag('');
     setPhoneFilter('all');
     setOpportunities([]);
+  };
+  const updateOpportunityTags = async (opportunity: Opportunity, nextTags: string[]) => {
+    const tags = [...new Set(nextTags.map(tag => tag.trim().replace(/\s+/g, ' ')).filter(Boolean))].slice(0, 20);
+    const { error: updateError } = await supabase
+      .from('clinic_experts_opportunities')
+      .update({ tags })
+      .eq('id', opportunity.id);
+    if (updateError) throw updateError;
+    setOpportunities(current => current.map(item => item.id === opportunity.id ? { ...item, tags } : item));
+  };
+  const addTag = async (opportunity: Opportunity) => {
+    const tag = newTag.trim().replace(/\s+/g, ' ');
+    if (!tag) return;
+    try {
+      await updateOpportunityTags(opportunity, [...(opportunity.tags || []), tag]);
+      setNewTag('');
+      setTagOpportunityId(null);
+    } catch (currentError) {
+      setError(currentError instanceof Error ? currentError.message : 'NÃ£o foi possÃ­vel salvar a tag.');
+    }
+  };
+  const removeTag = async (opportunity: Opportunity, tag: string) => {
+    try {
+      await updateOpportunityTags(opportunity, (opportunity.tags || []).filter(item => item !== tag));
+    } catch (currentError) {
+      setError(currentError instanceof Error ? currentError.message : 'NÃ£o foi possÃ­vel remover a tag.');
+    }
   };
   const visibleStages = stages.filter(stage => stage.pipeline_id === selectedPipelineId);
   const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
@@ -442,7 +472,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                             </div>
                             {opportunity.amount_cents > 0 && <p className="mt-3 font-mono text-xs font-semibold text-[#1F6F5B] dark:text-[#63B596]">{formatCurrency(opportunity.amount_cents)}</p>}
                             {opportunity.observations && <p className="mt-2 line-clamp-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-2 py-1.5 text-[10px] leading-relaxed text-[var(--text-secondary)]" title={opportunity.observations}>{opportunity.observations}</p>}
-                            {(opportunity.tags || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1">{opportunity.tags.map(tag => <span key={tag} className="max-w-full truncate rounded-md bg-[#EAF5F0] px-2 py-1 text-[9px] font-semibold text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]">{tag}</span>)}</div>}
+                            <div className="mt-2 flex flex-wrap items-center gap-1">
+                              {(opportunity.tags || []).map(tag => <span key={tag} className="inline-flex max-w-full items-center gap-1 rounded-md bg-[#EAF5F0] py-1 pl-2 pr-1 text-[9px] font-semibold text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]"><span className="truncate">{tag}</span><button type="button" onClick={() => void removeTag(opportunity, tag)} className="rounded p-0.5 hover:bg-[#1F6F5B]/10" aria-label={`Remover tag ${tag}`}><X className="h-2.5 w-2.5" /></button></span>)}
+                              {tagOpportunityId === opportunity.id ? <form onSubmit={event => { event.preventDefault(); void addTag(opportunity); }} className="flex items-center gap-1"><input autoFocus value={newTag} onChange={event => setNewTag(event.target.value)} onBlur={() => { if (!newTag.trim()) setTagOpportunityId(null); }} maxLength={40} placeholder="Nova tag" className="h-6 w-24 rounded-md border border-[var(--border)] bg-[var(--surface)] px-1.5 text-[9px] text-[var(--text)] outline-none focus:border-[var(--primary)]" /><button type="submit" className="rounded-md bg-[var(--primary)] px-1.5 py-1 text-[9px] font-bold text-white">Salvar</button></form> : <button type="button" onClick={() => { setTagOpportunityId(opportunity.id); setNewTag(''); }} className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border)] px-1.5 py-1 text-[9px] font-semibold text-[var(--text-muted)] transition hover:border-[var(--primary)]/50 hover:text-[var(--primary)]"><Tag className="h-2.5 w-2.5" />Tag</button>}
+                            </div>
                             <div className="mt-3 flex items-center justify-between gap-2 text-[9px] text-[var(--text-muted)]">
                               <span className="truncate">{opportunity.seller_name || 'Sem responsável'}</span>
                               <button type="button" onClick={() => setQuickOpportunity(opportunity)} className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 font-semibold text-[var(--primary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)]" title="Fazer disparo rápido"><MessageCircle className="h-3 w-3" />Disparo rápido</button>
