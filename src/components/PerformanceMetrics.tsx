@@ -5,6 +5,8 @@ import {
   Bar,
   Line,
   Area,
+  ReferenceArea,
+  ReferenceLine,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -167,6 +169,29 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
       pacingValue
     };
   }, [dailyMetrics, currentGoals, currentYear, currentMonth, daysInMonthCount, totalBusinessDays]);
+
+  const pacingTimeline = useMemo(() => {
+    const today = new Date();
+    const isThisMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
+    const todayDay = isThisMonth ? today.getDate() : daysInMonthCount;
+    const hasFutureDays = isThisMonth && todayDay < daysInMonthCount;
+
+    return {
+      isThisMonth,
+      todayDay,
+      todayLabel: String(todayDay).padStart(2, '0'),
+      hasFutureDays,
+      data: dailyMetrics.map((metric, index) => {
+        const isFuture = isThisMonth && index + 1 > todayDay;
+        return {
+          ...metric,
+          actualUntilToday: isFuture ? null : metric.cumulativeActual,
+          targetUntilToday: isFuture ? null : metric.cumulativeTarget,
+          targetForecast: isFuture || (isThisMonth && index + 1 === todayDay) ? metric.cumulativeTarget : null,
+        };
+      }),
+    };
+  }, [currentMonth, currentYear, dailyMetrics, daysInMonthCount]);
 
   const formatBRL = (val: number) => {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -528,9 +553,30 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div className="rounded-lg border border-border bg-panel/40 px-3 py-2.5">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Posição atual</span>
+                <span className="mt-0.5 block font-mono font-bold text-text">
+                  {summary.pacingStatus === 'ahead' ? '+' : '-'}{formatBRL(Math.abs(summary.pacingValue))}
+                </span>
+              </div>
+              <div className="rounded-lg border border-border bg-panel/40 px-3 py-2.5">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Referência</span>
+                <span className="mt-0.5 block font-medium text-text">
+                  {pacingTimeline.isThisMonth ? `Dia ${pacingTimeline.todayLabel} de ${daysInMonthCount}` : `Fechamento do mês`}
+                </span>
+              </div>
+              <div className="rounded-lg border border-border bg-panel/40 px-3 py-2.5">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Leitura</span>
+                <span className="mt-0.5 block font-medium text-text">
+                  Linha colorida encerra hoje; tracejada indica a projeção da meta.
+                </span>
+              </div>
+            </div>
+
             <div className="h-[320px] w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={dailyMetrics} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
+                <ComposedChart data={pacingTimeline.data} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="pacingStrokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                       {dailyMetrics.map((item, idx) => {
@@ -558,6 +604,25 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                     tickLine={false} 
                     tick={{ fill: 'var(--text-muted)', fontSize: 10, fontWeight: 'bold' }} 
                   />
+                  {pacingTimeline.data.filter(item => item.isWeekend).map(item => (
+                    <ReferenceArea
+                      key={`weekend-${item.day}`}
+                      x1={item.day}
+                      x2={item.day}
+                      fill="currentColor"
+                      fillOpacity={0.035}
+                      strokeOpacity={0}
+                    />
+                  ))}
+                  {pacingTimeline.isThisMonth && (
+                    <ReferenceLine
+                      x={pacingTimeline.todayLabel}
+                      stroke="#64748b"
+                      strokeWidth={1}
+                      strokeDasharray="3 3"
+                      label={{ value: 'Hoje', position: 'top', fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                    />
+                  )}
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
@@ -568,7 +633,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                   <Area 
                     name="Acumulado Realizado" 
                     type="monotone" 
-                    dataKey="cumulativeActual" 
+                    dataKey="actualUntilToday"
                     fill="url(#pacingAreaGrad)" 
                     stroke="url(#pacingStrokeGrad)" 
                     strokeWidth={2.5}
@@ -578,12 +643,24 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                   <Line 
                     name="Meta Acumulada" 
                     type="monotone" 
-                    dataKey="cumulativeTarget" 
+                    dataKey="targetUntilToday"
                     stroke="#94a3b8" 
                     strokeWidth={1.5} 
                     strokeDasharray="4 4" 
                     dot={false}
                   />
+                  {pacingTimeline.hasFutureDays && (
+                    <Line
+                      name="Projeção da Meta"
+                      type="monotone"
+                      dataKey="targetForecast"
+                      stroke="#94a3b8"
+                      strokeOpacity={0.38}
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                    />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
