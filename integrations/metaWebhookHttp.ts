@@ -27,6 +27,40 @@ function contentType(value: unknown) {
   return ['text', 'image', 'document', 'audio', 'video', 'location', 'template'].includes(type) ? type : 'text';
 }
 
+function normalizedName(value?: string | null) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+async function linkInboundPhoneToUniqueOpportunity(db: SupabaseClient, userId: string, phone: string, contactName?: string) {
+  const name = normalizedName(contactName);
+  if (name.length < 3) return 0;
+
+  const { data: candidates, error } = await db
+    .from('clinic_experts_opportunities')
+    .select('id,patient_name')
+    .eq('user_id', userId)
+    .is('patient_phone', null)
+    .not('patient_name', 'is', null);
+  if (error) throw error;
+
+  const matches = (candidates || []).filter(item => normalizedName(item.patient_name) === name);
+  // Never assign a WhatsApp number when more than one card can belong to that contact.
+  if (matches.length !== 1) return 0;
+  const { error: updateError } = await db
+    .from('clinic_experts_opportunities')
+    .update({ patient_phone: phone, synced_at: new Date().toISOString() })
+    .eq('id', matches[0].id)
+    .eq('user_id', userId)
+    .is('patient_phone', null);
+  if (updateError) throw updateError;
+  return 1;
+}
+
 async function conversationFor(db: SupabaseClient, userId: string, phone: string, name?: string) {
   const { data: contact, error: contactError } = await db.from('contacts').select('id').eq('user_id', userId).eq('phone', phone).limit(1).maybeSingle();
   if (contactError) throw contactError;
@@ -64,6 +98,7 @@ export async function handleMetaWebhook(rawBody: Buffer, signature: string | str
   const db = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
   try {
+    let linkedOpportunities = 0;
     for (const entry of Array.isArray(body.entry) ? body.entry : []) {
       for (const change of Array.isArray(entry.changes) ? entry.changes : []) {
         const value = change?.value;
@@ -76,6 +111,7 @@ export async function handleMetaWebhook(rawBody: Buffer, signature: string | str
           if (!from || !message.id) continue;
           const contact = Array.isArray(value.contacts) ? value.contacts.find((item: any) => String(item.wa_id || '') === from) : null;
           const conversationId = await conversationFor(db, config.user_id, `+${from}`, contact?.profile?.name);
+          linkedOpportunities += await linkInboundPhoneToUniqueOpportunity(db, config.user_id, from, contact?.profile?.name);
           const createdAt = message.timestamp ? new Date(Number(message.timestamp) * 1000).toISOString() : new Date().toISOString();
           const text = textFromMessage(message);
           const { error } = await db.from('messages').insert({ conversation_id: conversationId, sender_type: 'customer', content_type: contentType(message.type), content_text: text, message_id: message.id, status: 'delivered', created_at: createdAt });
@@ -84,7 +120,7 @@ export async function handleMetaWebhook(rawBody: Buffer, signature: string | str
         }
       }
     }
-    return res.status(200).json({ received: true });
+    return res.status(200).json({ received: true, linkedOpportunities });
   } catch (error) {
     console.error('[meta.webhook] ingestion failed', error instanceof Error ? error.message : error);
     return res.status(500).json({ error: 'Falha ao processar webhook Meta.' });

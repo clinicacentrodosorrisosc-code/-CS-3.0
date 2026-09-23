@@ -90,6 +90,16 @@ async function registerMetaNumber(phoneNumberId: string, accessToken: string, tw
   if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou registrar o número.');
 }
 
+async function subscribeWabaToApp(wabaId: string, accessToken: string) {
+  const response = await fetch(`https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(wabaId)}/subscribed_apps`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou assinar os eventos do WhatsApp.');
+}
+
 export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
   if (!['GET', 'POST', 'DELETE'].includes(req.method || '')) {
     res.status(405).json({ error: 'Metodo nao permitido.' });
@@ -98,11 +108,12 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
   try {
     const { userId, db } = await authenticate(req);
     if (req.method === 'GET') {
-      const { data, error } = await db.from('whatsapp_config').select('phone_number_id,waba_id,status,connected_at,updated_at,registered_at,subscribed_apps_at,last_registration_error').eq('user_id', userId).maybeSingle();
+      const { data, error } = await db.from('whatsapp_config').select('phone_number_id,waba_id,status,connected_at,updated_at,registered_at,subscribed_apps_at,last_registration_error,verify_token').eq('user_id', userId).maybeSingle();
       if (error) throw error;
       res.status(200).json({
         configured: Boolean(data),
         config: data || null,
+        webhook: data?.verify_token ? { callbackUrl: `${appPublicUrl || 'https://centrodosorriso.vercel.app'}/api/integrations/whatsapp/meta/webhook`, verifyToken: data.verify_token } : null,
       });
       return;
     }
@@ -124,22 +135,33 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
 
     const metaPhone = await validateMetaCredentials(phoneNumberId, accessToken);
     await registerMetaNumber(phoneNumberId, accessToken, twoFactorPin);
+    let subscribedAppsAt: string | null = null;
+    let subscriptionError: string | null = null;
+    if (wabaId) {
+      try {
+        await subscribeWabaToApp(wabaId, accessToken);
+        subscribedAppsAt = new Date().toISOString();
+      } catch (error) {
+        subscriptionError = errorMessage(error, 'Não foi possível assinar os eventos do WhatsApp.');
+      }
+    }
     const encryptedAccessToken = encryptAccessToken(accessToken);
+    const verifyToken = crypto.randomBytes(24).toString('hex');
     const { error } = await db.from('whatsapp_config').upsert({
       user_id: userId,
       phone_number_id: phoneNumberId,
       waba_id: wabaId,
       access_token: null,
       access_token_encrypted: encryptedAccessToken,
-      verify_token: null,
+      verify_token: verifyToken,
       status: 'connected',
       connected_at: new Date().toISOString(),
       registered_at: twoFactorPin ? new Date().toISOString() : null,
-      subscribed_apps_at: null,
-      last_registration_error: null,
+      subscribed_apps_at: subscribedAppsAt,
+      last_registration_error: subscriptionError,
     }, { onConflict: 'user_id' });
     if (error) throw error;
-    res.status(200).json({ connected: true, phone: metaPhone });
+    res.status(200).json({ connected: true, phone: metaPhone, webhook: { callbackUrl: `${appPublicUrl || 'https://centrodosorriso.vercel.app'}/api/integrations/whatsapp/meta/webhook`, verifyToken }, subscriptionError });
   } catch (error) {
     const message = errorMessage(error, 'Falha ao configurar WhatsApp.');
     res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });

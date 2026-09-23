@@ -12,7 +12,8 @@ type ApiList<T> = { data: T[]; meta?: ApiMeta };
 
 type ExternalStage = { uuid: string; name: string; type?: string; order?: number };
 type ExternalPipeline = { uuid: string; name: string; stages?: ExternalStage[] };
-type ExternalPatient = { uuid: string; name?: string; phone?: string; email?: string };
+type ExternalPatient = { uuid?: string; id?: string; name?: string; phone?: string; cellphone?: string; mobile?: string; whatsapp?: string; email?: string };
+type ExternalLead = { uuid?: string; id?: string; name?: string; phone?: string; cellphone?: string; mobile?: string; whatsapp?: string; email?: string };
 type ExternalOpportunity = {
   uuid: string;
   title?: string;
@@ -21,7 +22,9 @@ type ExternalOpportunity = {
   origin?: string | null;
   observations?: string | null;
   status?: string;
-  patient?: { uuid?: string; name?: string } | null;
+  patient?: ExternalPatient | null;
+  lead?: ExternalLead | null;
+  contact?: ExternalLead | null;
   seller?: { uuid?: string; name?: string } | null;
   pipeline?: { uuid?: string; name?: string } | null;
   stage?: { uuid?: string; name?: string; status?: string } | null;
@@ -222,6 +225,18 @@ function normalizedPatientPhone(value?: string | null) {
   const digits = String(value || '').replace(/\D/g, '');
   if (digits.length === 10 || digits.length === 11) return `55${digits}`;
   return digits.length >= 12 && digits.length <= 15 ? digits : null;
+}
+
+function opportunityContact(opportunity: ExternalOpportunity) {
+  const sources = [opportunity.patient, opportunity.lead, opportunity.contact].filter(Boolean) as Array<ExternalPatient | ExternalLead>;
+  const contact = sources.find(item => Boolean(item.phone || item.cellphone || item.mobile || item.whatsapp)) || sources.find(item => Boolean(item.name)) || null;
+  const phone = normalizedPatientPhone(contact?.phone || contact?.cellphone || contact?.mobile || contact?.whatsapp || null);
+  return {
+    externalId: opportunity.patient?.uuid || opportunity.patient?.id || null,
+    name: opportunity.patient?.name || contact?.name || null,
+    phone,
+    email: contact?.email || null,
+  };
 }
 
 export async function enrichClinicaExpertsOpportunityPhones(
@@ -502,7 +517,8 @@ export async function syncClinicaExperts(
       const pipelineId = externalPipelineId ? pipelineIds.get(externalPipelineId) : undefined;
       const stageId = externalStageId ? stageIds.get(externalStageId) : undefined;
       if (!pipelineId || !stageId) return [];
-      const patientId = opportunity.patient?.uuid || undefined;
+      const contact = opportunityContact(opportunity);
+      const patientId = contact.externalId || undefined;
       const previous = previousByExternalId.get(opportunity.uuid);
       const knownContact = patientId ? contactByPatientExternalId.get(patientId) : undefined;
       const protectedPhone = importedPhone(importedByExternalId.get(opportunity.uuid)) || (patientId ? importedPhone(importedByPatientExternalId.get(patientId)) : null);
@@ -513,10 +529,10 @@ export async function syncClinicaExperts(
         patient_external_id: patientId || null,
         pipeline_id: pipelineId,
         stage_id: stageId,
-        title: opportunity.title || opportunity.patient?.name || 'Oportunidade',
-        patient_name: opportunity.patient?.name || null,
-        patient_phone: protectedPhone || localPhone(previous) || knownContact?.patient_phone || null,
-        patient_email: previous?.patient_email || knownContact?.patient_email || null,
+        title: opportunity.title || contact.name || 'Oportunidade',
+        patient_name: contact.name || null,
+        patient_phone: protectedPhone || localPhone(previous) || knownContact?.patient_phone || contact.phone || null,
+        patient_email: previous?.patient_email || knownContact?.patient_email || contact.email || null,
         seller_name: opportunity.seller?.name || null,
         priority: Number(opportunity.priority || 1),
         amount_cents: Number(opportunity.amount || 0),
@@ -665,7 +681,8 @@ export async function processClinicaExpertsOpportunityWebhook(
     .maybeSingle();
   throwIfError(existingError, 'Erro ao consultar oportunidade existente');
 
-  const patientExternalId = resource.patient?.uuid || resource.patient?.id || null;
+  const contact = opportunityContact(resource as ExternalOpportunity);
+  const patientExternalId = contact.externalId || null;
   const { data: importedForCard, error: importedForCardError } = await db
     .from('clinic_experts_imported_data')
     .select('data')
@@ -695,11 +712,9 @@ export async function processClinicaExpertsOpportunityWebhook(
   let patientPhone = importedPhone
     || overridePhone
     || existingOpportunity?.patient_phone
-    || resource.patient?.phone
-    || resource.patient?.cellphone
-    || resource.patient?.mobile
+    || contact.phone
     || null;
-  let patientEmail = existingOpportunity?.patient_email || resource.patient?.email || null;
+  let patientEmail = existingOpportunity?.patient_email || contact.email || null;
 
   if (!patientPhone && patientExternalId) {
     const { data: knownPatientOpportunity, error: knownPatientError } = await db
@@ -727,8 +742,8 @@ export async function processClinicaExpertsOpportunityWebhook(
     patient_external_id: patientExternalId,
     pipeline_id: pipelineRow.id,
     stage_id: stageRow.id,
-    title: resource.title || resource.patient?.name || 'Oportunidade',
-    patient_name: resource.patient?.name || null,
+    title: resource.title || contact.name || 'Oportunidade',
+    patient_name: contact.name || null,
     patient_phone: patientPhone,
     patient_email: patientEmail,
     seller_name: resource.seller?.name || null,

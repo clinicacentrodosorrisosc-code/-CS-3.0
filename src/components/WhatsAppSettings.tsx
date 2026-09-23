@@ -32,6 +32,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [accessToken, setAccessToken] = useState('');
   const [twoFactorPin, setTwoFactorPin] = useState('');
   const [connected, setConnected] = useState(false);
+  const [webhook, setWebhook] = useState<{ callbackUrl: string; verifyToken: string } | null>(null);
   const [phoneLabel, setPhoneLabel] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,6 +54,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
         const response = await fetch('/api/integrations/whatsapp/config', { headers: { Authorization: `Bearer ${session.access_token}` } });
         const body = await readApiResponse(response);
         setConnected(Boolean(body.config?.status === 'connected'));
+        setWebhook(body.webhook || null);
         setPhoneNumberId(body.config?.phone_number_id || '');
         setWabaId(body.config?.waba_id || '');
       } catch (error) {
@@ -78,6 +80,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
       });
       const body = await readApiResponse(response);
       setConnected(true);
+      setWebhook(body.webhook || null);
       setAccessToken('');
       setPhoneLabel(body.phone?.verified_name || body.phone?.display_phone_number || 'Número validado pela Meta');
       setMessage({ type: 'success', text: 'WhatsApp Business conectado e validado pela Meta.' });
@@ -184,6 +187,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
           </form>
           <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-subtle)] text-[var(--text-secondary)]"><KeyRound className="h-4 w-4" /></div><h2 className="text-sm font-bold text-[var(--text)]">Onde encontrar</h2><p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">No Meta for Developers, abra sua aplicação, vá em WhatsApp → API Setup e copie o Phone Number ID e o token. O WABA ID está na conta do WhatsApp Business.</p>{phoneLabel && <div className="mt-4 rounded-xl bg-[#EAF5F0] px-3 py-2 text-xs font-semibold text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" /> {phoneLabel}</div>}</aside>
         </div>
+        {webhook && <section className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#1F6F5B]" /><div><h2 className="text-sm font-bold text-[var(--text)]">Captura de telefones pelo WhatsApp</h2><p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">No Meta for Developers, configure esta URL de callback e este token. Assine o campo <strong>messages</strong> para o CRM receber os números de quem escreve para a clínica.</p><div className="mt-3 grid gap-2 text-xs"><code className="break-all rounded-lg bg-[var(--bg-subtle)] px-3 py-2 text-[var(--text)]">{webhook.callbackUrl}</code><code className="break-all rounded-lg bg-[var(--bg-subtle)] px-3 py-2 text-[var(--text)]">{webhook.verifyToken}</code></div></div></div></section>}
         <section className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5F0] text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]"><FileText className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-[var(--text)]">Templates da Meta</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Consulte a Meta para confirmar a conexão e listar os templates cadastrados nesta conta.</p></div></div>
