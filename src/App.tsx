@@ -154,6 +154,15 @@ const App: React.FC = () => {
       }
 
       if (!profileData) {
+        setAllowedTabs([]);
+        setAllowedSubTabs([]);
+        setUserRole('user');
+        toast.error('Acesso não autorizado', {
+          description: 'Sua conta não possui mais acesso a esta clínica. Fale com um administrador.'
+        });
+        await supabase.auth.signOut();
+        return;
+
         const defaultRole = currentUser.user_metadata?.role || 'user';
         let defaultTabs: string[] = [Tab.DASHBOARD];
         if (defaultRole === 'admin') {
@@ -309,11 +318,9 @@ const App: React.FC = () => {
       loadedProfileUserId.current = currentUser.id;
     } catch (err) {
       console.error("Profile fetch error catch:", err);
-      setAllowedTabs(Object.values(Tab));
+      setAllowedTabs([]);
       setAllowedSubTabs([]);
-      if (currentUser?.user_metadata?.role) {
-          setUserRole(currentUser.user_metadata.role);
-      }
+      setUserRole('user');
     } finally {
       clearTimeout(timeoutId);
       setLoading(false);

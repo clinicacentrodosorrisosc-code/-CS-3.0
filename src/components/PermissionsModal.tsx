@@ -393,6 +393,23 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
+      if (!token) throw new Error('Sua sessão expirou. Faça login novamente para excluir usuários.');
+
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ target_user_id: userId })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Não foi possível remover a conta de acesso do usuário.');
+
+      showFeedback('Usuário excluído com sucesso do sistema!', 'success');
+      await fetchProfiles();
+      return;
+
       // Try server endpoint first
       if (token) {
         const response = await fetch('/api/admin/delete-user', {

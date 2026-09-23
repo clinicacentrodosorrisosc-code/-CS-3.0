@@ -385,26 +385,21 @@ async function startServer() {
         return res.status(400).json({ error: "Não é permitido excluir o seu próprio usuário logado." });
       }
 
-      const userClient = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        },
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      });
+      if (!supabaseServiceRoleKey) {
+        return res.status(503).json({ error: "Exclusão de usuários indisponível: chave de serviço não configurada." });
+      }
 
-      // Tenta RPC nativa de deleção do Supabase
-      const { error: rpcError } = await userClient.rpc('delete_user_account', { target_user_id });
-      
-      if (rpcError) {
-        console.warn(">>> [SERVER] RPC delete_user_account falhou, deletando da tabela profiles...", rpcError.message);
-        const { error: tableError } = await userClient.from('profiles').delete().eq('id', target_user_id);
-        if (tableError) throw tableError;
+      // Only the service role can remove auth.users and revoke the user's sessions.
+      const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      });
+      const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(target_user_id);
+      if (authDeleteError) throw authDeleteError;
+
+      // Clean up a residual profile when the database has no auth-user cascade.
+      const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', target_user_id);
+      if (profileDeleteError) {
+        console.warn(">>> [SERVER] Usuário removido da autenticação, mas houve resíduo no perfil:", profileDeleteError.message);
       }
 
       res.json({ 
