@@ -283,6 +283,7 @@ export async function enrichClinicaExpertsOpportunityPhones(
     lastPage = Math.max(page, Number(response.meta?.last_page || page));
 
     for (const patient of patients) {
+      if (!patient.uuid) continue;
       if (!patientIds.has(patient.uuid)) continue;
       const phone = normalizedPatientPhone(patient.phone);
       if (!phone) continue;

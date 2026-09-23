@@ -192,11 +192,11 @@ export async function handleWhatsAppTemplates(req: ApiRequest, res: ApiResponse)
     let pages = 0;
 
     while (nextUrl && pages < 50) {
-      const response = await fetch(nextUrl, {
+      const response: Response = await fetch(nextUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
         signal: AbortSignal.timeout(15_000),
       });
-      const body = await response.json().catch(() => ({}));
+      const body: any = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body?.error?.message || 'A Meta recusou a consulta dos templates.');
       if (Array.isArray(body.data)) templates.push(...body.data);
       nextUrl = typeof body?.paging?.next === 'string' ? body.paging.next : null;
