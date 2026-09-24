@@ -1,0 +1,3 @@
+[submodule "apps/crm-james"]
+	path = apps/crm-james
+	url = https://github.com/melgarafael/DeskcommCRM.git

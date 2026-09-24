@@ -78,11 +78,11 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export class ClinicaExpertsClient {
   constructor(private readonly token: string) {}
 
-  private async get<T>(path: string, query: Record<string, string | number> = {}): Promise<T> {
+  private async get<T>(path: string, query: Record<string, string | number> = {}, maxAttempts = MAX_REQUEST_ATTEMPTS): Promise<T> {
     const url = new URL(`${API_BASE_URL}${path}`);
     Object.entries(query).forEach(([key, value]) => url.searchParams.set(key, String(value)));
 
-    for (let attempt = 1; attempt <= MAX_REQUEST_ATTEMPTS; attempt += 1) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         const response = await fetch(url, {
           headers: {
@@ -97,7 +97,7 @@ export class ClinicaExpertsClient {
         const body = await response.text();
         const safeBody = body.slice(0, 300).replace(/[\r\n]+/g, ' ');
         const retryable = response.status === 429 || response.status >= 500;
-        if (!retryable || attempt === MAX_REQUEST_ATTEMPTS) {
+        if (!retryable || attempt === maxAttempts) {
           throw new Error(`Clinica Experts ${path} respondeu HTTP ${response.status}: ${safeBody}`);
         }
 
@@ -108,7 +108,7 @@ export class ClinicaExpertsClient {
           : exponentialDelay + Math.floor(Math.random() * 250);
         await delay(waitMs);
       } catch (error) {
-        if (attempt === MAX_REQUEST_ATTEMPTS || (error instanceof Error && error.message.includes('respondeu HTTP'))) {
+        if (attempt === maxAttempts || (error instanceof Error && error.message.includes('respondeu HTTP'))) {
           throw error;
         }
         await delay(Math.min(8_000, 1_000 * (2 ** (attempt - 1))) + Math.floor(Math.random() * 250));
@@ -154,6 +154,16 @@ export class ClinicaExpertsClient {
       sort_column: 'name',
       sort_direction: 'asc',
     });
+  }
+
+  searchPatients(query: string) {
+    return this.get<ApiList<ExternalPatient>>('/patients', {
+      search: query,
+      per_page: 12,
+      page: 1,
+      sort_column: 'name',
+      sort_direction: 'asc',
+    }, 1);
   }
 
   listCalendarEvents(startsAt: string, endsAt: string) {

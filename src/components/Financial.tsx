@@ -49,6 +49,7 @@ import {
   X,
   Download,
   Check,
+  Search,
 } from "lucide-react";
 import { motion } from "motion/react";
 import * as XLSX from "xlsx";
@@ -104,6 +105,13 @@ interface SalesTeam {
 interface Supplier {
   id: string;
   name: string;
+}
+
+interface ClinicaExpertsPatient {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
 }
 
 interface PaymentMethod {
@@ -682,6 +690,50 @@ export const Financial: React.FC<FinancialProps> = ({
     salesTeam: "",
     recurrence: 1,
   });
+  const [patientMatches, setPatientMatches] = useState<ClinicaExpertsPatient[]>(
+    [],
+  );
+  const [isPatientSearchLoading, setIsPatientSearchLoading] = useState(false);
+  const [patientSearchError, setPatientSearchError] = useState("");
+
+  useEffect(() => {
+    const query = formData.description.trim();
+    if (!isModalOpen || modalType !== "income" || query.length < 2) {
+      setPatientMatches([]);
+      setPatientSearchError("");
+      setIsPatientSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setIsPatientSearchLoading(true);
+      setPatientSearchError("");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
+        const response = await fetch(
+          `/api/integrations/clinica-experts/patients?q=${encodeURIComponent(query)}`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } },
+        );
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || "Não foi possível buscar pacientes.");
+        if (!cancelled) setPatientMatches(Array.isArray(body.data) ? body.data : []);
+      } catch (error) {
+        if (!cancelled) {
+          setPatientMatches([]);
+          setPatientSearchError(error instanceof Error ? error.message : "Não foi possível buscar pacientes.");
+        }
+      } finally {
+        if (!cancelled) setIsPatientSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [formData.description, isModalOpen, modalType]);
 
   const overviewMetrics = useMemo(() => {
     const periodIncome = transactions.filter((t) => {
@@ -1041,7 +1093,7 @@ export const Financial: React.FC<FinancialProps> = ({
 
       if (isNaN(amountVal) || amountVal <= 0)
         return toast.error("Informe um valor válido maior que zero.");
-      if (!formData.accountId)
+      if (modalType === "expense" && !formData.accountId)
         return toast.error("Selecione a conta de destino/origem.");
       if (!formData.paymentMethod)
         return toast.error("Selecione a forma de pagamento.");
@@ -1050,16 +1102,6 @@ export const Financial: React.FC<FinancialProps> = ({
         if (!formData.professional)
           return toast.error("Selecione o profissional responsável.");
 
-        const method = (formData.paymentMethod || "").toLowerCase();
-        const isCard =
-          method.includes("cartão") ||
-          method.includes("crédito") ||
-          method.includes("débito");
-        if (isCard && !formData.cardBrand) {
-          return toast.error(
-            "Selecione a bandeira do cartão para cálculo de taxas.",
-          );
-        }
       }
 
       setIsSaving(true);
@@ -1113,12 +1155,12 @@ export const Financial: React.FC<FinancialProps> = ({
           type: modalType,
           status: formData.status,
           payment_method: formData.paymentMethod,
-          account_id: formData.accountId,
+          account_id: formData.accountId || null,
           professional: formData.professional,
           installments: formData.installments,
           observation: formData.observation,
           is_partial: formData.isPartial,
-          card_brand: formData.cardBrand,
+          card_brand: formData.cardBrand || null,
           settlement_date: currentSettlementDate || null,
           supplier: formData.supplier,
           sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
@@ -1397,6 +1439,8 @@ export const Financial: React.FC<FinancialProps> = ({
     editData?: LocalTransaction,
   ) => {
     setModalType(type);
+    setPatientMatches([]);
+    setPatientSearchError("");
     if (editData) {
       setFormData({
         id: editData.id,
@@ -1423,7 +1467,7 @@ export const Financial: React.FC<FinancialProps> = ({
         (type === "income"
           ? incomeCategories[0]?.name
           : expenseCategories[0]?.name) || "";
-      const defaultAcc = accountsList[0]?.id || "";
+      const defaultAcc = type === "expense" ? accountsList[0]?.id || "" : "";
       setFormData({
         id: "",
         description: "",
@@ -5621,16 +5665,43 @@ export const Financial: React.FC<FinancialProps> = ({
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                           PACIENTE
                         </label>
-                        <input
-                          value={formData.description}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              description: e.target.value,
-                            })
-                          }
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none"
-                        />
+                        <div className="relative">
+                          <Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <input
+                            value={formData.description}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                description: e.target.value,
+                              })
+                            }
+                            autoComplete="off"
+                            placeholder="Digite ao menos 2 letras para buscar"
+                            className="w-full bg-surface border border-border rounded-xl py-3 pl-10 pr-4 text-text outline-none"
+                          />
+                          {(isPatientSearchLoading || patientMatches.length > 0 || patientSearchError) && formData.description.trim().length >= 2 && (
+                            <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white shadow-xl dark:bg-slate-900">
+                              {isPatientSearchLoading && <p className="px-4 py-3 text-xs text-slate-500">Buscando pacientes na Clínica Experts...</p>}
+                              {!isPatientSearchLoading && patientSearchError && <p className="px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{patientSearchError}</p>}
+                              {!isPatientSearchLoading && !patientSearchError && patientMatches.length === 0 && <p className="px-4 py-3 text-xs text-slate-500">Nenhum paciente encontrado na Clínica Experts.</p>}
+                              {!isPatientSearchLoading && patientMatches.map((patient) => (
+                                <button
+                                  key={patient.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData({ ...formData, description: patient.name });
+                                    setPatientMatches([]);
+                                  }}
+                                  className="flex w-full flex-col px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
+                                >
+                                  <span className="text-sm font-semibold text-text">{patient.name}</span>
+                                  {(patient.phone || patient.email) && <span className="mt-0.5 text-[11px] text-slate-500">{[patient.phone, patient.email].filter(Boolean).join(" · ")}</span>}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500">Base de pacientes consultada diretamente na Clínica Experts.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5696,7 +5767,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       </div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          CONTA / BANCO (AUTOMÁTICO)
+                          CONTA / BANCO (OPCIONAL)
                         </label>
                         <select
                           value={formData.accountId}
@@ -5708,6 +5779,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           }
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
                         >
+                          <option value="">Sem conta bancária</option>
                           {accountsList.map((acc) => (
                             <option key={acc.id} value={acc.id}>
                               {acc.name} ({acc.bank})
@@ -5892,7 +5964,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           .includes("débito")) && (
                         <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            BANDEIRA DO CARTÃO
+                            BANDEIRA DO CARTÃO (OPCIONAL)
                           </label>
                           <select
                             value={formData.cardBrand}
@@ -5904,7 +5976,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             }
                             className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
                           >
-                            <option value="">Selecione...</option>
+                            <option value="">Não informar</option>
                             {cardFees.map((f) => (
                               <option key={f.brand} value={f.brand}>
                                 {f.brand}

@@ -30,7 +30,8 @@ import {
   ShieldCheck,
   LayoutDashboard,
   KanbanSquare,
-  Settings2
+  Settings2,
+  ExternalLink
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -59,8 +60,13 @@ interface MenuItem {
     id: string;
     label: string;
     adminOnly?: boolean;
+    externalUrl?: string;
   }>;
 }
+
+const CRM_JAMES_URL = String(
+  import.meta.env.VITE_CRM_JAMES_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')
+).trim();
 
 const MENU_STRUCTURE: MenuItem[] = [
   // PRINCIPAL
@@ -84,7 +90,8 @@ const MENU_STRUCTURE: MenuItem[] = [
       { id: 'pipeline', label: 'Funil comercial' },
       { id: 'automations', label: 'Automações' },
       { id: 'campaigns', label: 'Disparador em massa' },
-      { id: 'whatsapp', label: 'WhatsApp Business' }
+      { id: 'whatsapp', label: 'WhatsApp Business' },
+      { id: 'crm-james', label: 'CRM James (beta)', externalUrl: CRM_JAMES_URL }
     ]
   },
   {
@@ -307,6 +314,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setFlyoutTab(tabId);
   };
 
+  const handleSubItemClick = (
+    tabId: Tab,
+    subItem: MenuItem['subItems'][number],
+  ) => {
+    if (subItem.externalUrl !== undefined) {
+      if (!subItem.externalUrl) {
+        window.alert('O ambiente CRM James (beta) ainda não foi configurado para esta instalação.');
+        return;
+      }
+
+      window.open(subItem.externalUrl, '_blank', 'noopener,noreferrer');
+      setIsMobileMenuOpen(false);
+      setFlyoutTab(null);
+      return;
+    }
+
+    setActiveTab(tabId);
+    if (onSubTabSelect) onSubTabSelect(subItem.id);
+    setIsMobileMenuOpen(false);
+    setFlyoutTab(null);
+  };
+
   const hideFlyout = () => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -409,9 +438,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setActiveTab(item.id);
-                      if (onSubTabSelect) onSubTabSelect(subItem.id);
-                      setIsMobileMenuOpen(false);
+                      handleSubItemClick(item.id, subItem);
                     }}
                     className={`
                       w-full text-left py-1.5 px-2.5 text-[11px] rounded-lg transition-all flex items-center justify-between
@@ -421,7 +448,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     `}
                   >
                     <span>{subItem.label}</span>
-                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />
+                    {subItem.externalUrl !== undefined
+                      ? <ExternalLink className="h-3 w-3 text-slate-400" />
+                      : <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />}
                   </button>
                 ))}
               </motion.div>
@@ -601,9 +630,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           key={sub.id}
                           type="button"
                           onClick={() => {
-                            setActiveTab(currentItem.id);
-                            if (onSubTabSelect) onSubTabSelect(sub.id);
-                            setFlyoutTab(null);
+                            handleSubItemClick(currentItem.id, sub);
                           }}
                           className={`
                             text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between
@@ -613,7 +640,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           `}
                         >
                           <span>{sub.label}</span>
-                          <ChevronRight className="w-3 h-3 text-slate-400" />
+                          {sub.externalUrl !== undefined
+                            ? <ExternalLink className="h-3 w-3 text-slate-400" />
+                            : <ChevronRight className="w-3 h-3 text-slate-400" />}
                         </button>
                       ))}
                     </div>

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "dev:crm-james": "corepack pnpm@9.15.9 --dir apps/crm-james dev --port 3001",
+    "setup:crm-james": "git submodule update --init --recursive && corepack pnpm@9.15.9 --dir apps/crm-james install --frozen-lockfile",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --ignore-pattern src/wacrm",

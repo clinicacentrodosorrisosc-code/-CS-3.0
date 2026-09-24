@@ -23,6 +23,8 @@ const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 const activeSyncs = new Map<string, Promise<unknown>>();
+const patientSearchCache = new Map<string, { expiresAt: number; patients: Array<{ id: string; name: string; phone: string | null; email: string | null }> }>();
+const patientSearchBlockedUntil = new Map<string, number>();
 
 function headerValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -167,6 +169,92 @@ export async function handleClinicaExpertsAgenda(req: ApiRequest, res: ApiRespon
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha ao consultar a agenda.';
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
+  }
+}
+
+/**
+ * Searches the patient's authoritative Clínica Experts directory. The API token
+ * remains server-side; a single filtered page is requested, never the full base.
+ */
+export async function handleClinicaExpertsPatients(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
+  if (!apiToken) {
+    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
+    return;
+  }
+  const query = headerValue(req.query?.q)?.trim() || '';
+  if (query.length < 2) {
+    res.status(200).json({ data: [] });
+    return;
+  }
+  let userId = '';
+  try {
+    const context = await resolveContext(req);
+    userId = context.userId;
+    const now = Date.now();
+    const cacheKey = `${context.userId}:${query.toLocaleLowerCase('pt-BR')}`;
+    const normalizedQuery = query.toLocaleLowerCase('pt-BR');
+    const { data: localRows, error: localError } = await context.db
+      .from('clinic_experts_opportunities')
+      .select('patient_external_id,patient_name,patient_phone,patient_email')
+      .eq('user_id', context.userId)
+      .ilike('patient_name', `%${query}%`)
+      .limit(50);
+    if (localError) throw localError;
+    const localPatients = [...new Map((localRows || [])
+      .filter(row => row.patient_external_id && row.patient_name)
+      .map(row => [String(row.patient_external_id), {
+        id: String(row.patient_external_id),
+        name: String(row.patient_name).trim(),
+        phone: row.patient_phone || null,
+        email: row.patient_email || null,
+      }])).values()]
+      .filter(patient => patient.name.toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+      .slice(0, 12);
+    if (localPatients.length > 0) {
+      res.status(200).json({ data: localPatients, source: 'synced' });
+      return;
+    }
+    const blockedUntil = patientSearchBlockedUntil.get(context.userId) || 0;
+    if (blockedUntil > now) {
+      const retryInSeconds = Math.ceil((blockedUntil - now) / 1_000);
+      res.status(429).json({ error: `A busca de pacientes está aguardando o limite da Clínica Experts. Tente novamente em ${retryInSeconds}s.` });
+      return;
+    }
+    let cached = patientSearchCache.get(cacheKey);
+    if (!cached || cached.expiresAt < now) {
+      const response = await new ClinicaExpertsClient(apiToken).searchPatients(query);
+      const patients = Array.isArray(response.data) ? response.data : [];
+      cached = {
+        expiresAt: now + 60_000,
+        patients: patients
+          .map(patient => ({
+            id: String(patient.uuid || patient.id || ''),
+            name: String(patient.name || '').trim(),
+            phone: patient.phone || patient.cellphone || patient.mobile || patient.whatsapp || null,
+            email: patient.email || null,
+          }))
+          .filter(patient => patient.id && patient.name),
+      };
+      patientSearchCache.set(cacheKey, cached);
+    }
+    const data = cached.patients
+      .filter(patient => patient.name.toLocaleLowerCase('pt-BR').includes(normalizedQuery))
+      .slice(0, 12);
+    res.status(200).json({ data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Falha ao buscar pacientes.';
+    if (/HTTP 429/.test(message) && userId) patientSearchBlockedUntil.set(userId, Date.now() + 60_000);
+    const rateLimited = /HTTP 429/.test(message);
+    res.status(/Sessao/i.test(message) ? 401 : rateLimited ? 429 : 500).json({
+      error: rateLimited
+        ? 'A Clínica Experts limitou temporariamente a consulta direta de pacientes. A base já sincronizada continua disponível; tente novamente em 1 minuto para pacientes ainda não sincronizados.'
+        : message,
+    });
   }
 }
 

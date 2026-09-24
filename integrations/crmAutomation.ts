@@ -47,6 +47,25 @@ function nextScheduleWindow(nodes: FlowNode[]) {
   return null;
 }
 
+function templateForStep(nodes: FlowNode[], edges: FlowEdge[], trigger: FlowNode, step: number) {
+  let node = nodes.find(item => item.id === edges.find(edge => edge.source === trigger.id)?.target);
+  let templateIndex = 0;
+  for (let safety = 0; node && safety < 12; safety += 1) {
+    if (node.data?.kind === 'template') {
+      templateIndex += 1;
+      if (templateIndex === step) return node;
+    }
+    node = nodes.find(item => item.id === edges.find(edge => edge.source === node?.id)?.target);
+  }
+  return undefined;
+}
+
+function delayAfterTemplate(nodes: FlowNode[], edges: FlowEdge[], template: FlowNode) {
+  const next = nodes.find(item => item.id === edges.find(edge => edge.source === template.id)?.target);
+  if (next?.data?.kind !== 'delay') return 0;
+  return Math.max(0, Number((next.data as any).minutes || 0)) * 60_000;
+}
+
 async function sendTemplate(db: SupabaseClient, userId: string, opportunity: Opportunity, node: FlowNode) {
   const { data: config, error } = await db.from('whatsapp_config').select('phone_number_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
   if (error) throw error;
@@ -89,14 +108,17 @@ export async function processCrmAutomationQueue(db: SupabaseClient, userId: stri
   if (claimError) throw claimError;
   const executions = (claimed || []) as QueueExecution[];
   if (!executions.length) return { claimed: 0, sent: 0, failed: 0, skipped: 0 };
-  const [flowsResult, opportunitiesResult] = await Promise.all([
+  const [flowsResult, opportunitiesResult, stepsResult] = await Promise.all([
     db.from('crm_automation_flows').select('id,nodes,edges').in('id', [...new Set(executions.map(item => item.flow_id))]),
     db.from('clinic_experts_opportunities').select('id,pipeline_id,stage_id,patient_name,patient_phone,seller_name,title,amount_cents').in('id', [...new Set(executions.map(item => item.opportunity_id))]),
+    db.from('crm_automation_executions').select('id,step').in('id', executions.map(item => item.id)),
   ]);
   if (flowsResult.error) throw flowsResult.error;
   if (opportunitiesResult.error) throw opportunitiesResult.error;
+  if (stepsResult.error) throw stepsResult.error;
   const flowsById = new Map((flowsResult.data || []).map(flow => [flow.id, flow]));
   const opportunitiesById = new Map((opportunitiesResult.data || []).map(opportunity => [opportunity.id, opportunity as Opportunity]));
+  const stepsById = new Map((stepsResult.data || []).map(item => [item.id, Number(item.step || 1)]));
   let sent = 0; let failed = 0; let skipped = 0;
   await Promise.all(executions.map(async execution => {
     const flow = flowsById.get(execution.flow_id);
@@ -104,11 +126,20 @@ export async function processCrmAutomationQueue(db: SupabaseClient, userId: stri
     const nodes = (Array.isArray(flow?.nodes) ? flow.nodes : []) as FlowNode[];
     const edges = (Array.isArray(flow?.edges) ? flow.edges : []) as FlowEdge[];
     const trigger = nodes.find(node => node.data?.kind === 'trigger' && node.data.stageId === execution.trigger_stage_id);
-    const templateNode = trigger ? nodes.find(node => node.id === edges.find(edge => edge.source === trigger.id)?.target && node.data?.kind === 'template') : undefined;
+    const templateNode = trigger ? templateForStep(nodes, edges, trigger, stepsById.get(execution.id) || 1) : undefined;
     if (!opportunity || !templateNode) { skipped += 1; await db.from('crm_automation_executions').update({ status: 'skipped', finished_at: new Date().toISOString(), locked_at: null, error_message: 'Fluxo ou oportunidade nao esta mais disponivel.' }).eq('id', execution.id); return; }
     const availableAt = nextScheduleWindow(nodes);
     if (availableAt) { await db.from('crm_automation_executions').update({ status: 'pending', available_at: availableAt, locked_at: null, error_message: null }).eq('id', execution.id); return; }
-    try { const metaMessageId = await sendTemplate(db, userId, opportunity, templateNode); sent += 1; await db.from('crm_automation_executions').update({ status: 'sent', meta_message_id: metaMessageId, finished_at: new Date().toISOString(), locked_at: null }).eq('id', execution.id); }
+    try {
+      const metaMessageId = await sendTemplate(db, userId, opportunity, templateNode);
+      sent += 1;
+      const delayMs = delayAfterTemplate(nodes, edges, templateNode);
+      if (delayMs > 0) {
+        await db.from('crm_automation_executions').update({ status: 'pending', step: (stepsById.get(execution.id) || 1) + 1, available_at: new Date(Date.now() + delayMs).toISOString(), meta_message_id: metaMessageId, locked_at: null }).eq('id', execution.id);
+      } else {
+        await db.from('crm_automation_executions').update({ status: 'sent', meta_message_id: metaMessageId, finished_at: new Date().toISOString(), locked_at: null }).eq('id', execution.id);
+      }
+    }
     catch (error) { failed += 1; const message = error instanceof Error ? error.message : 'Falha ao enviar template.'; await db.from('crm_automation_executions').update({ status: 'failed', error_message: message.slice(0, 1000), available_at: new Date(Date.now() + 5 * 60_000).toISOString(), locked_at: null }).eq('id', execution.id); console.error('[crm-automation] template send failed', message); }
   }));
   return { claimed: executions.length, sent, failed, skipped };

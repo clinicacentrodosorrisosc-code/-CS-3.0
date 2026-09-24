@@ -490,6 +490,11 @@ async function startServer() {
     }
   });
 
+  app.get('/api/integrations/clinica-experts/patients', async (req, res) => {
+    const { handleClinicaExpertsPatients } = await import('./integrations/clinicaExpertsHttp.js');
+    return handleClinicaExpertsPatients(req, res);
+  });
+
   const runClinicaExpertsSync = async (req: express.Request, res: express.Response) => {
     try {
       if (!clinicaExpertsToken) {
