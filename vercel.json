@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/integrations/clinica-experts/patients",
+      "destination": "/api/integrations/clinica-experts/financial?resource=patients"
+    }
+  ],
   "crons": [
     {
       "path": "/api/integrations/clinica-experts/sync",
