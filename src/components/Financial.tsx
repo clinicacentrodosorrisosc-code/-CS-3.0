@@ -459,6 +459,7 @@ export const Financial: React.FC<FinancialProps> = ({
   const [activePaymentIndex, setActivePaymentIndex] = useState<number | null>(
     null,
   );
+  const [isCategoryRankingOpen, setIsCategoryRankingOpen] = useState(false);
 
   const [payingTxId, setPayingTxId] = useState<string | null>(null);
   const [tempPaymentDate, setTempPaymentDate] = useState("");
@@ -793,6 +794,18 @@ export const Financial: React.FC<FinancialProps> = ({
         .sort((a, b) => b.average - a.average);
     })();
 
+    const categoryProcedureRanking = (() => {
+      const map: Record<string, { procedure: string; category: string; value: number }> = {};
+      periodIncome.forEach((t) => {
+        const category = t.category || "Outros";
+        const procedure = t.procedure || "Procedimento não informado";
+        const key = `${category}::${procedure}`;
+        if (!map[key]) map[key] = { category, procedure, value: 0 };
+        map[key].value += t.amount;
+      });
+      return Object.values(map).sort((a, b) => b.value - a.value);
+    })();
+
     return {
       currentMonthIncome,
       ticketAverage,
@@ -801,6 +814,7 @@ export const Financial: React.FC<FinancialProps> = ({
       procedureData,
       paymentData,
       categoryTicketAverage,
+      categoryProcedureRanking,
     };
   }, [transactions, overviewFilters]);
 
@@ -4638,11 +4652,24 @@ export const Financial: React.FC<FinancialProps> = ({
                     ].map((chart, idx) => (
                       <div
                         key={idx}
-                        className="glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between"
+                        onClick={idx === 0 ? () => setIsCategoryRankingOpen(true) : undefined}
+                        onKeyDown={idx === 0 ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setIsCategoryRankingOpen(true);
+                          }
+                        } : undefined}
+                        role={idx === 0 ? "button" : undefined}
+                        tabIndex={idx === 0 ? 0 : undefined}
+                        title={idx === 0 ? "Abrir ranking de procedimentos por categoria" : undefined}
+                        className={`glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
                       >
-                        <h3 className="text-xs font-bold text-text mb-1 uppercase tracking-wider text-center">
-                          {chart.title}
-                        </h3>
+                        <div className="mb-1 flex items-center justify-center gap-1.5">
+                          <h3 className="text-xs font-bold text-text uppercase tracking-wider text-center">
+                            {chart.title}
+                          </h3>
+                          {idx === 0 && <span className="material-symbols-outlined text-sm text-[var(--primary)]">open_in_new</span>}
+                        </div>
 
                         <div className="h-[210px] w-full relative flex items-center justify-center">
                           <DonutChart
@@ -5009,6 +5036,70 @@ export const Financial: React.FC<FinancialProps> = ({
             </div>
           </div>
         </div>
+
+        {isCategoryRankingOpen && (
+          <div
+            className="fixed inset-0 z-[210] flex items-center justify-center bg-black/20 p-4 backdrop-blur-2xl animate-in fade-in duration-200 dark:bg-black/60"
+            onMouseDown={() => setIsCategoryRankingOpen(false)}
+          >
+            <div
+              className="flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-3xl"
+              onMouseDown={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="category-ranking-title"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">Receitas por categoria</p>
+                  <h3 id="category-ranking-title" className="mt-1 text-lg font-bold text-text">Ranking de procedimentos</h3>
+                  <p className="mt-1 text-xs text-slate-500">Valores realizados entre {overviewFilters.start.split("-").reverse().join("/")} e {overviewFilters.end.split("-").reverse().join("/")}.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryRankingOpen(false)}
+                  className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-[var(--surface-hover)] hover:text-text"
+                  aria-label="Fechar ranking"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto p-3 custom-scrollbar">
+                {overviewMetrics.categoryProcedureRanking.length ? (
+                  <div className="overflow-hidden rounded-xl border border-border">
+                    <table className="w-full text-left">
+                      <thead className="bg-[var(--surface-hover)] text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        <tr>
+                          <th className="w-12 px-3 py-2.5 text-center">#</th>
+                          <th className="px-3 py-2.5">Procedimento</th>
+                          <th className="px-3 py-2.5">Categoria</th>
+                          <th className="px-3 py-2.5 text-right">Valor realizado</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border text-sm">
+                        {overviewMetrics.categoryProcedureRanking.map((item, index) => (
+                          <tr key={`${item.category}-${item.procedure}`} className="transition-colors hover:bg-[var(--surface-hover)]">
+                            <td className="px-3 py-3 text-center text-xs font-bold text-[var(--primary)]">{index + 1}</td>
+                            <td className="px-3 py-3 font-semibold text-text">{item.procedure}</td>
+                            <td className="px-3 py-3 text-xs text-slate-500">{item.category}</td>
+                            <td className="px-3 py-3 text-right font-mono text-sm font-bold tabular-nums text-text">
+                              {item.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="px-6 py-12 text-center text-sm text-slate-500">
+                    Não há receitas realizadas no período selecionado.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MODAL NOVA CONTA */}
         {isAccountModalOpen && (

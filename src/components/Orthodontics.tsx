@@ -1442,6 +1442,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Estimated Monthly Revenue */}
+              {userRole === 'admin' && (
               <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div>
@@ -1454,15 +1455,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       </div>
                   </div>
               </div>
+              )}
           </div>
 
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-stretch">
               {/* Ortho Pacing */}
               {(() => {
                 const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual > 0);
 
                 if (!hasData) {
                     return (
-                        <SpotlightCard className="glass-panel w-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
+                        <SpotlightCard className="glass-panel h-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
                             <div className="flex flex-col items-center justify-center h-full text-slate-500 py-12">
                                 <BarChart3 className="w-12 h-12 mb-4 opacity-40" />
                                 <h4 className="text-text font-bold text-sm">Sem dados de presença</h4>
@@ -1496,7 +1499,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 const daysRemaining = Math.max(0, orthoDaysTotal - orthoDaysPassed);
 
                 return (
-                  <SpotlightCard className="glass-panel w-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
+                  <SpotlightCard className="glass-panel h-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
                       <div className="flex flex-col mb-6">
                           <div className="flex justify-between items-center mb-6">
                               <h4 className="text-text font-bold text-sm">Pacing de Presença Ortodontia</h4>
@@ -1574,6 +1577,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </SpotlightCard>
                 );
               })()}
+
+              <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
+                  <div className="flex flex-col h-full w-full">
+                      <h3 className="text-lg font-bold text-text mb-4">Pacientes Ativos por Aparelho</h3>
+                      <div className="flex-1 w-full">
+                      <DonutChart data={applianceDistribution.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))} size={220} strokeWidth={30} onSegmentHover={(segment) => setActiveApplianceIndex(segment ? applianceDistribution.findIndex((entry: any) => entry.name === segment.label) : null)} centerContent={activeApplianceIndex !== null && applianceDistribution[activeApplianceIndex] ? <><span className="text-3xl font-bold text-text">{applianceDistribution[activeApplianceIndex].value}</span><span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-widest text-slate-400">{applianceDistribution[activeApplianceIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Pacientes</span>} />
+                      </div>
+                  </div>
+              </SpotlightCard>
+          </div>
           
         {/* Espaçamento mantido */}
         <div className="mt-6" />
@@ -1583,15 +1596,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <h3 className="text-lg font-bold text-text mb-4">Evolução do Tratamento ({currentYear})</h3>
                   <div className="h-[350px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={monthlyFlowData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                              <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                              <YAxis stroke="#94a3b8" fontSize={12} allowDecimals={false} />
-                              <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
-                              <Legend verticalAlign="top" height={36} iconType="circle" formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value}</span>} />
-                              <Bar dataKey="Iniciou" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                              <Bar dataKey="Finalizou" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                              <Bar dataKey="Documentacao" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} name="Doc. Inicial" />
+                          <BarChart data={monthlyFlowData} margin={{ top: 24, right: 20, left: 0, bottom: 5 }} barCategoryGap="28%">
+                              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                              <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                              <YAxis stroke="var(--text-muted)" fontSize={12} allowDecimals={false} tickLine={false} axisLine={false} />
+                              <RechartsTooltip cursor={{fill: 'var(--primary-dim)'}} contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '8px' }} itemStyle={{ color: 'var(--text)' }} />
+                              <Legend verticalAlign="top" height={36} iconType="circle" formatter={(value) => <span className="text-xs text-slate-500 font-bold">{value}</span>} />
+                              <Bar dataKey="Iniciou" name="Iniciados" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Iniciou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
+                              <Bar dataKey="Finalizou" name="Finalizados" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Finalizou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
+                              <Bar dataKey="Documentacao" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} name="Doc. Inicial"><LabelList dataKey="Documentacao" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
                           </BarChart>
                       </ResponsiveContainer>
                   </div>
@@ -1599,25 +1612,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           </SpotlightCard>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Distribution Chart */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
-                  <div className="flex flex-col h-full w-full">
-                      <h3 className="text-lg font-bold text-text mb-4">Pacientes Ativos por Aparelho</h3>
-                      <div className="flex-1 w-full">
-                      <DonutChart data={applianceDistribution.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))} size={220} strokeWidth={30} onSegmentHover={(segment) => setActiveApplianceIndex(segment ? applianceDistribution.findIndex((entry: any) => entry.name === segment.label) : null)} centerContent={activeApplianceIndex !== null && applianceDistribution[activeApplianceIndex] ? <><span className="text-3xl font-bold text-text">{applianceDistribution[activeApplianceIndex].value}</span><span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-widest text-slate-400">{applianceDistribution[activeApplianceIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Pacientes</span>} />
-                  </div>
-                  </div>
-              </SpotlightCard>
-
               {/* Maintenance Value Chart */}
               <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
                   <div className="flex flex-col h-full w-full">
                       <div className="flex justify-between items-start mb-4">
                           <h3 className="text-lg font-bold text-text">Distribuição Financeira</h3>
-                      <div className="text-right">
+                      {userRole === 'admin' && <div className="text-right">
                           <p className="text-[10px] text-slate-400 uppercase font-bold">Receita Estimada (Ativos)</p>
                           <p className="text-xl font-bold text-emerald-400">R$ {estimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                      </div>
+                      </div>}
                   </div>
                   <div className="flex-1 w-full">
                       <ResponsiveContainer width="100%" height="100%">
