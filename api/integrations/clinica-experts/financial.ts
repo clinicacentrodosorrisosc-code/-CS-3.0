@@ -1,6 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { ApiRequest, ApiResponse } from '../../../integrations/clinicaExpertsHttp.js';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const { handleClinicaExpertsFinancial } = await import('../../../integrations/clinicaExpertsHttp.js');
     return handleClinicaExpertsFinancial(req, res);

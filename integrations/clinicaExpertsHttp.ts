@@ -2,14 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { ClinicaExpertsClient, createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
-type ApiRequest = {
+export type ApiRequest = {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
   body?: unknown;
   query?: Record<string, string | string[] | undefined>;
 };
 
-type ApiResponse = {
+export type ApiResponse = {
   status: (code: number) => ApiResponse;
   json: (body: unknown) => void;
 };
