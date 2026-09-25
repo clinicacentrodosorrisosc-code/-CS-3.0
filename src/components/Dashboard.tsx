@@ -546,21 +546,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                 </div>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <section className="grid max-w-sm grid-cols-1 gap-4">
               <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Ticket médio</p>
                   <p className="mt-1 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{formatCurrency(averageTicket)}</p>
                   <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
-              </div>
-              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Avaliações concluídas</p>
-                  <p className="mt-1 text-2xl font-black tabular-nums text-[#1F6F5B] dark:text-[#63B596]">{evaluationRate.toFixed(1)}%</p>
-                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{evaluationSummary.evaluated} de {evaluationSummary.scheduled} agendadas</p>
-              </div>
-              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Taxa de no-show</p>
-                  <p className={`mt-1 text-2xl font-black tabular-nums ${noShowRate > 15 ? 'text-rose-500' : 'text-[#17211D] dark:text-white'}`}>{noShowRate.toFixed(1)}%</p>
-                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{evaluationSummary.noShow} ausência{evaluationSummary.noShow === 1 ? '' : 's'} no mês</p>
               </div>
           </section>
 

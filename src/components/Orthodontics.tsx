@@ -1377,7 +1377,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           )}
 
           {/* Top KPIs */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               {/* Active Total */}
               <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
@@ -1441,13 +1441,28 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   <p className="mt-2 text-xs text-slate-500">No mês selecionado</p>
               </div>
 
+              {/* Estimated Monthly Revenue */}
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Receita mensal estimada</p>
+                          <p className="mt-2 text-2xl font-display font-bold text-text">{estimatedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                          <p className="mt-1 text-xs text-slate-500">Mensalidades dos pacientes ativos</p>
+                      </div>
+                      <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          <span className="material-symbols-outlined text-xl">payments</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
               {/* Ortho Pacing */}
               {(() => {
                 const hasData = orthoPacing.chartData && orthoPacing.chartData.length > 0 && orthoPacing.chartData.some(d => d.atual > 0);
 
                 if (!hasData) {
                     return (
-                        <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group col-span-2" spotlightColor="rgba(59, 130, 246, 0.4)">
+                        <SpotlightCard className="glass-panel w-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
                             <div className="flex flex-col items-center justify-center h-full text-slate-500 py-12">
                                 <BarChart3 className="w-12 h-12 mb-4 opacity-40" />
                                 <h4 className="text-text font-bold text-sm">Sem dados de presença</h4>
@@ -1481,7 +1496,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 const daysRemaining = Math.max(0, orthoDaysTotal - orthoDaysPassed);
 
                 return (
-                  <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group col-span-2" spotlightColor="rgba(59, 130, 246, 0.4)">
+                  <SpotlightCard className="glass-panel w-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
                       <div className="flex flex-col mb-6">
                           <div className="flex justify-between items-center mb-6">
                               <h4 className="text-text font-bold text-sm">Pacing de Presença Ortodontia</h4>
@@ -1559,8 +1574,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </SpotlightCard>
                 );
               })()}
-
-              </div>
           
         {/* Espaçamento mantido */}
         <div className="mt-6" />
