@@ -1605,7 +1605,11 @@ export const Financial: React.FC<FinancialProps> = ({
     setFormData((prev) => ({
       ...prev,
       paymentMethod: pmName,
-      accountId: method?.defaultAccountId || prev.accountId,
+      accountId:
+        modalType === "income"
+          ? ""
+          : method?.defaultAccountId || prev.accountId,
+      cardBrand: modalType === "income" ? "" : prev.cardBrand,
       installments:
         pmName.toLowerCase().includes("cartão") ||
         pmName.toLowerCase().includes("crédito")
@@ -5765,30 +5769,8 @@ export const Financial: React.FC<FinancialProps> = ({
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold"
                         />
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          CONTA / BANCO (OPCIONAL)
-                        </label>
-                        <select
-                          value={formData.accountId}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              accountId: e.target.value,
-                            })
-                          }
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
-                        >
-                          <option value="">Sem conta bancária</option>
-                          {accountsList.map((acc) => (
-                            <option key={acc.id} value={acc.id}>
-                              {acc.name} ({acc.bank})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                    <div className="animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                           PROFISSIONAL
@@ -5953,38 +5935,6 @@ export const Financial: React.FC<FinancialProps> = ({
                           </button>
                         </div>
                       </div>
-                      {((formData.paymentMethod || "")
-                        .toLowerCase()
-                        .includes("cartão") ||
-                        (formData.paymentMethod || "")
-                          .toLowerCase()
-                          .includes("crédito") ||
-                        (formData.paymentMethod || "")
-                          .toLowerCase()
-                          .includes("débito")) && (
-                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            BANDEIRA DO CARTÃO (OPCIONAL)
-                          </label>
-                          <select
-                            value={formData.cardBrand}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                cardBrand: e.target.value,
-                              })
-                            }
-                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
-                          >
-                            <option value="">Não informar</option>
-                            {cardFees.map((f) => (
-                              <option key={f.brand} value={f.brand}>
-                                {f.brand}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
                     </div>
                     {((formData.paymentMethod || "")
                       .toLowerCase()
