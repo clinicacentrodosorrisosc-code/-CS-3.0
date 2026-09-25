@@ -135,7 +135,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [loading, setLoading] = useState(true);
   const [selectedDate] = useState<Date | null>(null);
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
-  const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number } | null>(null);
+  const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number; selectedDate: Date | null } | null>(null);
   const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
@@ -877,7 +877,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (!patient) return;
 
       // Abrir modal de seleção de dia e status no calendário para garantir sincronia completa com a agenda
-      setGridEditingInfo({ patientId, monthIndex });
+      setGridEditingInfo({ patientId, monthIndex, selectedDate: null });
   };
 
   const toggleDailyAttendance = async (patientId: string, date: Date, overrideStatus?: 'Present' | 'Absent' | 'Scheduled' | 'None') => {
@@ -1377,87 +1377,69 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           )}
 
           {/* Top KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {/* Active Total */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(168, 85, 247, 0.4)">
-                  <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="material-symbols-outlined text-6xl text-purple-500">groups</span>
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pacientes ativos</p>
+                          <p className="mt-2 text-3xl font-display font-bold text-text">{activeCount}</p>
+                          <p className="mt-1 text-xs text-slate-500">Em tratamento no quadro</p>
+                      </div>
+                      <div className="grid size-10 place-items-center rounded-lg bg-[var(--primary-dim)] text-[var(--primary)]">
+                          <span className="material-symbols-outlined text-xl">groups</span>
+                      </div>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pacientes Ativos (Total)</p>
-                  <div className="flex items-end gap-2">
-                      <span className="text-3xl font-display font-bold text-text">{activeCount}</span>
-                  </div>
-              </SpotlightCard>
+              </div>
 
               {/* Started In Month */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group border-l-4 border-l-emerald-500 flex flex-col min-h-[240px]" spotlightColor="rgba(16, 185, 129, 0.4)">
-                  <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="material-symbols-outlined text-6xl text-emerald-500">person_add</span>
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                          <p className="mt-2 text-3xl font-display font-bold text-emerald-500">+{startedInMonth}</p>
+                          <p className="mt-1 truncate text-xs text-slate-500">{startedNames.length ? startedNames.join(', ') : 'Nenhum início no período'}</p>
+                      </div>
+                      <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          <span className="material-symbols-outlined text-xl">person_add</span>
+                      </div>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
-                  <div className="flex items-end gap-2 mb-2">
-                      <span className="text-3xl font-display font-bold text-emerald-400">+{startedInMonth}</span>
-                  </div>
-                  <div className="flex-1 mt-4 overflow-y-auto pr-1 custom-scrollbar max-h-[110px]">
-                    <div className="flex flex-col gap-2">
-                      {startedNames.map((name, i) => (
-                          <div key={i} className="text-[11px] text-slate-400 truncate hover:text-emerald-400 transition-colors">• {name}</div>
-                      ))}
-                    </div>
-                  </div>
-              </SpotlightCard>
+              </div>
 
               {/* Finished In Month */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group border-l-4 border-l-blue-500 flex flex-col min-h-[240px]" spotlightColor="rgba(59, 130, 246, 0.4)">
-                  <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="material-symbols-outlined text-6xl text-blue-500">flag</span>
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                          <p className="mt-2 text-3xl font-display font-bold text-[var(--primary)]">{finishedInMonth}</p>
+                          <p className="mt-1 truncate text-xs text-slate-500">{finishedNames.length ? finishedNames.join(', ') : 'Nenhuma finalização no período'}</p>
+                      </div>
+                      <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-[var(--primary-dim)] text-[var(--primary)]">
+                          <span className="material-symbols-outlined text-xl">flag</span>
+                      </div>
                   </div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
-                  <div className="flex items-end gap-2 mb-2">
-                      <span className="text-3xl font-display font-bold text-blue-400">{finishedInMonth}</span>
-                  </div>
-                  <div className="flex-1 mt-4 overflow-y-auto pr-1 custom-scrollbar max-h-[110px]">
-                    <div className="flex flex-col gap-2">
-                      {finishedNames.map((name, i) => (
-                          <div key={i} className="text-[11px] text-slate-400 truncate hover:text-blue-400 transition-colors">• {name}</div>
-                      ))}
-                    </div>
-                  </div>
-              </SpotlightCard>
+              </div>
 
               {/* Attendance */}
-              <SpotlightCard className="glass-panel rounded-2xl p-4 relative overflow-hidden group flex items-center justify-between" spotlightColor="rgba(139, 92, 246, 0.4)">
-                  <div>
-                      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Taxa de Presença</p>
-                      <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</span>
-                          <span className={`text-[10px] font-black uppercase ${
-                              attendanceRate < 85 ? 'text-red-500' : 
-                              attendanceRate <= 90 ? 'text-amber-500' : 
-                              'text-emerald-500'
-                          }`}>
-                              {attendanceRate < 85 ? 'Ruim' : attendanceRate <= 90 ? 'Bom' : 'Excelente'}
-                          </span>
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Taxa de Presença</p>
+                          <p className="mt-2 text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</p>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-1">No mês selecionado</p>
+                      <span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase ${
+                          attendanceRate < 85 ? 'text-red-500' :
+                          attendanceRate <= 90 ? 'text-amber-500' :
+                          'text-emerald-500'
+                      }`}>
+                          {attendanceRate < 85 ? 'Ruim' : attendanceRate <= 90 ? 'Bom' : 'Excelente'}
+                      </span>
                   </div>
-                  <div className="relative size-14">
-                      <svg className="size-full transform -rotate-90">
-                          <circle cx="28" cy="28" r="24" stroke="#1e293b" strokeWidth="4" fill="transparent" />
-                          <circle 
-                            cx="28" 
-                            cy="28" 
-                            r="24" 
-                            stroke={attendanceRate < 85 ? '#ef4444' : attendanceRate <= 90 ? '#f59e0b' : '#10b981'} 
-                            strokeWidth="4" 
-                            fill="transparent" 
-                            strokeDasharray="150.7" 
-                            strokeDashoffset={150.7 - (150.7 * attendanceRate) / 100} 
-                            strokeLinecap="round" 
-                          />
-                      </svg>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+                      <div className={`h-full rounded-full ${attendanceRate < 85 ? 'bg-red-500' : attendanceRate <= 90 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, attendanceRate)}%` }} />
                   </div>
-              </SpotlightCard>
+                  <p className="mt-2 text-xs text-slate-500">No mês selecionado</p>
+              </div>
 
               {/* Ortho Pacing */}
               {(() => {
@@ -2732,25 +2714,25 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     {MONTHS.map((_, idx) => {
                                         const monthKey = `${currentYear}-${String(idx + 1).padStart(2, '0')}`;
                                         const status = p.attendance[monthKey] || 'None';
+                                        const monthKeyPrefix = `${currentYear}-${String(idx + 1).padStart(2, '0')}-`;
+                                        const statusDayKey = Object.keys(p.attendance || {}).find(key =>
+                                            key.startsWith(monthKeyPrefix) && p.attendance[key] === status
+                                        );
+                                        const statusDay = statusDayKey ? Number(statusDayKey.split('-')[2]) : null;
+                                        const statusLabel = status === 'Present' ? 'Presente' : status === 'Scheduled' ? 'Agendado' : status === 'Absent' ? 'Faltou' : 'Sem registro';
                                         
                                         let cellClass = "cursor-pointer transition-all duration-200 group/cell";
                                         let content = null;
                                         
                                         if (status === 'Present') {
                                             cellClass += " bg-emerald-500/20 text-emerald-400";
-                                            // Find the specific day
-                                            const monthKeyPrefix = `${currentYear}-${String(idx + 1).padStart(2, '0')}-`;
-                                            const dayKey = Object.keys(p.attendance || {}).find(key => 
-                                                key.startsWith(monthKeyPrefix) && p.attendance[key] === 'Present'
-                                            );
-                                            const day = dayKey ? dayKey.split('-')[2] : '';
-                                            content = <span className="text-[10px] font-bold">{day ? parseInt(day) : <span className="material-symbols-outlined text-sm">check</span>}</span>;
+                                            content = <span className="text-[10px] font-bold">{statusDay || <span className="material-symbols-outlined text-sm">check</span>}</span>;
                                         } else if (status === 'Scheduled') {
                                             cellClass += " bg-amber-500/20 text-amber-400";
-                                            content = <span className="material-symbols-outlined text-sm">event</span>;
+                                            content = <span className="text-[10px] font-bold">{statusDay || <span className="material-symbols-outlined text-sm">event</span>}</span>;
                                         } else if (status === 'Absent') {
                                             cellClass += " bg-red-500/20 text-red-400";
-                                            content = <span className="material-symbols-outlined text-sm">close</span>;
+                                            content = <span className="text-[10px] font-bold">{statusDay || <span className="material-symbols-outlined text-sm">close</span>}</span>;
                                         } else {
                                             cellClass += " hover:bg-panel";
                                         }
@@ -2760,12 +2742,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                 key={idx} 
                                                 className={`p-2 text-center border-l border-border relative ${cellClass}`}
                                             >
-                                                <div 
-                                                    className="w-full h-full flex items-center justify-center min-h-[30px]"
+                                                <button
+                                                    type="button"
+                                                    className="w-full h-full flex items-center justify-center min-h-[30px] rounded-md"
                                                     onClick={() => toggleAttendance(p.id, idx)}
+                                                    title={`${MONTHS[idx]}: ${statusLabel}. Escolher data e status.`}
+                                                    aria-label={`${p.name}, ${MONTHS[idx]}: ${statusLabel}. Escolher data e status.`}
                                                 >
                                                     {content}
-                                                </div>
+                                                </button>
                                                 
                                                 {status !== 'None' && (
                                                     <button
@@ -3145,7 +3130,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       {/* Grid Date Selection Modal */}
       {gridEditingInfo && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-              <div className="bg-surface border border-border w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+              <div className="bg-surface border border-border w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                   <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                       <h3 className="text-lg font-bold text-text font-display">Selecione o Dia de Presença</h3>
                       <button onClick={() => setGridEditingInfo(null)} className="text-slate-400 hover:text-text"><span className="material-symbols-outlined">close</span></button>
@@ -3155,11 +3140,57 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                         currentYear={currentYear} 
                         selectedMonth={(gridEditingInfo.monthIndex + 1).toString()} 
                         isOrthoDay={isOrthoDay} 
-                        onDayClick={(date) => {
-                            toggleDailyAttendance(gridEditingInfo.patientId, date);
-                            setGridEditingInfo(null);
+                        title="Escolha a data"
+                        selectedDate={gridEditingInfo.selectedDate}
+                        getDayStatus={(date) => {
+                            const patient = patients.find(item => item.id === gridEditingInfo.patientId);
+                            return patient?.attendance[formatDateKey(date)] || 'None';
                         }}
+                        onDayClick={(date) => setGridEditingInfo(current => current ? { ...current, selectedDate: date } : current)}
                       />
+                      {(() => {
+                          const patient = patients.find(item => item.id === gridEditingInfo.patientId);
+                          const selectedDate = gridEditingInfo.selectedDate;
+                          const currentStatus = selectedDate && patient ? patient.attendance[formatDateKey(selectedDate)] || 'None' : 'None';
+                          const dateLabel = selectedDate
+                              ? selectedDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
+                              : 'Nenhuma data selecionada';
+                          const statusLabel = currentStatus === 'Scheduled' ? 'Agendado' : currentStatus === 'Present' ? 'Presente' : currentStatus === 'Absent' ? 'Faltou' : 'Sem status';
+                          const saveStatus = async (status: 'Scheduled' | 'Present' | 'Absent' | 'None') => {
+                              if (!selectedDate) {
+                                  toast.error('Escolha uma data no calendário antes de salvar.');
+                                  return;
+                              }
+                              await setPatientDailyStatus(gridEditingInfo.patientId, formatDateKey(selectedDate), status);
+                              setGridEditingInfo(null);
+                          };
+
+                          return (
+                              <div className="mt-4 rounded-xl border border-border bg-panel p-4">
+                                  <div className="flex flex-col gap-1 border-b border-border pb-3">
+                                      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Registro de presença</span>
+                                      <span className="text-sm font-semibold text-text">{patient?.name || 'Paciente'}</span>
+                                      <span className="text-xs capitalize text-slate-500">{dateLabel} {selectedDate ? `• ${statusLabel}` : ''}</span>
+                                  </div>
+                                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                      <button type="button" disabled={!selectedDate} onClick={() => saveStatus('Scheduled')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-45">
+                                          <Calendar className="size-4" /> Agendado
+                                      </button>
+                                      <button type="button" disabled={!selectedDate} onClick={() => saveStatus('Present')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-45">
+                                          <CheckCircle2 className="size-4" /> Presente
+                                      </button>
+                                      <button type="button" disabled={!selectedDate} onClick={() => saveStatus('Absent')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-50 px-3 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-45">
+                                          <XCircle className="size-4" /> Faltou
+                                      </button>
+                                  </div>
+                                  {selectedDate && currentStatus !== 'None' && (
+                                      <button type="button" onClick={() => saveStatus('None')} className="mt-3 text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-text">
+                                          Limpar status desta data
+                                      </button>
+                                  )}
+                              </div>
+                          );
+                      })()}
                   </div>
               </div>
           </div>

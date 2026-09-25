@@ -555,7 +555,7 @@ const App: React.FC = () => {
           openNotifications={() => setIsNotificationsOpen(true)}
         />
 
-        <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent md:p-2 md:pl-0">
+        <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent md:p-1.5 md:pl-0">
 
         <NotificationCenter
           isOpen={isNotificationsOpen}

@@ -206,14 +206,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isExpanded: externalIsExpanded,
   onToggleExpand: externalOnToggleExpand
 }) => {
-  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('sidebar_expanded');
-      return saved !== null ? saved === 'true' : true;
-    } catch {
-      return true;
-    }
-  });
+  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(false);
 
   const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
 
@@ -382,9 +375,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <button
               type="button"
-              onClick={() => handleTabClick(item.id, hasSubItems)}
+              onClick={(event) => {
+                handleTabClick(item.id, hasSubItems);
+                if (!isExpanded && hasSubItems) showFlyout(item.id, event.currentTarget);
+              }}
               className={`
-                group relative flex items-center min-h-11 py-1.5 rounded-lg border transition-all duration-150 w-full text-left
+                group relative flex items-center min-h-10 py-1 rounded-lg border transition-all duration-150 w-full text-left
                 ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
                 ${isActive
                   ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-[0_6px_16px_rgba(0,122,255,0.18)] font-semibold'
@@ -478,7 +474,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <motion.aside
         initial={false}
         animate={{
-          width: isExpanded ? 236 : 56
+          width: isExpanded ? 220 : 48
         }}
         transition={{
           type: 'spring',
@@ -487,8 +483,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           mass: 0.5
         }}
         className={`
-          flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-2 lg:mr-2 lg:h-[calc(100%-1rem)] lg:rounded-2xl
-          bg-white dark:bg-[#151820] border border-[var(--border-subtle)]
+          flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-0 lg:mr-0 lg:h-full lg:rounded-none
+          bg-[var(--surface)] border-r border-[var(--border-subtle)]
           transition-colors duration-200
           ${isMobileMenuOpen ? 'h-[92vh] w-full rounded-b-3xl shadow-2xl z-50' : 'h-auto'}
         `}
@@ -546,7 +542,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Scrollable Navigation Area */}
         <div className={`
-          flex-1 flex flex-col overflow-y-auto px-2 py-3 gap-3 custom-scrollbar
+          flex-1 flex flex-col overflow-y-auto px-1 py-2 gap-2 custom-scrollbar
           ${isMobileMenuOpen ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 lg:opacity-100 lg:max-h-full'}
         `}>
           {renderNavGroup(mainItems, 'Principal')}
@@ -554,17 +550,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Profile & Footer Section */}
-        <div className="p-2 border-t border-[#e8eaee] dark:border-white/[0.06] flex flex-col gap-1.5 bg-white dark:bg-[#151820]">
+        <div className="p-1 border-t border-[#e8eaee] dark:border-white/[0.06] flex flex-col gap-1 bg-[var(--surface)]">
           <div
             onClick={() => setIsProfileCardOpen(true)}
             className={`
-              flex items-center gap-2.5 p-2 rounded-lg hover:bg-[#f4f5f7] dark:hover:bg-white/[0.06] transition-all cursor-pointer group
-              ${!isExpanded ? 'justify-center p-2' : 'justify-between'}
+              flex items-center gap-2.5 p-1 rounded-lg hover:bg-[#f4f5f7] dark:hover:bg-white/[0.06] transition-all cursor-pointer group
+              ${!isExpanded ? 'justify-center p-1' : 'justify-between'}
             `}
             title="Abrir Perfil"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
+              <div className="w-7 h-7 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-black text-[10px] shrink-0 shadow-sm">
                 {userRole.slice(0, 2).toUpperCase()}
               </div>
 
@@ -608,7 +604,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
             style={{ top: flyoutPosition.top, left: flyoutPosition.left }}
-            className="fixed w-56 rounded-xl bg-white dark:bg-[#151820] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-2 z-50 hidden lg:flex flex-col gap-1"
+            className="fixed w-52 rounded-xl bg-[var(--surface)] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-1.5 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);

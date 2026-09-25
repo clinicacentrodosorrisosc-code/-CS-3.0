@@ -66,18 +66,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="z-50 flex h-[58px] min-h-[58px] w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-5 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="z-50 flex h-12 min-h-12 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-4 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
+      <div className="flex min-w-0 items-center gap-2.5">
         <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white" aria-label="Abrir menu">
           <Menu className="size-4" />
         </button>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="grid size-8 place-items-center rounded-[10px] bg-[var(--primary)] text-[10px] font-bold text-white shadow-[0_3px_10px_rgba(0,122,255,0.22)]">CS</div>
+          <div className="grid size-7 place-items-center rounded-lg bg-[var(--primary)] text-[9px] font-bold text-white shadow-[0_3px_10px_rgba(0,122,255,0.22)]">CS</div>
           <span className="hidden text-sm font-semibold tracking-[-0.025em] text-[var(--text)] sm:inline">Centro do Sorriso</span>
         </div>
 
-        <div className="hidden h-5 w-px bg-[var(--border)] md:block" />
+        <div className="hidden h-4 w-px bg-[var(--border)] md:block" />
         <div className="hidden min-w-0 items-center gap-1.5 text-xs md:flex">
           <span className="truncate font-semibold text-[var(--primary)]">{moduleLabel}</span>
           {subLabel && <><ChevronRight className="size-3 text-[#b0b6c0]" /><span className="truncate text-[#667085] dark:text-slate-300">{subLabel}</span></>}
