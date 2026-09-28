@@ -35,6 +35,7 @@ interface OrthoPatient {
   status: 'Active' | 'Finished' | 'Suspended';
   maintenanceValue: number;
   attendance: Record<string, any>;
+  finishReason?: string;
   problemNote?: string; // New field for issues
 }
 
@@ -315,6 +316,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [selectedPatientToFinish, setSelectedPatientToFinish] = useState<string | null>(null);
   const [finishDate, setFinishDate] = useState(new Date().toISOString().split('T')[0]);
+  const [finishReason, setFinishReason] = useState('');
 
   // Problem Note Modal
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -347,6 +349,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   status: p.status,
                   maintenanceValue: Number(p.maintenance_value || 0),
                   attendance: att,
+                  finishReason: att.__finish_reason || undefined,
                   problemNote: p.problem_note
               };
           }) : [];
@@ -492,21 +495,57 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const handleOpenFinishModal = (id: string) => {
       setSelectedPatientToFinish(id);
       setFinishDate(new Date().toISOString().split('T')[0]);
+      setFinishReason('');
       setIsFinishModalOpen(true);
   };
 
   const handleConfirmFinish = async () => {
       if (!selectedPatientToFinish) return;
+      const reasonName = finishReason.trim();
+      const patient = patients.find(p => p.id === selectedPatientToFinish);
+      if (!patient) return;
+      if (!reasonName) {
+          toast.error('Informe o motivo da finalização.');
+          return;
+      }
       
       try {
+          const normalizedReason = reasonName.toLocaleLowerCase('pt-BR');
+          const existingReason = finishReasons.find(reason =>
+              reason.name.trim().toLocaleLowerCase('pt-BR') === normalizedReason,
+          );
+
+          if (!existingReason) {
+              const { error: reasonError } = await supabase.from('ortho_finish_reasons').insert({
+                  id: 'reason_' + Date.now().toString(),
+                  name: reasonName,
+              });
+              if (reasonError) {
+                  console.error('Error saving finish reason', reasonError);
+                  toast.error('Não foi possível salvar o motivo de finalização.');
+                  return;
+              }
+          }
+
+          const updatedAttendance = {
+              ...patient.attendance,
+              __finish_reason: existingReason?.name ?? reasonName,
+          };
           const { error } = await supabase.from('ortho_patients').update({
               status: 'Finished',
-              end_date: finishDate
+              end_date: finishDate,
+              attendance: updatedAttendance,
           }).eq('id', selectedPatientToFinish);
           
           if (!error) {
               // Optimistic update
-              setPatients(prev => prev.map(p => p.id === selectedPatientToFinish ? { ...p, status: 'Finished', endDate: finishDate } : p));
+              setPatients(prev => prev.map(p => p.id === selectedPatientToFinish ? {
+                  ...p,
+                  status: 'Finished',
+                  endDate: finishDate,
+                  attendance: updatedAttendance,
+                  finishReason: existingReason?.name ?? reasonName,
+              } : p));
               await loadData();
               toast.success('Paciente finalizado com sucesso!');
           } else {
@@ -520,6 +559,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       
       setIsFinishModalOpen(false);
       setSelectedPatientToFinish(null);
+      setFinishReason('');
   };
 
   const handleReactivate = async (id: string) => {
@@ -986,6 +1026,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
     startedNames, 
     finishedInMonth, 
     finishedNames, 
+    finishReasonDistribution,
+    topFinishReason,
     problemPatients,
     consecutiveAbsentPatients
   } = useMemo(() => {
@@ -1021,6 +1063,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const finishedInMonthPatients = patients.filter(p => p.endDate && p.endDate.startsWith(targetMonthKey) && p.status === 'Finished');
       const finishedInMonth = finishedInMonthPatients.length;
       const finishedNames = finishedInMonthPatients.map(p => p.name);
+      const finishReasonsByCount = finishedInMonthPatients.reduce<Record<string, number>>((counts, patient) => {
+          const reason = patient.finishReason?.trim() || 'Não informado';
+          counts[reason] = (counts[reason] || 0) + 1;
+          return counts;
+      }, {});
+      const finishReasonDistribution = Object.entries(finishReasonsByCount)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pt-BR'));
+      const topFinishReason = finishReasonDistribution[0] ?? null;
 
       const problemPatients = activePatients.filter(p => p.problemNote && p.problemNote.trim() !== '');
 
@@ -1056,7 +1107,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       // Quem estiver como agendado, falta ou None é contabilizado como se não tivesse vindo.
       const rate = count > 0 ? (present / count) * 100 : 0;
 
-      return { activeCount: count, estimatedRevenue: revenue, applianceDistribution: appDist, valueDistribution: valDist, attendanceRate: rate, startedInMonth, startedNames, finishedInMonth, finishedNames, problemPatients, consecutiveAbsentPatients };
+      return { activeCount: count, estimatedRevenue: revenue, applianceDistribution: appDist, valueDistribution: valDist, attendanceRate: rate, startedInMonth, startedNames, finishedInMonth, finishedNames, finishReasonDistribution, topFinishReason, problemPatients, consecutiveAbsentPatients };
   }, [patients, selectedMonth, currentYear]);
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -1377,7 +1428,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           )}
 
           {/* Top KPIs */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
               {/* Active Total */}
               <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
@@ -1421,6 +1472,23 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Attendance */}
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Motivo mais registrado</p>
+                          <p className="mt-2 truncate text-lg font-display font-bold text-text" title={topFinishReason?.name}>
+                              {topFinishReason?.name ?? '—'}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-slate-500" title={finishReasonDistribution.map(reason => `${reason.name}: ${reason.count}`).join(' · ')}>
+                              {topFinishReason ? `${topFinishReason.count} ${topFinishReason.count === 1 ? 'finalização no período' : 'finalizações no período'}` : 'Sem finalizações no período'}
+                          </p>
+                      </div>
+                      <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                          <span className="material-symbols-outlined text-xl">analytics</span>
+                      </div>
+                  </div>
+              </div>
+
               <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div>
@@ -2702,16 +2770,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                                     )}
                                                 </div>
                                                 <button 
-                                                    onClick={async (e) => {
+                                                    onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (!confirm('Deseja finalizar o tratamento deste paciente e removê-lo da grade?')) return;
-                                                        const endDate = new Date().toISOString().split('T')[0];
-                                                        const { error } = await supabase.from('ortho_patients').update({ status: 'Finished', end_date: endDate }).eq('id', p.id);
-                                                        if (!error) {
-                                                            setPatients(patients.map(pat => pat.id === p.id ? { ...pat, status: 'Finished', endDate } : pat));
-                                                        } else {
-                                                            alert('Erro ao finalizar paciente.');
-                                                        }
+                                                        handleOpenFinishModal(p.id);
                                                     }}
                                                     title="Finalizar e Remover da Grade"
                                                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-panel hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 rounded"
@@ -3065,7 +3126,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <button onClick={() => setIsFinishModalOpen(false)} className="text-slate-400 hover:text-text"><span className="material-symbols-outlined">close</span></button>
                   </div>
                   <div className="p-6 flex flex-col gap-4">
-                      <p className="text-sm text-slate-300">Selecione a data de conclusão do tratamento para arquivar este paciente.</p>
+                      <p className="text-sm text-slate-300">Informe a data e o motivo para finalizar o tratamento. Um motivo novo fica disponível nas próximas finalizações.</p>
                       <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Data de Finalização</label>
                           <input 
@@ -3074,6 +3135,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               onChange={(e) => setFinishDate(e.target.value)}
                               className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-purple-500 outline-none"
                           />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase">Motivo da Finalização</label>
+                          <input
+                              list="ortho-finish-reasons"
+                              value={finishReason}
+                              onChange={(e) => setFinishReason(e.target.value)}
+                              placeholder="Escolha ou escreva um novo motivo"
+                              className="bg-panel border border-border rounded-lg px-4 py-3 text-text focus:border-purple-500 outline-none"
+                              autoFocus
+                          />
+                          <datalist id="ortho-finish-reasons">
+                              {finishReasons.map(reason => <option key={reason.id} value={reason.name} />)}
+                          </datalist>
+                          <p className="text-[11px] text-slate-500">Os motivos já cadastrados aparecem como sugestão enquanto você digita.</p>
                       </div>
                   </div>
                   <div className="p-6 border-t border-border bg-surface flex justify-end gap-3">
