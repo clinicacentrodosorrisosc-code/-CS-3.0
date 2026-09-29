@@ -286,13 +286,14 @@ export async function handleClinicaExpertsFinancial(req: ApiRequest, res: ApiRes
       res.status(400).json({ error: 'A Clínica Experts permite consultar títulos e parcelas em períodos de até 1 ano.' });
       return;
     }
-    const [accounts, categories, bills, parcels] = await Promise.all([
+    const [accounts, categories, bills, parcels, bookings] = await Promise.all([
       client.listFinancialAccounts(),
       client.listFinancialCategories(),
       client.listBills(startsAt, endsAt),
       client.listParcels(startsAt, endsAt),
+      client.listCalendarEvents(startsAt, endsAt),
     ]);
-    res.status(200).json({ data: { accounts, categories, bills, parcels, fetchedAt: new Date().toISOString() } });
+    res.status(200).json({ data: { accounts, categories, bills, parcels, bookings, fetchedAt: new Date().toISOString() } });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha ao consultar o financeiro da Clinica Experts.';
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });

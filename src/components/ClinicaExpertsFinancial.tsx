@@ -19,10 +19,11 @@ type FinancialData = {
   categories: FinancialRecord[];
   bills: FinancialRecord[];
   parcels: FinancialRecord[];
+  bookings: FinancialRecord[];
   fetchedAt: string;
 };
 type FlowDirection = 'income' | 'expense' | 'unknown';
-type View = 'overview' | 'accounts' | 'cashflow';
+type View = 'overview' | 'accounts' | 'cashflow' | 'procedures';
 
 const recordValue = (record: FinancialRecord, keys: string[]) => {
   for (const key of keys) {
@@ -219,6 +220,57 @@ const billParcels = (bill: FinancialRecord): FinancialRecord[] => {
     : [bill];
 };
 
+type ProcedureOccurrence = { id: string; name: string; quantity: number; status: string; date: string; patient: string; professional: string };
+
+const procedureOccurrences = (bookings: FinancialRecord[]): ProcedureOccurrence[] => bookings.flatMap((booking, bookingIndex) => {
+  const procedures = Array.isArray(booking.procedures) ? booking.procedures : [];
+  return procedures.flatMap((procedure, procedureIndex) => {
+    if (!procedure || typeof procedure !== 'object') return [];
+    const item = procedure as FinancialRecord;
+    return [{
+      id: textValue(item, ['uuid', 'id'], `${bookingIndex}-${procedureIndex}`),
+      name: textValue(item, ['name', 'description', 'title', 'procedure_name'], 'Procedimento nao informado'),
+      quantity: Math.max(1, numericValue(item.quantity) || numericValue(item.qty) || 1),
+      status: textValue(booking, ['status'], 'scheduled'),
+      date: textValue(booking, ['starts_at', 'date', 'created_at'], ''),
+      patient: textValue(booking, ['patient'], textValue(booking, ['patient_name'], 'Paciente nao informado')),
+      professional: textValue(booking, ['professional'], textValue(booking, ['professional_name'], 'Profissional nao informado')),
+    }];
+  });
+});
+
+const procedureStatus = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized === 'done' || /conclu|finaliz/.test(normalized)) return { label: 'Concluido', tone: 'text-emerald-600 dark:text-emerald-300' };
+  if (/cancel/.test(normalized)) return { label: 'Cancelado', tone: 'text-rose-600 dark:text-rose-300' };
+  if (/noshow/.test(normalized)) return { label: 'Nao compareceu', tone: 'text-amber-600 dark:text-amber-300' };
+  if (/confirm/.test(normalized)) return { label: 'Confirmado', tone: 'text-sky-600 dark:text-sky-300' };
+  return { label: 'Agendado', tone: 'text-[var(--text-secondary)]' };
+};
+
+const ProceduresPanel: React.FC<{ occurrences: ProcedureOccurrence[] }> = ({ occurrences }) => {
+  const ranking = useMemo(() => {
+    const grouped = new Map<string, { scheduled: number; completed: number; cancelled: number; professionals: Set<string> }>();
+    occurrences.forEach((occurrence) => {
+      const item = grouped.get(occurrence.name) || { scheduled: 0, completed: 0, cancelled: 0, professionals: new Set<string>() };
+      item.scheduled += occurrence.quantity;
+      const status = procedureStatus(occurrence.status).label;
+      if (status === 'Concluido') item.completed += occurrence.quantity;
+      if (status === 'Cancelado') item.cancelled += occurrence.quantity;
+      if (occurrence.professional !== 'Profissional nao informado') item.professionals.add(occurrence.professional);
+      grouped.set(occurrence.name, item);
+    });
+    return [...grouped.entries()].map(([name, values]) => ({ name, ...values })).sort((a, b) => b.scheduled - a.scheduled || a.name.localeCompare(b.name, 'pt-BR'));
+  }, [occurrences]);
+  const completed = occurrences.filter((item) => procedureStatus(item.status).label === 'Concluido').reduce((total, item) => total + item.quantity, 0);
+  const cancelled = occurrences.filter((item) => procedureStatus(item.status).label === 'Cancelado').reduce((total, item) => total + item.quantity, 0);
+  return <div className="space-y-5">
+    <div className="grid gap-3 sm:grid-cols-3"><Metric icon={ReceiptText} label="Procedimentos" value={ranking.length} description="Tipos retornados na agenda" tone="neutral" format="count" /><Metric icon={ArrowDownLeft} label="Concluidos" value={completed} description="Quantidade concluida no periodo" tone="income" format="count" /><Metric icon={CircleAlert} label="Cancelados" value={cancelled} description="Quantidade cancelada no periodo" tone="expense" format="count" /></div>
+    <SectionCard title="Resumo por procedimento" subtitle="Agendados, concluidos, cancelados e profissionais no periodo" icon={FolderTree}>{ranking.length === 0 ? <p className="p-5 text-sm text-[var(--text-muted)]">Nenhum procedimento foi retornado pela agenda da Clinica Experts para este periodo.</p> : <div className="overflow-auto custom-scrollbar"><table className="w-full min-w-[720px] text-left text-xs"><thead className="bg-white/35 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] dark:bg-white/[0.03]"><tr><th className="px-4 py-3">Procedimento</th><th className="px-4 py-3 text-right">Agendados</th><th className="px-4 py-3 text-right">Concluidos</th><th className="px-4 py-3 text-right">Cancelados</th><th className="px-4 py-3">Profissionais</th></tr></thead><tbody className="divide-y divide-[var(--border-subtle)]">{ranking.map((item) => <tr key={item.name}><td className="px-4 py-3 font-semibold text-[var(--text)]">{item.name}</td><td className="px-4 py-3 text-right font-bold tabular-nums">{item.scheduled}</td><td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600 dark:text-emerald-300">{item.completed}</td><td className="px-4 py-3 text-right font-bold tabular-nums text-rose-600 dark:text-rose-300">{item.cancelled}</td><td className="px-4 py-3 text-[var(--text-secondary)]">{item.professionals.size ? [...item.professionals].join(', ') : '—'}</td></tr>)}</tbody></table></div>}</SectionCard>
+    <SectionCard title="Atendimentos com procedimento" subtitle={`${occurrences.length} registro(s) retornados pela Clinica Experts`} icon={ReceiptText}>{occurrences.length === 0 ? null : <div className="max-h-[34rem] overflow-auto custom-scrollbar divide-y divide-[var(--border-subtle)]">{[...occurrences].sort((a, b) => b.date.localeCompare(a.date)).map((item) => { const status = procedureStatus(item.status); return <div key={`${item.id}-${item.date}-${item.patient}`} className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-4 py-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-[var(--text)]">{item.name}</p><p className="mt-1 truncate text-[11px] text-[var(--text-secondary)]">{item.patient} · {item.professional} · {formatDate(item.date)}</p></div><div className="text-right"><p className="text-xs font-bold tabular-nums text-[var(--text)]">{item.quantity}x</p><p className={`mt-1 text-[10px] font-bold uppercase tracking-wide ${status.tone}`}>{status.label}</p></div></div>; })}</div>}</SectionCard>
+  </div>;
+};
+
 const Metric: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -357,11 +409,13 @@ export const ClinicaExpertsFinancial: React.FC = () => {
     }
     return [...groups.entries()].map(([name, values]) => ({ name, ...values, net: values.income - values.expense })).sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
   }, [categoriesById, paidRecords, receivedRecords]);
+  const procedures = useMemo(() => procedureOccurrences(data?.bookings || []), [data?.bookings]);
 
   const views: Array<{ id: View; label: string }> = [
     { id: 'overview', label: 'Visão do período' },
     { id: 'accounts', label: 'Contas e saldos' },
     { id: 'cashflow', label: 'Categorias e DFC' },
+    { id: 'procedures', label: 'Procedimentos' },
   ];
 
   return <div className="mx-auto w-full max-w-7xl space-y-5 pb-10">
@@ -373,6 +427,8 @@ export const ClinicaExpertsFinancial: React.FC = () => {
     <nav aria-label="Seções financeiras da Clínica Experts" className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-white/70 bg-white/50 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,.8)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.04]">
       {views.map((view) => <button key={view.id} type="button" onClick={() => setActiveView(view.id)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeView === view.id ? 'bg-white text-[var(--primary)] shadow-sm dark:bg-white/90' : 'text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text)] dark:hover:bg-white/[0.08]'}`}>{view.label}</button>)}
     </nav>
+
+    {data && activeView === 'procedures' ? <ProceduresPanel occurrences={procedures} /> : null}
 
     {error ? <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/75 p-4 text-sm text-rose-800 backdrop-blur-xl dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-100"><CircleAlert className="mt-0.5 size-4 shrink-0" />{error}</div> : null}
 
