@@ -7,7 +7,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
 import crypto from "crypto";
-import { ClinicaExpertsClient, createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from "./integrations/clinicaExperts";
+import { ClinicaExpertsClient, createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts, syncClinicaExpertsPayments } from "./integrations/clinicaExperts";
 import { handleWhatsAppCallingEligibility, handleWhatsAppConfig } from "./integrations/whatsappHttp";
 import { handleWhatsAppBulkCampaigns } from "./integrations/whatsappBulkCampaignsHttp";
 import { handleWahaConfig, handleWahaWebhook } from "./integrations/wahaHttp";
@@ -494,6 +494,10 @@ async function startServer() {
     const { handleClinicaExpertsPatients } = await import('./integrations/clinicaExpertsHttp.js');
     return handleClinicaExpertsPatients(req, res);
   });
+  app.post('/api/integrations/clinica-experts/payments', async (req, res) => {
+    const { handleClinicaExpertsPaymentSync } = await import('./integrations/clinicaExpertsHttp.js');
+    return handleClinicaExpertsPaymentSync(req, res);
+  });
 
   const runClinicaExpertsSync = async (req: express.Request, res: express.Response) => {
     try {
@@ -584,13 +588,15 @@ async function startServer() {
       }
       if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
 
-      if (!eventName.startsWith('crm_opportunity.')) {
+      const isFinancialEvent = /(^|\.)(bill|parcel|payment|financial)(\.|$)/i.test(eventName);
+      if (!eventName.startsWith('crm_opportunity.') && !isFinancialEvent) {
         await db.from('clinic_experts_webhook_events').update({ status: 'ignored', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
         return res.status(200).json({ received: true, ignored: true });
       }
 
       try {
-        await processClinicaExpertsOpportunityWebhook(db, clinicaExpertsOwnerUserId, payload, clinicaExpertsToken);
+        if (isFinancialEvent) await syncClinicaExpertsPayments(db, clinicaExpertsToken);
+        else await processClinicaExpertsOpportunityWebhook(db, clinicaExpertsOwnerUserId, payload, clinicaExpertsToken);
         await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
         return res.status(200).json({ received: true, processed: true });
       } catch (error: any) {

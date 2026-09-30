@@ -6,6 +6,8 @@ const PAGE_SIZE = 100;
 const REQUEST_GAP_MS = 550;
 const MAX_REQUEST_ATTEMPTS = 3;
 const REQUEST_TIMEOUT_MS = 10_000;
+export const CLINICA_EXPERTS_PAYMENT_SYNC_START_AT = '2026-09-29T23:23:55-03:00';
+export const CLINICA_EXPERTS_PAYMENT_SOURCE = 'CLINICA_EXPERTS_PAYMENT_SYNC_V2';
 
 type ApiMeta = { page?: number; last_page?: number };
 type ApiList<T> = { data: T[]; meta?: ApiMeta };
@@ -51,7 +53,15 @@ export type SyncResult = {
   stages: number;
   opportunities: number;
   patients: number;
+  payments?: number;
   finishedAt: string;
+};
+
+export type PaymentSyncResult = {
+  read: number;
+  realized: number;
+  imported: number;
+  deleted: number;
 };
 
 export type PhoneEnrichmentResult = {
@@ -204,6 +214,15 @@ export class ClinicaExpertsClient {
       ends_at: endsAt,
       sort_column: 'due_date',
       sort_direction: 'asc',
+    });
+  }
+
+  listSales(startsAt: string, endsAt: string) {
+    return this.listAll<ExternalFinancialRecord>('/sales', {
+      starts_at: startsAt,
+      ends_at: endsAt,
+      sort_column: 'sale_date',
+      sort_direction: 'desc',
     });
   }
 
@@ -416,6 +435,256 @@ function throwIfError(error: { message: string } | null, context: string) {
   if (error) throw new Error(`${context}: ${error.message}`);
 }
 
+function financialSyncDate(date: Date, endOfDay = false) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date);
+  const part = (type: string) => parts.find(item => item.type === type)?.value || '';
+  return `${part('year')}-${part('month')}-${part('day')}T${endOfDay ? '23:59:59' : '00:00:00'}-03:00`;
+}
+
+const financialText = (record: ExternalFinancialRecord | undefined, keys: string[]) => {
+  for (const key of keys) {
+    const value = record?.[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (typeof value === 'number') return String(value);
+  }
+  return '';
+};
+
+const financialName = (value: unknown) => {
+  if (typeof value === 'string') return value.trim();
+  if (!value || typeof value !== 'object') return '';
+  return financialText(value as ExternalFinancialRecord, ['name', 'description', 'title']);
+};
+
+const normalizedFinancialLabel = (value: unknown) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/^\s*\*+\s*/, '')
+  .replace(/[^a-zA-Z0-9]+/g, ' ')
+  .trim()
+  .toLocaleLowerCase('pt-BR');
+
+const procedureCategory = (
+  procedureNames: string[],
+  categories: Array<{ name: string; subcategories: string[] }>,
+) => {
+  const matchedCategories = procedureNames.flatMap(procedureName => {
+    const normalizedProcedure = normalizedFinancialLabel(procedureName);
+    if (!normalizedProcedure) return [];
+    const exact = categories.find(category => category.subcategories.some(
+      subcategory => normalizedFinancialLabel(subcategory) === normalizedProcedure,
+    ));
+    if (exact) return [exact.name];
+
+    const byPrefix = categories.filter(category => {
+      const normalizedCategory = normalizedFinancialLabel(category.name);
+      const categoryRoot = normalizedCategory.endsWith('s')
+        ? normalizedCategory.slice(0, -1)
+        : normalizedCategory;
+      return categoryRoot.length >= 4 && normalizedProcedure.includes(categoryRoot);
+    });
+    return byPrefix.length === 1 ? [byPrefix[0].name] : [];
+  });
+  const uniqueCategories = [...new Set(matchedCategories)];
+  return uniqueCategories.length === 1 ? uniqueCategories[0] : '';
+};
+
+const financialAmount = (record: ExternalFinancialRecord | undefined) => {
+  for (const key of ['final_amount', 'amount', 'nominal_amount', 'net_amount']) {
+    const value = Number(record?.[key]);
+    if (Number.isFinite(value) && value > 0) return value / 100;
+  }
+  return 0;
+};
+
+export async function syncClinicaExpertsPayments(
+  db: SupabaseClient,
+  apiToken: string,
+  startsAt?: string,
+  endsAt?: string,
+): Promise<PaymentSyncResult> {
+  const now = new Date();
+  const defaultStart = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
+  const defaultEnd = new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000);
+  const start = startsAt || financialSyncDate(defaultStart);
+  const end = endsAt || financialSyncDate(defaultEnd, true);
+  const client = new ClinicaExpertsClient(apiToken);
+  const [bills, parcels, sales] = await Promise.all([
+    client.listBills(start, end),
+    client.listParcels(start, end),
+    client.listSales(start, end),
+  ]);
+
+  const salesByBuyerAndCreation = new Map<string, ExternalFinancialRecord[]>();
+  for (const sale of sales) {
+    const buyer = sale.buyer && typeof sale.buyer === 'object'
+      ? sale.buyer as ExternalFinancialRecord
+      : undefined;
+    const buyerId = financialText(buyer, ['uuid', 'id']);
+    const createdAt = financialText(sale, ['created_at']);
+    if (!buyerId || !createdAt) continue;
+    const key = `${buyerId}|${createdAt}`;
+    salesByBuyerAndCreation.set(key, [...(salesByBuyerAndCreation.get(key) || []), sale]);
+  }
+
+  const billByParcelId = new Map<string, { bill: ExternalFinancialRecord; parcel: ExternalFinancialRecord }>();
+  for (const bill of bills) {
+    const paymentMethods = Array.isArray(bill.payment_methods) ? bill.payment_methods : [];
+    for (const method of paymentMethods) {
+      if (!method || typeof method !== 'object') continue;
+      const nestedParcels = Array.isArray((method as ExternalFinancialRecord).parcels)
+        ? (method as ExternalFinancialRecord).parcels as unknown[] : [];
+      for (const nested of nestedParcels) {
+        if (!nested || typeof nested !== 'object') continue;
+        const parcel = nested as ExternalFinancialRecord;
+        const parcelId = financialText(parcel, ['uuid', 'id']);
+        if (parcelId) billByParcelId.set(parcelId, { bill, parcel });
+      }
+    }
+  }
+
+  const realizedParcels = parcels.filter(parcel => {
+    const status = financialText(parcel, ['status']).toLowerCase();
+    const updatedAt = financialText(parcel, ['updated_at', 'execution_date']);
+    return ['paid', 'received'].includes(status) && updatedAt >= CLINICA_EXPERTS_PAYMENT_SYNC_START_AT;
+  });
+  const [accountsResult, categoriesResult] = await Promise.all([
+    db.from('accounts').select('id,name,bank'),
+    db.from('income_categories').select('name,subcategories'),
+  ]);
+  const { data: accounts, error: accountsError } = accountsResult;
+  throwIfError(accountsError, 'Erro ao consultar contas para importar pagamentos');
+  const { data: incomeCategoryRows, error: categoriesError } = categoriesResult;
+  throwIfError(categoriesError, 'Erro ao consultar categorias de receitas');
+  const incomeCategoryMappings = (incomeCategoryRows || []).flatMap(category => {
+    const name = String(category.name || '').trim();
+    if (!name) return [];
+    const subcategories = Array.isArray(category.subcategories)
+      ? category.subcategories.flatMap(item => {
+        if (typeof item === 'string') return item.trim() ? [item.trim()] : [];
+        if (!item || typeof item !== 'object') return [];
+        const subcategoryName = financialName(item);
+        return subcategoryName ? [subcategoryName] : [];
+      })
+      : [];
+    return [{ name, subcategories }];
+  });
+  const accountByName = new Map<string, string>();
+  for (const account of accounts || []) {
+    for (const value of [account.name, account.bank]) {
+      const normalized = String(value || '').trim().toLocaleLowerCase('pt-BR');
+      if (normalized && !accountByName.has(normalized)) accountByName.set(normalized, account.id);
+    }
+  }
+
+  const rows = realizedParcels.flatMap(parcel => {
+    const parcelId = financialText(parcel, ['uuid', 'id']);
+    const linked = parcelId ? billByParcelId.get(parcelId) : undefined;
+    if (!parcelId || !linked) return [];
+    const paymentDate = financialText(parcel, ['execution_date', 'compensation_date', 'due_date']).slice(0, 10);
+    const amount = financialAmount(linked.parcel);
+    if (!paymentDate || amount <= 0) return [];
+    const patient = financialName(linked.bill.person) || financialText(linked.bill, ['description']) || 'Paciente nao informado';
+    const patientId = linked.bill.person && typeof linked.bill.person === 'object'
+      ? financialText(linked.bill.person as ExternalFinancialRecord, ['uuid', 'id']) : '';
+    const billCreatedAt = financialText(linked.bill, ['created_at']);
+    const saleCandidates = patientId && billCreatedAt
+      ? salesByBuyerAndCreation.get(`${patientId}|${billCreatedAt}`) || []
+      : [];
+    const billAmount = Number(linked.bill.final_amount ?? linked.bill.amount ?? 0);
+    const sale = saleCandidates.find(candidate => {
+      const saleAmount = Number(candidate.final_amount ?? candidate.nominal_amount ?? 0);
+      return Number.isFinite(saleAmount) && saleAmount === billAmount;
+    }) || saleCandidates[0];
+    const saleItems = [
+      ...(Array.isArray(sale?.procedures) ? sale.procedures : []),
+      ...(Array.isArray(sale?.combos) ? sale.combos : []),
+    ].flatMap(item => item && typeof item === 'object' ? [item as ExternalFinancialRecord] : []);
+    const fallbackProcedure = financialText(linked.bill, ['description']);
+    const procedureItems = saleItems.length ? saleItems : [{
+      name: fallbackProcedure,
+      final_amount: Number(linked.parcel.final_amount ?? linked.parcel.amount ?? 0),
+    }];
+    const paymentMethod = financialName(parcel.payment_method) || 'Nao informado';
+    const externalAccountName = financialName(parcel.financial_account);
+    const accountId = accountByName.get(externalAccountName.toLocaleLowerCase('pt-BR')) || null;
+    const itemAmounts = procedureItems.map(item => Math.max(0, Number(
+      item.final_amount ?? item.nominal_amount ?? item.amount ?? 0,
+    ) || 0));
+    const itemAmountTotal = itemAmounts.reduce((sum, itemAmount) => sum + itemAmount, 0);
+    const paymentAmountInCents = Math.round(amount * 100);
+    let allocatedInCents = 0;
+    return procedureItems.flatMap((item, itemIndex) => {
+      const procedure = financialName(item) || fallbackProcedure;
+      if (!procedure) return [];
+      const isLastItem = itemIndex === procedureItems.length - 1;
+      const proportionalAmount = itemAmountTotal > 0
+        ? Math.round(paymentAmountInCents * (itemAmounts[itemIndex] / itemAmountTotal))
+        : Math.round(paymentAmountInCents / procedureItems.length);
+      const itemPaymentInCents = isLastItem
+        ? paymentAmountInCents - allocatedInCents
+        : proportionalAmount;
+      allocatedInCents += itemPaymentInCents;
+      if (itemPaymentInCents <= 0) return [];
+      const professional = financialName(item.professional)
+        || financialName(item.executor)
+        || financialName(item.responsible)
+        || financialText(item, ['professional_name', 'executor_name']);
+      const itemExternalId = `clinica_experts_parcel:${parcelId}:procedure:${itemIndex}`;
+      return [{
+        id: `ce_payment_${parcelId}_procedure_${itemIndex}`,
+        external_id: itemExternalId,
+        date: paymentDate,
+        settlement_date: paymentDate,
+        description: patient,
+        category: procedureCategory([procedure], incomeCategoryMappings),
+        procedure,
+        type: 'income',
+        amount: itemPaymentInCents / 100,
+        status: 'Paid',
+        payment_method: paymentMethod,
+        professional: professional || null,
+        account_id: accountId,
+        installments: Number(parcel.payment_method_installments || linked.parcel.parcel_number || 1),
+        observation: `Pagamento importado da Clinica Experts | Item ${itemIndex + 1}/${procedureItems.length}${patientId ? ` | Paciente: ${patientId}` : ''}`,
+        source: CLINICA_EXPERTS_PAYMENT_SOURCE,
+      }];
+    });
+  });
+
+  for (let index = 0; index < rows.length; index += 500) {
+    const { error } = await db.from('transactions').upsert(rows.slice(index, index + 500), { onConflict: 'external_id' });
+    throwIfError(error, 'Erro ao importar pagamentos da Clinica Experts');
+  }
+
+  const authoritativeExternalIds = new Set(rows.map(row => row.external_id));
+  const reconciliationStart = start.slice(0, 10);
+  const reconciliationEnd = end.slice(0, 10);
+  const { data: synchronizedTransactions, error: synchronizedTransactionsError } = await db
+    .from('transactions')
+    .select('id,external_id,date')
+    .eq('source', CLINICA_EXPERTS_PAYMENT_SOURCE)
+    .gte('date', reconciliationStart)
+    .lte('date', reconciliationEnd);
+  throwIfError(synchronizedTransactionsError, 'Erro ao consultar pagamentos para conciliacao');
+  const transactionIdsToDelete = (synchronizedTransactions || [])
+    .filter(transaction => !authoritativeExternalIds.has(String(transaction.external_id || '')))
+    .map(transaction => transaction.id);
+  let deleted = 0;
+  for (let index = 0; index < transactionIdsToDelete.length; index += 500) {
+    const { data: deletedRows, error: deleteError } = await db
+      .from('transactions')
+      .delete()
+      .in('id', transactionIdsToDelete.slice(index, index + 500))
+      .select('id');
+    throwIfError(deleteError, 'Erro ao remover pagamentos excluidos da Clinica Experts');
+    deleted += deletedRows?.length || 0;
+  }
+  return { read: parcels.length, realized: realizedParcels.length, imported: rows.length, deleted };
+}
+
 export async function syncClinicaExperts(
   db: SupabaseClient,
   userId: string,
@@ -613,11 +882,19 @@ export async function syncClinicaExperts(
       throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
     }
 
+    let payments = 0;
+    try {
+      payments = (await syncClinicaExpertsPayments(db, apiToken)).imported;
+    } catch (paymentError) {
+      console.error('[CLINICA EXPERTS] Payment sync failed:', paymentError instanceof Error ? paymentError.message : paymentError);
+    }
+
     const result: SyncResult = {
       pipelines: pipelineRows.length,
       stages: stageRows.length,
       opportunities: opportunityRows.length,
       patients: new Set(opportunityRows.map(opportunity => opportunity.patient_external_id).filter(Boolean)).size,
+      payments,
       finishedAt: now,
     };
 

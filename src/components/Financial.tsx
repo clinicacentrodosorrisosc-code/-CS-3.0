@@ -249,6 +249,7 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const [loading, setLoading] = useState(true);
+  const [syncingClinicPayments, setSyncingClinicPayments] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
@@ -1056,6 +1057,44 @@ export const Financial: React.FC<FinancialProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const syncClinicaExpertsPayments = async () => {
+    setSyncingClinicPayments(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Sua sessao expirou. Entre novamente.');
+      const response = await fetch('/api/integrations/clinica-experts/payments', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const payload = await response.json() as { data?: { imported?: number; deleted?: number }; error?: string };
+      if (!response.ok) throw new Error(payload.error || 'Nao foi possivel sincronizar os pagamentos.');
+      await fetchAllData();
+      notifyDataChange('transactions');
+      toast.success(`${payload.data?.imported || 0} pagamento(s) sincronizado(s). ${payload.data?.deleted || 0} lancamento(s) antigo(s) removido(s).`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao sincronizar pagamentos.');
+    } finally {
+      setSyncingClinicPayments(false);
+    }
+  };
+
+  const updateIncomeClassification = async (
+    transactionId: string,
+    field: 'category' | 'professional',
+    value: string,
+  ) => {
+    const { error } = await supabase.from('transactions').update({ [field]: value }).eq('id', transactionId);
+    if (error) {
+      toast.error(`Nao foi possivel atualizar ${field === 'category' ? 'a categoria' : 'o profissional'}.`);
+      return;
+    }
+    setTransactions((current) => current.map((transaction) => transaction.id === transactionId
+      ? { ...transaction, [field]: value }
+      : transaction));
+    notifyDataChange('transactions');
+    toast.success(field === 'category' ? 'Categoria incluida.' : 'Profissional incluido.');
   };
 
   useEffect(() => {
@@ -2204,6 +2243,15 @@ export const Financial: React.FC<FinancialProps> = ({
                 </h3>
                 <div className="flex gap-2">
                   <button
+                    type="button"
+                    onClick={() => void syncClinicaExpertsPayments()}
+                    disabled={syncingClinicPayments}
+                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-blue-400 transition-colors hover:bg-blue-500/15 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${syncingClinicPayments ? 'animate-spin' : ''}`} />
+                    {syncingClinicPayments ? 'Sincronizando' : 'Sincronizar Clinica Experts'}
+                  </button>
+                  <button
                     onClick={() => setIsIncomeFiltersOpen((value) => !value)}
                     className="text-[9px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10"
                   >
@@ -2651,19 +2699,33 @@ export const Financial: React.FC<FinancialProps> = ({
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex flex-col">
-                              <span className="font-medium text-text">
-                                {tx.category}
-                              </span>
-                              {tx.procedure && (
-                                <span className="text-[10px] text-slate-500 font-medium">
-                                  {tx.procedure}
-                                </span>
-                              )}
-                            </div>
+                            {tx.category ? (
+                              <div className="flex flex-col">
+                                <span className="font-medium text-text">{tx.category}</span>
+                                {tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}
+                              </div>
+                            ) : (
+                              <SelectMenu
+                                value=""
+                                onChange={(value) => void updateIncomeClassification(tx.id, 'category', value)}
+                                options={incomeCategories.map((category) => ({ value: category.name, label: category.name }))}
+                                placeholder="Incluir categoria"
+                                searchPlaceholder="Buscar categoria..."
+                                className="min-w-[9rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold"
+                              />
+                            )}
                           </td>
                           <td className="p-4 text-slate-400">
-                            {tx.professional || "Clínica"}
+                            {tx.professional ? tx.professional : (
+                              <SelectMenu
+                                value=""
+                                onChange={(value) => void updateIncomeClassification(tx.id, 'professional', value)}
+                                options={professionals.map((professional) => ({ value: professional.name, label: professional.name }))}
+                                placeholder="Incluir profissional"
+                                searchPlaceholder="Buscar profissional..."
+                                className="min-w-[10rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold"
+                              />
+                            )}
                           </td>
                           <td className="p-4 text-slate-400">
                             {tx.salesTeam ? (
