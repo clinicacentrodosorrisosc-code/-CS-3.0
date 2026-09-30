@@ -95,6 +95,8 @@ const hasValidPhone = (phone: string | null | undefined) => {
   return digits.length >= 12 && digits.length <= 15;
 };
 
+const externalSyncEnabled = import.meta.env.VITE_EXTERNAL_SYNC_ENABLED === 'true';
+
 const formatLastSync = (date: string | null | undefined) => {
   if (!date) return 'Ainda não sincronizado';
   return `Atualizado em ${new Date(date).toLocaleString('pt-BR', {
@@ -363,11 +365,12 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
               <button
                 type="button"
                 onClick={handleSync}
-                disabled={isSyncing || syncStatus?.configured === false}
+                disabled={!externalSyncEnabled || isSyncing || syncStatus?.configured === false}
+                title={externalSyncEnabled ? undefined : 'Sincronizacao externa desativada para testes locais.'}
                 className="flex h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-[0_8px_24px_rgba(37,99,235,0.18)] transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
               >
                 <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'Sincronizando' : 'Sincronizar agora'}
+                {isSyncing ? 'Sincronizando' : externalSyncEnabled ? 'Sincronizar agora' : 'Sincronizacao desativada'}
               </button>
             </div>
           </header>

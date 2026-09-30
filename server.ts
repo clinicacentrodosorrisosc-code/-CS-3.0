@@ -23,6 +23,8 @@ const clinicaExpertsOwnerUserId = process.env.CLINICA_EXPERTS_OWNER_USER_ID || '
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const cronSecret = process.env.CRON_SECRET || '';
 const clinicaExpertsWebhookSecret = process.env.CLINICA_EXPERTS_WEBHOOK_SECRET || '';
+const externalSyncEnabled = process.env.EXTERNAL_SYNC_ENABLED === 'true';
+const externalSyncDisabledMessage = 'Sincronizacoes externas estao desativadas neste ambiente de teste.';
 const clinicaExpertsSyncIntervalMinutes = Math.max(
   1,
   Number(process.env.CLINICA_EXPERTS_SYNC_INTERVAL_MINUTES || 1),
@@ -495,12 +497,14 @@ async function startServer() {
     return handleClinicaExpertsPatients(req, res);
   });
   app.post('/api/integrations/clinica-experts/payments', async (req, res) => {
+    if (!externalSyncEnabled) return res.status(423).json({ error: externalSyncDisabledMessage });
     const { handleClinicaExpertsPaymentSync } = await import('./integrations/clinicaExpertsHttp.js');
     return handleClinicaExpertsPaymentSync(req, res);
   });
 
   const runClinicaExpertsSync = async (req: express.Request, res: express.Response) => {
     try {
+      if (!externalSyncEnabled) return res.status(423).json({ error: externalSyncDisabledMessage });
       if (!clinicaExpertsToken) {
         return res.status(503).json({
           error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.',
@@ -546,6 +550,7 @@ async function startServer() {
       && crypto.timingSafeEqual(Buffer.from(suppliedSecret), Buffer.from(expectedSecret)),
     );
     if (!isValidSecret) return res.status(401).json({ error: 'Webhook nao autorizado.' });
+    if (!externalSyncEnabled) return res.status(423).json({ error: externalSyncDisabledMessage });
     if (!clinicaExpertsOwnerUserId || !supabaseServiceRoleKey) {
       return res.status(503).json({ error: 'Integracao Clinica Experts incompleta no servidor.' });
     }
@@ -609,7 +614,7 @@ async function startServer() {
     }
   });
 
-  if (clinicaExpertsToken && clinicaExpertsOwnerUserId && supabaseServiceRoleKey) {
+  if (externalSyncEnabled && clinicaExpertsToken && clinicaExpertsOwnerUserId && supabaseServiceRoleKey) {
     const intervalMs = clinicaExpertsSyncIntervalMinutes * 60_000;
     const runScheduledSync = () => {
       const db = createClinicaExpertsServiceDb();
@@ -620,6 +625,8 @@ async function startServer() {
     syncTimer.unref();
     setImmediate(runScheduledSync);
     console.log(`>>> [CLINICA EXPERTS] Automatic sync enabled every ${clinicaExpertsSyncIntervalMinutes} minute(s).`);
+  } else if (!externalSyncEnabled) {
+    console.log('>>> [CLINICA EXPERTS] Sincronizacoes externas desativadas para testes locais.');
   }
 
   app.get("/api/health", (req, res) => {

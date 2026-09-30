@@ -249,6 +249,7 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const [loading, setLoading] = useState(true);
+  const externalSyncEnabled = import.meta.env.VITE_EXTERNAL_SYNC_ENABLED === 'true';
   const [syncingClinicPayments, setSyncingClinicPayments] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
@@ -1060,6 +1061,10 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const syncClinicaExpertsPayments = async () => {
+    if (!externalSyncEnabled) {
+      toast.error('A extracao de lancamentos externos esta desativada para testes locais.');
+      return;
+    }
     setSyncingClinicPayments(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -2245,11 +2250,12 @@ export const Financial: React.FC<FinancialProps> = ({
                   <button
                     type="button"
                     onClick={() => void syncClinicaExpertsPayments()}
-                    disabled={syncingClinicPayments}
+                    disabled={!externalSyncEnabled || syncingClinicPayments}
+                    title={externalSyncEnabled ? undefined : 'Extracao de lancamentos desativada para testes locais.'}
                     className="inline-flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-blue-400 transition-colors hover:bg-blue-500/15 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <RefreshCw className={`h-3 w-3 ${syncingClinicPayments ? 'animate-spin' : ''}`} />
-                    {syncingClinicPayments ? 'Sincronizando' : 'Sincronizar Clinica Experts'}
+                    {syncingClinicPayments ? 'Sincronizando' : externalSyncEnabled ? 'Sincronizar Clinica Experts' : 'Extracao desativada'}
                   </button>
                   <button
                     onClick={() => setIsIncomeFiltersOpen((value) => !value)}

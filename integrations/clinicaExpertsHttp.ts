@@ -25,6 +25,8 @@ const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
 const activeSyncs = new Map<string, Promise<unknown>>();
 const patientSearchCache = new Map<string, { expiresAt: number; patients: Array<{ id: string; name: string; phone: string | null; email: string | null }> }>();
 const patientSearchBlockedUntil = new Map<string, number>();
+const externalSyncEnabled = process.env.EXTERNAL_SYNC_ENABLED === 'true';
+const externalSyncDisabledMessage = 'Sincronizacoes externas estao desativadas temporariamente.';
 
 function headerValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -305,6 +307,10 @@ export async function handleClinicaExpertsPaymentSync(req: ApiRequest, res: ApiR
     res.status(405).json({ error: 'Metodo nao permitido.' });
     return;
   }
+  if (!externalSyncEnabled) {
+    res.status(423).json({ error: externalSyncDisabledMessage });
+    return;
+  }
   const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
   if (!apiToken) {
     res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
@@ -335,6 +341,10 @@ export async function handleClinicaExpertsPaymentSync(req: ApiRequest, res: ApiR
 export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+  if (!externalSyncEnabled) {
+    res.status(423).json({ error: externalSyncDisabledMessage });
     return;
   }
   const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
@@ -420,6 +430,10 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
   );
   if (!isValidSecret) {
     res.status(401).json({ error: 'Webhook nao autorizado.' });
+    return;
+  }
+  if (!externalSyncEnabled) {
+    res.status(423).json({ error: externalSyncDisabledMessage });
     return;
   }
 
