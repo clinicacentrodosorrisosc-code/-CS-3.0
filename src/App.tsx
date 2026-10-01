@@ -24,6 +24,8 @@ import { AppHeader } from './components/Layout/AppHeader';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
 import { LoadingPanel } from './components/ui/loading-panel';
+import AuditLog from './components/AuditLog';
+import { recordAuditEvent } from './lib/audit';
 
 const TabContainer = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -63,6 +65,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
   const activeTabRef = useRef<Tab>(Tab.DASHBOARD);
+  const lastAuditedTabRef = useRef<Tab | null>(null);
 
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -73,6 +76,12 @@ const App: React.FC = () => {
   useEffect(() => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!session?.user?.id || lastAuditedTabRef.current === activeTab) return;
+    lastAuditedTabRef.current = activeTab;
+    void recordAuditEvent('VIEW', activeTab, `Acessou o módulo ${activeTab}`);
+  }, [activeTab, session?.user?.id]);
 
   // Real-time listener for remote financial entries across profiles
   useRealtimeSubscription(['transactions'], (changedTable, isRemote) => {
@@ -386,12 +395,15 @@ const App: React.FC = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!isMounted) return;
 
       setSession(newSession);
 
       if (newSession) {
+        if (event === 'SIGNED_IN') {
+          void recordAuditEvent('LOGIN', 'Autenticação', 'Entrou no sistema');
+        }
         fetchUserProfile(newSession.user);
       } else {
         loadedProfileUserId.current = null;
@@ -584,6 +596,12 @@ const App: React.FC = () => {
             {activeTab === Tab.SETTINGS && (
               <TabContainer key="settings">
                 <WhatsAppSettings requestedSubTab={requestedSubTab} />
+              </TabContainer>
+            )}
+
+            {activeTab === Tab.AUDIT && userRole === 'admin' && (
+              <TabContainer key="audit">
+                <AuditLog />
               </TabContainer>
             )}
 

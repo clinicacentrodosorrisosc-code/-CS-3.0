@@ -11,6 +11,7 @@ export enum Tab {
   BIBLIOTECA = 'Biblioteca',
   TASKS = 'Tarefas',
   CRM = 'CRM',
+  AUDIT = 'Auditoria',
   SETTINGS = 'Configurações'
 }
 

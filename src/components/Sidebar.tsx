@@ -31,8 +31,10 @@ import {
   LayoutDashboard,
   KanbanSquare,
   Settings2,
-  ExternalLink
+  ExternalLink,
+  ClipboardList
 } from 'lucide-react';
+import { recordAuditEvent } from '../lib/audit';
 
 interface SidebarProps {
   activeTab: Tab;
@@ -98,6 +100,13 @@ const MENU_STRUCTURE: MenuItem[] = [
     id: Tab.SETTINGS,
     label: 'Configurações',
     icon: Settings2,
+    group: 'management',
+    subItems: []
+  },
+  {
+    id: Tab.AUDIT,
+    label: 'Auditoria',
+    icon: ClipboardList,
     group: 'management',
     subItems: []
   },
@@ -269,6 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [activeTab]);
 
   const handleLogout = async () => {
+    await recordAuditEvent('LOGOUT', 'Autenticação', 'Encerrou a sessão no sistema');
     await supabase.auth.signOut();
   };
 
@@ -346,7 +356,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const filteredNavItems = MENU_STRUCTURE.filter(item =>
-    Array.isArray(allowedTabs) && (allowedTabs.length === 0 || allowedTabs.includes(item.id))
+    item.id === Tab.AUDIT
+      ? userRole === 'admin'
+      : Array.isArray(allowedTabs) && (allowedTabs.length === 0 || allowedTabs.includes(item.id))
   );
 
   const mainItems = filteredNavItems.filter(item => item.group === 'main');
