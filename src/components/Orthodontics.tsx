@@ -9,7 +9,7 @@ import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { OrthodonticsCalendar } from './OrthodonticsCalendar';
 import { MultiSelectMenu, type SelectMenuOption } from './ui/select-menu';
-import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter } from 'lucide-react';
+import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
@@ -34,6 +34,7 @@ interface OrthoPatient {
   estimatedDuration: number; // months
   status: 'Active' | 'Finished' | 'Suspended';
   maintenanceValue: number;
+  whatsappPhone?: string;
   attendance: Record<string, any>;
   finishReason?: string;
   problemNote?: string; // New field for issues
@@ -48,6 +49,16 @@ interface ApplianceType {
 interface FinishReason {
   id: string;
   name: string;
+}
+
+interface OrthoWhatsAppHistoryEntry {
+  id: string;
+  phone: string;
+  message: string;
+  amount: number;
+  status: 'opened' | 'sent';
+  openedAt: string;
+  sentAt?: string;
 }
 
 const isOrthoDay = (date: Date) => {
@@ -77,6 +88,30 @@ const isOrthoDay = (date: Date) => {
 
 const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#F59E0B', '#EF4444', '#1D4ED8'];
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const DEFAULT_WHATSAPP_MESSAGE = 'Olá, {nome}! Passando para lembrar que o valor da sua mensalidade de ortodontia é {valor}.';
+
+const normalizePatientName = (value: string) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('pt-BR')
+    .replace(/\s+/g, ' ');
+
+const normalizeWhatsAppPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('55')) return digits;
+    return digits.length === 10 || digits.length === 11 ? `55${digits}` : digits;
+};
+
+const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+}).format(value || 0);
+
+const renderWhatsAppTemplate = (template: string, patient: OrthoPatient) => template
+    .replaceAll('{nome}', patient.name)
+    .replaceAll('{valor}', formatCurrency(patient.maintenanceValue));
 
 // Config for sub-tabs
 const ORTHO_TABS_CONFIG = [
@@ -139,6 +174,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number; selectedDate: Date | null } | null>(null);
   const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [whatsAppPatient, setWhatsAppPatient] = useState<OrthoPatient | null>(null);
+  const [whatsAppHistoryPatient, setWhatsAppHistoryPatient] = useState<OrthoPatient | null>(null);
+  const [whatsAppPhone, setWhatsAppPhone] = useState('');
+  const [whatsAppTemplate, setWhatsAppTemplate] = useState(DEFAULT_WHATSAPP_MESSAGE);
+  const [whatsAppMessage, setWhatsAppMessage] = useState(DEFAULT_WHATSAPP_MESSAGE);
+  const [isFindingWhatsAppPhone, setIsFindingWhatsAppPhone] = useState(false);
+  const [isSavingWhatsAppTemplate, setIsSavingWhatsAppTemplate] = useState(false);
+  const [whatsAppPhoneNotice, setWhatsAppPhoneNotice] = useState('');
+
+  const getWhatsAppHistory = (patient: OrthoPatient): OrthoWhatsAppHistoryEntry[] => {
+      const history = patient.attendance?.__whatsapp_history;
+      return Array.isArray(history) ? history.filter(item => item && typeof item === 'object') : [];
+  };
 
   const isAdmin = userRole === 'admin';
 
@@ -348,6 +396,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   estimatedDuration: p.estimated_duration,
                   status: p.status,
                   maintenanceValue: Number(p.maintenance_value || 0),
+                  whatsappPhone: att.__whatsapp_phone || undefined,
                   attendance: att,
                   finishReason: att.__finish_reason || undefined,
                   problemNote: p.problem_note
@@ -393,6 +442,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
             .eq('procedure', 'Documentação Inicial');
           if (txs) {
               setDocInitialTransactions(txs);
+          }
+
+          const { data: messageSetting } = await supabase
+              .from('commercial_settings')
+              .select('value')
+              .eq('key', 'ortho_whatsapp_message_template')
+              .maybeSingle();
+          if (typeof messageSetting?.value === 'string' && messageSetting.value.trim()) {
+              setWhatsAppTemplate(messageSetting.value);
           }
       } catch (err) {
           console.error("Error loading ortho data", err);
@@ -1014,6 +1072,151 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
       notifyDataChange('ortho_patients');
       toast.success(existingPayment?.paidAt ? 'Pagamento desmarcado.' : 'Pagamento registrado.');
+  };
+
+  const openWhatsAppComposer = async (patient: OrthoPatient) => {
+      setOpenActionMenuId(null);
+      setWhatsAppPatient(patient);
+      setWhatsAppPhone(patient.whatsappPhone || '');
+      setWhatsAppMessage(renderWhatsAppTemplate(whatsAppTemplate, patient));
+      setWhatsAppPhoneNotice(patient.whatsappPhone ? 'Telefone salvo no cadastro de Ortodontia.' : 'Buscando telefone no CRM...');
+
+      if (patient.whatsappPhone) return;
+
+      setIsFindingWhatsAppPhone(true);
+      try {
+          const { data, error } = await supabase
+              .from('clinic_experts_opportunities')
+              .select('patient_name,patient_phone')
+              .ilike('patient_name', patient.name)
+              .not('patient_phone', 'is', null)
+              .limit(20);
+
+          if (error) throw error;
+
+          const exactPhones = Array.from(new Set((data || [])
+              .filter(item => normalizePatientName(String(item.patient_name || '')) === normalizePatientName(patient.name))
+              .map(item => normalizeWhatsAppPhone(String(item.patient_phone || '')))
+              .filter(phone => phone.length >= 12 && phone.length <= 13)));
+
+          if (exactPhones.length === 1) {
+              setWhatsAppPhone(exactPhones[0]);
+              setWhatsAppPhoneNotice('Telefone localizado pelo nome exato no CRM. Confira antes de abrir o WhatsApp.');
+          } else if (exactPhones.length > 1) {
+              setWhatsAppPhoneNotice('Há mais de um telefone para este nome no CRM. Informe o número correto.');
+          } else {
+              setWhatsAppPhoneNotice('Telefone não localizado. Informe o número com DDD.');
+          }
+      } catch (error) {
+          console.error('Erro ao localizar telefone para WhatsApp', error);
+          setWhatsAppPhoneNotice('Não foi possível consultar o CRM. Informe o número com DDD.');
+      } finally {
+          setIsFindingWhatsAppPhone(false);
+      }
+  };
+
+  const handleSaveWhatsAppTemplate = async () => {
+      const template = whatsAppTemplate.trim();
+      if (!template) {
+          toast.error('Escreva uma mensagem padrão antes de salvar.');
+          return;
+      }
+
+      setIsSavingWhatsAppTemplate(true);
+      try {
+          const { error } = await supabase
+              .from('commercial_settings')
+              .upsert({ key: 'ortho_whatsapp_message_template', value: template, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+          if (error) throw error;
+          if (whatsAppPatient) setWhatsAppMessage(renderWhatsAppTemplate(template, whatsAppPatient));
+          toast.success('Mensagem padrão salva para todos os pacientes.');
+      } catch (error) {
+          toast.error('Não foi possível salvar a mensagem padrão: ' + (error instanceof Error ? error.message : 'erro desconhecido'));
+      } finally {
+          setIsSavingWhatsAppTemplate(false);
+      }
+  };
+
+  const updateWhatsAppTemplateDraft = (template: string) => {
+      setWhatsAppTemplate(template);
+      if (whatsAppPatient) setWhatsAppMessage(renderWhatsAppTemplate(template, whatsAppPatient));
+  };
+
+  const handleOpenWhatsApp = async () => {
+      if (!whatsAppPatient) return;
+      const normalizedPhone = normalizeWhatsAppPhone(whatsAppPhone);
+      if (normalizedPhone.length < 12 || normalizedPhone.length > 13) {
+          toast.error('Informe um telefone válido com DDD.');
+          return;
+      }
+      if (!whatsAppMessage.trim()) {
+          toast.error('Escreva a mensagem antes de continuar.');
+          return;
+      }
+
+      const whatsAppWindow = window.open('', '_blank');
+
+      const historyEntry: OrthoWhatsAppHistoryEntry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          phone: normalizedPhone,
+          message: whatsAppMessage.trim(),
+          amount: whatsAppPatient.maintenanceValue,
+          status: 'opened',
+          openedAt: new Date().toISOString()
+      };
+      const updatedAttendance = {
+          ...whatsAppPatient.attendance,
+          __whatsapp_phone: normalizedPhone,
+          __whatsapp_history: [historyEntry, ...getWhatsAppHistory(whatsAppPatient)].slice(0, 100)
+      };
+      const { error } = await supabase
+          .from('ortho_patients')
+          .update({ attendance: updatedAttendance })
+          .eq('id', whatsAppPatient.id);
+
+      if (error) {
+          whatsAppWindow?.close();
+          toast.error('Não foi possível registrar o histórico: ' + error.message);
+          return;
+      }
+
+      setPatients(current => current.map(patient => patient.id === whatsAppPatient.id
+          ? { ...patient, whatsappPhone: normalizedPhone, attendance: updatedAttendance }
+          : patient));
+      notifyDataChange('ortho_patients');
+
+      const whatsAppUrl = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(whatsAppMessage.trim())}`;
+      if (whatsAppWindow) {
+          whatsAppWindow.opener = null;
+          whatsAppWindow.location.href = whatsAppUrl;
+      } else {
+          window.open(whatsAppUrl, '_blank', 'noopener,noreferrer');
+      }
+      setWhatsAppPatient(null);
+      toast.success('Abertura registrada no histórico. Confirme depois que a mensagem foi enviada.');
+  };
+
+  const handleConfirmWhatsAppSent = async (patient: OrthoPatient, entryId: string) => {
+      const sentAt = new Date().toISOString();
+      const updatedHistory = getWhatsAppHistory(patient).map(entry => entry.id === entryId
+          ? { ...entry, status: 'sent' as const, sentAt }
+          : entry);
+      const updatedAttendance = { ...patient.attendance, __whatsapp_history: updatedHistory };
+      const { error } = await supabase
+          .from('ortho_patients')
+          .update({ attendance: updatedAttendance })
+          .eq('id', patient.id);
+
+      if (error) {
+          toast.error('Não foi possível confirmar o envio: ' + error.message);
+          return;
+      }
+
+      const updatedPatient = { ...patient, attendance: updatedAttendance };
+      setPatients(current => current.map(item => item.id === patient.id ? updatedPatient : item));
+      setWhatsAppHistoryPatient(updatedPatient);
+      notifyDataChange('ortho_patients');
+      toast.success('Mensagem marcada como enviada.');
   };
 
   const { 
@@ -2633,7 +2836,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                             Ações <span className="material-symbols-outlined text-base">more_horiz</span>
                                         </button>
                                         {openActionMenuId === p.id && (
-                                            <div className="absolute right-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg">
+                                            <div className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg">
+                                                <button onClick={() => openWhatsAppComposer(p)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"><MessageCircle className="h-4 w-4" />Enviar WhatsApp</button>
+                                                <button onClick={() => { setWhatsAppHistoryPatient(p); setOpenActionMenuId(null); }} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="flex items-center gap-2"><Clock className="h-4 w-4" />Histórico WhatsApp</span>{getWhatsAppHistory(p).length > 0 && <span className="rounded-md bg-surface-high px-1.5 py-0.5 font-mono text-[9px]">{getWhatsAppHistory(p).length}</span>}</button>
                                                 <button onClick={() => { setEditingPatient(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">edit</span>Editar paciente</button>
                                                 <button onClick={() => { openNoteModal(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">warning</span>{hasProblem ? 'Ver alerta' : 'Adicionar alerta'}</button>
                                                 {p.status === 'Active' ? <button onClick={() => { handleOpenFinishModal(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">task_alt</span>Finalizar tratamento</button> : <button onClick={() => { handleReactivate(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">restart_alt</span>Reativar tratamento</button>}
@@ -3045,6 +3250,150 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
            </div>
         </div>
       </div>
+
+      {whatsAppPatient && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={() => setWhatsAppPatient(null)}>
+              <section className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-border bg-surface shadow-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-label="Preparar mensagem de WhatsApp" onMouseDown={event => event.stopPropagation()}>
+                  <header className="flex items-start justify-between gap-4 border-b border-border p-5">
+                      <div className="flex min-w-0 items-start gap-3">
+                          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                              <MessageCircle className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                              <h2 className="truncate text-base font-bold text-text">Enviar WhatsApp</h2>
+                              <p className="mt-0.5 truncate text-xs text-slate-500">{whatsAppPatient.name}</p>
+                          </div>
+                      </div>
+                      <button type="button" onClick={() => setWhatsAppPatient(null)} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-surface-high hover:text-text" aria-label="Fechar">
+                          <X className="h-5 w-5" />
+                      </button>
+                  </header>
+
+                  <div className="custom-scrollbar overflow-y-auto p-5">
+                      <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-surface-high px-4 py-3">
+                          <span className="text-xs text-slate-500">Mensalidade cadastrada</span>
+                          <strong className="font-mono text-sm text-text">{formatCurrency(whatsAppPatient.maintenanceValue)}</strong>
+                      </div>
+
+                      <section className="mb-5 rounded-xl border border-border bg-surface-high p-4">
+                          <div className="flex items-start justify-between gap-3">
+                              <div>
+                                  <h3 className="text-xs font-bold text-text">Mensagem padrão para todos</h3>
+                                  <p className="mt-1 text-[10px] leading-relaxed text-slate-500">Use os campos abaixo para preencher automaticamente os dados de cada paciente.</p>
+                              </div>
+                              <button type="button" onClick={handleSaveWhatsAppTemplate} disabled={isSavingWhatsAppTemplate || !whatsAppTemplate.trim()} className="shrink-0 rounded-lg border border-emerald-600/30 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/15">
+                                  {isSavingWhatsAppTemplate ? 'Salvando...' : 'Salvar para todos'}
+                              </button>
+                          </div>
+                          <textarea
+                              value={whatsAppTemplate}
+                              onChange={event => updateWhatsAppTemplateDraft(event.target.value)}
+                              rows={4}
+                              maxLength={1200}
+                              className="mt-3 w-full resize-y rounded-xl border border-border bg-surface px-3 py-3 text-sm leading-relaxed text-text outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                          />
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] text-slate-500">Inserir:</span>
+                              <button type="button" onClick={() => updateWhatsAppTemplateDraft(`${whatsAppTemplate}${whatsAppTemplate.endsWith(' ') || !whatsAppTemplate ? '' : ' '}{nome}`)} className="rounded-md border border-border bg-surface px-2 py-1 font-mono text-[10px] font-semibold text-slate-600 transition-colors hover:border-emerald-500/40 hover:text-emerald-700">{'{nome}'}</button>
+                              <button type="button" onClick={() => updateWhatsAppTemplateDraft(`${whatsAppTemplate}${whatsAppTemplate.endsWith(' ') || !whatsAppTemplate ? '' : ' '}{valor}`)} className="rounded-md border border-border bg-surface px-2 py-1 font-mono text-[10px] font-semibold text-slate-600 transition-colors hover:border-emerald-500/40 hover:text-emerald-700">{'{valor}'}</button>
+                          </div>
+                      </section>
+
+                      <label className="block text-xs font-semibold text-text">
+                          Telefone do paciente
+                          <input
+                              value={whatsAppPhone}
+                              onChange={event => setWhatsAppPhone(event.target.value)}
+                              inputMode="tel"
+                              autoComplete="tel"
+                              placeholder="(11) 99999-9999"
+                              className="mt-2 h-11 w-full rounded-xl border border-border bg-panel px-3 text-sm text-text outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                          />
+                      </label>
+                      <p className={`mt-2 text-[11px] ${whatsAppPhoneNotice.includes('mais de um') || whatsAppPhoneNotice.includes('não') || whatsAppPhoneNotice.includes('Não') ? 'text-amber-600 dark:text-amber-300' : 'text-slate-500'}`}>
+                          {isFindingWhatsAppPhone ? 'Buscando telefone no CRM...' : whatsAppPhoneNotice}
+                      </p>
+
+                      <label className="mt-5 block text-xs font-semibold text-text">
+                          Mensagem deste paciente
+                          <textarea
+                              value={whatsAppMessage}
+                              onChange={event => setWhatsAppMessage(event.target.value)}
+                              rows={6}
+                              maxLength={1200}
+                              className="mt-2 w-full resize-y rounded-xl border border-border bg-panel px-3 py-3 text-sm leading-relaxed text-text outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                          />
+                      </label>
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-slate-500">
+                          <span>Você ainda pode ajustar somente este envio.</span>
+                          <span className="shrink-0 font-mono">{whatsAppMessage.length}/1200</span>
+                      </div>
+                  </div>
+
+                  <footer className="flex items-center justify-end gap-3 border-t border-border bg-surface p-4">
+                      <button type="button" onClick={() => setWhatsAppPatient(null)} className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-surface-high hover:text-text">Cancelar</button>
+                      <button type="button" onClick={handleOpenWhatsApp} disabled={isFindingWhatsAppPhone || !whatsAppPhone.trim() || !whatsAppMessage.trim()} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                          <MessageCircle className="h-4 w-4" /> Abrir no WhatsApp
+                      </button>
+                  </footer>
+              </section>
+          </div>
+      )}
+
+      {whatsAppHistoryPatient && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={() => setWhatsAppHistoryPatient(null)}>
+              <section className="flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-border bg-surface shadow-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-label="Histórico de mensagens do WhatsApp" onMouseDown={event => event.stopPropagation()}>
+                  <header className="flex items-start justify-between gap-4 border-b border-border p-5">
+                      <div>
+                          <h2 className="text-base font-bold text-text">Histórico do WhatsApp</h2>
+                          <p className="mt-1 text-xs text-slate-500">{whatsAppHistoryPatient.name}</p>
+                      </div>
+                      <button type="button" onClick={() => setWhatsAppHistoryPatient(null)} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-surface-high hover:text-text" aria-label="Fechar histórico"><X className="h-5 w-5" /></button>
+                  </header>
+
+                  <div className="border-b border-border bg-amber-50 px-5 py-3 text-[11px] leading-relaxed text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+                      O sistema registra quando a conversa é aberta. Como o envio acontece no WhatsApp, use “Confirmar enviado” depois de tocar em enviar.
+                  </div>
+
+                  <div className="custom-scrollbar overflow-y-auto p-4">
+                      {getWhatsAppHistory(whatsAppHistoryPatient).length === 0 ? (
+                          <div className="py-12 text-center">
+                              <MessageCircle className="mx-auto h-8 w-8 text-slate-300" />
+                              <p className="mt-3 text-sm font-semibold text-text">Nenhuma mensagem registrada</p>
+                              <p className="mt-1 text-xs text-slate-500">Os próximos envios aparecerão aqui.</p>
+                          </div>
+                      ) : (
+                          <div className="space-y-3">
+                              {getWhatsAppHistory(whatsAppHistoryPatient).map(entry => {
+                                  const isSent = entry.status === 'sent';
+                                  const eventDate = new Date(entry.sentAt || entry.openedAt);
+                                  return (
+                                      <article key={entry.id} className="rounded-xl border border-border bg-surface-high p-4">
+                                          <div className="flex flex-wrap items-start justify-between gap-3">
+                                              <div>
+                                                  <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold ${isSent ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'}`}>
+                                                      {isSent ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+                                                      {isSent ? 'Enviado' : 'Aberto no WhatsApp'}
+                                                  </span>
+                                                  <p className="mt-2 text-[11px] text-slate-500">{eventDate.toLocaleString('pt-BR')} | {entry.phone}</p>
+                                              </div>
+                                              <strong className="font-mono text-xs text-text">{formatCurrency(entry.amount)}</strong>
+                                          </div>
+                                          <p className="mt-3 whitespace-pre-wrap rounded-lg bg-surface px-3 py-2.5 text-xs leading-relaxed text-slate-600">{entry.message}</p>
+                                          {!isSent && (
+                                              <button type="button" onClick={() => handleConfirmWhatsAppSent(whatsAppHistoryPatient, entry.id)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/30 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/15">
+                                                  <CheckCircle2 className="h-4 w-4" /> Confirmar enviado
+                                              </button>
+                                          )}
+                                      </article>
+                                  );
+                              })}
+                          </div>
+                      )}
+                  </div>
+              </section>
+          </div>
+      )}
 
       {/* New Contract Modal */}
       {isNewContractModalOpen && (
