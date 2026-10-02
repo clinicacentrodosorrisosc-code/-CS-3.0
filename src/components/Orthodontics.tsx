@@ -2458,6 +2458,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 {'M\u00eas do pagamento'}
                 <input type="month" value={paymentMonth} onChange={(event) => setPaymentMonth(event.target.value)} className="bg-transparent text-sm text-text outline-none" />
               </label>
+              <div className="ml-auto inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--primary-border)] bg-[var(--primary-dim)] px-3 text-xs text-[var(--text-secondary)]" aria-live="polite">
+                  <span className="font-mono text-base font-bold text-[var(--primary)]">{filteredPatients.length}</span>
+                  <span>{filteredPatients.length === 1 ? 'paciente visível' : 'pacientes visíveis'}</span>
+                  <span className="text-[var(--text-muted)]">de {patients.length}</span>
+              </div>
               <select 
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
