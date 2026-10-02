@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Label, LabelList, LineChart, Line
@@ -109,8 +109,10 @@ const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', {
     currency: 'BRL'
 }).format(value || 0);
 
+const getFirstName = (value: string) => value.trim().split(/\s+/)[0] || value;
+
 const renderWhatsAppTemplate = (template: string, patient: OrthoPatient) => template
-    .replaceAll('{nome}', patient.name)
+    .replaceAll('{nome}', getFirstName(patient.name))
     .replaceAll('{valor}', formatCurrency(patient.maintenanceValue));
 
 // Config for sub-tabs
@@ -182,10 +184,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [isFindingWhatsAppPhone, setIsFindingWhatsAppPhone] = useState(false);
   const [isSavingWhatsAppTemplate, setIsSavingWhatsAppTemplate] = useState(false);
   const [whatsAppPhoneNotice, setWhatsAppPhoneNotice] = useState('');
+  const skipNextOrthoRealtimeReload = useRef(false);
+  const orthoReloadResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getWhatsAppHistory = (patient: OrthoPatient): OrthoWhatsAppHistoryEntry[] => {
       const history = patient.attendance?.__whatsapp_history;
       return Array.isArray(history) ? history.filter(item => item && typeof item === 'object') : [];
+  };
+
+  const markLocalOrthoUpdate = () => {
+      skipNextOrthoRealtimeReload.current = true;
+      if (orthoReloadResetTimer.current) clearTimeout(orthoReloadResetTimer.current);
+      orthoReloadResetTimer.current = setTimeout(() => {
+          skipNextOrthoRealtimeReload.current = false;
+      }, 1500);
   };
 
   const isAdmin = userRole === 'admin';
@@ -464,6 +476,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   }, []);
 
   useRealtimeSubscription(['ortho_patients', 'ortho_appliances', 'ortho_finish_reasons', 'transactions'], () => {
+      if (skipNextOrthoRealtimeReload.current) {
+          skipNextOrthoRealtimeReload.current = false;
+          return;
+      }
       loadData();
   });
 
@@ -1169,12 +1185,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           __whatsapp_phone: normalizedPhone,
           __whatsapp_history: [historyEntry, ...getWhatsAppHistory(whatsAppPatient)].slice(0, 100)
       };
+      markLocalOrthoUpdate();
       const { error } = await supabase
           .from('ortho_patients')
           .update({ attendance: updatedAttendance })
           .eq('id', whatsAppPatient.id);
 
       if (error) {
+          skipNextOrthoRealtimeReload.current = false;
           whatsAppWindow?.close();
           toast.error('Não foi possível registrar o histórico: ' + error.message);
           return;
@@ -1183,7 +1201,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       setPatients(current => current.map(patient => patient.id === whatsAppPatient.id
           ? { ...patient, whatsappPhone: normalizedPhone, attendance: updatedAttendance }
           : patient));
-      notifyDataChange('ortho_patients');
 
       const whatsAppUrl = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(whatsAppMessage.trim())}`;
       if (whatsAppWindow) {
@@ -1202,12 +1219,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           ? { ...entry, status: 'sent' as const, sentAt }
           : entry);
       const updatedAttendance = { ...patient.attendance, __whatsapp_history: updatedHistory };
+      markLocalOrthoUpdate();
       const { error } = await supabase
           .from('ortho_patients')
           .update({ attendance: updatedAttendance })
           .eq('id', patient.id);
 
       if (error) {
+          skipNextOrthoRealtimeReload.current = false;
           toast.error('Não foi possível confirmar o envio: ' + error.message);
           return;
       }
@@ -1215,7 +1234,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       const updatedPatient = { ...patient, attendance: updatedAttendance };
       setPatients(current => current.map(item => item.id === patient.id ? updatedPatient : item));
       setWhatsAppHistoryPatient(updatedPatient);
-      notifyDataChange('ortho_patients');
       toast.success('Mensagem marcada como enviada.');
   };
 
@@ -2669,6 +2687,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       {filteredPatients.map((p) => {
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
                           const hasLongTreatment = hasTreatmentOverOneYear(p);
+                          const latestWhatsApp = getWhatsAppHistory(p)[0];
                           
                           return (
                             <tr 
@@ -2684,6 +2703,12 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-400" title="Tratamento ativo há mais de 1 ano">
                                             <span className="material-symbols-outlined text-[11px]">warning</span>
                                             12+ meses
+                                        </span>
+                                    )}
+                                    {latestWhatsApp && (
+                                        <span className={`ml-2 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${latestWhatsApp.status === 'sent' ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300'}`} title={latestWhatsApp.status === 'sent' ? 'Última mensagem confirmada como enviada' : 'Conversa aberta no WhatsApp; envio ainda não confirmado'}>
+                                            <MessageCircle className="h-3 w-3" />
+                                            {latestWhatsApp.status === 'sent' ? 'WhatsApp enviado' : 'WhatsApp aberto'}
                                         </span>
                                     )}
                                     {p.endDate && <div className="text-[10px] text-slate-500 font-normal">Fim: {p.endDate.split('-').reverse().join('/')}</div>}
