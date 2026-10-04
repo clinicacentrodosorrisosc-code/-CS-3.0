@@ -32,7 +32,12 @@ import {
   KanbanSquare,
   Settings2,
   ExternalLink,
-  ClipboardList
+  ClipboardList,
+  Search,
+  CalendarPlus,
+  FilePlus2,
+  CreditCard,
+  Gem
 } from 'lucide-react';
 import { recordAuditEvent } from '../lib/audit';
 
@@ -215,7 +220,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isExpanded: externalIsExpanded,
   onToggleExpand: externalOnToggleExpand
 }) => {
-  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(false);
+  const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_expanded');
+      return saved === null ? true : saved === 'true';
+    } catch {
+      return true;
+    }
+  });
 
   const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
 
@@ -236,6 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navQuery, setNavQuery] = useState('');
   const [openAccordionTab, setOpenAccordionTab] = useState<Tab | null>(activeTab);
   const [flyoutTab, setFlyoutTab] = useState<Tab | null>(null);
   const [flyoutPosition, setFlyoutPosition] = useState({ top: 16, left: 76 });
@@ -355,11 +368,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const filteredNavItems = MENU_STRUCTURE.filter(item =>
-    item.id === Tab.AUDIT
+  const normalizedQuery = navQuery.trim().toLocaleLowerCase('pt-BR');
+  const filteredNavItems = MENU_STRUCTURE.filter(item => {
+    const hasAccess = item.id === Tab.AUDIT
       ? userRole === 'admin'
-      : Array.isArray(allowedTabs) && (allowedTabs.length === 0 || allowedTabs.includes(item.id))
-  );
+      : Array.isArray(allowedTabs) && (allowedTabs.length === 0 || allowedTabs.includes(item.id));
+    const matchesQuery = !normalizedQuery
+      || item.label.toLocaleLowerCase('pt-BR').includes(normalizedQuery)
+      || item.subItems.some(subItem => subItem.label.toLocaleLowerCase('pt-BR').includes(normalizedQuery));
+    return hasAccess && matchesQuery;
+  });
 
   const mainItems = filteredNavItems.filter(item => item.group === 'main');
   const managementItems = filteredNavItems.filter(item => item.group === 'management');
@@ -367,7 +385,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const renderNavGroup = (items: MenuItem[], groupTitle?: string) => (
     <div className="flex flex-col gap-1 w-full">
       {groupTitle && isExpanded && (
-        <span className="text-[10px] font-extrabold text-[#98A2B3] dark:text-slate-500 uppercase tracking-widest px-3 py-1.5 mt-2 select-none">
+        <span className="px-3 py-1.5 mt-2 select-none text-[10px] font-semibold text-[var(--text-muted)] tracking-normal">
           {groupTitle}
         </span>
       )}
@@ -392,19 +410,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 if (!isExpanded && hasSubItems) showFlyout(item.id, event.currentTarget);
               }}
               className={`
-                group relative flex items-center min-h-10 py-1 rounded-lg border transition-all duration-150 w-full text-left
+                sidebar-nav-item group relative flex items-center min-h-9 py-0.5 rounded-lg transition-all duration-150 w-full text-left
                 ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
                 ${isActive
-                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-[0_6px_16px_rgba(0,122,255,0.18)] font-semibold'
-                  : 'border-transparent text-[#667085] hover:text-[#172033] hover:bg-[#f4f5f7] hover:border-[#E2E5EA] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] dark:hover:border-white/[0.08] font-medium'}
+                  ? 'sidebar-nav-item-active font-semibold'
+                  : 'text-[#667085] hover:text-[#172033] hover:bg-white/70 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04] font-medium'}
               `}
               title={!isExpanded ? item.label : undefined}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`
-                  w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
+                  w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200
                   ${isActive
-                    ? 'bg-white/18 text-white'
+                    ? 'sidebar-nav-icon-active'
                     : 'text-[#667085] group-hover:text-[#172033] dark:text-slate-400 dark:group-hover:text-slate-200'}
                 `}>
                   <IconComponent className="w-4 h-4" />
@@ -486,7 +504,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <motion.aside
         initial={false}
         animate={{
-          width: isExpanded ? 220 : 48
+          width: isExpanded ? 236 : 60
         }}
         transition={{
           type: 'spring',
@@ -496,18 +514,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }}
         className={`
           flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-0 lg:mr-0 lg:h-full lg:rounded-none
-          bg-[var(--surface)] border-r border-[var(--border-subtle)]
+          sidebar-shell bg-[var(--surface)] border-r border-[var(--border-subtle)]
           transition-colors duration-200
           ${isMobileMenuOpen ? 'h-[92vh] w-full rounded-b-3xl shadow-2xl z-50' : 'h-auto'}
         `}
       >
         {/* Top Branding & Expand/Collapse Trigger */}
-        <div className="h-[50px] px-2.5 flex items-center justify-between border-b border-[#e8eaee] dark:border-white/[0.06] select-none lg:hidden">
+        <div className="sidebar-brand h-[62px] px-3 flex items-center justify-between border-b border-[#e8eaee] dark:border-white/[0.06] select-none">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] p-[1px] shadow-md shadow-blue-500/20 shrink-0">
-              <div className="w-full h-full bg-white dark:bg-[#0B0F17] rounded-[11px] flex items-center justify-center font-black text-[var(--primary)] dark:text-[var(--primary-hover)] text-sm">
-                CS
-              </div>
+            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] flex items-center justify-center font-black text-white text-xs shrink-0">
+              CS
             </div>
 
             {isExpanded && (
@@ -520,8 +536,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="text-xs font-bold text-[#172033] dark:text-slate-100 tracking-tight truncate leading-tight">
                   Centro do Sorriso
                 </span>
-                <span className="text-[10px] text-[#8B3DFF] dark:text-[#C9A9FF] font-bold tracking-wide">
-                  Nexus Odonto Pro
+                <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide">
+                  Gestão Clínica
                 </span>
               </motion.div>
             )}
@@ -552,13 +568,74 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
+        {isExpanded && (
+          <div className="sidebar-search px-3 pt-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="search"
+                value={navQuery}
+                onChange={event => setNavQuery(event.target.value)}
+                placeholder="Buscar"
+                className="h-9 w-full rounded-lg border border-[var(--border)] bg-white pl-9 pr-11 text-[11px] text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
+                aria-label="Buscar no menu"
+              />
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-[var(--border-subtle)] bg-[#f4f5f7] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-muted)]">Ctrl K</span>
+            </div>
+          </div>
+        )}
+
         {/* Scrollable Navigation Area */}
         <div className={`
           flex-1 flex flex-col overflow-y-auto px-1 py-2 gap-2 custom-scrollbar
           ${isMobileMenuOpen ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0 lg:opacity-100 lg:max-h-full'}
         `}>
-          {renderNavGroup(mainItems, 'Principal')}
-          {renderNavGroup(managementItems, 'Gestão & Apoio')}
+          {renderNavGroup(mainItems, 'Menu principal')}
+          {renderNavGroup(managementItems)}
+
+          {isExpanded && !normalizedQuery && (
+            <div className="sidebar-shortcuts mt-2 border-t border-[var(--border-subtle)] pt-3">
+              <span className="px-3 text-[10px] font-semibold text-[var(--text-muted)]">Atalhos fixos</span>
+              <div className="mt-2 flex flex-col gap-1">
+                {[
+                  { label: 'Agendar paciente', icon: CalendarPlus, tab: Tab.DASHBOARD, subTab: 'agenda', tone: 'blue' },
+                  { label: 'Novo orçamento', icon: FilePlus2, tab: Tab.CRM, subTab: 'pipeline', tone: 'green' },
+                  { label: 'Registrar pagamento', icon: CreditCard, tab: Tab.FINANCIAL, subTab: 'transactions', tone: 'yellow' },
+                  { label: 'Solicitar laboratório', icon: FlaskConical, tab: Tab.LABWORK, subTab: 'kanban', tone: 'purple' }
+                ].map(shortcut => {
+                  const ShortcutIcon = shortcut.icon;
+                  return (
+                    <button
+                      key={shortcut.label}
+                      type="button"
+                      onClick={() => {
+                        setActiveTab(shortcut.tab);
+                        onSubTabSelect?.(shortcut.subTab);
+                      }}
+                      className="sidebar-shortcut flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2 text-left text-[11px] font-medium text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text)]"
+                    >
+                      <span className={`shortcut-icon shortcut-icon-${shortcut.tone}`}><ShortcutIcon className="size-3.5" /></span>
+                      <span className="min-w-0 flex-1 truncate">{shortcut.label}</span>
+                      <ChevronRight className="size-3 text-[var(--text-muted)]" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isExpanded && !normalizedQuery && (
+            <div className="sidebar-upgrade mx-2 mt-auto rounded-xl border border-[var(--border)] bg-white p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold text-[var(--text)]">Evolua sua gestão</p>
+                  <p className="mt-1 text-[9px] leading-4 text-[var(--text-muted)]">Recursos para uma clínica ainda mais eficiente.</p>
+                </div>
+                <Gem className="size-4 shrink-0 text-[var(--primary)]" />
+              </div>
+              <button type="button" className="mt-3 h-8 w-full rounded-lg bg-[#171b24] text-[10px] font-semibold text-white hover:bg-[#252b37]">Conhecer recursos</button>
+            </div>
+          )}
         </div>
 
         {/* User Profile & Footer Section */}

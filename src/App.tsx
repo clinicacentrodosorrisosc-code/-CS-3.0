@@ -37,7 +37,7 @@ const TabContainer = ({ children }: { children: React.ReactNode }) => {
         duration: 0.35,
         ease: [0.16, 1, 0.3, 1]
       }}
-      className="absolute inset-0 flex flex-col"
+      className="module-view absolute inset-0 flex flex-col"
       style={{ zIndex: 10 }}
     >
       {children}
@@ -536,22 +536,9 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="ce-app flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--text)] transition-colors duration-200">
+    <div className="ce-app app-stage flex min-h-[100dvh] flex-col overflow-hidden text-[var(--text)] transition-colors duration-200">
       <a href="#main-content" className="skip-link">Pular para o conteúdo</a>
-      <AppHeader
-          activeTab={activeTab}
-          requestedSubTab={requestedSubTab}
-          userRole={userRole}
-          userEmail={session.user.email}
-          onlineUsers={onlineUsers}
-          notificationCount={notificationCount}
-          openNotifications={() => setIsNotificationsOpen(true)}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          openPermissions={() => setIsPermissionsOpen(true)}
-        />
-
-      <div className="flex min-h-0 flex-1">
+      <div className="app-window flex min-h-0 flex-1 overflow-hidden">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -567,7 +554,21 @@ const App: React.FC = () => {
           openNotifications={() => setIsNotificationsOpen(true)}
         />
 
-        <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent md:p-1.5 md:pl-0">
+        <div className="workspace-column flex min-w-0 flex-1 flex-col overflow-hidden">
+          <AppHeader
+            activeTab={activeTab}
+            requestedSubTab={requestedSubTab}
+            userRole={userRole}
+            userEmail={session.user.email}
+            onlineUsers={onlineUsers}
+            notificationCount={notificationCount}
+            openNotifications={() => setIsNotificationsOpen(true)}
+            theme={theme}
+            toggleTheme={toggleTheme}
+            openPermissions={() => setIsPermissionsOpen(true)}
+          />
+
+        <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
 
         <NotificationCenter
           isOpen={isNotificationsOpen}
@@ -579,7 +580,7 @@ const App: React.FC = () => {
           }}
         />
 
-        <div className="workspace-canvas flex-1 min-h-0 relative overflow-hidden bg-[var(--surface)] md:rounded-2xl md:border md:border-[var(--border-subtle)]">
+        <div className="workspace-canvas flex-1 min-h-0 relative overflow-hidden bg-[var(--surface)] lg:rounded-[1.25rem] lg:border lg:border-[var(--border-subtle)]">
           <AnimatePresence mode="wait">
             {activeTab === Tab.DASHBOARD && (
               <TabContainer key="dashboard">
@@ -665,6 +666,7 @@ const App: React.FC = () => {
         {/* Permissions Modal */}
         <PermissionsModal isOpen={isPermissionsOpen} onClose={() => setIsPermissionsOpen(false)} onlineUsers={onlineUsers} />
         </main>
+        </div>
       </div>
 
       <Toaster

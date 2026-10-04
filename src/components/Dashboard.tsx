@@ -6,13 +6,14 @@ import {
 } from 'recharts';
 import { supabase } from '../supabaseClient';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
-import { Calendar, ChevronLeft, ChevronRight, Settings, X } from 'lucide-react';
+import { Banknote, Calendar, ChevronLeft, ChevronRight, ClipboardCheck, ReceiptText, Settings, UserCheck, X } from 'lucide-react';
 import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
 import { ClinicaExpertsAgenda } from './ClinicaExpertsAgenda';
 import { AnimatedNumber } from './ui/animated-number';
 import { DateRangePicker } from './ui/date-range-picker';
+import { DonutChart } from './ui/donut-chart';
 
 // --- TYPES ---
 interface DailyData {
@@ -378,7 +379,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         return year === currentYear && month - 1 === currentMonth ? total + day.salesCount : total;
     }, 0);
     const averageTicket = totalSalesCount > 0 ? totalRev / totalSalesCount : 0;
-    const evaluationSummary = Object.values(evaluationCounts).reduce((total, day) => ({
+    const evaluationSummary = currentMonthEvaluations.reduce((total, day) => ({
         scheduled: total.scheduled + day.ana.scheduled + day.comercial.scheduled,
         evaluated: total.evaluated + day.ana.evaluated + day.comercial.evaluated,
         noShow: total.noShow + day.ana.noShow + day.comercial.noShow
@@ -493,65 +494,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
     return (
       <div className="flex flex-col gap-3.5 animate-in fade-in pb-6">
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* KPI 1: Faturamento Total */}
-                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full relative overflow-hidden">
-                    <div className="flex justify-between items-start mb-2.5 flex-wrap gap-2">
-                        <div className="min-w-0">
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400 truncate">Faturamento Total</p>
-                            <AnimatedNumber value={totalRev} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums mt-1 tracking-tight truncate" />
-                        </div>
-                        <div className="text-right flex flex-col items-end gap-1 min-w-0 max-w-[50%]">
-                            {Object.entries(teamRevenues).map(([team, amount]) => (
-                                <div key={team} className="flex items-center gap-1.5 min-w-0 max-w-full">
-                                    <span className="text-[10px] font-bold uppercase text-[#86938D] dark:text-slate-400 truncate">{team}</span>
-                                    <span className="text-[10px] font-bold text-[#17211D] dark:text-slate-100 tabular-nums shrink-0">{formatCurrency(amount)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="mt-2 w-full bg-[#EEF2F0] dark:bg-white/[0.08] h-2 rounded-full overflow-hidden p-[1px]">
-                        <div className="h-full rounded-full bg-[#1F6F5B] transition-all duration-500" style={{ width: `${Math.min(perc, 100)}%` }}></div>
-                    </div>
-                    <div className="flex justify-between items-center mt-3 flex-wrap gap-1 min-w-0">
-                      <span className="text-[11px] text-[#5E6D66] dark:text-slate-400 font-semibold truncate">Meta: {formatCurrency(Number(currentGoals.revenue))}</span>
-                      <span className={`text-[10px] font-extrabold tabular-nums px-2.5 py-0.5 rounded-full shrink-0 ${perc >= 100 ? 'bg-[#EAF5F0] text-[#1F6F5B] border border-[#CFE5DC]' : 'bg-[#FEECEF] text-[#E11D48] border border-[#FCD4DC]'}`}>
-                        {perc >= 100 ? `+${perc.toFixed(1)}% ↗` : `${perc.toFixed(1)}% ↘`}
-                      </span>
-                    </div>
-                </div>
+          <section className="dashboard-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <article className="metric-card dashboard-kpi-card">
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--blue"><Banknote size={16} /></div>
+                  <div className="min-w-0">
+                      <AnimatedNumber value={totalRev} format={formatCurrency} className="dashboard-kpi-value block truncate" />
+                      <p className="dashboard-kpi-label">Faturamento do mês</p>
+                      <p className={`dashboard-kpi-helper ${perc >= 100 ? 'is-positive' : ''}`}>{perc.toFixed(1)}% da meta mensal</p>
+                  </div>
+              </article>
 
-                {/* KPI 2: Falta para Meta */}
-                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400 mb-1">Falta para a Meta</p>
-                      <AnimatedNumber value={neededRevenueReal} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#17211D] dark:text-white tabular-nums tracking-tight" />
-                    </div>
-                    <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#DFE6E2] dark:border-white/[0.08] text-[11px] text-[#5E6D66] dark:text-slate-400">
-                        <span>Dias úteis totais</span>
-                        <strong className="text-[#17211D] dark:text-slate-100 font-mono font-extrabold">{getWorkDaysInRange(1, daysInMonthCount)} dias</strong>
-                    </div>
-                </div>
+              <article className="metric-card dashboard-kpi-card">
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--green"><ClipboardCheck size={16} /></div>
+                  <div className="min-w-0">
+                      <p className="dashboard-kpi-value">{evaluationSummary.evaluated.toLocaleString('pt-BR')}</p>
+                      <p className="dashboard-kpi-label">Avaliações realizadas</p>
+                      <p className="dashboard-kpi-helper">{evaluationSummary.scheduled.toLocaleString('pt-BR')} agendadas no período</p>
+                  </div>
+              </article>
 
-                {/* KPI 3: Meta Diária Necessária */}
-                <div className="metric-card bg-white dark:bg-[#19231F] rounded-2xl p-5 border border-[#DFE6E2] dark:border-white/[0.08] flex flex-col justify-between h-full">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#1F6F5B] dark:text-[#63B596] mb-1">Meta Diária Necessária</p>
-                      <AnimatedNumber value={dailyMetaRequiredLocked} format={formatCurrency} className="block text-2xl lg:text-3xl font-black text-[#1F6F5B] dark:text-[#63B596] tabular-nums tracking-tight" />
-                    </div>
-                    <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-[#DFE6E2] dark:border-white/[0.08] text-[11px] text-[#5E6D66] dark:text-slate-400">
-                        <span>Restam na operação</span>
-                        <strong className="text-[#1F6F5B] dark:text-[#63B596] font-mono font-extrabold">{remainingWorkDays} dias úteis</strong>
-                    </div>
-                </div>
-          </section>
+              <article className="metric-card dashboard-kpi-card">
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--yellow"><UserCheck size={16} /></div>
+                  <div className="min-w-0">
+                      <p className="dashboard-kpi-value">{evaluationRate.toFixed(1)}%</p>
+                      <p className="dashboard-kpi-label">Comparecimento</p>
+                      <p className="dashboard-kpi-helper">{evaluationSummary.noShow.toLocaleString('pt-BR')} faltas · {noShowRate.toFixed(1)}%</p>
+                  </div>
+              </article>
 
-          <section className="grid max-w-sm grid-cols-1 gap-4">
-              <div className="bg-white dark:bg-[#19231F] rounded-2xl p-4 border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Ticket médio</p>
-                  <p className="mt-1 text-2xl font-black tabular-nums text-[#17211D] dark:text-white">{formatCurrency(averageTicket)}</p>
-                  <p className="mt-2 text-[10px] font-semibold text-[#5E6D66] dark:text-slate-400">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
-              </div>
+              <article className="metric-card dashboard-kpi-card">
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--purple"><ReceiptText size={16} /></div>
+                  <div className="min-w-0">
+                      <p className="dashboard-kpi-value truncate">{formatCurrency(averageTicket)}</p>
+                      <p className="dashboard-kpi-label">Ticket médio</p>
+                      <p className="dashboard-kpi-helper">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
+                  </div>
+              </article>
           </section>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -560,11 +538,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Tendência e performance no mesmo espaço</p>
               </div>
               <div className="flex w-fit rounded-xl border border-[#DFE6E2] bg-[#F0F4F2] p-0.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
-                  <button type="button" onClick={() => setInsightView('trend')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${insightView === 'trend' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}>Tendência</button>
-                  <button type="button" onClick={() => setInsightView('performance')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${insightView === 'performance' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}>Performance</button>
+                  <button type="button" onClick={() => setInsightView('trend')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all ${insightView === 'trend' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Tendência</button>
+                  <button type="button" onClick={() => setInsightView('performance')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all ${insightView === 'performance' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Performance</button>
               </div>
           </div>
 
+          <div className="dashboard-insights-grid grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
           {insightView === 'trend' ? (
           <section className="bg-white dark:bg-[#19231F] p-5 rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
@@ -579,21 +558,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('diaria')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Diária
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('mensal')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Mensal
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('personalizado')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-[#1F6F5B] text-white shadow-sm' : 'text-[#5E6D66] hover:text-[#17211D] dark:text-slate-400 dark:hover:text-white'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Personalizado
                           </button>
@@ -637,8 +616,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                       <ComposedChart data={activeTrendData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                           <defs>
                               <linearGradient id="colorVendasNexus" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#1F6F5B" stopOpacity={0.25}/>
-                                  <stop offset="95%" stopColor="#1F6F5B" stopOpacity={0}/>
+                                  <stop offset="5%" stopColor="#3478F6" stopOpacity={0.22}/>
+                                  <stop offset="95%" stopColor="#3478F6" stopOpacity={0}/>
                               </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -650,7 +629,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                               formatter={(val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                           />
                           <Area type="monotone" dataKey="vendas" fillOpacity={1} fill="url(#colorVendasNexus)" stroke="none" />
-                          <Line type="monotone" dataKey="vendas" stroke="#1F6F5B" strokeWidth={2.5} dot={{ r: 2.5, fill: '#1F6F5B', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                          <Line type="monotone" dataKey="vendas" stroke="#3478F6" strokeWidth={2.5} dot={{ r: 2.5, fill: '#3478F6', strokeWidth: 0 }} activeDot={{ r: 5 }} />
                           {trendViewMode === 'diaria' && (
                               <Line type="monotone" dataKey="mediaMovel" stroke="#2A8069" strokeWidth={2} dot={false} strokeDasharray="4 4" />
                           )}
@@ -666,6 +645,51 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
               currentMonth={currentMonth}
           />
           )}
+
+          <section className="dashboard-team-card flex min-h-[292px] flex-col rounded-xl border border-[var(--border)] bg-white p-4">
+              <div className="flex items-center justify-between">
+                  <div>
+                      <h3 className="text-sm font-semibold text-[var(--text)]">Carga da equipe</h3>
+                      <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">Distribuição do faturamento no período</p>
+                  </div>
+                  <button type="button" className="grid size-7 place-items-center rounded-lg border border-[var(--border-subtle)] text-[var(--text-muted)]" aria-label="Mais opções">•••</button>
+              </div>
+              <div className="mt-5 grid flex-1 grid-cols-[112px_minmax(0,1fr)] items-center gap-4">
+                  <DonutChart
+                      data={[{ label: 'Meta alcançada', value: Math.min(Math.max(perc, 0), 100), color: '#3478f6' }]}
+                      totalValue={100}
+                      size={112}
+                      strokeWidth={12}
+                      highlightOnHover={false}
+                      centerContent={
+                          <div>
+                              <strong className="block text-xl font-semibold tabular-nums text-[var(--text)]">{Math.round(Math.min(perc, 100))}%</strong>
+                              <span className="text-[9px] text-[var(--text-muted)]">da meta</span>
+                          </div>
+                      }
+                  />
+                  <div className="min-w-0 space-y-3">
+                      {Object.entries(teamRevenues).slice(0, 5).map(([team, amount], index) => {
+                          const totalTeams = Math.max(Object.values(teamRevenues).reduce((sum, value) => sum + Number(value), 0), 1);
+                          const share = Math.round((Number(amount) / totalTeams) * 100);
+                          return (
+                              <div key={team} className="grid grid-cols-[minmax(0,1fr)_34px] items-center gap-2 text-[10px]">
+                                  <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                          <span className={`size-1.5 shrink-0 rounded-full team-dot-${index % 4}`} />
+                                          <span className="truncate font-medium text-[var(--text-secondary)]">{team}</span>
+                                      </div>
+                                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-[#eef0f3]"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${share}%` }} /></div>
+                                  </div>
+                                  <span className="text-right font-semibold tabular-nums text-[var(--text)]">{share}%</span>
+                              </div>
+                          );
+                      })}
+                  </div>
+              </div>
+              <button type="button" onClick={() => setActiveSubTab('commercial')} className="mt-3 h-8 rounded-lg border border-[var(--border)] text-[10px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">Ver desempenho comercial</button>
+          </section>
+          </div>
 
           <section className="bg-white dark:bg-[#19231F] rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] overflow-hidden flex flex-col shadow-sm transition-colors duration-300">
                 <div className="p-3 bg-[#F5F7F6] dark:bg-white/[0.02] border-b border-[#DFE6E2] dark:border-white/[0.08] flex justify-between items-center">
@@ -698,16 +722,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         
         {/* View Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-8 lg:py-7 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-3 py-3 lg:px-5 lg:py-4 custom-scrollbar">
            <div className="dashboard-workspace w-full max-w-[1600px] mx-auto">
                
                <div className="dashboard-command-bar flex flex-col gap-5 p-4 md:flex-row md:items-center md:justify-between md:p-5">
                    <div>
-                       <span className="dashboard-eyebrow">VISÃO OPERACIONAL</span>
+                       <span className="dashboard-eyebrow">Centro de operação</span>
                        <h1 className="mt-2 text-2xl font-semibold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-[-0.035em] md:text-[28px]">
-                          {activeSubTab === 'geral' ? 'Dashboard Geral' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
+                          {activeSubTab === 'geral' ? 'Visão geral da clínica' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
                        </h1>
-                       <p className="text-xs text-slate-400 mt-0.5">Métricas de performance e faturamento em tempo real.</p>
+                       <p className="mt-1 text-xs text-[var(--text-secondary)]">Acompanhe a operação, as metas e os próximos compromissos.</p>
                    </div>
 
                    <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -749,11 +773,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                   {isLoadingDashboard ? (
                     <div className="flex flex-col gap-6 w-full animate-pulse">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="h-32 glass-panel rounded-2xl"></div>
-                            <div className="h-32 glass-panel rounded-2xl"></div>
-                            <div className="h-32 glass-panel rounded-2xl"></div>
+                            <div className="skeleton h-32 rounded-2xl"></div>
+                            <div className="skeleton h-32 rounded-2xl"></div>
+                            <div className="skeleton h-32 rounded-2xl"></div>
                         </div>
-                        <div className="h-[400px] w-full glass-panel rounded-2xl mt-4"></div>
+                        <div className="skeleton h-[400px] w-full rounded-2xl mt-4"></div>
                     </div>
                   ) : (
                     activeSubTab === 'geral' ? renderFinancialView() : activeSubTab === 'commercial' ? <CommercialDailyReport /> : activeSubTab === 'reception' ? <ReceptionDailyReport /> : <ClinicaExpertsAgenda />
@@ -765,8 +789,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       </div>
 
       {isConfigModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-150">
-            <div className="glass-panel w-full max-w-lg rounded-2xl p-6 flex flex-col gap-6 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="modal-overlay z-[150] animate-in fade-in duration-150">
+            <div className="modal-panel flex max-w-lg flex-col gap-6">
               <div className="flex justify-between items-center border-b border-border pb-4">
                   <div>
                     <h3 className="text-xl font-bold text-text leading-tight">Configurações do Mês</h3>
@@ -782,7 +806,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                     type="number" 
                     value={currentGoals.revenue} 
                     onChange={e => updateGoalConfig('revenue', Number(e.target.value))} 
-                    className="w-full bg-panel border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-purple-500 transition-colors" 
+                    className="form-control"
                   />
                 </div>
                 <div>
@@ -791,7 +815,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                     type="number" 
                     value={currentGoals.businessDays} 
                     onChange={e => updateGoalConfig('businessDays', Number(e.target.value))} 
-                    className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-text outline-none focus:border-purple-500 transition-colors" 
+                    className="form-control"
                   />
                 </div>
                 

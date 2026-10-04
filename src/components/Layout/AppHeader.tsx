@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, ShieldCheck, ChevronRight, Menu, ExternalLink } from 'lucide-react';
+import { Sun, Moon, ShieldCheck, Menu, ExternalLink, CalendarDays } from 'lucide-react';
 import { Tab } from '../../types';
 import { NotificationBell } from '../ui/notification-bell';
 import BorderAvatar from '../ui/avatar-border';
@@ -55,6 +55,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const subLabel = requestedSubTab
     ? requestedSubTab.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase())
     : null;
+  const now = new Date();
+  const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(now).replace('.', '');
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const todayLabel = `1 ${monthLabel} - ${monthEnd} ${monthLabel} ${now.getFullYear()}`;
 
   const openCrmJames = () => {
     if (!CRM_JAMES_URL) {
@@ -66,25 +70,29 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="z-50 flex h-12 min-h-12 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-4 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
+    <header className="app-header z-50 flex h-12 min-h-12 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-5 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
       <div className="flex min-w-0 items-center gap-2.5">
-        <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white" aria-label="Abrir menu">
+        <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white lg:hidden" aria-label="Abrir menu">
           <Menu className="size-4" />
         </button>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="grid size-7 place-items-center rounded-lg bg-[var(--primary)] text-[9px] font-bold text-white shadow-[0_3px_10px_rgba(0,122,255,0.22)]">CS</div>
-          <span className="hidden text-sm font-semibold tracking-[-0.025em] text-[var(--text)] sm:inline">Centro do Sorriso</span>
-        </div>
-
-        <div className="hidden h-4 w-px bg-[var(--border)] md:block" />
-        <div className="hidden min-w-0 items-center gap-1.5 text-xs md:flex">
-          <span className="truncate font-semibold text-[var(--primary)]">{moduleLabel}</span>
-          {subLabel && <><ChevronRight className="size-3 text-[#b0b6c0]" /><span className="truncate text-[#667085] dark:text-slate-300">{subLabel}</span></>}
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm font-semibold leading-tight tracking-[-0.025em] text-[var(--text)]">
+            {activeTab === Tab.DASHBOARD ? 'Bom dia, equipe.' : moduleLabel}
+          </span>
+          <span className="mt-0.5 hidden truncate text-[9px] text-[var(--text-muted)] sm:block">
+            {activeTab === Tab.DASHBOARD
+              ? 'Veja o que está acontecendo na clínica hoje.'
+              : subLabel || 'Centro do Sorriso'}
+          </span>
         </div>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="header-date hidden h-8 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] xl:flex">
+          <CalendarDays className="size-3.5" />
+          <span>{todayLabel}</span>
+        </div>
         <button
           type="button"
           onClick={openCrmJames}

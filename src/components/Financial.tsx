@@ -759,6 +759,7 @@ export const Financial: React.FC<FinancialProps> = ({
     );
     const ticketAverage =
       periodIncome.length > 0 ? currentMonthIncome / periodIncome.length : 0;
+    const transactionCount = periodIncome.length;
 
     // --- AGGREGATION FOR CHARTS ---
     const groupData = (
@@ -811,6 +812,7 @@ export const Financial: React.FC<FinancialProps> = ({
     return {
       currentMonthIncome,
       ticketAverage,
+      transactionCount,
       errorCount,
       categoryData,
       procedureData,
@@ -2205,6 +2207,17 @@ export const Financial: React.FC<FinancialProps> = ({
     ).length;
     return (
       <div className="flex flex-col gap-4 animate-in fade-in h-full">
+        <div className="module-context-bar" aria-label="Contexto dos lançamentos">
+          <span className="module-context-label">Financeiro › Receitas</span>
+          <span className="module-context-count">{filtered.length} lançamento{filtered.length === 1 ? '' : 's'}</span>
+          <span className="module-context-chip">{txFilters.start.split('-').reverse().join('/')} — {txFilters.end.split('-').reverse().join('/')}</span>
+          {txFilters.category !== 'all' && <span className="module-context-chip">{txFilters.category}<button type="button" onClick={() => setTxFilters({ ...txFilters, category: 'all', procedure: 'all' })} aria-label="Remover filtro de categoria"><X className="h-3 w-3" /></button></span>}
+          {txFilters.professional !== 'all' && <span className="module-context-chip">{txFilters.professional}<button type="button" onClick={() => setTxFilters({ ...txFilters, professional: 'all' })} aria-label="Remover filtro de profissional"><X className="h-3 w-3" /></button></span>}
+          {txFilters.status !== 'all' && <span className="module-context-chip">{txFilters.status === 'Paid' ? 'Recebido' : 'Pendente'}<button type="button" onClick={() => setTxFilters({ ...txFilters, status: 'all' })} aria-label="Remover filtro de status"><X className="h-3 w-3" /></button></span>}
+          {txFilters.search && <span className="module-context-chip">Busca: {txFilters.search}<button type="button" onClick={() => setTxFilters({ ...txFilters, search: '' })} aria-label="Limpar busca"><X className="h-3 w-3" /></button></span>}
+          <span className="module-context-spacer" />
+          <button type="button" onClick={() => openModal('income')} className="btn btn-primary !px-3 !py-1.5 !text-[11px]"><Plus className="h-3.5 w-3.5" />Nova receita</button>
+        </div>
         {isMyProfile && (
           <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
             <div className="flex items-center gap-2">
@@ -2241,7 +2254,7 @@ export const Financial: React.FC<FinancialProps> = ({
           renderBudgetPlanner()
         ) : (
           <div className="flex flex-col gap-4 flex-1">
-            <div className="glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
+            <div className="module-filter-panel glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
                   <Filter className="text-blue-400 w-3 h-3" /> Filtros
@@ -2259,7 +2272,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   </button>
                   <button
                     onClick={() => setIsIncomeFiltersOpen((value) => !value)}
-                    className="text-[9px] font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-blue-500/10"
+                    className="module-toolbar-action text-[9px] font-bold text-[#1F6F5B] dark:text-[#63B596] uppercase tracking-wider"
                   >
                     {isIncomeFiltersOpen
                       ? "Ocultar filtros"
@@ -2267,13 +2280,13 @@ export const Financial: React.FC<FinancialProps> = ({
                   </button>
                   <button
                     onClick={() => handleExport(filtered)}
-                    className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1"
+                    className="module-toolbar-action text-[9px] font-bold text-[#1F6F5B] dark:text-[#63B596] uppercase tracking-wider flex items-center gap-1"
                   >
                     <Download className="w-3 h-3" /> Exportar
                   </button>
                   <button
                     onClick={() => setTxFilters(initialTxFilters)}
-                    className="text-[9px] font-bold text-slate-500 hover:text-text uppercase tracking-wider transition-colors px-2 py-0.5 rounded-lg hover:bg-panel"
+                    className="module-toolbar-action text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider"
                   >
                     Limpar Filtros
                   </button>
@@ -2472,7 +2485,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       onChange={(e) =>
                         setTxFilters({ ...txFilters, search: e.target.value })
                       }
-                      className="w-full bg-surface border border-border rounded-lg px-2.5 py-1 text-[10px] font-bold text-text outline-none focus:border-blue-500 transition-colors placeholder-slate-600"
+                      className="form-control min-h-10 px-2.5 py-1 text-[10px] font-bold placeholder:text-[var(--text-muted)]"
                     />
                   </div>
                 </div>
@@ -2831,14 +2844,16 @@ export const Financial: React.FC<FinancialProps> = ({
                             <div className="flex justify-end gap-2">
                               <button
                                 onClick={() => openObsModal(tx)}
-                                className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
+                                className={`table-row-action ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
                                 title="Ver/Escrever Nota"
                               >
                                 <StickyNote className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => openModal("income", tx)}
-                                className="text-slate-500 hover:text-text p-1.5"
+                                className="table-row-action text-slate-500 hover:text-text"
+                                title="Editar lançamento"
+                                aria-label="Editar lançamento"
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
@@ -3320,14 +3335,16 @@ export const Financial: React.FC<FinancialProps> = ({
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => openObsModal(tx)}
-                            className={`p-1.5 rounded hover:bg-panel/80 transition-colors ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
+                            className={`table-row-action ${tx.observation ? "text-amber-400" : "text-slate-600 hover:text-text"}`}
                             title="Ver/Escrever Nota"
                           >
                             <StickyNote className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => openModal("expense", tx)}
-                            className="text-slate-500 hover:text-text p-1.5"
+                            className="table-row-action text-slate-500 hover:text-text"
+                            title="Editar lançamento"
+                            aria-label="Editar lançamento"
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
@@ -4522,7 +4539,7 @@ export const Financial: React.FC<FinancialProps> = ({
     );
 
   return (
-    <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
+    <div className="financial-module flex-1 flex w-full h-full bg-transparent text-[var(--text)] font-sans overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         {/* View Content */}
@@ -4578,7 +4595,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   onClick={() => openModal("income")}
                   className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Receita
+                  <Plus className="w-3.5 h-3.5" /> Nova receita
                 </button>
               </div>
             </div>
@@ -4606,8 +4623,8 @@ export const Financial: React.FC<FinancialProps> = ({
 
             <div className="flex-1 w-full pb-10">
               {activeSubTab === "overview" && (
-                <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                  <div className="bg-white dark:bg-[#141A29] p-3 rounded-2xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
+                <div className="financial-overview flex flex-col gap-3.5 animate-in fade-in duration-300">
+                  <div className="financial-filter-bar bg-white dark:bg-[#141A29] p-3 rounded-xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">
                         Período:
@@ -4643,29 +4660,23 @@ export const Financial: React.FC<FinancialProps> = ({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                      <p className="text-[#16C8C7] dark:text-[#2DD4BF] text-[11px] font-extrabold uppercase tracking-wider mb-1">
-                        Receita Realizada
-                      </p>
-                      <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">
-                        R${" "}
-                        {overviewMetrics.currentMonthIncome.toLocaleString(
-                          "pt-BR",
-                        )}
-                      </span>
-                    </div>
-                    <div className="bg-white dark:bg-[#141A29] rounded-2xl p-5 border border-[#EAEFF6] dark:border-white/[0.08] shadow-sm flex flex-col justify-between">
-                      <p className="text-[#5347CE] dark:text-[#887CFD] text-[11px] font-extrabold uppercase tracking-wider mb-1">
-                        Ticket Médio Total
-                      </p>
-                      <span className="text-2xl lg:text-3xl font-black font-mono tabular-nums text-[#181B26] dark:text-white">
-                        R${" "}
-                        {overviewMetrics.ticketAverage.toLocaleString("pt-BR", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
+                  <div className="financial-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <article className="financial-kpi-card">
+                      <div className="financial-kpi-icon financial-kpi-icon--blue"><Banknote size={16} /></div>
+                      <div className="min-w-0"><strong>R$ {overviewMetrics.currentMonthIncome.toLocaleString("pt-BR")}</strong><span>Receita realizada</span><small>No período selecionado</small></div>
+                    </article>
+                    <article className="financial-kpi-card">
+                      <div className="financial-kpi-icon financial-kpi-icon--green"><Receipt size={16} /></div>
+                      <div className="min-w-0"><strong>{overviewMetrics.transactionCount.toLocaleString("pt-BR")}</strong><span>Recebimentos</span><small>Lançamentos pagos</small></div>
+                    </article>
+                    <article className="financial-kpi-card">
+                      <div className="financial-kpi-icon financial-kpi-icon--yellow"><CreditCard size={16} /></div>
+                      <div className="min-w-0"><strong>R$ {overviewMetrics.ticketAverage.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong><span>Ticket médio</span><small>Média por recebimento</small></div>
+                    </article>
+                    <article className="financial-kpi-card">
+                      <div className="financial-kpi-icon financial-kpi-icon--purple"><ShieldCheck size={16} /></div>
+                      <div className="min-w-0"><strong>{overviewMetrics.errorCount}</strong><span>Pendências de auditoria</span><small>{overviewMetrics.errorCount === 0 ? "Tudo conciliado" : "Requer atenção"}</small></div>
+                    </article>
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -4697,7 +4708,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   </div>
 
                   {/* GRÁFICOS FINANCEIROS UI REFINADA */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  <div className="financial-donut-grid grid grid-cols-1 xl:grid-cols-3 gap-3.5">
                     {[
                       {
                         title: "Por Categoria",
@@ -4730,10 +4741,10 @@ export const Financial: React.FC<FinancialProps> = ({
                         role={idx === 0 ? "button" : undefined}
                         tabIndex={idx === 0 ? 0 : undefined}
                         title={idx === 0 ? "Abrir ranking de procedimentos por categoria" : undefined}
-                        className={`glass-panel rounded-xl p-4 border border-border flex flex-col h-[340px] justify-between ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
+                        className={`financial-donut-card glass-panel rounded-xl p-4 border border-border flex flex-col min-h-[244px] ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
                       >
-                        <div className="mb-1 flex items-center justify-center gap-1.5">
-                          <h3 className="text-xs font-bold text-text uppercase tracking-wider text-center">
+                        <div className="mb-3 flex items-center justify-between gap-1.5">
+                          <h3 className="text-xs font-semibold text-text">
                             {chart.title}
                           </h3>
                           {idx === 0 && <span className="material-symbols-outlined text-sm text-[var(--primary)]">open_in_new</span>}
@@ -4748,8 +4759,8 @@ export const Financial: React.FC<FinancialProps> = ({
                                 color: COLORS[index % COLORS.length],
                               }),
                             )}
-                            size={210}
-                            strokeWidth={28}
+                            size={154}
+                            strokeWidth={18}
                             onSegmentHover={(segment) =>
                               chart.setActive(
                                 segment
