@@ -232,6 +232,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1)); 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear().toString());
   const [paymentMonth, setPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [savingPaymentPatientId, setSavingPaymentPatientId] = useState<string | null>(null);
 
   // Chart Hover State
   const [activeApplianceIndex, setActiveApplianceIndex] = useState<number | null>(null);
@@ -507,8 +508,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       if (contracts.length) result = result.filter(patient => contracts.includes(patient.contractType || 'Empty'));
       if (durations.includes('12plus')) result = result.filter(hasTreatmentOverOneYear);
       if (payments.length) result = result.filter(patient => {
-          if (!hasTreatmentOverOneYear(patient)) return false;
-          const isPaid = Boolean(getPostYearPayment(patient, paymentMonth)?.paidAt);
+          if (patient.status !== 'Active') return false;
+          const isPaid = Boolean(getMonthlyPayment(patient, paymentMonth)?.paidAt);
           return (payments.includes('paid') && isPaid) || (payments.includes('pending') && !isPaid);
       });
 
@@ -1066,28 +1067,36 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return completedMonths >= 12;
   }
 
-  function getPostYearPayment(patient: OrthoPatient, month: string) {
-      return patient.attendance?.[`__post12_payment_${month}`] as { paidAt?: string } | undefined;
+  function getMonthlyPayment(patient: OrthoPatient, month: string) {
+      return (patient.attendance?.[`__monthly_payment_${month}`]
+          || patient.attendance?.[`__post12_payment_${month}`]) as { paidAt?: string } | undefined;
   }
 
-  const handleTogglePostYearPayment = async (patient: OrthoPatient) => {
-      const key = `__post12_payment_${paymentMonth}`;
-      const existingPayment = getPostYearPayment(patient, paymentMonth);
+  const handleToggleMonthlyPayment = async (patient: OrthoPatient) => {
+      const key = `__monthly_payment_${paymentMonth}`;
+      const legacyKey = `__post12_payment_${paymentMonth}`;
+      const existingPayment = getMonthlyPayment(patient, paymentMonth);
       const attendance = { ...patient.attendance };
 
-      if (existingPayment?.paidAt) delete attendance[key];
+      if (existingPayment?.paidAt) {
+          delete attendance[key];
+          delete attendance[legacyKey];
+      }
       else attendance[key] = { paidAt: new Date().toISOString().slice(0, 10) };
 
+      setSavingPaymentPatientId(patient.id);
       setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, attendance } : p));
       const { error } = await supabase.from('ortho_patients').update({ attendance }).eq('id', patient.id);
       if (error) {
           toast.error('N\u00e3o foi poss\u00edvel atualizar o pagamento: ' + error.message);
           await loadData();
+          setSavingPaymentPatientId(null);
           return;
       }
 
       notifyDataChange('ortho_patients');
-      toast.success(existingPayment?.paidAt ? 'Pagamento desmarcado.' : 'Pagamento registrado.');
+      toast.success(existingPayment?.paidAt ? 'Pagamento removido do m\u00eas selecionado.' : 'Pagamento do m\u00eas registrado.');
+      setSavingPaymentPatientId(null);
   };
 
   const openWhatsAppComposer = async (patient: OrthoPatient) => {
@@ -2308,8 +2317,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   }, [patients]);
 
   const renderPayments = () => {
-      const eligiblePatients = patients.filter(hasTreatmentOverOneYear);
-      const paidCount = eligiblePatients.filter(patient => getPostYearPayment(patient, paymentMonth)?.paidAt).length;
+      const eligiblePatients = patients.filter(patient => patient.status === 'Active');
+      const paidCount = eligiblePatients.filter(patient => getMonthlyPayment(patient, paymentMonth)?.paidAt).length;
       const pendingCount = eligiblePatients.length - paidCount;
       const paymentMonthLabel = new Date(`${paymentMonth}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
@@ -2318,8 +2327,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                       <div>
-                          <h2 className="text-base font-bold text-text">{'Mensalidades ap\u00f3s 12 meses'}</h2>
-                          <p className="mt-1 text-xs text-slate-400">{'Pacientes ativos com 12 meses completos de tratamento. O vencimento padr\u00e3o \u00e9 dia 10.'}</p>
+                          <h2 className="text-base font-bold text-text">Mensalidades de ortodontia</h2>
+                          <p className="mt-1 text-xs text-slate-400">Pagamentos mensais dos pacientes ativos no tratamento ortod\u00f4ntico.</p>
                       </div>
                       <label className="flex flex-col gap-1 text-xs font-semibold text-slate-400">
                           {'Compet\u00eancia'}
@@ -2339,11 +2348,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           <thead className="border-b border-border bg-panel text-[11px] font-semibold uppercase tracking-wide text-slate-400"><tr><th className="p-4">Paciente</th><th className="p-4">{'In\u00edcio'}</th><th className="p-4 text-right">Mensalidade</th><th className="p-4 text-center">{paymentMonthLabel}</th></tr></thead>
                           <tbody className="divide-y divide-border/70">
                               {eligiblePatients.map(patient => {
-                                  const payment = getPostYearPayment(patient, paymentMonth);
+                                  const payment = getMonthlyPayment(patient, paymentMonth);
                                   const isPaid = Boolean(payment?.paidAt);
-                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}<span className="ml-2 text-[10px] font-bold text-amber-400">12+ meses</span></td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => handleTogglePostYearPayment(patient)} className={`inline-flex min-w-32 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'pending'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Pendente'}</button></td></tr>;
+                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}</td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => handleToggleMonthlyPayment(patient)} disabled={savingPaymentPatientId === patient.id} className={`inline-flex min-w-36 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-[var(--primary-border)] bg-[var(--primary-dim)] text-[var(--primary)] hover:bg-[var(--surface-hover)]'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'payments'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}</button></td></tr>;
                               })}
-                              {eligiblePatients.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-sm text-slate-400">Nenhum paciente ativo completou 12 meses de tratamento.</td></tr>}
+                              {eligiblePatients.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-sm text-slate-400">Nenhum paciente ativo encontrado.</td></tr>}
                           </tbody>
                       </table>
                   </div>
@@ -2688,6 +2697,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
                           const hasLongTreatment = hasTreatmentOverOneYear(p);
                           const latestWhatsApp = getWhatsAppHistory(p)[0];
+                          const monthlyPayment = getMonthlyPayment(p, paymentMonth);
+                          const isMonthlyPaymentPaid = Boolean(monthlyPayment?.paidAt);
+                          const isSavingPayment = savingPaymentPatientId === p.id;
                           
                           return (
                             <tr 
@@ -2805,11 +2817,18 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
                                 <td className="p-5 text-center">
-                                    {hasLongTreatment ? (() => {
-                                        const payment = getPostYearPayment(p, paymentMonth);
-                                        const isPaid = Boolean(payment?.paidAt);
-                                        return <button onClick={() => handleTogglePostYearPayment(p)} className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'pending'}</span>{isPaid ? `Pago ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Pendente'}</button>;
-                                    })() : <span className="text-xs text-slate-500">—</span>}
+                                    {p.status === 'Active' ? (
+                                        <button
+                                            type="button"
+                                            disabled={isSavingPayment}
+                                            onClick={() => handleToggleMonthlyPayment(p)}
+                                            title={isMonthlyPaymentPaid ? 'Clique para remover o pagamento deste mês' : `Registrar pagamento de ${paymentMonth.split('-').reverse().join('/')}`}
+                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isMonthlyPaymentPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">{isSavingPayment ? 'progress_activity' : isMonthlyPaymentPaid ? 'check_circle' : 'payments'}</span>
+                                            {isSavingPayment ? 'Salvando...' : isMonthlyPaymentPaid ? `Pago ${monthlyPayment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}
+                                        </button>
+                                    ) : <span className="text-xs text-slate-500">—</span>}
                                 </td>
                                 <td className="p-5 text-center">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
