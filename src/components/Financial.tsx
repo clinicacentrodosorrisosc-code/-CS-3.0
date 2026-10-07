@@ -1153,7 +1153,13 @@ export const Financial: React.FC<FinancialProps> = ({
         currentCategoryObj &&
         currentCategoryObj.subcategories &&
         currentCategoryObj.subcategories.length > 0;
-      if (hasSubcategories && !formData.procedure)
+      const allowsIncomeWithoutSubcategory =
+        modalType === "income" && formData.category === "Excalibur";
+      if (
+        hasSubcategories &&
+        !allowsIncomeWithoutSubcategory &&
+        !formData.procedure
+      )
         return toast.error("Selecione um sub-categoria / procedimento.");
 
       if (isNaN(amountVal) || amountVal <= 0)
@@ -5933,9 +5939,18 @@ export const Financial: React.FC<FinancialProps> = ({
                           onChange={(e) =>
                             handleSubCategoryChange(e.target.value)
                           }
+                          disabled={
+                            modalType === "income" &&
+                            formData.category === "Excalibur"
+                          }
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
                         >
-                          <option value="">Selecione...</option>
+                          <option value="">
+                            {modalType === "income" &&
+                            formData.category === "Excalibur"
+                              ? "Não se aplica"
+                              : "Selecione..."}
+                          </option>
                           {(
                             (modalType === "income"
                               ? incomeCategories
