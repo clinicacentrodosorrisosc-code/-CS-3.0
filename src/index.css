@@ -1962,3 +1962,191 @@ select option {
 .dark .ce-app table :is(thead, .sticky) {
   background-color: var(--bg-subtle) !important;
 }
+
+/* Complete application dark mode. Legacy screens contain many Tailwind CDN
+   utilities and arbitrary light hex values, so every neutral surface is
+   normalized here while semantic success/warning/danger colors remain intact. */
+html.dark,
+html.dark body,
+html.dark #root {
+  background: var(--background) !important;
+  color: var(--text) !important;
+  color-scheme: dark;
+}
+
+.dark .ce-app :is(
+  .app-window,
+  .workspace-shell,
+  .workspace-canvas,
+  main,
+  section.module-view,
+  .module-view
+) {
+  background-color: var(--background) !important;
+  color: var(--text) !important;
+}
+
+.dark .ce-app :is(
+  .app-header,
+  .sidebar-shell,
+  .sidebar-brand,
+  .dashboard-command-bar,
+  .module-command-bar,
+  .module-filter-panel,
+  .module-filter-menu,
+  .module-context-bar,
+  .module-segmented-control,
+  .dashboard-segmented-control,
+  .financial-filter-bar,
+  .financial-kpi-card,
+  .financial-donut-card,
+  .glass-panel,
+  .nexus-card,
+  .fintech-card,
+  .metric-card,
+  .modal-panel,
+  [role="dialog"] > div,
+  [role="menu"],
+  [role="listbox"],
+  [data-radix-popper-content-wrapper] > div
+) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28) !important;
+}
+
+.dark .ce-app :is(
+  [class*="bg-white"],
+  [class*="bg-gray-"],
+  [class*="bg-slate-"],
+  [class*="bg-zinc-"],
+  [class*="bg-neutral-"]
+):not([class*="bg-slate-950"]):not([class*="bg-slate-900"]):not([class*="bg-zinc-950"]):not([class*="bg-neutral-950"]) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+}
+
+.dark .ce-app :is(
+  [class*="bg-[#D"],
+  [class*="bg-[#E"],
+  [class*="bg-[#F"],
+  [class*="bg-[#d"],
+  [class*="bg-[#e"],
+  [class*="bg-[#f"]
+) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+}
+
+.dark .ce-app :is(
+  [class*="border-white"],
+  [class*="border-gray-"],
+  [class*="border-slate-"],
+  [class*="border-zinc-"],
+  [class*="border-neutral-"],
+  [class*="border-[#D"],
+  [class*="border-[#E"],
+  [class*="border-[#F"],
+  [class*="border-[#d"],
+  [class*="border-[#e"],
+  [class*="border-[#f"]
+) {
+  border-color: var(--border) !important;
+}
+
+.dark .ce-app :is(
+  [class*="text-black"],
+  [class*="text-gray-900"],
+  [class*="text-gray-800"],
+  [class*="text-slate-900"],
+  [class*="text-slate-800"],
+  [class*="text-slate-700"],
+  [class*="text-zinc-900"],
+  [class*="text-neutral-900"],
+  [class*="text-[#1"],
+  [class*="text-[#2"],
+  [class*="text-[#3"]
+) {
+  color: var(--text) !important;
+}
+
+.dark .ce-app :is(
+  [class*="text-gray-400"],
+  [class*="text-gray-500"],
+  [class*="text-gray-600"],
+  [class*="text-slate-400"],
+  [class*="text-slate-500"],
+  [class*="text-slate-600"],
+  [class*="text-zinc-400"],
+  [class*="text-zinc-500"],
+  [class*="text-neutral-400"],
+  [class*="text-neutral-500"],
+  [class*="text-[#6"],
+  [class*="text-[#7"],
+  [class*="text-[#8"],
+  [class*="text-[#9"]
+) {
+  color: var(--text-secondary) !important;
+}
+
+.dark .ce-app :is(input, select, textarea) {
+  background-color: var(--surface-high) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  color-scheme: dark;
+}
+
+.dark .ce-app :is(input, textarea)::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+.dark .ce-app :is(
+  .module-segmented-control button[data-active="true"],
+  .dashboard-segmented-control button[data-active="true"],
+  [role="tab"][aria-selected="true"]
+) {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border-hover) !important;
+  color: var(--text) !important;
+}
+
+.dark .ce-app table {
+  background: var(--surface) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark .ce-app table :is(thead, th) {
+  background: var(--bg-subtle) !important;
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark .ce-app table :is(tbody, tr, td) {
+  border-color: var(--border-subtle) !important;
+}
+
+.dark .ce-app table tbody tr:hover {
+  background: var(--surface-hover) !important;
+}
+
+.dark .ce-app :is(.recharts-default-tooltip, .recharts-tooltip-wrapper > div) {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+.dark .ce-app :is(.recharts-cartesian-axis-tick-value, .recharts-legend-item-text) {
+  fill: var(--text-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark .financial-kpi-icon--blue,
+.dark .financial-kpi-icon--green,
+.dark .financial-kpi-icon--yellow,
+.dark .financial-kpi-icon--purple {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
