@@ -1904,3 +1904,61 @@ select option {
   .ce-app .p-8,
   .ce-app .p-6 { padding: 0.9rem !important; }
 }
+
+/* Dark-mode final guard: legacy utility combinations must resolve through the
+   shared tokens as well. This comes last so a later light-only rule cannot
+   leave isolated white cards, dialogs or table areas behind. */
+.dark .ce-app,
+.dark .ce-app .module-view,
+.dark .ce-app .workspace-canvas {
+  background-color: var(--background) !important;
+  color: var(--text);
+}
+
+.dark .ce-app :is(
+  [class*="bg-white"],
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-gray-50"],
+  [class*="bg-gray-100"]
+) {
+  background-color: var(--surface) !important;
+}
+
+.dark .ce-app :is(
+  [class*="bg-slate-200"],
+  [class*="bg-slate-300"],
+  [class*="bg-gray-200"],
+  [class*="bg-gray-300"]
+) {
+  background-color: var(--bg-subtle) !important;
+}
+
+.dark .ce-app :is(
+  [class*="border-white"],
+  [class*="border-slate-100"],
+  [class*="border-slate-200"],
+  [class*="border-gray-100"],
+  [class*="border-gray-200"]
+) {
+  border-color: var(--border) !important;
+}
+
+.dark .ce-app :is([class*="text-black"], [class*="text-[#181B26]"]) {
+  color: var(--text) !important;
+}
+
+.dark .ce-app :is([class*="text-[#64748B]"], [class*="text-slate-600"]) {
+  color: var(--text-secondary) !important;
+}
+
+.dark .ce-app :is(dialog, [role="dialog"]) > div,
+.dark .ce-app .modal-panel,
+.dark .ce-app .financial-filter-bar {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.dark .ce-app table :is(thead, .sticky) {
+  background-color: var(--bg-subtle) !important;
+}

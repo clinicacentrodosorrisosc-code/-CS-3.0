@@ -698,6 +698,11 @@ export const Financial: React.FC<FinancialProps> = ({
   );
   const [isPatientSearchLoading, setIsPatientSearchLoading] = useState(false);
   const [patientSearchError, setPatientSearchError] = useState("");
+  const isBoletoPayment =
+    modalType === "income" &&
+    formData.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto");
+  const isBoletoInstallmentSale =
+    isBoletoPayment && !formData.id && formData.installments > 1;
 
   useEffect(() => {
     const query = formData.description.trim();
@@ -1185,7 +1190,14 @@ export const Financial: React.FC<FinancialProps> = ({
       }
 
       const recurrenceCount =
-        modalType === "expense" && !formData.id ? formData.recurrence || 1 : 1;
+        modalType === "expense" && !formData.id
+          ? formData.recurrence || 1
+          : isBoletoInstallmentSale
+            ? formData.installments
+            : 1;
+      const totalInCents = Math.round(amountVal * 100);
+      const installmentBaseInCents = Math.floor(totalInCents / recurrenceCount);
+      const installmentRemainderInCents = totalInCents % recurrenceCount;
 
       for (let i = 0; i < recurrenceCount; i++) {
         const currentTxDate = new Date(baseDate);
@@ -1202,18 +1214,26 @@ export const Financial: React.FC<FinancialProps> = ({
           formData.procedure === "Panorâmica" ||
           formData.procedure === "Documentação Inicial";
 
+        const installmentAmount = isBoletoInstallmentSale
+          ? (installmentBaseInCents +
+              (i === recurrenceCount - 1 ? installmentRemainderInCents : 0)) /
+            100
+          : amountVal;
+        const installmentDescription = isBoletoInstallmentSale
+          ? `${formData.description} (${i + 1}/${recurrenceCount})`
+          : recurrenceCount > 1
+            ? `${formData.description} (${i + 1}/${recurrenceCount})`
+            : formData.description;
+
         transactionsToInsert.push({
           id: i === 0 && formData.id ? formData.id : "tx_" + safeGenerateId(),
-          description:
-            recurrenceCount > 1
-              ? `${formData.description} (${i + 1}/${recurrenceCount})`
-              : formData.description,
-          amount: amountVal,
+          description: installmentDescription,
+          amount: installmentAmount,
           category: formData.category,
           procedure: formData.procedure,
           date: currentTxDate.toISOString().split("T")[0],
           type: modalType,
-          status: formData.status,
+          status: isBoletoInstallmentSale ? "Pending" : formData.status,
           payment_method: formData.paymentMethod,
           account_id: formData.accountId || null,
           professional: formData.professional,
@@ -1221,7 +1241,9 @@ export const Financial: React.FC<FinancialProps> = ({
           observation: formData.observation,
           is_partial: formData.isPartial,
           card_brand: formData.cardBrand || null,
-          settlement_date: currentSettlementDate || null,
+          settlement_date: isBoletoInstallmentSale
+            ? null
+            : currentSettlementDate || null,
           supplier: formData.supplier,
           sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
         });
@@ -1662,6 +1684,7 @@ export const Financial: React.FC<FinancialProps> = ({
 
   const handlePaymentMethodChange = (pmName: string) => {
     const method = paymentMethods.find((m) => m.name === pmName);
+    const isBoleto = pmName.toLocaleLowerCase("pt-BR").includes("boleto");
     setFormData((prev) => ({
       ...prev,
       paymentMethod: pmName,
@@ -1672,9 +1695,12 @@ export const Financial: React.FC<FinancialProps> = ({
       cardBrand: modalType === "income" ? "" : prev.cardBrand,
       installments:
         pmName.toLowerCase().includes("cartão") ||
-        pmName.toLowerCase().includes("crédito")
+        pmName.toLowerCase().includes("crédito") ||
+        isBoleto
           ? prev.installments
           : 1,
+      status: isBoleto ? "Pending" : prev.status,
+      settlementDate: isBoleto ? "" : prev.settlementDate,
     }));
   };
 
@@ -5569,7 +5595,7 @@ export const Financial: React.FC<FinancialProps> = ({
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl max-h-[calc(100dvh-2rem)] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
+            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl h-[min(46rem,calc(100dvh-2rem))] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
               <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                 <h3 className="text-xl font-bold text-text font-display">
                   {formData.id
@@ -5585,7 +5611,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              <div className="p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto min-h-0 max-h-[calc(100dvh-8rem)] custom-scrollbar bg-transparent">
+              <div className="flex-1 min-h-0 p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-transparent">
                 {modalType === "expense" ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -5824,7 +5850,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          DATA
+                          {isBoletoPayment ? "PRIMEIRO VENCIMENTO" : "DATA"}
                         </label>
                         <input
                           type="date"
@@ -5927,7 +5953,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          VALOR (R$)
+                          {isBoletoPayment ? "VALOR TOTAL DA VENDA (R$)" : "VALOR (R$)"}
                         </label>
                         <input
                           type="number"
@@ -6063,19 +6089,21 @@ export const Financial: React.FC<FinancialProps> = ({
                           >
                             A Receber
                           </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData({
-                                ...formData,
-                                status: "Paid",
-                                settlementDate: today,
-                              })
-                            }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
-                          >
-                            Recebido
-                          </button>
+                          {!isBoletoInstallmentSale && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData({
+                                  ...formData,
+                                  status: "Paid",
+                                  settlementDate: today,
+                                })
+                              }
+                              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            >
+                              Recebido
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -6106,18 +6134,19 @@ export const Financial: React.FC<FinancialProps> = ({
                         </div>
                       </div>
                     </div>
-                    {((formData.paymentMethod || "")
+                    {(((formData.paymentMethod || "")
                       .toLowerCase()
                       .includes("cartão") ||
                       (formData.paymentMethod || "")
                         .toLowerCase()
-                        .includes("crédito")) &&
+                        .includes("crédito") ||
+                      isBoletoPayment) &&
                       !(formData.paymentMethod || "")
                         .toLowerCase()
-                        .includes("débito") && (
+                        .includes("débito")) && (
                         <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            NÚMERO DE PARCELAS
+                            {isBoletoPayment ? "PARCELAS NO BOLETO" : "NÚMERO DE PARCELAS"}
                           </label>
                           <select
                             value={formData.installments}
@@ -6125,6 +6154,14 @@ export const Financial: React.FC<FinancialProps> = ({
                               setFormData({
                                 ...formData,
                                 installments: parseInt(e.target.value) || 1,
+                                status:
+                                  isBoletoPayment && parseInt(e.target.value) > 1
+                                    ? "Pending"
+                                    : formData.status,
+                                settlementDate:
+                                  isBoletoPayment && parseInt(e.target.value) > 1
+                                    ? ""
+                                    : formData.settlementDate,
                               })
                             }
                             className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
@@ -6137,6 +6174,11 @@ export const Financial: React.FC<FinancialProps> = ({
                               ),
                             )}
                           </select>
+                          {isBoletoPayment && (
+                            <p className="text-xs leading-5 text-slate-500">
+                              Cada parcela será criada em aberto, com vencimentos mensais a partir da data informada.
+                            </p>
+                          )}
                         </div>
                       )}
                   </>
