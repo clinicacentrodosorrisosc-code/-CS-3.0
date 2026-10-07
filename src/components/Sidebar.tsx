@@ -45,6 +45,7 @@ interface SidebarProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   allowedTabs: string[];
+  allowedSubTabs?: string[];
   userRole: string;
   userEmail?: string;
   openPermissions: () => void;
@@ -56,6 +57,8 @@ interface SidebarProps {
   openNotifications?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  isMobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
 }
 
 interface MenuItem {
@@ -68,12 +71,38 @@ interface MenuItem {
     label: string;
     adminOnly?: boolean;
     externalUrl?: string;
+    permissionId?: string;
   }>;
 }
 
 const CRM_JAMES_URL = String(
   import.meta.env.VITE_CRM_JAMES_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')
 ).trim();
+
+const SUB_TAB_PERMISSION_IDS: Record<string, string> = {
+  commercial: 'dash_financial',
+  agenda: 'dash_agenda',
+  pipeline: 'crm_pipeline',
+  automations: 'crm_automations',
+  campaigns: 'crm_campaigns',
+  whatsapp: 'crm_whatsapp',
+  overview: 'financial_overview',
+  transactions: 'financial_transactions',
+  pricing: 'financial_pricing',
+  viability: 'financial_viability',
+  vision: 'ortho_vision',
+  grid: 'ortho_grid',
+  patients: 'ortho_patients',
+  dashboard: 'lab_dashboard',
+  kanban: 'lab_kanban',
+  campaign_calendar: 'campaign_calendar',
+  meeting_minutes: 'meeting_minutes',
+  clinic_ideas: 'clinic_ideas',
+  sales_playbook: 'sales_playbook',
+  [`${Tab.FINANCIAL}:settings`]: 'financial_settings',
+  [`${Tab.ORTHODONTICS}:settings`]: 'ortho_settings',
+  [`${Tab.LABWORK}:settings`]: 'lab_settings',
+};
 
 const MENU_STRUCTURE: MenuItem[] = [
   // PRINCIPAL
@@ -208,6 +237,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   allowedTabs,
+  allowedSubTabs = [],
   userRole,
   userEmail,
   openPermissions,
@@ -218,7 +248,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   openNotifications,
   onSubTabSelect,
   isExpanded: externalIsExpanded,
-  onToggleExpand: externalOnToggleExpand
+  onToggleExpand: externalOnToggleExpand,
+  isMobileOpen: externalIsMobileOpen,
+  onMobileOpenChange
 }) => {
   const [internalIsExpanded, setInternalIsExpanded] = useState<boolean>(() => {
     try {
@@ -247,7 +279,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [internalIsMobileOpen, setInternalIsMobileOpen] = useState(false);
+  const isMobileMenuOpen = externalIsMobileOpen ?? internalIsMobileOpen;
+  const setIsMobileMenuOpen = (open: boolean) => {
+    if (onMobileOpenChange) onMobileOpenChange(open);
+    else setInternalIsMobileOpen(open);
+  };
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isMobileMenuOpen, onMobileOpenChange]);
   const [navQuery, setNavQuery] = useState('');
   const [openAccordionTab, setOpenAccordionTab] = useState<Tab | null>(activeTab);
   const [flyoutTab, setFlyoutTab] = useState<Tab | null>(null);
@@ -372,7 +418,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const filteredNavItems = MENU_STRUCTURE.filter(item => {
     const hasAccess = item.id === Tab.AUDIT
       ? userRole === 'admin'
-      : Array.isArray(allowedTabs) && (allowedTabs.length === 0 || allowedTabs.includes(item.id));
+      : Array.isArray(allowedTabs) && allowedTabs.includes(item.id);
     const matchesQuery = !normalizedQuery
       || item.label.toLocaleLowerCase('pt-BR').includes(normalizedQuery)
       || item.subItems.some(subItem => subItem.label.toLocaleLowerCase('pt-BR').includes(normalizedQuery));
@@ -381,6 +427,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const mainItems = filteredNavItems.filter(item => item.group === 'main');
   const managementItems = filteredNavItems.filter(item => item.group === 'management');
+  const canAccessSubItem = (tabId: Tab, subItem: MenuItem['subItems'][number]) => {
+    const permissionId = subItem.permissionId || SUB_TAB_PERMISSION_IDS[`${tabId}:${subItem.id}`] || SUB_TAB_PERMISSION_IDS[subItem.id];
+    return (!subItem.adminOnly || userRole === 'admin')
+      && (userRole === 'admin' || !permissionId || allowedSubTabs.length === 0 || allowedSubTabs.includes(permissionId));
+  };
 
   const renderNavGroup = (items: MenuItem[], groupTitle?: string) => (
     <div className="flex flex-col gap-1 w-full">
@@ -393,7 +444,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         const isActive = activeTab === item.id;
         const isAccordionOpen = isExpanded && openAccordionTab === item.id;
         const IconComponent = item.icon;
-        const validSubItems = item.subItems.filter(sub => !sub.adminOnly || userRole === 'admin');
+        const validSubItems = item.subItems.filter(subItem => canAccessSubItem(item.id, subItem));
         const hasSubItems = validSubItems.length > 0;
 
         return (
@@ -502,6 +553,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Main Sidebar Shell */}
       <motion.aside
+        id="app-sidebar"
         initial={false}
         animate={{
           width: isExpanded ? 236 : 60
@@ -516,7 +568,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-0 lg:mr-0 lg:h-full lg:rounded-none
           sidebar-shell bg-[var(--surface)] border-r border-[var(--border-subtle)]
           transition-colors duration-200
-          ${isMobileMenuOpen ? 'h-[92vh] w-full rounded-b-3xl shadow-2xl z-50' : 'h-auto'}
+          ${isMobileMenuOpen ? 'sidebar-mobile-open shadow-2xl z-50' : 'sidebar-mobile-closed'}
         `}
       >
         {/* Top Branding & Expand/Collapse Trigger */}
@@ -602,7 +654,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   { label: 'Novo orçamento', icon: FilePlus2, tab: Tab.CRM, subTab: 'pipeline', tone: 'green' },
                   { label: 'Registrar pagamento', icon: CreditCard, tab: Tab.FINANCIAL, subTab: 'transactions', tone: 'yellow' },
                   { label: 'Solicitar laboratório', icon: FlaskConical, tab: Tab.LABWORK, subTab: 'kanban', tone: 'purple' }
-                ].map(shortcut => {
+                ].filter(shortcut => allowedTabs.includes(shortcut.tab)
+                  && canAccessSubItem(shortcut.tab, { id: shortcut.subTab, label: shortcut.label }))
+                  .map(shortcut => {
                   const ShortcutIcon = shortcut.icon;
                   return (
                     <button
@@ -698,7 +752,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
               if (!currentItem) return null;
-              const validSubs = currentItem.subItems.filter(s => !s.adminOnly || userRole === 'admin');
+              const validSubs = currentItem.subItems.filter(subItem => canAccessSubItem(currentItem.id, subItem));
 
               return (
                 <>

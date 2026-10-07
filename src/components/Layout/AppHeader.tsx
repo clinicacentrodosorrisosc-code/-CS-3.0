@@ -50,6 +50,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   toggleTheme,
   openPermissions,
   onMobileMenuToggle,
+  isSidebarExpanded = false,
 }) => {
   const moduleLabel = TAB_LABELS[activeTab] || 'Centro do Sorriso';
   const subLabel = requestedSubTab
@@ -72,7 +73,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className="app-header z-50 flex h-12 min-h-12 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 backdrop-blur-xl sm:px-5 dark:bg-[color-mix(in_srgb,var(--surface)_92%,transparent)]">
       <div className="flex min-w-0 items-center gap-2.5">
-        <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white lg:hidden" aria-label="Abrir menu">
+        <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white lg:hidden" aria-label={isSidebarExpanded ? 'Fechar menu' : 'Abrir menu'} aria-expanded={isSidebarExpanded} aria-controls="app-sidebar">
           <Menu className="size-4" />
         </button>
 

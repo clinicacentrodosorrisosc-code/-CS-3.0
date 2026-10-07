@@ -98,6 +98,7 @@ const App: React.FC = () => {
   const [allowedSubTabs, setAllowedSubTabs] = useState<string[]>([]);
   const [userRole, setUserRole] = useState<string>('user');
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
@@ -543,6 +544,7 @@ const App: React.FC = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           allowedTabs={allowedTabs}
+          allowedSubTabs={allowedSubTabs}
           userRole={userRole}
           userEmail={session.user.email}
           openPermissions={() => setIsPermissionsOpen(true)}
@@ -552,6 +554,8 @@ const App: React.FC = () => {
           toggleTheme={toggleTheme}
           notificationCount={notificationCount}
           openNotifications={() => setIsNotificationsOpen(true)}
+          isMobileOpen={isMobileMenuOpen}
+          onMobileOpenChange={setIsMobileMenuOpen}
         />
 
         <div className="workspace-column flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -566,6 +570,8 @@ const App: React.FC = () => {
             theme={theme}
             toggleTheme={toggleTheme}
             openPermissions={() => setIsPermissionsOpen(true)}
+            onMobileMenuToggle={() => setIsMobileMenuOpen(current => !current)}
+            isSidebarExpanded={isMobileMenuOpen}
           />
 
         <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
