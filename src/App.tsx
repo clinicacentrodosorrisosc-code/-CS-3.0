@@ -100,26 +100,29 @@ const App: React.FC = () => {
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
     try {
-      const saved = localStorage.getItem('theme');
-      return (saved as 'light' | 'dark') || 'light';
+      const saved = localStorage.getItem(`theme:${session.user.id}`);
+      setTheme(saved === 'dark' ? 'dark' : 'light');
     } catch (e) {
-      console.warn("Could not read theme from localStorage inside App.tsx:", e);
-      return 'light';
+      console.warn("Could not read the user theme from localStorage:", e);
+      setTheme('light');
     }
-  });
+  }, [session?.user?.id]);
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     try {
-      localStorage.setItem('theme', theme);
+      if (session?.user?.id) localStorage.setItem(`theme:${session.user.id}`, theme);
     } catch (e) {
       console.warn("Could not write theme to localStorage inside App.tsx:", e);
     }
-  }, [theme]);
+  }, [session?.user?.id, theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 

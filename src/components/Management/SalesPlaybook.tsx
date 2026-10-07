@@ -172,7 +172,7 @@ export const SalesPlaybook: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-950/60 p-1 rounded-xl border border-border">
+        <div className="flex items-center gap-2 bg-[var(--bg-subtle)] p-1 rounded-xl border border-[var(--border)]">
           <button
             onClick={() => { setActiveTab('objections'); setFilterCat('all'); }}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
@@ -235,7 +235,7 @@ export const SalesPlaybook: React.FC = () => {
                     {obj.objection}
                   </h3>
 
-                  <p className="text-xs text-slate-400 leading-relaxed bg-slate-950/40 p-2.5 rounded-xl border border-white/5">
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-subtle)] p-2.5 rounded-xl border border-[var(--border)]">
                     <strong>Por que o paciente diz isso:</strong> {obj.explanation}
                   </p>
 
@@ -253,13 +253,13 @@ export const SalesPlaybook: React.FC = () => {
                         <span>{copiedId === obj.id ? 'Copiado!' : 'Copiar'}</span>
                       </button>
                     </div>
-                    <p className="text-xs text-slate-200 italic leading-relaxed">
+                    <p className="text-xs text-[var(--text)] italic leading-relaxed">
                       {obj.recommendedResponse}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/5 flex items-start gap-2 text-[11px] text-amber-300/90 bg-amber-500/5 p-2.5 rounded-xl border border-amber-500/10">
+                <div className="pt-3 border-t border-[var(--border-subtle)] flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300/90 bg-amber-500/5 p-2.5 rounded-xl border border-amber-500/10">
                   <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <span><strong>Dica de Ouro:</strong> {obj.goldenTip}</span>
                 </div>
@@ -280,7 +280,7 @@ export const SalesPlaybook: React.FC = () => {
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[10px] font-bold uppercase font-mono">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[var(--surface-high)] text-[var(--text-secondary)] text-[10px] font-bold uppercase font-mono">
                       {script.category}
                     </span>
                     <button
@@ -295,12 +295,12 @@ export const SalesPlaybook: React.FC = () => {
                   <h3 className="text-sm font-extrabold text-text">{script.title}</h3>
                   <p className="text-xs text-slate-400">{script.description}</p>
 
-                  <div className="bg-slate-950/80 p-3.5 rounded-xl border border-white/5 text-xs text-slate-200 whitespace-pre-wrap font-sans leading-relaxed">
+                  <div className="bg-[var(--bg-subtle)] p-3.5 rounded-xl border border-[var(--border)] text-xs text-[var(--text)] whitespace-pre-wrap font-sans leading-relaxed">
                     {script.messageTemplate}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
                   <span>Pronto para envio no WhatsApp</span>
                   <span>Personalize os campos [ ]</span>
                 </div>

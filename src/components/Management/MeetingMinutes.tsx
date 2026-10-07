@@ -242,12 +242,12 @@ export const MeetingMinutes: React.FC = () => {
                 </div>
 
                 {/* Footer Action Items progress */}
-                <div className="pt-3 border-t border-white/5 space-y-2">
+                <div className="pt-3 border-t border-[var(--border-subtle)] space-y-2">
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                     <span>Plano de Ação:</span>
                     <span className="font-bold text-text">{completedActions}/{totalActions} concluídas</span>
                   </div>
-                  <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-[var(--surface-high)] h-1.5 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-emerald-500 rounded-full transition-all"
                       style={{ width: `${progress}%` }}
@@ -283,7 +283,7 @@ export const MeetingMinutes: React.FC = () => {
                   <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Participantes:</h5>
                   <div className="flex flex-wrap gap-1.5">
                     {viewingMeeting.participants.map((p, idx) => (
-                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-medium">
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-[var(--surface-high)] text-[var(--text)] text-xs font-medium">
                         {p}
                       </span>
                     ))}
@@ -293,7 +293,7 @@ export const MeetingMinutes: React.FC = () => {
 
               <div>
                 <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Conteúdo & Pauta:</h5>
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-white/5 text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">
+                <div className="bg-[var(--bg-subtle)] p-4 rounded-xl border border-[var(--border)] text-xs text-[var(--text)] whitespace-pre-wrap leading-relaxed">
                   {viewingMeeting.content}
                 </div>
               </div>
@@ -313,7 +313,7 @@ export const MeetingMinutes: React.FC = () => {
                           {act.task}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded font-mono">
+                      <span className="text-[10px] text-[var(--text-secondary)] bg-[var(--surface-high)] px-2 py-0.5 rounded font-mono">
                         {act.owner} {act.deadline && `• ${act.deadline.split('-').reverse().slice(0, 2).join('/')}`}
                       </span>
                     </div>
@@ -390,7 +390,7 @@ export const MeetingMinutes: React.FC = () => {
               </div>
 
               {/* Action items builder */}
-              <div className="space-y-2 pt-2 border-t border-white/5">
+              <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
                 <label className="text-xs font-bold text-slate-300 block">Adicionar Tarefas do Plano de Ação:</label>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <input
@@ -418,7 +418,7 @@ export const MeetingMinutes: React.FC = () => {
 
                 <div className="space-y-1.5 mt-2">
                   {formData.actionItems.map((act) => (
-                    <div key={act.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-950 border border-white/5 text-xs">
+                    <div key={act.id} className="flex justify-between items-center p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-xs text-[var(--text)]">
                       <span>• {act.task} (<strong className="text-indigo-400">{act.owner}</strong>)</span>
                       <button onClick={() => handleRemoveActionItem(act.id)} className="text-rose-400 p-1">
                         ✕

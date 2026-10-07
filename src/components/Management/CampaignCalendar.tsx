@@ -182,7 +182,7 @@ export const CampaignCalendar: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-4 bg-slate-950/60 p-4 rounded-2xl border border-white/10">
+            <div className="flex items-center gap-4 bg-[var(--bg-subtle)] p-4 rounded-2xl border border-[var(--border)]">
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase block">Meta de Faturamento</span>
                 <span className="text-lg font-black text-emerald-400 font-mono">
@@ -240,7 +240,7 @@ export const CampaignCalendar: React.FC = () => {
                 className={`p-4 rounded-2xl border transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between min-h-[160px] ${
                   isCurrentMonth 
                     ? 'bg-indigo-950/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10' 
-                    : 'bg-panel border-border hover:border-white/20'
+                    : 'bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-hover)]'
                 }`}
               >
                 <div>
@@ -270,7 +270,7 @@ export const CampaignCalendar: React.FC = () => {
                 </div>
 
                 {camp && (
-                  <div className="pt-2 mt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-mono">
+                  <div className="pt-2 mt-2 border-t border-[var(--border-subtle)] flex justify-between items-center text-[10px] font-mono">
                     <span className="text-slate-500">Meta:</span>
                     <span className="font-bold text-emerald-400">
                       {(camp.targetRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
