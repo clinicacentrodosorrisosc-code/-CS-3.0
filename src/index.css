@@ -2150,3 +2150,94 @@ html.dark #root {
   background: var(--surface-elevated) !important;
   border-color: var(--border) !important;
 }
+
+/* Final shell and theme correction. The theme class is mirrored on html,
+   body and #root so portals and legacy screens follow the same palette. */
+.ce-app .app-header {
+  height: 40px !important;
+  min-height: 40px !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+
+.ce-app .module-command-bar {
+  min-height: 40px;
+  margin-bottom: 6px;
+}
+
+.dark,
+.dark body,
+.dark #root,
+body.dark,
+#root.dark {
+  background-color: #101217 !important;
+  color: var(--text) !important;
+  color-scheme: dark;
+}
+
+.dark .ce-app::before { display: none; }
+
+.dark .ce-app :is(
+  .app-stage,
+  .app-window,
+  .workspace-column,
+  .workspace-shell,
+  .workspace-canvas,
+  .module-view,
+  .dashboard-workspace
+) {
+  background: var(--background) !important;
+  background-image: none !important;
+}
+
+.dark .ce-app :is(
+  .app-header,
+  .sidebar-shell,
+  .sidebar-brand,
+  .sidebar-shell > div,
+  .glass-panel,
+  .nexus-card,
+  .fintech-card,
+  .metric-card,
+  .financial-kpi-card,
+  .financial-donut-card,
+  .module-command-bar,
+  .dashboard-command-bar,
+  .modal-panel,
+  [role="dialog"],
+  [role="dialog"] > div,
+  [role="menu"],
+  [role="listbox"]
+) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.dark .ce-app :is(.metric-card, .financial-kpi-card):hover {
+  background-color: var(--surface-hover) !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: none !important;
+}
+
+.dark .ce-app :is(.module-filter-control, .module-toolbar-action, .header-date, .sidebar-search input) {
+  background-color: var(--surface-high) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.dark .ce-app :is(.dashboard-kpi-icon, .financial-kpi-icon, .shortcut-icon) {
+  background: var(--surface-elevated) !important;
+  border-color: var(--border) !important;
+}
+
+.dark .ce-app :is(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl) {
+  box-shadow: none !important;
+}
+
+@media (max-width: 1023px) {
+  .ce-app .app-header { height: 44px !important; min-height: 44px !important; }
+}

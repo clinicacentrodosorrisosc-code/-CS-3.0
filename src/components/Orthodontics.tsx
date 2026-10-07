@@ -1,5 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { ptBR } from 'date-fns/locale';
 import { 
   Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Label, LabelList, LineChart, Line
@@ -8,6 +10,8 @@ import { DonutChart } from './ui/donut-chart';
 import { supabase } from '../supabaseClient';
 import { SpotlightCard } from './ui/spotlight-card';
 import { OrthodonticsCalendar } from './OrthodonticsCalendar';
+import { OrthodonticsBulkReminder } from './OrthodonticsBulkReminder';
+import { Calendar as DateCalendar } from './base-ui/calendar';
 import { MultiSelectMenu, type SelectMenuOption } from './ui/select-menu';
 import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -176,6 +180,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [gridEditingInfo, setGridEditingInfo] = useState<{ patientId: string; monthIndex: number; selectedDate: Date | null } | null>(null);
   const [editingPatient, setEditingPatient] = useState<OrthoPatient | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [whatsAppPatient, setWhatsAppPatient] = useState<OrthoPatient | null>(null);
   const [whatsAppHistoryPatient, setWhatsAppHistoryPatient] = useState<OrthoPatient | null>(null);
   const [whatsAppPhone, setWhatsAppPhone] = useState('');
@@ -233,6 +238,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear().toString());
   const [paymentMonth, setPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [savingPaymentPatientId, setSavingPaymentPatientId] = useState<string | null>(null);
+  const [paymentCalendarPatient, setPaymentCalendarPatient] = useState<OrthoPatient | null>(null);
+  const [isBulkReminderOpen, setIsBulkReminderOpen] = useState(false);
 
   // Chart Hover State
   const [activeApplianceIndex, setActiveApplianceIndex] = useState<number | null>(null);
@@ -1072,19 +1079,19 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           || patient.attendance?.[`__post12_payment_${month}`]) as { paidAt?: string } | undefined;
   }
 
-  const handleToggleMonthlyPayment = async (patient: OrthoPatient) => {
+  const handleSetMonthlyPayment = async (patient: OrthoPatient, paidAt: string | null) => {
       const key = `__monthly_payment_${paymentMonth}`;
       const legacyKey = `__post12_payment_${paymentMonth}`;
-      const existingPayment = getMonthlyPayment(patient, paymentMonth);
       const attendance = { ...patient.attendance };
 
-      if (existingPayment?.paidAt) {
+      if (!paidAt) {
           delete attendance[key];
           delete attendance[legacyKey];
       }
-      else attendance[key] = { paidAt: new Date().toISOString().slice(0, 10) };
+      else attendance[key] = { paidAt };
 
       setSavingPaymentPatientId(patient.id);
+      setPaymentCalendarPatient(null);
       setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, attendance } : p));
       const { error } = await supabase.from('ortho_patients').update({ attendance }).eq('id', patient.id);
       if (error) {
@@ -1095,12 +1102,26 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       }
 
       notifyDataChange('ortho_patients');
-      toast.success(existingPayment?.paidAt ? 'Pagamento removido do m\u00eas selecionado.' : 'Pagamento do m\u00eas registrado.');
+      toast.success(paidAt ? 'Pagamento do mês registrado.' : 'Pagamento removido do mês selecionado.');
       setSavingPaymentPatientId(null);
+  };
+
+  const openActionMenu = (event: React.MouseEvent<HTMLButtonElement>, patientId: string) => {
+      if (openActionMenuId === patientId) {
+          setOpenActionMenuId(null);
+          setActionMenuPosition(null);
+          return;
+      }
+      const rect = event.currentTarget.getBoundingClientRect();
+      const menuHeight = 244;
+      const top = rect.bottom + menuHeight > window.innerHeight - 12 ? Math.max(12, rect.top - menuHeight - 8) : rect.bottom + 8;
+      setActionMenuPosition({ top, right: Math.max(12, window.innerWidth - rect.right) });
+      setOpenActionMenuId(patientId);
   };
 
   const openWhatsAppComposer = async (patient: OrthoPatient) => {
       setOpenActionMenuId(null);
+      setActionMenuPosition(null);
       setWhatsAppPatient(patient);
       setWhatsAppPhone(patient.whatsappPhone || '');
       setWhatsAppMessage(renderWhatsAppTemplate(whatsAppTemplate, patient));
@@ -2350,7 +2371,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               {eligiblePatients.map(patient => {
                                   const payment = getMonthlyPayment(patient, paymentMonth);
                                   const isPaid = Boolean(payment?.paidAt);
-                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}</td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => handleToggleMonthlyPayment(patient)} disabled={savingPaymentPatientId === patient.id} className={`inline-flex min-w-36 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-[var(--primary-border)] bg-[var(--primary-dim)] text-[var(--primary)] hover:bg-[var(--surface-hover)]'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'payments'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}</button></td></tr>;
+                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}</td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => setPaymentCalendarPatient(patient)} disabled={savingPaymentPatientId === patient.id} className={`inline-flex min-w-36 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-[var(--primary-border)] bg-[var(--primary-dim)] text-[var(--primary)] hover:bg-[var(--surface-hover)]'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'calendar_month'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}</button></td></tr>;
                               })}
                               {eligiblePatients.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-sm text-slate-400">Nenhum paciente ativo encontrado.</td></tr>}
                           </tbody>
@@ -2821,7 +2842,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         <button
                                             type="button"
                                             disabled={isSavingPayment}
-                                            onClick={() => handleToggleMonthlyPayment(p)}
+                                            onClick={() => setPaymentCalendarPatient(p)}
                                             title={isMonthlyPaymentPaid ? 'Clique para remover o pagamento deste mês' : `Registrar pagamento de ${paymentMonth.split('-').reverse().join('/')}`}
                                             className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isMonthlyPaymentPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'}`}
                                         >
@@ -2881,19 +2902,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         </button>
                                     </div>
                                     <div className="relative inline-flex">
-                                        <button type="button" onClick={() => setOpenActionMenuId(current => current === p.id ? null : p.id)} aria-expanded={openActionMenuId === p.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high hover:text-text">
+                                        <button type="button" onClick={(event) => openActionMenu(event, p.id)} aria-expanded={openActionMenuId === p.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high hover:text-text">
                                             Ações <span className="material-symbols-outlined text-base">more_horiz</span>
                                         </button>
-                                        {openActionMenuId === p.id && (
-                                            <div className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-lg">
-                                                <button onClick={() => openWhatsAppComposer(p)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"><MessageCircle className="h-4 w-4" />Enviar WhatsApp</button>
-                                                <button onClick={() => { setWhatsAppHistoryPatient(p); setOpenActionMenuId(null); }} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="flex items-center gap-2"><Clock className="h-4 w-4" />Histórico WhatsApp</span>{getWhatsAppHistory(p).length > 0 && <span className="rounded-md bg-surface-high px-1.5 py-0.5 font-mono text-[9px]">{getWhatsAppHistory(p).length}</span>}</button>
-                                                <button onClick={() => { setEditingPatient(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">edit</span>Editar paciente</button>
-                                                <button onClick={() => { openNoteModal(p); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">warning</span>{hasProblem ? 'Ver alerta' : 'Adicionar alerta'}</button>
-                                                {p.status === 'Active' ? <button onClick={() => { handleOpenFinishModal(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">task_alt</span>Finalizar tratamento</button> : <button onClick={() => { handleReactivate(p.id); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition-colors hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">restart_alt</span>Reativar tratamento</button>}
-                                                <button onClick={() => { handleDeletePatient(p.id, p.name); setOpenActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-600 transition-colors hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" />Excluir paciente</button>
-                                            </div>
-                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -3213,6 +3224,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       </div>
   );
 
+  const actionMenuPatient = openActionMenuId ? patients.find(patient => patient.id === openActionMenuId) || null : null;
+
   if (loading) return (
     <div className="flex-1 w-full h-full p-8 flex flex-col gap-6 animate-pulse bg-transparent">
       <div className="h-10 w-48 bg-panel rounded-lg mb-4"></div>
@@ -3227,7 +3240,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar relative z-10 w-full">
+        <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 lg:px-6 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
                {/* Visual spacing for title */}
                <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -3249,6 +3262,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                    </div>
 
                    <div className="flex gap-2 text-xs justify-end items-center">
+                      {activeSubTab === 'patients' && (
+                          <button
+                              type="button"
+                              onClick={() => setIsBulkReminderOpen(true)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/25 bg-emerald-500/10 px-3.5 py-2 font-bold text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+                          >
+                              <MessageCircle className="h-3.5 w-3.5" /> Lembrete em massa
+                          </button>
+                      )}
                       {activeSubTab === 'patients' && (
                           <button 
                               onClick={() => { setIsNewContractModalOpen(true); }}
@@ -3299,6 +3321,39 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
            </div>
         </div>
       </div>
+
+      {actionMenuPatient && actionMenuPosition && createPortal(
+          <>
+              <button type="button" aria-label="Fechar menu de ações" className="fixed inset-0 z-[110] cursor-default bg-transparent" onClick={() => { setOpenActionMenuId(null); setActionMenuPosition(null); }} />
+              <div role="menu" className="fixed z-[120] w-56 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-2xl" style={{ top: actionMenuPosition.top, right: actionMenuPosition.right }}>
+                  <button onClick={() => openWhatsAppComposer(actionMenuPatient)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"><MessageCircle className="h-4 w-4" />Enviar WhatsApp</button>
+                  <button onClick={() => { setWhatsAppHistoryPatient(actionMenuPatient); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-surface-high hover:text-text"><span className="flex items-center gap-2"><Clock className="h-4 w-4" />Histórico WhatsApp</span>{getWhatsAppHistory(actionMenuPatient).length > 0 && <span className="rounded-md bg-surface-high px-1.5 py-0.5 font-mono text-[9px]">{getWhatsAppHistory(actionMenuPatient).length}</span>}</button>
+                  <button onClick={() => { setEditingPatient(actionMenuPatient); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">edit</span>Editar paciente</button>
+                  <button onClick={() => { openNoteModal(actionMenuPatient); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">warning</span>{actionMenuPatient.problemNote ? 'Ver alerta' : 'Adicionar alerta'}</button>
+                  {actionMenuPatient.status === 'Active'
+                      ? <button onClick={() => { handleOpenFinishModal(actionMenuPatient.id); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">task_alt</span>Finalizar tratamento</button>
+                      : <button onClick={() => { void handleReactivate(actionMenuPatient.id); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-surface-high hover:text-text"><span className="material-symbols-outlined text-base">restart_alt</span>Reativar tratamento</button>}
+                  <button onClick={() => { handleDeletePatient(actionMenuPatient.id, actionMenuPatient.name); setOpenActionMenuId(null); setActionMenuPosition(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 className="h-3.5 w-3.5" />Excluir paciente</button>
+              </div>
+          </>,
+          document.body
+      )}
+
+      {paymentCalendarPatient && (() => {
+          const payment = getMonthlyPayment(paymentCalendarPatient, paymentMonth);
+          const selectedDate = payment?.paidAt ? new Date(`${payment.paidAt}T12:00:00`) : undefined;
+          return (
+              <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onMouseDown={() => setPaymentCalendarPatient(null)}>
+                  <section role="dialog" aria-modal="true" aria-label="Registrar pagamento mensal" className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl" onMouseDown={event => event.stopPropagation()}>
+                      <header className="flex items-start justify-between gap-3 border-b border-border px-4 py-3"><div><p className="text-[10px] font-semibold text-primary">Pagamento de {paymentMonth.split('-').reverse().join('/')}</p><h2 className="mt-1 truncate text-sm font-bold text-text">{paymentCalendarPatient.name}</h2></div><button type="button" onClick={() => setPaymentCalendarPatient(null)} className="rounded-lg p-2 text-slate-500 hover:bg-surface-high" aria-label="Fechar calendário"><X className="h-4 w-4" /></button></header>
+                      <div className="p-3"><DateCalendar mode="single" locale={ptBR} month={new Date(`${paymentMonth}-01T12:00:00`)} selected={selectedDate} onSelect={(date) => { if (date) void handleSetMonthlyPayment(paymentCalendarPatient, formatDateKey(date)); }} className="mx-auto rounded-xl bg-transparent p-1" /></div>
+                      <footer className="flex items-center justify-between border-t border-border bg-surface px-4 py-3"><p className="text-[10px] text-slate-500">Selecione o dia em que recebeu.</p>{payment?.paidAt && <button type="button" onClick={() => void handleSetMonthlyPayment(paymentCalendarPatient, null)} className="rounded-lg px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">Remover registro</button>}</footer>
+                  </section>
+              </div>
+          );
+      })()}
+
+      {isBulkReminderOpen && <OrthodonticsBulkReminder paymentMonth={paymentMonth} onClose={() => setIsBulkReminderOpen(false)} onSent={loadData} />}
 
       {whatsAppPatient && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={() => setWhatsAppPatient(null)}>

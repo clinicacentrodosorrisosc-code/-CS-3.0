@@ -115,8 +115,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
+    const themeTargets = [root, window.document.body, window.document.getElementById('root')].filter(Boolean) as HTMLElement[];
+    themeTargets.forEach(target => {
+      target.classList.remove('light', 'dark');
+      target.classList.add(theme);
+    });
     root.dataset.theme = theme;
     root.style.colorScheme = theme;
     try {
