@@ -753,6 +753,21 @@ export const Financial: React.FC<FinancialProps> = ({
       .map((name) => ({ id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`, name, daysToReceive: 0 })),
   ];
   const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+  const orthoMaintenanceIncomeDefaults = useMemo(() => {
+    const category =
+      incomeCategories.find((entry) =>
+        normalizePatientName(entry.name).includes("orto"),
+      ) || null;
+    const procedure =
+      category?.subcategories.find((entry) =>
+        normalizePatientName(entry.name).includes("manuten"),
+      ) || null;
+
+    return {
+      category: category?.name || "",
+      procedure: procedure?.name || "",
+    };
+  }, [incomeCategories]);
   const isSelectedOrthoMaintenancePayment = Boolean(
     selectedOrthoPatient &&
       shouldRegisterOrthoMaintenance &&
@@ -6335,7 +6350,14 @@ export const Financial: React.FC<FinancialProps> = ({
                                   key={patient.id}
                                   type="button"
                                   onClick={() => {
-                                    setFormData({ ...formData, description: patient.name });
+                                    setFormData((current) => ({
+                                      ...current,
+                                      description: patient.name,
+                                      category: orthoMaintenanceIncomeDefaults.category || current.category,
+                                      procedure: orthoMaintenanceIncomeDefaults.category
+                                        ? orthoMaintenanceIncomeDefaults.procedure
+                                        : current.procedure,
+                                    }));
                                     setSelectedOrthoPatient(patient);
                                     setShouldRegisterOrthoMaintenance(true);
                                     setPatientMatches([]);
@@ -6360,7 +6382,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             <span>
                               <strong className="block text-emerald-700 dark:text-emerald-400">Registrar pagamento de manutenção</strong>
                               {isSelectedOrthoMaintenancePayment
-                                ? `O pagamento será marcado para ${selectedOrthoPatient.name} na Ortodontia.`
+                                ? `O pagamento será marcado para ${selectedOrthoPatient.name} na Ortodontia. Categoria e procedimento foram preenchidos e podem ser alterados.`
                                 : "O registro só é feito para uma receita quitada, sem boleto pendente ou procedimentos divididos."}
                             </span>
                           </label>
