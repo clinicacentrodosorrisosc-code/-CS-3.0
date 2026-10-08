@@ -736,6 +736,8 @@ export const Financial: React.FC<FinancialProps> = ({
   );
   const [selectedOrthoPatient, setSelectedOrthoPatient] =
     useState<OrthoMaintenancePatient | null>(null);
+  const [shouldRegisterOrthoMaintenance, setShouldRegisterOrthoMaintenance] =
+    useState(false);
   const [isPatientSearchLoading, setIsPatientSearchLoading] = useState(false);
   const [patientSearchError, setPatientSearchError] = useState("");
   const isBoletoPayment =
@@ -753,13 +755,12 @@ export const Financial: React.FC<FinancialProps> = ({
   const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
   const isSelectedOrthoMaintenancePayment = Boolean(
     selectedOrthoPatient &&
+      shouldRegisterOrthoMaintenance &&
       modalType === "income" &&
       formData.status === "Paid" &&
       !isBoletoPayment &&
       !hasBoletoPaymentSplit &&
-      !isProcedureSplit &&
-      normalizePatientName(`${formData.category} ${formData.procedure}`).includes("orto") &&
-      normalizePatientName(`${formData.category} ${formData.procedure}`).includes("manuten"),
+      !isProcedureSplit,
   );
   const matchingOrthoMaintenancePatients = useMemo(() => {
     const query = normalizePatientName(orthoMaintenanceSearch);
@@ -1748,6 +1749,7 @@ export const Financial: React.FC<FinancialProps> = ({
     setModalType(type);
     setPatientMatches([]);
     setSelectedOrthoPatient(null);
+    setShouldRegisterOrthoMaintenance(false);
     setPatientSearchError("");
     setIsPaymentSplit(false);
     setPaymentSplits([]);
@@ -6312,11 +6314,11 @@ export const Financial: React.FC<FinancialProps> = ({
                               {
                                 const description = e.target.value;
                                 setFormData({ ...formData, description });
-                                setSelectedOrthoPatient((current) =>
-                                  current && normalizePatientName(current.name) === normalizePatientName(description)
-                                    ? current
-                                    : null,
-                                );
+                                const keepsSelectedPatient =
+                                  selectedOrthoPatient &&
+                                  normalizePatientName(selectedOrthoPatient.name) === normalizePatientName(description);
+                                setSelectedOrthoPatient(keepsSelectedPatient ? selectedOrthoPatient : null);
+                                if (!keepsSelectedPatient) setShouldRegisterOrthoMaintenance(false);
                               }
                             }
                             autoComplete="off"
@@ -6335,6 +6337,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                   onClick={() => {
                                     setFormData({ ...formData, description: patient.name });
                                     setSelectedOrthoPatient(patient);
+                                    setShouldRegisterOrthoMaintenance(true);
                                     setPatientMatches([]);
                                   }}
                                   className="flex w-full flex-col px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
@@ -6347,11 +6350,20 @@ export const Financial: React.FC<FinancialProps> = ({
                           )}
                         </div>
                         {selectedOrthoPatient ? (
-                          <p className={`text-[10px] ${isSelectedOrthoMaintenancePayment ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
-                            {isSelectedOrthoMaintenancePayment
-                              ? "Pagamento de manutenção será registrado também na Ortodontia."
-                              : "Paciente ativo de ortodontia selecionado. Selecione Ortodontia e Manutenção para registrar o pagamento."}
-                          </p>
+                          <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-[11px] text-text">
+                            <input
+                              type="checkbox"
+                              checked={shouldRegisterOrthoMaintenance}
+                              onChange={(event) => setShouldRegisterOrthoMaintenance(event.target.checked)}
+                              className="mt-0.5 size-3.5 rounded border-emerald-500/40 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <span>
+                              <strong className="block text-emerald-700 dark:text-emerald-400">Registrar pagamento de manutenção</strong>
+                              {isSelectedOrthoMaintenancePayment
+                                ? `O pagamento será marcado para ${selectedOrthoPatient.name} na Ortodontia.`
+                                : "O registro só é feito para uma receita quitada, sem boleto pendente ou procedimentos divididos."}
+                            </span>
+                          </label>
                         ) : (
                           <p className="text-[10px] text-slate-500">A busca mostra somente pacientes ativos de ortodontia.</p>
                         )}
