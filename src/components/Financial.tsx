@@ -673,6 +673,7 @@ export const Financial: React.FC<FinancialProps> = ({
   const [activeAuditMenuId, setActiveAuditMenuId] = useState<string | null>(
     null,
   );
+  const [expandedIncomeGroups, setExpandedIncomeGroups] = useState<string[]>([]);
 
   const [expFilters, setExpFilters] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -1356,6 +1357,7 @@ export const Financial: React.FC<FinancialProps> = ({
           const paymentAmountInCents = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
             ? Math.floor(originalPaymentAmountInCents / recurrenceCount) + (i === recurrenceCount - 1 ? originalPaymentAmountInCents % recurrenceCount : 0)
             : originalPaymentAmountInCents;
+          const paymentDate = paymentIsBoleto ? currentTxDate : baseDate;
           let remainingPaymentCents = paymentAmountInCents;
           procedureEntries.forEach((procedureEntry, procedureIndex) => {
             const allocatedInCents = procedureIndex === procedureEntries.length - 1
@@ -1373,7 +1375,7 @@ export const Financial: React.FC<FinancialProps> = ({
               amount: allocatedInCents / 100,
               category: procedureEntry.category,
               procedure: procedureEntry.procedure,
-              date: currentTxDate.toISOString().split("T")[0],
+              date: paymentDate.toISOString().split("T")[0],
               type: modalType,
               status: isBoletoInstallmentSale || paymentIsBoleto ? "Pending" : formData.status,
               payment_method: paymentEntry.paymentMethod,
@@ -1387,7 +1389,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 ? null
                 : currentSettlementDate ||
                   (formData.status === "Paid"
-                    ? currentTxDate.toISOString().split("T")[0]
+                    ? paymentDate.toISOString().split("T")[0]
                     : null),
               supplier: formData.supplier,
               sales_team:
@@ -2464,6 +2466,16 @@ export const Financial: React.FC<FinancialProps> = ({
         return matches;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
+    const groupedFiltered = Array.from(
+      filtered.reduce((groups, transaction) => {
+        const key = `${transaction.date}|${transaction.description}|${transaction.paymentMethod}`;
+        const group = groups.get(key) || [];
+        group.push(transaction);
+        groups.set(key, group);
+        return groups;
+      }, new Map<string, LocalTransaction[]>()),
+      ([key, items]) => ({ key, items }),
+    );
     const totalRevenue = filtered.reduce((acc, curr) => acc + curr.amount, 0);
     const selectedIncomesSum = filtered
       .filter((t) => selectedIncomes.includes(t.id))
@@ -2945,7 +2957,10 @@ export const Financial: React.FC<FinancialProps> = ({
                     </tr>
                   </thead>
                   <tbody className="text-xs text-slate-300 divide-y divide-white/5">
-                    {filtered.map((tx) => {
+                    {groupedFiltered.map(({ key: groupKey, items }) => {
+                      const tx = items[0];
+                      const hasMultipleProcedures = items.length > 1;
+                      const isExpanded = expandedIncomeGroups.includes(groupKey);
                       const isSelected = selectedIncomes.includes(tx.id);
                       return (
                         <tr
@@ -2991,6 +3006,17 @@ export const Financial: React.FC<FinancialProps> = ({
                               <div className="flex flex-col">
                                 <span className="font-medium text-text">{tx.category}</span>
                                 {tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}
+                                {hasMultipleProcedures && (
+                                  <button type="button" onClick={() => setExpandedIncomeGroups((current) => current.includes(groupKey) ? current.filter((key) => key !== groupKey) : [...current, groupKey])} className="mt-2 inline-flex w-fit items-center gap-1 text-[10px] font-bold text-[var(--primary)] hover:underline">
+                                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                    {isExpanded ? "Ocultar procedimentos" : `Ver ${items.length} procedimentos`}
+                                  </button>
+                                )}
+                                {hasMultipleProcedures && isExpanded && (
+                                  <div className="mt-2 space-y-1 rounded-lg border border-border bg-panel/60 p-2 text-[10px] text-slate-400">
+                                    {items.map((item) => <div key={item.id}><span className="font-semibold text-text">{item.category}</span>{item.procedure ? ` - ${item.procedure}` : ""}<span className="text-slate-500"> · {item.professional || "Sem profissional"}</span></div>)}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <SelectMenu
@@ -3004,7 +3030,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             )}
                           </td>
                           <td className="p-4 text-slate-400">
-                            {tx.professional ? tx.professional : (
+                            {hasMultipleProcedures ? "Vários profissionais" : tx.professional ? tx.professional : (
                               <SelectMenu
                                 value=""
                                 onChange={(value) => void updateIncomeClassification(tx.id, 'professional', value)}
@@ -3041,7 +3067,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           </td>
                           <td className="p-4 text-right font-bold text-emerald-400">
                             R${" "}
-                            {tx.amount.toLocaleString("pt-BR", {
+                            {items.reduce((total, item) => total + item.amount, 0).toLocaleString("pt-BR", {
                               minimumFractionDigits: 2,
                             })}
                           </td>
