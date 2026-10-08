@@ -1357,7 +1357,12 @@ export const Financial: React.FC<FinancialProps> = ({
           const paymentAmountInCents = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
             ? Math.floor(originalPaymentAmountInCents / recurrenceCount) + (i === recurrenceCount - 1 ? originalPaymentAmountInCents % recurrenceCount : 0)
             : originalPaymentAmountInCents;
-          const paymentDate = paymentIsBoleto ? currentTxDate : baseDate;
+          const paymentDate = paymentIsBoleto ? currentTxDate : modalType === "income" ? baseDate : currentTxDate;
+          const entryInstallmentDescription = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
+            ? `${formData.description} (${i + 1}/${recurrenceCount}) - ${paymentEntry.paymentMethod}`
+            : isPaymentSplit
+              ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
+              : installmentDescription;
           let remainingPaymentCents = paymentAmountInCents;
           procedureEntries.forEach((procedureEntry, procedureIndex) => {
             const allocatedInCents = procedureIndex === procedureEntries.length - 1
@@ -1369,9 +1374,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 i === 0 && paymentIndex === 0 && procedureIndex === 0 && formData.id
                   ? formData.id
                   : "tx_" + safeGenerateId(),
-              description: isPaymentSplit
-                ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
-                : installmentDescription,
+              description: entryInstallmentDescription,
               amount: allocatedInCents / 100,
               category: procedureEntry.category,
               procedure: procedureEntry.procedure,
@@ -2998,6 +3001,12 @@ export const Financial: React.FC<FinancialProps> = ({
                               )}
                               {tx.externalId && (
                                 <RefreshCw className="w-3 h-3 text-blue-400" />
+                              )}
+                              {hasMultipleProcedures && (
+                                <button type="button" onClick={() => setExpandedIncomeGroups((current) => current.includes(groupKey) ? current.filter((key) => key !== groupKey) : [...current, groupKey])} className="inline-flex items-center gap-1 rounded-md border border-[var(--primary-border)] bg-[var(--primary-dim)] px-2 py-1 text-[10px] font-bold text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white">
+                                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  {isExpanded ? "Fechar detalhes" : `${items.length} procedimentos`}
+                                </button>
                               )}
                             </div>
                           </td>
