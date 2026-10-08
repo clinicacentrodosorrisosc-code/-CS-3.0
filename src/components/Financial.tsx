@@ -148,6 +148,12 @@ interface LocalTransaction extends Transaction {
   isPartial?: boolean;
 }
 
+interface PaymentSplit {
+  id: string;
+  paymentMethod: string;
+  amount: string;
+}
+
 const COLORS = [
   "#2563EB",
   "#60A5FA",
@@ -693,6 +699,8 @@ export const Financial: React.FC<FinancialProps> = ({
     salesTeam: "",
     recurrence: 1,
   });
+  const [isPaymentSplit, setIsPaymentSplit] = useState(false);
+  const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
   const [patientMatches, setPatientMatches] = useState<ClinicaExpertsPatient[]>(
     [],
   );
@@ -1166,11 +1174,34 @@ export const Financial: React.FC<FinancialProps> = ({
         return toast.error("Informe um valor válido maior que zero.");
       if (modalType === "expense" && !formData.accountId)
         return toast.error("Selecione a conta de destino/origem.");
-      if (!formData.paymentMethod)
+      if (!isPaymentSplit && !formData.paymentMethod)
         return toast.error("Selecione a forma de pagamento.");
 
+      const normalizedPaymentSplits = isPaymentSplit
+        ? paymentSplits.map((split) => ({
+            ...split,
+            amountInCents: Math.round(
+              parseFloat((split.amount || "0").replace(",", ".")) * 100,
+            ),
+          }))
+        : [];
+      if (isPaymentSplit) {
+        if (formData.status !== "Paid")
+          return toast.error("O pagamento dividido só pode ser usado para lançamentos recebidos.");
+        if (normalizedPaymentSplits.length < 2)
+          return toast.error("Adicione ao menos duas formas de pagamento.");
+        if (normalizedPaymentSplits.some((split) => !split.paymentMethod || split.amountInCents <= 0))
+          return toast.error("Informe a forma e o valor de cada pagamento.");
+        const splitTotalInCents = normalizedPaymentSplits.reduce(
+          (total, split) => total + split.amountInCents,
+          0,
+        );
+        if (splitTotalInCents !== Math.round(amountVal * 100))
+          return toast.error("A soma das formas de pagamento deve ser igual ao valor total.");
+      }
+
       if (modalType === "income") {
-        if (!formData.professional)
+        if (!formData.professional && formData.category !== "Excalibur")
           return toast.error("Selecione o profissional responsável.");
 
       }
@@ -1198,12 +1229,18 @@ export const Financial: React.FC<FinancialProps> = ({
       const recurrenceCount =
         modalType === "expense" && !formData.id
           ? formData.recurrence || 1
-          : isBoletoInstallmentSale
+          : isBoletoInstallmentSale && !isPaymentSplit
             ? formData.installments
             : 1;
       const totalInCents = Math.round(amountVal * 100);
       const installmentBaseInCents = Math.floor(totalInCents / recurrenceCount);
       const installmentRemainderInCents = totalInCents % recurrenceCount;
+      const paymentEntries = isPaymentSplit
+        ? normalizedPaymentSplits.map((split) => ({
+            paymentMethod: split.paymentMethod,
+            amount: split.amountInCents / 100,
+          }))
+        : [{ paymentMethod: formData.paymentMethod, amount: amountVal }];
 
       for (let i = 0; i < recurrenceCount; i++) {
         const currentTxDate = new Date(baseDate);
@@ -1231,27 +1268,37 @@ export const Financial: React.FC<FinancialProps> = ({
             ? `${formData.description} (${i + 1}/${recurrenceCount})`
             : formData.description;
 
-        transactionsToInsert.push({
-          id: i === 0 && formData.id ? formData.id : "tx_" + safeGenerateId(),
-          description: installmentDescription,
-          amount: installmentAmount,
-          category: formData.category,
-          procedure: formData.procedure,
-          date: currentTxDate.toISOString().split("T")[0],
-          type: modalType,
-          status: isBoletoInstallmentSale ? "Pending" : formData.status,
-          payment_method: formData.paymentMethod,
-          account_id: formData.accountId || null,
-          professional: formData.professional,
-          installments: formData.installments,
-          observation: formData.observation,
-          is_partial: formData.isPartial,
-          card_brand: formData.cardBrand || null,
-          settlement_date: isBoletoInstallmentSale
-            ? null
-            : currentSettlementDate || null,
-          supplier: formData.supplier,
-          sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
+        paymentEntries.forEach((paymentEntry, paymentIndex) => {
+          transactionsToInsert.push({
+            id:
+              i === 0 && paymentIndex === 0 && formData.id
+                ? formData.id
+                : "tx_" + safeGenerateId(),
+            description: isPaymentSplit
+              ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
+              : installmentDescription,
+            amount: isPaymentSplit ? paymentEntry.amount : installmentAmount,
+            category: formData.category,
+            procedure: formData.procedure,
+            date: currentTxDate.toISOString().split("T")[0],
+            type: modalType,
+            status: isBoletoInstallmentSale ? "Pending" : formData.status,
+            payment_method: paymentEntry.paymentMethod,
+            account_id: formData.accountId || null,
+            professional: formData.professional,
+            installments: isPaymentSplit ? 1 : formData.installments,
+            observation: formData.observation,
+            is_partial: formData.isPartial,
+            card_brand: formData.cardBrand || null,
+            settlement_date: isBoletoInstallmentSale
+              ? null
+              : currentSettlementDate ||
+                (formData.status === "Paid"
+                  ? currentTxDate.toISOString().split("T")[0]
+                  : null),
+            supplier: formData.supplier,
+            sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
+          });
         });
       }
 
@@ -1529,6 +1576,8 @@ export const Financial: React.FC<FinancialProps> = ({
     setModalType(type);
     setPatientMatches([]);
     setPatientSearchError("");
+    setIsPaymentSplit(false);
+    setPaymentSplits([]);
     if (editData) {
       setFormData({
         id: editData.id,
@@ -1708,6 +1757,37 @@ export const Financial: React.FC<FinancialProps> = ({
       status: isBoleto ? "Pending" : prev.status,
       settlementDate: isBoleto ? "" : prev.settlementDate,
     }));
+  };
+
+  const createPaymentSplit = (paymentMethod = paymentMethods[0]?.name || "Dinheiro"): PaymentSplit => ({
+    id: `split_${safeGenerateId()}`,
+    paymentMethod,
+    amount: "",
+  });
+
+  const togglePaymentSplit = () => {
+    setIsPaymentSplit((current) => {
+      const next = !current;
+      if (next) {
+        setPaymentSplits([
+          {
+            id: `split_${safeGenerateId()}`,
+            paymentMethod: formData.paymentMethod || paymentMethods[0]?.name || "Dinheiro",
+            amount: formData.amount,
+          },
+          createPaymentSplit(),
+        ]);
+      } else {
+        setPaymentSplits([]);
+      }
+      return next;
+    });
+  };
+
+  const updatePaymentSplit = (id: string, field: keyof Omit<PaymentSplit, "id">, value: string) => {
+    setPaymentSplits((current) => current.map((split) => (
+      split.id === id ? { ...split, [field]: value } : split
+    )));
   };
 
   const getEffectiveFee = (tx: LocalTransaction) => {
@@ -5856,7 +5936,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          {isBoletoPayment ? "PRIMEIRO VENCIMENTO" : "DATA"}
+                          {isBoletoPayment ? "PRIMEIRO VENCIMENTO" : "DATA DE RECEBIMENTO"}
                         </label>
                         <input
                           type="date"
@@ -5984,7 +6064,9 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          PROFISSIONAL
+                          {formData.category === "Excalibur"
+                            ? "PROFISSIONAL (OPCIONAL)"
+                            : "PROFISSIONAL"}
                         </label>
                         <select
                           value={formData.professional}
@@ -6047,16 +6129,17 @@ export const Financial: React.FC<FinancialProps> = ({
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
+                    <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          FORMA PAGTO
+                          FORMA DE PAGAMENTO
                         </label>
                         <select
                           value={formData.paymentMethod}
                           onChange={(e) =>
                             handlePaymentMethodChange(e.target.value)
                           }
+                          disabled={isPaymentSplit}
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
                         >
                           {paymentMethods.map((pm) => (
@@ -6065,25 +6148,46 @@ export const Financial: React.FC<FinancialProps> = ({
                             </option>
                           ))}
                         </select>
+                        {modalType === "income" &&
+                          formData.status === "Paid" &&
+                          !formData.id && (
+                            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-panel/60 px-4 py-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-text">Dividir entre formas de pagamento</p>
+                                <p className="mt-0.5 text-[11px] text-slate-500">Ex.: R$ 200 no Pix e R$ 300 em Dinheiro.</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={togglePaymentSplit}
+                                className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition-colors ${isPaymentSplit ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border bg-surface text-slate-600 hover:bg-surface-high hover:text-text"}`}
+                              >
+                                {isPaymentSplit ? "Pagamento dividido" : "Dividir pagamento"}
+                              </button>
+                            </div>
+                          )}
+                        {isPaymentSplit && (
+                          <div className="mt-3 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] p-3">
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-[11px] font-bold text-[var(--primary)]">FORMAS DE PAGAMENTO</p>
+                              <p className="text-[11px] text-[var(--text-secondary)]">Total informado: R$ {paymentSplits.reduce((total, split) => total + (parseFloat((split.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</p>
+                            </div>
+                            <div className="space-y-2">
+                              {paymentSplits.map((split, index) => (
+                                <div key={split.id} className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-center gap-2">
+                                  <select value={split.paymentMethod} onChange={(e) => updatePaymentSplit(split.id, "paymentMethod", e.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">
+                                    {paymentMethods.filter((pm) => !pm.name.toLocaleLowerCase("pt-BR").includes("boleto")).map((pm) => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
+                                  </select>
+                                  <input type="number" min="0" step="0.01" value={split.amount} onChange={(e) => updatePaymentSplit(split.id, "amount", e.target.value)} placeholder="0,00" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-right text-xs font-bold text-text outline-none" />
+                                  <button type="button" onClick={() => setPaymentSplits((current) => current.length > 2 ? current.filter((item) => item.id !== split.id) : current)} disabled={paymentSplits.length <= 2} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={`Remover forma de pagamento ${index + 1}`}>
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setPaymentSplits((current) => [...current, createPaymentSplit()])} className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline">+ Adicionar outra forma</button>
+                          </div>
+                        )}
                       </div>
-                      {formData.status === "Paid" && (
-                        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-left-2">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            DATA DO RECEBIMENTO
-                          </label>
-                          <input
-                            type="date"
-                            value={formData.settlementDate}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                settlementDate: e.target.value,
-                              })
-                            }
-                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
-                          />
-                        </div>
-                      )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">

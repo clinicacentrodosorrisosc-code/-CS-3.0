@@ -108,6 +108,13 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
 html { scroll-behavior: smooth; }
 
 @media (min-width: 1024px) {
@@ -2158,6 +2165,15 @@ html.dark #root {
   min-height: 40px !important;
   background: var(--surface) !important;
   box-shadow: none !important;
+}
+
+/* Keep the workspace anchored to the viewport edge, including on displays
+   with dynamic browser chrome, so no unused strip appears above the app. */
+#root > .ce-app {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
 }
 
 .ce-app .module-command-bar {

@@ -13,7 +13,7 @@ import { OrthodonticsCalendar } from './OrthodonticsCalendar';
 import { OrthodonticsBulkReminder } from './OrthodonticsBulkReminder';
 import { Calendar as DateCalendar } from './base-ui/calendar';
 import { MultiSelectMenu, type SelectMenuOption } from './ui/select-menu';
-import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter, MessageCircle } from 'lucide-react';
+import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter, MessageCircle, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
 
@@ -63,6 +63,7 @@ interface OrthoWhatsAppHistoryEntry {
   status: 'opened' | 'sent';
   openedAt: string;
   sentAt?: string;
+  paymentMonth?: string | null;
 }
 
 const isOrthoDay = (date: Date) => {
@@ -106,6 +107,14 @@ const normalizeWhatsAppPhone = (value: string) => {
     if (!digits) return '';
     if (digits.startsWith('55')) return digits;
     return digits.length === 10 || digits.length === 11 ? `55${digits}` : digits;
+};
+
+const formatWhatsAppPhone = (value?: string) => {
+    const digits = normalizeWhatsAppPhone(value || '');
+    const local = digits.startsWith('55') ? digits.slice(2) : digits;
+    if (local.length === 11) return `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}`;
+    if (local.length === 10) return `(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+    return value || '';
 };
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', {
@@ -739,6 +748,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const handleSaveEditedPatient = async () => {
       if (!editingPatient) return;
       try {
+          const normalizedPhone = normalizeWhatsAppPhone(editingPatient.whatsappPhone || '');
+          if (editingPatient.whatsappPhone?.trim() && (normalizedPhone.length < 12 || normalizedPhone.length > 13)) {
+              toast.error('Informe um telefone válido com DDD para os lembretes de WhatsApp.');
+              return;
+          }
           const nowStr = new Date().toISOString().split('T')[0];
           const isSigned = Boolean(editingPatient.aditivoSigned);
           const isDueDateChanged = Boolean(editingPatient.dueDateChanged);
@@ -753,7 +767,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               __due_date_changed: isDueDateChanged,
               __due_date_changed_at: isDueDateChanged ? (editingPatient.dueDateChangedAt || nowStr) : null,
               __due_day: editingPatient.dueDay || null,
-              __due_date_notes: editingPatient.dueDateNotes || null
+              __due_date_notes: editingPatient.dueDateNotes || null,
+              __whatsapp_phone: normalizedPhone || null
           };
 
           const { error } = await supabase.from('ortho_patients').update({
@@ -767,7 +782,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           }).eq('id', editingPatient.id);
 
           if (!error) {
-              setPatients(prev => prev.map(p => p.id === editingPatient.id ? { ...editingPatient, attendance: updatedAttendance } : p));
+              setPatients(prev => prev.map(p => p.id === editingPatient.id ? { ...editingPatient, whatsappPhone: normalizedPhone || undefined, attendance: updatedAttendance } : p));
               notifyDataChange('ortho_patients');
               toast.success('Informações do paciente atualizadas com sucesso!');
               setEditingPatient(null);
@@ -1059,19 +1074,26 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return parts.length > 0 ? parts.join(' ') : '0d';
   };
 
-  function hasTreatmentOverOneYear(patient: OrthoPatient) {
+  function hasTreatmentOverOneYear(patient: OrthoPatient, referenceMonth = paymentMonth) {
       if (patient.status !== 'Active' || !patient.startDate) return false;
 
       const startDate = new Date(`${patient.startDate}T00:00:00`);
       if (Number.isNaN(startDate.getTime())) return false;
 
-      const today = new Date();
-      let completedMonths = (today.getFullYear() - startDate.getFullYear()) * 12
-          + today.getMonth() - startDate.getMonth();
+      const referenceDate = new Date(`${referenceMonth}-01T12:00:00`);
+      referenceDate.setMonth(referenceDate.getMonth() + 1, 0);
+      let completedMonths = (referenceDate.getFullYear() - startDate.getFullYear()) * 12
+          + referenceDate.getMonth() - startDate.getMonth();
 
-      if (today.getDate() < startDate.getDate()) completedMonths--;
+      if (referenceDate.getDate() < startDate.getDate()) completedMonths--;
 
       return completedMonths >= 12;
+  }
+
+  function getWhatsAppHistoryForMonth(patient: OrthoPatient, month: string) {
+      return getWhatsAppHistory(patient)
+          .filter(entry => entry.paymentMonth === month || (!entry.paymentMonth && (entry.sentAt || entry.openedAt || '').startsWith(month)))
+          .sort((a, b) => new Date(b.sentAt || b.openedAt).getTime() - new Date(a.sentAt || a.openedAt).getTime());
   }
 
   function getMonthlyPayment(patient: OrthoPatient, month: string) {
@@ -1208,7 +1230,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           message: whatsAppMessage.trim(),
           amount: whatsAppPatient.maintenanceValue,
           status: 'opened',
-          openedAt: new Date().toISOString()
+          openedAt: new Date().toISOString(),
+          paymentMonth
       };
       const updatedAttendance = {
           ...whatsAppPatient.attendance,
@@ -2503,7 +2526,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 className="min-w-56"
               />
               <label className="flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-1.5 text-xs font-semibold text-slate-400">
-                {'M\u00eas do pagamento'}
+                {'Competência de pagamento e lembretes'}
                 <input type="month" value={paymentMonth} onChange={(event) => setPaymentMonth(event.target.value)} className="bg-transparent text-sm text-text outline-none" />
               </label>
               <div className="ml-auto inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--primary-border)] bg-[var(--primary-dim)] px-3 text-xs text-[var(--text-secondary)]" aria-live="polite">
@@ -2717,7 +2740,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       {filteredPatients.map((p) => {
                           const hasProblem = p.problemNote && p.problemNote.trim().length > 0;
                           const hasLongTreatment = hasTreatmentOverOneYear(p);
-                          const latestWhatsApp = getWhatsAppHistory(p)[0];
+                          const latestWhatsApp = getWhatsAppHistoryForMonth(p, paymentMonth)[0];
                           const monthlyPayment = getMonthlyPayment(p, paymentMonth);
                           const isMonthlyPaymentPaid = Boolean(monthlyPayment?.paidAt);
                           const isSavingPayment = savingPaymentPatientId === p.id;
@@ -2729,6 +2752,12 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             >
                                 <td className="p-5 font-bold text-text relative">
                                     {p.name}
+                                    {p.whatsappPhone && (
+                                        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                                            <Phone className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                            {formatWhatsAppPhone(p.whatsappPhone)}
+                                        </div>
+                                    )}
                                     {hasProblem && (
                                         <span className="ml-2 inline-flex items-center justify-center bg-red-500 text-text text-[9px] px-1.5 rounded-full" title="Problema Relatado">!</span>
                                     )}
@@ -2913,8 +2942,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </tbody>
               </table>
               {filteredPatients.length === 0 && (
-                  <div className="p-8 text-center text-slate-500">
-                      Nenhum paciente encontrado.
+                  <div className="empty-state">
+                      <p className="font-semibold text-[var(--text)]">Nenhum paciente encontrado.</p>
+                      <p className="text-xs">Ajuste os filtros ou cadastre um novo paciente para continuar.</p>
                   </div>
               )}
           </div>
@@ -4002,26 +4032,52 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
     </div>
       {/* Edit Patient Modal */}
       {editingPatient && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-              <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                  <div className="p-6 border-b border-border bg-panel flex justify-between items-center">
+          <div className="fixed inset-0 z-[160] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm animate-in fade-in duration-200 sm:items-center sm:p-4">
+              <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-border bg-surface shadow-2xl sm:rounded-3xl">
+                  <div className="flex items-center justify-between border-b border-border bg-surface-high px-5 py-4 sm:px-6">
                       <h3 className="text-lg font-bold text-text font-display flex items-center gap-2">
-                          <span className="material-symbols-outlined text-purple-400">edit</span>
+                          <span className="grid size-9 place-items-center rounded-xl bg-[var(--primary-dim)] text-[var(--primary)] material-symbols-outlined">edit</span>
                           Editar Paciente Ortodôntico
                       </h3>
-                      <button onClick={() => setEditingPatient(null)} className="text-slate-400 hover:text-text">
+                      <button type="button" onClick={() => setEditingPatient(null)} className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-panel hover:text-text" aria-label="Fechar edição do paciente">
                           <span className="material-symbols-outlined">close</span>
                       </button>
                   </div>
-                  <div className="p-6 flex flex-col gap-4">
-                      <div className="flex flex-col gap-2">
+                  <div className="custom-scrollbar overflow-y-auto p-5 sm:p-6">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--primary-border)] bg-[var(--primary-dim)] px-4 py-3">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">Cadastro e lembretes</p>
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">O telefone salvo aqui será usado nos lembretes em massa de WhatsApp.</p>
+                        </div>
+                        <span className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold ${editingPatient.status === 'Active' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-border bg-surface text-slate-500'}`}>{editingPatient.status === 'Active' ? 'Em tratamento' : editingPatient.status === 'Finished' ? 'Finalizado' : 'Suspenso'}</span>
+                    </div>
+                    <div className="flex flex-col gap-5">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="flex flex-col gap-2">
                           <label className="text-xs font-bold text-slate-400 uppercase">Nome do Paciente</label>
                           <input 
                               type="text"
                               value={editingPatient.name}
                               onChange={(e) => setEditingPatient({ ...editingPatient, name: e.target.value })}
-                              className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none focus:border-purple-500"
+                              className="bg-panel border border-border rounded-xl px-4 py-3 text-text font-bold outline-none transition-colors focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-dim)]"
                           />
+                      </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs font-bold uppercase text-slate-400">Telefone para lembretes</label>
+                            <div className="relative">
+                                <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600 dark:text-emerald-400" />
+                                <input
+                                    type="tel"
+                                    inputMode="tel"
+                                    autoComplete="tel"
+                                    value={editingPatient.whatsappPhone || ''}
+                                    onChange={(e) => setEditingPatient({ ...editingPatient, whatsappPhone: e.target.value })}
+                                    placeholder="(11) 99999-9999"
+                                    className="w-full rounded-xl border border-border bg-panel py-3 pl-10 pr-4 text-text outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-500">Com DDD. Este número fica disponível para os lembretes em massa.</p>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4175,6 +4231,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-purple-500 h-24 resize-none text-xs"
                           />
                       </div>
+                  </div>
                   </div>
                   <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end gap-3">
                       <button onClick={() => setEditingPatient(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
