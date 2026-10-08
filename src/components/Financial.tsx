@@ -118,7 +118,6 @@ interface PaymentMethod {
   id: string;
   name: string;
   daysToReceive: number;
-  defaultAccountId?: string;
 }
 
 interface CardFeeConfig {
@@ -151,6 +150,13 @@ interface LocalTransaction extends Transaction {
 interface PaymentSplit {
   id: string;
   paymentMethod: string;
+  amount: string;
+}
+
+interface ProcedureSplit {
+  id: string;
+  category: string;
+  procedure: string;
   amount: string;
 }
 
@@ -701,6 +707,8 @@ export const Financial: React.FC<FinancialProps> = ({
   });
   const [isPaymentSplit, setIsPaymentSplit] = useState(false);
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
+  const [isProcedureSplit, setIsProcedureSplit] = useState(false);
+  const [procedureSplits, setProcedureSplits] = useState<ProcedureSplit[]>([]);
   const [patientMatches, setPatientMatches] = useState<ClinicaExpertsPatient[]>(
     [],
   );
@@ -1063,7 +1071,6 @@ export const Financial: React.FC<FinancialProps> = ({
             id: p.id,
             name: p.name,
             daysToReceive: p.days_to_receive,
-            defaultAccountId: p.default_account_id,
           })),
         );
       const { data: fees } = await supabase.from("card_fees").select("*");
@@ -1164,6 +1171,7 @@ export const Financial: React.FC<FinancialProps> = ({
       const allowsIncomeWithoutSubcategory =
         modalType === "income" && formData.category === "Excalibur";
       if (
+        !isProcedureSplit &&
         hasSubcategories &&
         !allowsIncomeWithoutSubcategory &&
         !formData.procedure
@@ -1200,8 +1208,37 @@ export const Financial: React.FC<FinancialProps> = ({
           return toast.error("A soma das formas de pagamento deve ser igual ao valor total.");
       }
 
+      const normalizedProcedureSplits = isProcedureSplit
+        ? procedureSplits.map((item) => ({
+            ...item,
+            amountInCents: Math.round(
+              parseFloat((item.amount || "0").replace(",", ".")) * 100,
+            ),
+          }))
+        : [];
+      if (isProcedureSplit) {
+        if (normalizedProcedureSplits.length < 2)
+          return toast.error("Adicione ao menos dois procedimentos.");
+        const hasInvalidProcedure = normalizedProcedureSplits.some((item) => {
+          const category = incomeCategories.find((entry) => entry.name === item.category);
+          const procedureIsRequired = !!category?.subcategories?.length && item.category !== "Excalibur";
+          return !item.category || (procedureIsRequired && !item.procedure) || item.amountInCents <= 0;
+        });
+        if (hasInvalidProcedure)
+          return toast.error("Informe categoria, procedimento e valor de cada item.");
+        const proceduresTotalInCents = normalizedProcedureSplits.reduce(
+          (total, item) => total + item.amountInCents,
+          0,
+        );
+        if (proceduresTotalInCents !== Math.round(amountVal * 100))
+          return toast.error("A soma dos procedimentos deve ser igual ao valor total.");
+      }
+
       if (modalType === "income") {
-        if (!formData.professional && formData.category !== "Excalibur")
+        const hasOnlyExcaliburProcedures = isProcedureSplit
+          ? normalizedProcedureSplits.every((item) => item.category === "Excalibur")
+          : formData.category === "Excalibur";
+        if (!formData.professional && !hasOnlyExcaliburProcedures)
           return toast.error("Selecione o profissional responsável.");
 
       }
@@ -1241,6 +1278,17 @@ export const Financial: React.FC<FinancialProps> = ({
             amount: split.amountInCents / 100,
           }))
         : [{ paymentMethod: formData.paymentMethod, amount: amountVal }];
+      const procedureEntries = isProcedureSplit
+        ? normalizedProcedureSplits.map((item) => ({
+            category: item.category,
+            procedure: item.procedure,
+            amountInCents: item.amountInCents,
+          }))
+        : [{
+            category: formData.category,
+            procedure: formData.procedure,
+            amountInCents: totalInCents,
+          }];
 
       for (let i = 0; i < recurrenceCount; i++) {
         const currentTxDate = new Date(baseDate);
@@ -1268,36 +1316,51 @@ export const Financial: React.FC<FinancialProps> = ({
             ? `${formData.description} (${i + 1}/${recurrenceCount})`
             : formData.description;
 
-        paymentEntries.forEach((paymentEntry, paymentIndex) => {
-          transactionsToInsert.push({
-            id:
-              i === 0 && paymentIndex === 0 && formData.id
-                ? formData.id
-                : "tx_" + safeGenerateId(),
-            description: isPaymentSplit
-              ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
-              : installmentDescription,
-            amount: isPaymentSplit ? paymentEntry.amount : installmentAmount,
-            category: formData.category,
-            procedure: formData.procedure,
-            date: currentTxDate.toISOString().split("T")[0],
-            type: modalType,
-            status: isBoletoInstallmentSale ? "Pending" : formData.status,
-            payment_method: paymentEntry.paymentMethod,
-            account_id: formData.accountId || null,
-            professional: formData.professional,
-            installments: isPaymentSplit ? 1 : formData.installments,
-            observation: formData.observation,
-            is_partial: formData.isPartial,
-            card_brand: formData.cardBrand || null,
-            settlement_date: isBoletoInstallmentSale
-              ? null
-              : currentSettlementDate ||
-                (formData.status === "Paid"
-                  ? currentTxDate.toISOString().split("T")[0]
-                  : null),
-            supplier: formData.supplier,
-            sales_team: isRestrictedProcedure ? "" : formData.salesTeam,
+        const currentPaymentEntries = isBoletoInstallmentSale
+          ? [{ paymentMethod: formData.paymentMethod, amount: installmentAmount }]
+          : paymentEntries;
+        currentPaymentEntries.forEach((paymentEntry, paymentIndex) => {
+          const paymentAmountInCents = Math.round(paymentEntry.amount * 100);
+          let remainingPaymentCents = paymentAmountInCents;
+          procedureEntries.forEach((procedureEntry, procedureIndex) => {
+            const allocatedInCents = procedureIndex === procedureEntries.length - 1
+              ? remainingPaymentCents
+              : Math.floor((paymentAmountInCents * procedureEntry.amountInCents) / totalInCents);
+            remainingPaymentCents -= allocatedInCents;
+            transactionsToInsert.push({
+              id:
+                i === 0 && paymentIndex === 0 && procedureIndex === 0 && formData.id
+                  ? formData.id
+                  : "tx_" + safeGenerateId(),
+              description: isPaymentSplit
+                ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
+                : installmentDescription,
+              amount: allocatedInCents / 100,
+              category: procedureEntry.category,
+              procedure: procedureEntry.procedure,
+              date: currentTxDate.toISOString().split("T")[0],
+              type: modalType,
+              status: isBoletoInstallmentSale ? "Pending" : formData.status,
+              payment_method: paymentEntry.paymentMethod,
+              account_id: formData.accountId || null,
+              professional: formData.professional,
+              installments: isPaymentSplit || isProcedureSplit ? 1 : formData.installments,
+              observation: formData.observation,
+              is_partial: formData.isPartial,
+              card_brand: formData.cardBrand || null,
+              settlement_date: isBoletoInstallmentSale
+                ? null
+                : currentSettlementDate ||
+                  (formData.status === "Paid"
+                    ? currentTxDate.toISOString().split("T")[0]
+                    : null),
+              supplier: formData.supplier,
+              sales_team:
+                procedureEntry.procedure === "Panorâmica" ||
+                procedureEntry.procedure === "Documentação Inicial"
+                  ? ""
+                  : formData.salesTeam,
+            });
           });
         });
       }
@@ -1578,6 +1641,8 @@ export const Financial: React.FC<FinancialProps> = ({
     setPatientSearchError("");
     setIsPaymentSplit(false);
     setPaymentSplits([]);
+    setIsProcedureSplit(false);
+    setProcedureSplits([]);
     if (editData) {
       setFormData({
         id: editData.id,
@@ -1738,15 +1803,10 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const handlePaymentMethodChange = (pmName: string) => {
-    const method = paymentMethods.find((m) => m.name === pmName);
     const isBoleto = pmName.toLocaleLowerCase("pt-BR").includes("boleto");
     setFormData((prev) => ({
       ...prev,
       paymentMethod: pmName,
-      accountId:
-        modalType === "income"
-          ? ""
-          : method?.defaultAccountId || prev.accountId,
       cardBrand: modalType === "income" ? "" : prev.cardBrand,
       installments:
         pmName.toLowerCase().includes("cartão") ||
@@ -1788,6 +1848,63 @@ export const Financial: React.FC<FinancialProps> = ({
     setPaymentSplits((current) => current.map((split) => (
       split.id === id ? { ...split, [field]: value } : split
     )));
+  };
+
+  const createProcedureSplit = (): ProcedureSplit => ({
+    id: `procedure_${safeGenerateId()}`,
+    category: incomeCategories[0]?.name || "",
+    procedure: "",
+    amount: "",
+  });
+
+  const toggleProcedureSplit = () => {
+    setIsProcedureSplit((current) => {
+      const next = !current;
+      if (next) {
+        setProcedureSplits([
+          {
+            id: `procedure_${safeGenerateId()}`,
+            category: formData.category,
+            procedure: formData.procedure,
+            amount: formData.amount,
+          },
+          createProcedureSplit(),
+        ]);
+      } else {
+        setProcedureSplits([]);
+      }
+      return next;
+    });
+  };
+
+  const updateProcedureSplit = (id: string, field: keyof Omit<ProcedureSplit, "id">, value: string) => {
+    setProcedureSplits((current) => {
+      const next = current.map((item) => {
+        if (item.id !== id) return item;
+        return field === "category"
+          ? { ...item, category: value, procedure: "" }
+          : { ...item, [field]: value };
+      });
+      const total = next.reduce(
+        (sum, item) => sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
+        0,
+      );
+      setFormData((previous) => ({ ...previous, amount: total ? total.toFixed(2) : "" }));
+      return next;
+    });
+  };
+
+  const removeProcedureSplit = (id: string) => {
+    setProcedureSplits((current) => {
+      if (current.length <= 2) return current;
+      const next = current.filter((item) => item.id !== id);
+      const total = next.reduce(
+        (sum, item) => sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
+        0,
+      );
+      setFormData((previous) => ({ ...previous, amount: total ? total.toFixed(2) : "" }));
+      return next;
+    });
   };
 
   const getEffectiveFee = (tx: LocalTransaction) => {
@@ -4439,7 +4556,6 @@ export const Financial: React.FC<FinancialProps> = ({
                     id: "pm_" + Date.now(),
                     name: newPaymentMethod,
                     days_to_receive: 0,
-                    default_account_id: accountsList[0]?.id || "",
                   });
                 fetchAllData();
                 setNewPaymentMethod("");
@@ -4489,28 +4605,6 @@ export const Financial: React.FC<FinancialProps> = ({
                       }}
                       className="w-12 bg-panel border border-border rounded text-center text-text"
                     />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">
-                      CONTA PADRÃO:
-                    </span>
-                    <select
-                      value={pm.defaultAccountId}
-                      onChange={async (e) => {
-                        await supabase
-                          .from("payment_methods")
-                          .update({ default_account_id: e.target.value })
-                          .eq("id", pm.id);
-                        fetchAllData();
-                      }}
-                      className="w-full bg-panel border border-border rounded px-2 py-1 text-xs text-slate-300 [&>option]:bg-surface [&>option]:text-text"
-                    >
-                      {accountsList.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>
@@ -6045,7 +6139,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         </select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6" hidden={isProcedureSplit}>
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                           {isBoletoPayment ? "VALOR TOTAL DA VENDA (R$)" : "VALOR (R$)"}
@@ -6060,6 +6154,52 @@ export const Financial: React.FC<FinancialProps> = ({
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text font-bold"
                         />
                       </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-panel/50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold text-text">Procedimentos do lançamento</p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">Inclua mais de uma categoria, subcategoria e valor no mesmo recebimento.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={toggleProcedureSplit}
+                          disabled={!!formData.id}
+                          className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition-colors ${isProcedureSplit ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border bg-surface text-slate-600 hover:bg-surface-high hover:text-text"}`}
+                        >
+                          {isProcedureSplit ? "Vários procedimentos" : "Adicionar procedimentos"}
+                        </button>
+                      </div>
+                      {isProcedureSplit && (
+                        <div className="mt-4 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] p-3">
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[11px] font-bold text-[var(--primary)]">ITENS DO RECEBIMENTO</p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">Total: R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {procedureSplits.map((item, index) => {
+                              const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
+                              const isExcalibur = item.category === "Excalibur";
+                              return (
+                                <div key={item.id} className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-surface p-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem_auto] md:items-center">
+                                  <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">
+                                    {incomeCategories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
+                                  </select>
+                                  <select value={item.procedure} disabled={isExcalibur} onChange={(event) => updateProcedureSplit(item.id, "procedure", event.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60">
+                                    <option value="">{isExcalibur ? "Não se aplica" : "Selecione..."}</option>
+                                    {subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.name}>{subcategory.name}</option>)}
+                                  </select>
+                                  <input type="number" min="0" step="0.01" value={item.amount} onChange={(event) => updateProcedureSplit(item.id, "amount", event.target.value)} placeholder="0,00" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-right text-xs font-bold text-text outline-none" />
+                                  <button type="button" onClick={() => removeProcedureSplit(item.id)} disabled={procedureSplits.length <= 2} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={`Remover procedimento ${index + 1}`}>
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <button type="button" onClick={() => setProcedureSplits((current) => [...current, createProcedureSplit()])} className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline">+ Adicionar outro procedimento</button>
+                        </div>
+                      )}
                     </div>
                     <div className="animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
