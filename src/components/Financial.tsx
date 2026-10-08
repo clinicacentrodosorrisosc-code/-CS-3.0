@@ -108,13 +108,6 @@ interface Supplier {
   name: string;
 }
 
-interface ClinicaExpertsPatient {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-}
-
 interface OrthoMaintenancePatient {
   id: string;
   name: string;
@@ -738,9 +731,11 @@ export const Financial: React.FC<FinancialProps> = ({
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
   const [isProcedureSplit, setIsProcedureSplit] = useState(false);
   const [procedureSplits, setProcedureSplits] = useState<ProcedureSplit[]>([]);
-  const [patientMatches, setPatientMatches] = useState<ClinicaExpertsPatient[]>(
+  const [patientMatches, setPatientMatches] = useState<OrthoMaintenancePatient[]>(
     [],
   );
+  const [selectedOrthoPatient, setSelectedOrthoPatient] =
+    useState<OrthoMaintenancePatient | null>(null);
   const [isPatientSearchLoading, setIsPatientSearchLoading] = useState(false);
   const [patientSearchError, setPatientSearchError] = useState("");
   const isBoletoPayment =
@@ -756,6 +751,16 @@ export const Financial: React.FC<FinancialProps> = ({
       .map((name) => ({ id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`, name, daysToReceive: 0 })),
   ];
   const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+  const isSelectedOrthoMaintenancePayment = Boolean(
+    selectedOrthoPatient &&
+      modalType === "income" &&
+      formData.status === "Paid" &&
+      !isBoletoPayment &&
+      !hasBoletoPaymentSplit &&
+      !isProcedureSplit &&
+      normalizePatientName(`${formData.category} ${formData.procedure}`).includes("orto") &&
+      normalizePatientName(`${formData.category} ${formData.procedure}`).includes("manuten"),
+  );
   const matchingOrthoMaintenancePatients = useMemo(() => {
     const query = normalizePatientName(orthoMaintenanceSearch);
     if (!query) return orthoMaintenancePatients;
@@ -773,20 +778,24 @@ export const Financial: React.FC<FinancialProps> = ({
       return;
     }
 
+    if (
+      selectedOrthoPatient &&
+      normalizePatientName(selectedOrthoPatient.name) === normalizePatientName(query)
+    ) {
+      setPatientMatches([]);
+      setPatientSearchError("");
+      setIsPatientSearchLoading(false);
+      return;
+    }
+
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       setIsPatientSearchLoading(true);
       setPatientSearchError("");
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) throw new Error("Sua sessão expirou. Entre novamente.");
-        const response = await fetch(
-          `/api/integrations/clinica-experts/patients?q=${encodeURIComponent(query)}`,
-          { headers: { Authorization: `Bearer ${session.access_token}` } },
-        );
-        const body = await response.json();
-        if (!response.ok) throw new Error(body.error || "Não foi possível buscar pacientes.");
-        if (!cancelled) setPatientMatches(Array.isArray(body.data) ? body.data : []);
+        const { data, error } = await supabase.from("ortho_patients").select("id, name, attendance").eq("status", "Active").ilike("name", `%${query}%`).order("name").limit(12);
+        if (error) throw error;
+        if (!cancelled) setPatientMatches((data || []) as OrthoMaintenancePatient[]);
       } catch (error) {
         if (!cancelled) {
           setPatientMatches([]);
@@ -801,7 +810,7 @@ export const Financial: React.FC<FinancialProps> = ({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [formData.description, isModalOpen, modalType]);
+  }, [formData.description, isModalOpen, modalType, selectedOrthoPatient]);
 
   const overviewMetrics = useMemo(() => {
     const periodIncome = transactions.filter((t) => {
@@ -1183,6 +1192,7 @@ export const Financial: React.FC<FinancialProps> = ({
       "suppliers",
       "sales_teams",
       "payment_methods",
+      "ortho_patients",
     ],
     () => {
       fetchAllData();
@@ -1287,6 +1297,18 @@ export const Financial: React.FC<FinancialProps> = ({
         if (!isProcedureSplit && !formData.professional && !hasOnlyExcaliburProcedures)
           return toast.error("Selecione o profissional responsável.");
 
+      }
+
+      const maintenancePaymentMonth = formData.date.slice(0, 7);
+      const maintenancePaymentKey = `__monthly_payment_${maintenancePaymentMonth}`;
+      const legacyMaintenancePaymentKey = `__post12_payment_${maintenancePaymentMonth}`;
+      if (
+        isSelectedOrthoMaintenancePayment &&
+        selectedOrthoPatient &&
+        (selectedOrthoPatient.attendance?.[maintenancePaymentKey] ||
+          selectedOrthoPatient.attendance?.[legacyMaintenancePaymentKey])
+      ) {
+        return toast.error("Este paciente já possui uma manutenção registrada neste mês.");
       }
 
       setIsSaving(true);
@@ -1442,6 +1464,20 @@ export const Financial: React.FC<FinancialProps> = ({
         .from("transactions")
         .upsert(transactionsToInsert);
       if (!error) {
+        if (isSelectedOrthoMaintenancePayment && selectedOrthoPatient) {
+          const attendance = { ...(selectedOrthoPatient.attendance || {}) } as Record<string, unknown>;
+          attendance[maintenancePaymentKey] = { paidAt: formData.date };
+          const { error: maintenanceError } = await supabase
+            .from("ortho_patients")
+            .update({ attendance })
+            .eq("id", selectedOrthoPatient.id);
+
+          if (maintenanceError) {
+            toast.error("Lançamento salvo, mas não foi possível registrar a manutenção: " + maintenanceError.message);
+          } else {
+            notifyDataChange("ortho_patients");
+          }
+        }
         playCashRegisterSound();
         await fetchAllData();
         notifyDataChange(["transactions", "accounts"]);
@@ -1711,6 +1747,7 @@ export const Financial: React.FC<FinancialProps> = ({
   ) => {
     setModalType(type);
     setPatientMatches([]);
+    setSelectedOrthoPatient(null);
     setPatientSearchError("");
     setIsPaymentSplit(false);
     setPaymentSplits([]);
@@ -6272,10 +6309,15 @@ export const Financial: React.FC<FinancialProps> = ({
                           <input
                             value={formData.description}
                             onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                description: e.target.value,
-                              })
+                              {
+                                const description = e.target.value;
+                                setFormData({ ...formData, description });
+                                setSelectedOrthoPatient((current) =>
+                                  current && normalizePatientName(current.name) === normalizePatientName(description)
+                                    ? current
+                                    : null,
+                                );
+                              }
                             }
                             autoComplete="off"
                             placeholder="Digite ao menos 2 letras para buscar"
@@ -6283,27 +6325,36 @@ export const Financial: React.FC<FinancialProps> = ({
                           />
                           {(isPatientSearchLoading || patientMatches.length > 0 || patientSearchError) && formData.description.trim().length >= 2 && (
                             <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white shadow-xl dark:bg-slate-900">
-                              {isPatientSearchLoading && <p className="px-4 py-3 text-xs text-slate-500">Buscando pacientes na Clínica Experts...</p>}
+                              {isPatientSearchLoading && <p className="px-4 py-3 text-xs text-slate-500">Buscando pacientes ativos de ortodontia...</p>}
                               {!isPatientSearchLoading && patientSearchError && <p className="px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{patientSearchError}</p>}
-                              {!isPatientSearchLoading && !patientSearchError && patientMatches.length === 0 && <p className="px-4 py-3 text-xs text-slate-500">Nenhum paciente encontrado na Clínica Experts.</p>}
+                              {!isPatientSearchLoading && !patientSearchError && patientMatches.length === 0 && <p className="px-4 py-3 text-xs text-slate-500">Nenhum paciente ativo de ortodontia encontrado.</p>}
                               {!isPatientSearchLoading && patientMatches.map((patient) => (
                                 <button
                                   key={patient.id}
                                   type="button"
                                   onClick={() => {
                                     setFormData({ ...formData, description: patient.name });
+                                    setSelectedOrthoPatient(patient);
                                     setPatientMatches([]);
                                   }}
                                   className="flex w-full flex-col px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
                                 >
                                   <span className="text-sm font-semibold text-text">{patient.name}</span>
-                                  {(patient.phone || patient.email) && <span className="mt-0.5 text-[11px] text-slate-500">{[patient.phone, patient.email].filter(Boolean).join(" · ")}</span>}
+                                  <span className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">Paciente ativo de ortodontia</span>
                                 </button>
                               ))}
                             </div>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-500">Base de pacientes consultada diretamente na Clínica Experts.</p>
+                        {selectedOrthoPatient ? (
+                          <p className={`text-[10px] ${isSelectedOrthoMaintenancePayment ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
+                            {isSelectedOrthoMaintenancePayment
+                              ? "Pagamento de manutenção será registrado também na Ortodontia."
+                              : "Paciente ativo de ortodontia selecionado. Selecione Ortodontia e Manutenção para registrar o pagamento."}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-slate-500">A busca mostra somente pacientes ativos de ortodontia.</p>
+                        )}
                       </div>
                     </div>
                     {!isProcedureSplit && (
