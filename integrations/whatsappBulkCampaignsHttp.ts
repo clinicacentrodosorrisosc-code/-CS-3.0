@@ -47,8 +47,11 @@ async function auth(req: Request) {
 }
 function value(key: string, item: Opportunity) { return ({ patient_name: item.patient_name || '', patient_phone: item.patient_phone || '', seller_name: item.seller_name || '', opportunity_title: item.title || '', amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((item.amount_cents || 0) / 100) } as Record<string, string>)[key] || ''; }
 function components(mapping: string, item: Opportunity) {
-  const parameters = String(mapping || '').split(/\r?\n/).map(line => line.match(/^\s*\{\{(\d+)\}\}\s*=\s*([a-z_]+)\s*$/i)).filter((match): match is RegExpMatchArray => Boolean(match)).sort((a, b) => Number(a[1]) - Number(b[1])).map(match => ({ type: 'text', text: value(match[2], item) }));
-  return parameters.length ? [{ type: 'body', parameters }] : undefined;
+  const lines = String(mapping || '').split(/\r?\n/);
+  const parameters = lines.map(line => line.match(/^\s*\{\{(\d+)\}\}\s*=\s*([a-z_]+)\s*$/i)).filter((match): match is RegExpMatchArray => Boolean(match)).sort((a, b) => Number(a[1]) - Number(b[1])).map(match => ({ type: 'text', text: value(match[2], item) }));
+  const copyCodeButtons = lines.map(line => line.match(/^\s*__copy_code_(\d+)\s*=\s*(.+?)\s*$/)).filter((match): match is RegExpMatchArray => Boolean(match)).map(match => ({ type: 'button', sub_type: 'copy_code', index: match[1], parameters: [{ type: 'coupon_code', coupon_code: match[2] }] }));
+  const result = [parameters.length ? { type: 'body', parameters } : null, ...copyCodeButtons].filter(Boolean);
+  return result.length ? result : undefined;
 }
 async function resolvePhones(db: SupabaseClient, userId: string, raw: Array<Opportunity & { patient_external_id?: string | null }>, allowHistory: boolean) {
   const patientIds = [...new Set(raw.map(item => item.patient_external_id).filter(Boolean))] as string[];

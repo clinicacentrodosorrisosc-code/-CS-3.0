@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Check, CheckCircle2, CircleAlert, MessageCircle, Search, Send, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-type Template = { name: string; language: string; status: string; components?: { type: string; text?: string }[] };
+type TemplateButton = { type?: string; text?: string };
+type TemplateComponent = { type: string; text?: string; buttons?: TemplateButton[] };
+type Template = { name: string; language: string; status: string; components?: TemplateComponent[] };
 type Contact = { id: string; patient_name: string; opportunity_title: string; phone: string; status: 'ready' | 'skipped'; reason?: string };
 type Preview = { template: { body: string; category: string }; sample: { patient_name?: string; patient_phone?: string; title?: string; amount_cents?: number } | null; recipients: { totalCards: number; eligible: number; skippedInvalid: number; skippedDuplicate: number; contacts: Contact[] }; pricing: { unitPrice: number; total: number; estimated: boolean; note: string } };
 type Campaign = { id: string; name: string; sent_count: number; failed_count: number; total_recipients: number; status: string; created_at: string };
@@ -35,6 +37,7 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
   const [templateKey, setTemplateKey] = useState('');
   const [name, setName] = useState(`Lembrete ortodontia ${paymentMonth.split('-').reverse().join('/')}`);
   const [mapping, setMapping] = useState<Record<number, string>>({});
+  const [copyCode, setCopyCode] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
@@ -45,9 +48,17 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
 
   const currentTemplate = templates.find(item => `${item.name}::${item.language}` === templateKey);
   const templateBody = currentTemplate?.components?.find(item => item.type === 'BODY')?.text || '';
+  const copyCodeButtons = useMemo(() => (currentTemplate?.components || [])
+    .find(item => item.type === 'BUTTONS')?.buttons
+    ?.map((button, index) => ({ ...button, index }))
+    .filter(button => button.type?.toUpperCase() === 'COPY_CODE') || [], [currentTemplate]);
+  const requiresCopyCode = copyCodeButtons.length > 0;
   const positions = useMemo(() => Array.from(new Set(Array.from(templateBody.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b), [templateBody]);
   const missingVariables = positions.filter(position => !mapping[position]);
-  const variableMapping = Object.entries(mapping).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n');
+  const variableMapping = [
+    ...Object.entries(mapping).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`),
+    ...copyCodeButtons.map(button => `__copy_code_${button.index} = ${copyCode.trim()}`),
+  ].join('\n');
 
   const loadBase = async () => {
     const headers = await authHeaders();
@@ -67,7 +78,7 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
   }, []);
 
   useEffect(() => {
-    if (!currentTemplate) { setPreview(null); setSelectedIds(new Set()); return; }
+    if (!currentTemplate) { setPreview(null); setSelectedIds(new Set()); setCopyCode(''); return; }
     const controller = new AbortController();
     void (async () => {
       try {
@@ -92,6 +103,7 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
     const nextPositions = Array.from(new Set(Array.from(body.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
     const defaults = ['patient_name', 'amount', 'opportunity_title'];
     setMapping(Object.fromEntries(nextPositions.map((position, index) => [position, defaults[index] || 'patient_name'])));
+    setCopyCode('');
   };
 
   const sampleValue = (key: string) => {
@@ -107,9 +119,12 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
 
   const renderedMessage = templateBody.replace(/\{\{(\d+)\}\}/g, (_, raw: string) => mapping[Number(raw)] ? sampleValue(mapping[Number(raw)]) : `{{${raw}}}`);
   const visibleContacts = (preview?.recipients.contacts || []).filter(contact => !search.trim() || [contact.patient_name, contact.phone].some(value => value.toLocaleLowerCase('pt-BR').includes(search.trim().toLocaleLowerCase('pt-BR'))));
+  const readyContactIds = useMemo(() => (preview?.recipients.contacts || []).filter(contact => contact.status === 'ready').map(contact => contact.id), [preview]);
+  const allReadySelected = readyContactIds.length > 0 && readyContactIds.every(id => selectedIds.has(id));
+  const toggleAll = () => setSelectedIds(() => allReadySelected ? new Set() : new Set(readyContactIds));
 
   const send = async () => {
-    if (!currentTemplate || !name.trim() || !selectedIds.size || missingVariables.length) return;
+    if (!currentTemplate || !name.trim() || !selectedIds.size || missingVariables.length || (requiresCopyCode && !copyCode.trim())) return;
     if (!window.confirm(`Enviar lembrete para ${selectedIds.size} paciente(s) de ortodontia?`)) return;
     setSending(true); setNotice('');
     try {
@@ -148,8 +163,9 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
           <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold">Nome da campanha<input value={name} onChange={event => setName(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Template aprovado<select value={templateKey} onChange={event => selectTemplate(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label></div>
           {loading && <div className="rounded-xl bg-[var(--bg-subtle)] p-5 text-sm text-[var(--text-muted)]">Carregando templates e pacientes...</div>}
           {currentTemplate && <section className="grid gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4 md:grid-cols-[minmax(0,1fr)_250px]"><div><p className="text-[11px] font-bold text-[var(--primary)]">Prévia da mensagem</p><div className="mt-3 rounded-xl bg-[var(--surface)] p-3 text-xs leading-5">{renderedMessage || 'Template sem texto no corpo.'}</div></div><div><p className="text-xs font-bold">Variáveis</p><div className="mt-2 space-y-2">{positions.map(position => <label key={position} className="block text-[10px] font-semibold">{`{{${position}}}`}<select value={mapping[position] || ''} onChange={event => setMapping(current => ({ ...current, [position]: event.target.value }))} className="mt-1 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"><option value="">Selecione</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}</div></div></section>}
-          {preview && <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)]"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-4"><div><p className="text-sm font-bold">{selectedIds.size} pacientes selecionados</p><p className="mt-1 text-[10px] text-[var(--text-muted)]">{preview.recipients.totalCards} pendentes · {preview.recipients.skippedInvalid + preview.recipients.skippedDuplicate} sem envio</p></div><label className="flex h-9 min-w-52 items-center gap-2 rounded-lg border border-[var(--border)] px-3"><Search className="h-4 w-4 text-[var(--text-muted)]" /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar paciente" className="min-w-0 flex-1 border-0 bg-transparent text-xs outline-none" /></label></div><div className="custom-scrollbar max-h-72 overflow-y-auto p-2">{visibleContacts.map(contact => { const disabled = contact.status !== 'ready'; const checked = selectedIds.has(contact.id); return <button key={contact.id} type="button" disabled={disabled} onClick={() => setSelectedIds(current => { const next = new Set(current); if (checked) next.delete(contact.id); else next.add(contact.id); return next; })} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--surface-hover)] disabled:opacity-50"><span className={`grid size-5 place-items-center rounded border ${checked ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-[var(--border)]'}`}>{checked && <Check className="h-3 w-3" />}</span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold">{contact.patient_name}</span><span className="block truncate text-[10px] text-[var(--text-muted)]">{contact.phone || contact.reason}</span></span>{disabled ? <CircleAlert className="h-4 w-4 text-amber-500" /> : <CheckCircle2 className="h-4 w-4 text-emerald-500" />}</button>; })}</div></section>}
-          <button type="button" disabled={sending || !currentTemplate || !name.trim() || !selectedIds.size || missingVariables.length > 0} onClick={() => void send()} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando lembretes...' : `Enviar para ${selectedIds.size} pacientes`}</button>
+          {requiresCopyCode && <label className="block rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4 text-xs font-semibold">Código Pix do botão “copiar”<textarea value={copyCode} onChange={event => setCopyCode(event.target.value.replace(/[\r\n]+/g, ''))} placeholder="Cole aqui o código Pix que o paciente copiará" rows={3} className="mt-1.5 w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-xs font-normal" /><span className="mt-1 block text-[10px] font-normal text-[var(--text-muted)]">Este código é enviado no botão do template e fica registrado apenas nesta campanha.</span></label>}
+          {preview && <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)]"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-4"><div><p className="text-sm font-bold">{selectedIds.size} pacientes selecionados</p><p className="mt-1 text-[10px] text-[var(--text-muted)]">{preview.recipients.totalCards} pendentes · {preview.recipients.skippedInvalid + preview.recipients.skippedDuplicate} sem envio</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={toggleAll} disabled={!readyContactIds.length} className="h-9 rounded-lg border border-[var(--border)] px-3 text-xs font-semibold hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-50">{allReadySelected ? 'Desselecionar todos' : 'Selecionar todos'}</button><label className="flex h-9 min-w-52 items-center gap-2 rounded-lg border border-[var(--border)] px-3"><Search className="h-4 w-4 text-[var(--text-muted)]" /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar paciente" className="min-w-0 flex-1 border-0 bg-transparent text-xs outline-none" /></label></div></div><div className="custom-scrollbar max-h-72 overflow-y-auto p-2">{visibleContacts.map(contact => { const disabled = contact.status !== 'ready'; const checked = selectedIds.has(contact.id); return <button key={contact.id} type="button" disabled={disabled} onClick={() => setSelectedIds(current => { const next = new Set(current); if (checked) next.delete(contact.id); else next.add(contact.id); return next; })} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--surface-hover)] disabled:opacity-50"><span className={`grid size-5 place-items-center rounded border ${checked ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-[var(--border)]'}`}>{checked && <Check className="h-3 w-3" />}</span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold">{contact.patient_name}</span><span className="block truncate text-[10px] text-[var(--text-muted)]">{contact.phone || contact.reason}</span></span>{disabled ? <CircleAlert className="h-4 w-4 text-amber-500" /> : <CheckCircle2 className="h-4 w-4 text-emerald-500" />}</button>; })}</div></section>}
+          <button type="button" disabled={sending || !currentTemplate || !name.trim() || !selectedIds.size || missingVariables.length > 0 || (requiresCopyCode && !copyCode.trim())} onClick={() => void send()} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando lembretes...' : `Enviar para ${selectedIds.size} pacientes`}</button>
         </main>
         <aside className="rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4"><div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-[var(--primary)]" /><h3 className="text-sm font-bold">Histórico de campanhas</h3></div><div className="mt-3 space-y-2">{campaigns.length ? campaigns.map(campaign => <button key={campaign.id} type="button" onClick={() => void openReport(campaign)} className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 text-left hover:bg-[var(--surface-hover)]"><span className="block truncate text-xs font-semibold">{campaign.name}</span><span className="mt-1 block text-[10px] text-[var(--text-muted)]">{campaign.sent_count}/{campaign.total_recipients} enviados · ver detalhes</span></button>) : <p className="py-8 text-center text-xs text-[var(--text-muted)]">Nenhum lembrete enviado.</p>}</div></aside>
       </div>

@@ -1075,14 +1075,16 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       return parts.length > 0 ? parts.join(' ') : '0d';
   };
 
-  function hasTreatmentOverOneYear(patient: OrthoPatient, referenceMonth = paymentMonth) {
+  function hasTreatmentOverOneYear(patient: OrthoPatient) {
       if (patient.status !== 'Active' || !patient.startDate) return false;
 
       const startDate = new Date(`${patient.startDate}T00:00:00`);
       if (Number.isNaN(startDate.getTime())) return false;
 
-      const referenceDate = new Date(`${referenceMonth}-01T12:00:00`);
-      referenceDate.setMonth(referenceDate.getMonth() + 1, 0);
+      // O filtro de duração é sobre o tratamento em curso, não sobre a competência
+      // financeira escolhida para cobrança. Vincular os dois fazia a lista 12+
+      // desaparecer ao consultar uma competência anterior ao início do tratamento.
+      const referenceDate = new Date();
       let completedMonths = (referenceDate.getFullYear() - startDate.getFullYear()) * 12
           + referenceDate.getMonth() - startDate.getMonth();
 
