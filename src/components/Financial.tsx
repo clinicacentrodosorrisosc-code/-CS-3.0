@@ -50,6 +50,7 @@ import {
   Download,
   Check,
   Search,
+  UserRoundCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
 import * as XLSX from "xlsx";
@@ -113,6 +114,20 @@ interface ClinicaExpertsPatient {
   phone: string | null;
   email: string | null;
 }
+
+interface OrthoMaintenancePatient {
+  id: string;
+  name: string;
+  attendance: Record<string, unknown> | null;
+}
+
+const normalizePatientName = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLocaleLowerCase("pt-BR")
+    .replace(/\s+/g, " ");
 
 interface PaymentMethod {
   id: string;
@@ -673,6 +688,16 @@ export const Financial: React.FC<FinancialProps> = ({
   const [activeAuditMenuId, setActiveAuditMenuId] = useState<string | null>(
     null,
   );
+  const [maintenanceTransaction, setMaintenanceTransaction] =
+    useState<LocalTransaction | null>(null);
+  const [orthoMaintenancePatients, setOrthoMaintenancePatients] = useState<
+    OrthoMaintenancePatient[]
+  >([]);
+  const [orthoMaintenanceSearch, setOrthoMaintenanceSearch] = useState("");
+  const [isLoadingOrthoMaintenancePatients, setIsLoadingOrthoMaintenancePatients] =
+    useState(false);
+  const [isRegisteringOrthoMaintenance, setIsRegisteringOrthoMaintenance] =
+    useState(false);
   const [expandedIncomeGroups, setExpandedIncomeGroups] = useState<string[]>([]);
 
   const [expFilters, setExpFilters] = useState({
@@ -730,6 +755,13 @@ export const Financial: React.FC<FinancialProps> = ({
       .map((name) => ({ id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`, name, daysToReceive: 0 })),
   ];
   const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+  const matchingOrthoMaintenancePatients = useMemo(() => {
+    const query = normalizePatientName(orthoMaintenanceSearch);
+    if (!query) return orthoMaintenancePatients;
+    return orthoMaintenancePatients.filter((patient) =>
+      normalizePatientName(patient.name).includes(query),
+    );
+  }, [orthoMaintenancePatients, orthoMaintenanceSearch]);
 
   useEffect(() => {
     const query = formData.description.trim();
@@ -1813,6 +1845,63 @@ export const Financial: React.FC<FinancialProps> = ({
           t.id === tx.id ? { ...t, reconciliationStatus: finalStatus } : t,
         ),
       );
+  };
+
+  const isOrthodonticIncome = (tx: LocalTransaction) =>
+    tx.type === "income" &&
+    normalizePatientName(tx.category || "").includes("ortodontia");
+
+  const openOrthoMaintenanceRegistration = async (tx: LocalTransaction) => {
+    setActiveAuditMenuId(null);
+    setMaintenanceTransaction(tx);
+    setOrthoMaintenanceSearch(tx.description);
+    setIsLoadingOrthoMaintenancePatients(true);
+
+    const { data, error } = await supabase
+      .from("ortho_patients")
+      .select("id, name, attendance")
+      .order("name");
+
+    setIsLoadingOrthoMaintenancePatients(false);
+    if (error) {
+      toast.error("Não foi possível carregar os pacientes de ortodontia: " + error.message);
+      setMaintenanceTransaction(null);
+      return;
+    }
+
+    setOrthoMaintenancePatients((data || []) as OrthoMaintenancePatient[]);
+  };
+
+  const registerOrthoMaintenance = async (patient: OrthoMaintenancePatient) => {
+    if (!maintenanceTransaction) return;
+
+    const paidAt = maintenanceTransaction.date;
+    const paymentMonth = paidAt.slice(0, 7);
+    const paymentKey = `__monthly_payment_${paymentMonth}`;
+    const legacyPaymentKey = `__post12_payment_${paymentMonth}`;
+    const attendance = { ...(patient.attendance || {}) } as Record<string, unknown>;
+
+    if (attendance[paymentKey] || attendance[legacyPaymentKey]) {
+      toast.error("Este paciente já possui uma manutenção registrada neste mês.");
+      return;
+    }
+
+    setIsRegisteringOrthoMaintenance(true);
+    attendance[paymentKey] = { paidAt };
+    const { error } = await supabase
+      .from("ortho_patients")
+      .update({ attendance })
+      .eq("id", patient.id);
+    setIsRegisteringOrthoMaintenance(false);
+
+    if (error) {
+      toast.error("Não foi possível registrar a manutenção: " + error.message);
+      return;
+    }
+
+    notifyDataChange("ortho_patients");
+    setMaintenanceTransaction(null);
+    toast.success(`Manutenção de ${patient.name} registrada em ${paidAt.split("-").reverse().join("/")}.`);
   };
 
   const handleCategoryChange = (catName: string) => {
@@ -2962,6 +3051,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   <tbody className="text-xs text-slate-300 divide-y divide-white/5">
                     {groupedFiltered.map(({ key: groupKey, items }) => {
                       const tx = items[0];
+                      const orthodonticTransaction = items.find(isOrthodonticIncome);
                       const hasMultipleProcedures = items.length > 1;
                       const isExpanded = expandedIncomeGroups.includes(groupKey);
                       const isSelected = selectedIncomes.includes(tx.id);
@@ -3104,7 +3194,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 <ChevronDown className="w-3 h-3" />
                               </button>
                               {activeAuditMenuId === tx.id && (
-                                <div className="absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-2xl">
+                                <div role="menu" className="dropdown-surface absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border py-1 shadow-2xl">
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -3140,6 +3230,16 @@ export const Financial: React.FC<FinancialProps> = ({
                                     <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                                     Marcar divergência
                                   </button>
+                                  {orthodonticTransaction?.reconciliationStatus === "verified" && (
+                                    <button
+                                      type="button"
+                                      onClick={() => void openOrthoMaintenanceRegistration(orthodonticTransaction)}
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
+                                    >
+                                      <UserRoundCheck className="h-3.5 w-3.5 text-emerald-400" />
+                                      Registrar manutenção
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -5458,6 +5558,44 @@ export const Financial: React.FC<FinancialProps> = ({
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {maintenanceTransaction && (
+          <div
+            className="fixed inset-0 z-[220] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+            onMouseDown={() => !isRegisteringOrthoMaintenance && setMaintenanceTransaction(null)}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ortho-maintenance-title"
+              className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <header className="flex items-start justify-between gap-4 border-b border-border p-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Receita conciliada</p>
+                  <h3 id="ortho-maintenance-title" className="mt-1 text-lg font-bold text-text">Registrar manutenção</h3>
+                  <p className="mt-1 text-xs text-slate-500">O pagamento será registrado em {maintenanceTransaction.date.split("-").reverse().join("/")}, a mesma data do lançamento.</p>
+                </div>
+                <button type="button" onClick={() => setMaintenanceTransaction(null)} disabled={isRegisteringOrthoMaintenance} className="grid size-8 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-[var(--surface-hover)] hover:text-text" aria-label="Fechar"><X className="size-4" /></button>
+              </header>
+              <div className="border-b border-border p-4">
+                <label className="flex h-10 items-center gap-2 rounded-xl border border-border bg-[var(--background)] px-3">
+                  <Search className="size-4 text-slate-400" />
+                  <input value={orthoMaintenanceSearch} onChange={(event) => setOrthoMaintenanceSearch(event.target.value)} placeholder="Buscar paciente de ortodontia" className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-slate-400" autoFocus />
+                </label>
+              </div>
+              <div className="custom-scrollbar max-h-80 overflow-y-auto p-2">
+                {isLoadingOrthoMaintenancePatients ? <p className="px-3 py-8 text-center text-sm text-slate-500">Carregando pacientes...</p> : matchingOrthoMaintenancePatients.length ? matchingOrthoMaintenancePatients.map((patient) => (
+                  <button key={patient.id} type="button" disabled={isRegisteringOrthoMaintenance} onClick={() => void registerOrthoMaintenance(patient)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-wait disabled:opacity-60">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500"><UserRoundCheck className="size-4" /></span>
+                    <span className="min-w-0"><span className="block truncate text-sm font-semibold text-text">{patient.name}</span><span className="mt-0.5 block text-[11px] text-slate-500">Registrar manutenção deste mês</span></span>
+                  </button>
+                )) : <p className="px-3 py-8 text-center text-sm text-slate-500">Nenhum paciente de ortodontia encontrado.</p>}
+              </div>
+            </section>
           </div>
         )}
 

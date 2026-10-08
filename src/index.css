@@ -738,9 +738,26 @@ select option {
 .module-filter-menu {
   border: 1px solid rgba(31, 111, 91, 0.16);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.97);
+  background-color: var(--surface);
+  background-image: none;
+  opacity: 1;
   box-shadow: 0 16px 36px rgba(24, 39, 32, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* An open menu must never allow table or form content to show through it. */
+.ce-app :is(.module-filter-menu, .dropdown-surface, [role="menu"], [role="listbox"], [role="dialog"][aria-label]) {
+  background-color: var(--surface) !important;
+  background-image: none !important;
+  opacity: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 16px 36px rgba(24, 39, 32, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .ce-app :is(.module-filter-menu, .dropdown-surface, [role="menu"], [role="listbox"], [role="dialog"][aria-label]) {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .module-filter-option { border-radius: 0.625rem; transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), color 160ms cubic-bezier(0.16, 1, 0.3, 1); }
