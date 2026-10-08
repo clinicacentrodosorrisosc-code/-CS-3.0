@@ -6084,6 +6084,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         <p className="text-[10px] text-slate-500">Base de pacientes consultada diretamente na Clínica Experts.</p>
                       </div>
                     </div>
+                    {!isProcedureSplit && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -6139,6 +6140,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         </select>
                       </div>
                     </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6" hidden={isProcedureSplit}>
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -6155,51 +6157,50 @@ export const Financial: React.FC<FinancialProps> = ({
                         />
                       </div>
                     </div>
-                    <div className="rounded-xl border border-border bg-panel/50 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-bold text-text">Procedimentos do lançamento</p>
-                          <p className="mt-0.5 text-[11px] text-slate-500">Inclua mais de uma categoria, subcategoria e valor no mesmo recebimento.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={toggleProcedureSplit}
-                          disabled={!!formData.id}
-                          className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition-colors ${isProcedureSplit ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border bg-surface text-slate-600 hover:bg-surface-high hover:text-text"}`}
-                        >
-                          {isProcedureSplit ? "Vários procedimentos" : "Adicionar procedimentos"}
-                        </button>
+                    {isProcedureSplit && (
+                      <div className="space-y-5">
+                        {procedureSplits.map((item, index) => {
+                          const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
+                          const isExcalibur = item.category === "Excalibur";
+                          return (
+                            <div key={item.id} className="relative grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categoria{index > 0 ? ` ${index + 1}` : ''}</label>
+                                <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
+                                  {incomeCategories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sub-categoria / procedimento</label>
+                                <select value={item.procedure} disabled={isExcalibur} onChange={(event) => updateProcedureSplit(item.id, "procedure", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-surface [&>option]:text-text">
+                                  <option value="">{isExcalibur ? "Não se aplica" : "Selecione..."}</option>
+                                  {subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.name}>{subcategory.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="flex max-w-[16rem] flex-col gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Valor (R$)</label>
+                                <input type="number" min="0" step="0.01" value={item.amount} onChange={(event) => updateProcedureSplit(item.id, "amount", event.target.value)} placeholder="0,00" className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none" />
+                              </div>
+                              {procedureSplits.length > 2 && (
+                                <button type="button" onClick={() => removeProcedureSplit(item.id)} className="absolute right-0 top-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600" aria-label={`Remover procedimento ${index + 1}`}>
+                                  <X className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      {isProcedureSplit && (
-                        <div className="mt-4 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] p-3">
-                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-[11px] font-bold text-[var(--primary)]">ITENS DO RECEBIMENTO</p>
-                            <p className="text-[11px] text-[var(--text-secondary)]">Total: R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</p>
-                          </div>
-                          <div className="space-y-2">
-                            {procedureSplits.map((item, index) => {
-                              const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
-                              const isExcalibur = item.category === "Excalibur";
-                              return (
-                                <div key={item.id} className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-surface p-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_7rem_auto] md:items-center">
-                                  <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">
-                                    {incomeCategories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
-                                  </select>
-                                  <select value={item.procedure} disabled={isExcalibur} onChange={(event) => updateProcedureSplit(item.id, "procedure", event.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60">
-                                    <option value="">{isExcalibur ? "Não se aplica" : "Selecione..."}</option>
-                                    {subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.name}>{subcategory.name}</option>)}
-                                  </select>
-                                  <input type="number" min="0" step="0.01" value={item.amount} onChange={(event) => updateProcedureSplit(item.id, "amount", event.target.value)} placeholder="0,00" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-right text-xs font-bold text-text outline-none" />
-                                  <button type="button" onClick={() => removeProcedureSplit(item.id)} disabled={procedureSplits.length <= 2} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={`Remover procedimento ${index + 1}`}>
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <button type="button" onClick={() => setProcedureSplits((current) => [...current, createProcedureSplit()])} className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline">+ Adicionar outro procedimento</button>
-                        </div>
-                      )}
+                    )}
+                    <div className="flex items-center justify-between gap-3">
+                      {isProcedureSplit && <p className="text-[11px] text-slate-500">Total dos procedimentos: <span className="font-bold text-text">R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</span></p>}
+                      <button
+                        type="button"
+                        onClick={() => isProcedureSplit ? setProcedureSplits((current) => [...current, createProcedureSplit()]) : toggleProcedureSplit()}
+                        disabled={!!formData.id}
+                        className="ml-auto text-[11px] font-bold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        + Incluir mais procedimentos
+                      </button>
                     </div>
                     <div className="animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
@@ -6307,10 +6308,31 @@ export const Financial: React.FC<FinancialProps> = ({
                           )}
                         {isPaymentSplit && (
                           <div className="mt-3 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] p-3">
-                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-[11px] font-bold text-[var(--primary)]">FORMAS DE PAGAMENTO</p>
-                              <p className="text-[11px] text-[var(--text-secondary)]">Total informado: R$ {paymentSplits.reduce((total, split) => total + (parseFloat((split.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</p>
-                            </div>
+                            {(() => {
+                              const totalVenda = parseFloat((formData.amount || "0").replace(",", ".")) || 0;
+                              const totalInformado = paymentSplits.reduce((total, split) => total + (parseFloat((split.amount || "0").replace(",", ".")) || 0), 0);
+                              const restante = totalVenda - totalInformado;
+                              const statusClass = Math.abs(restante) < 0.005
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                : restante > 0
+                                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                  : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300";
+                              return (
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                  <p className="text-[11px] font-bold text-[var(--primary)]">FORMAS DE PAGAMENTO</p>
+                                  <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
+                                    <span className="text-[var(--text-secondary)]">Informado: R$ {totalInformado.toFixed(2).replace(".", ",")}</span>
+                                    <span className={`rounded-full border px-2 py-1 font-bold ${statusClass}`}>
+                                      {Math.abs(restante) < 0.005
+                                        ? "Total conferido"
+                                        : restante > 0
+                                          ? `Falta R$ ${restante.toFixed(2).replace(".", ",")}`
+                                          : `Excede R$ ${Math.abs(restante).toFixed(2).replace(".", ",")}`}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             <div className="space-y-2">
                               {paymentSplits.map((split, index) => (
                                 <div key={split.id} className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-center gap-2">
