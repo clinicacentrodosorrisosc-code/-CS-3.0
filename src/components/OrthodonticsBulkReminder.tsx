@@ -9,6 +9,7 @@ type Contact = { id: string; patient_name: string; opportunity_title: string; ph
 type Preview = { template: { body: string; category: string }; sample: { patient_name?: string; patient_phone?: string; title?: string; amount_cents?: number } | null; recipients: { totalCards: number; eligible: number; skippedInvalid: number; skippedDuplicate: number; contacts: Contact[] }; pricing: { unitPrice: number; total: number; estimated: boolean; note: string } };
 type Campaign = { id: string; name: string; sent_count: number; failed_count: number; total_recipients: number; status: string; created_at: string };
 type Recipient = { id: string; patient_name: string; phone: string; status: string; error_message?: string | null };
+type ConnectionStatus = { active: boolean; checkedAt: string; phone?: { displayName?: string | null; displayNumber?: string | null; qualityRating?: string | null }; hasWabaId?: boolean };
 
 const variableOptions = [
   { value: 'patient_name', label: 'Nome do paciente' },
@@ -44,6 +45,9 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState('');
+  const [connection, setConnection] = useState<ConnectionStatus | null>(null);
+  const [connectionError, setConnectionError] = useState('');
+  const [checkingConnection, setCheckingConnection] = useState(false);
   const [report, setReport] = useState<{ campaign: Campaign; recipients: Recipient[] } | null>(null);
 
   const currentTemplate = templates.find(item => `${item.name}::${item.language}` === templateKey);
@@ -60,6 +64,22 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
     ...copyCodeButtons.map(button => `__copy_code_${button.index} = ${copyCode.trim()}`),
   ].join('\n');
 
+  const checkConnection = async () => {
+    setCheckingConnection(true);
+    setConnectionError('');
+    try {
+      const response = await fetch('/api/integrations/whatsapp/config?check=connection', { headers: await authHeaders() });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || 'Nao foi possivel verificar a conexao do WhatsApp.');
+      setConnection(body);
+    } catch (error) {
+      setConnection(null);
+      setConnectionError(error instanceof Error ? error.message : 'Nao foi possivel verificar a conexao do WhatsApp.');
+    } finally {
+      setCheckingConnection(false);
+    }
+  };
+
   const loadBase = async () => {
     const headers = await authHeaders();
     const [templateResponse, campaignResponse] = await Promise.all([
@@ -74,7 +94,10 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
   };
 
   useEffect(() => {
-    void loadBase().catch(error => setNotice(error.message)).finally(() => setLoading(false));
+    void Promise.all([
+      loadBase().catch(error => setNotice(error.message)),
+      checkConnection(),
+    ]).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -160,6 +183,7 @@ export const OrthodonticsBulkReminder: React.FC<OrthodonticsBulkReminderProps> =
       {notice && <p className="mx-5 mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-200">{notice}</p>}
       <div className="custom-scrollbar grid min-h-0 flex-1 gap-5 overflow-y-auto p-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <main className="space-y-4">
+          <section className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${connection ? 'border-emerald-500/25 bg-emerald-500/10' : connectionError ? 'border-rose-500/25 bg-rose-500/10' : 'border-[var(--border)] bg-[var(--bg-subtle)]'}`}><div><p className="text-xs font-bold">Conexao WhatsApp</p><p className="mt-1 text-[11px] text-[var(--text-muted)]">{connection ? `Ativa na Meta${connection.phone?.displayName ? `: ${connection.phone.displayName}` : ''}${connection.phone?.displayNumber ? ` (${connection.phone.displayNumber})` : ''}.` : connectionError || 'Verificando a conexao oficial...'}</p>{connection && !connection.hasWabaId && <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-300">Informe o WABA ID em Integracoes {'>'} WhatsApp para listar e enviar templates.</p>}</div><button type="button" onClick={() => void checkConnection()} disabled={checkingConnection} className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-semibold hover:bg-[var(--surface-hover)] disabled:opacity-50">{checkingConnection ? 'Verificando...' : 'Verificar conexao'}</button></section>
           <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold">Nome da campanha<input value={name} onChange={event => setName(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3" /></label><label className="text-xs font-semibold">Template aprovado<select value={templateKey} onChange={event => selectTemplate(event.target.value)} className="mt-1.5 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3"><option value="">Selecione</option>{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label></div>
           {loading && <div className="rounded-xl bg-[var(--bg-subtle)] p-5 text-sm text-[var(--text-muted)]">Carregando templates e pacientes...</div>}
           {currentTemplate && <section className="grid gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4 md:grid-cols-[minmax(0,1fr)_250px]"><div><p className="text-[11px] font-bold text-[var(--primary)]">Prévia da mensagem</p><div className="mt-3 rounded-xl bg-[var(--surface)] p-3 text-xs leading-5">{renderedMessage || 'Template sem texto no corpo.'}</div></div><div><p className="text-xs font-bold">Variáveis</p><div className="mt-2 space-y-2">{positions.map(position => <label key={position} className="block text-[10px] font-semibold">{`{{${position}}}`}<select value={mapping[position] || ''} onChange={event => setMapping(current => ({ ...current, [position]: event.target.value }))} className="mt-1 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-xs"><option value="">Selecione</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}</div></div></section>}

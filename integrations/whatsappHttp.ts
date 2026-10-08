@@ -168,6 +168,49 @@ export async function handleWhatsAppConfig(req: ApiRequest, res: ApiResponse) {
   }
 }
 
+export async function handleWhatsAppConnectionStatus(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo nao permitido.' });
+    return;
+  }
+
+  try {
+    const { userId, db } = await authenticate(req);
+    const { data: config, error } = await db
+      .from('whatsapp_config')
+      .select('phone_number_id,waba_id,access_token_encrypted,status,updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!config || config.status !== 'connected' || !config.phone_number_id || !config.access_token_encrypted) {
+      throw new Error('WhatsApp Business nao conectado. Configure a conta em Integracoes > WhatsApp.');
+    }
+
+    const accessToken = decryptWhatsAppAccessToken(config.access_token_encrypted);
+    const response = await fetch(`https://graph.facebook.com/${metaGraphVersion}/${encodeURIComponent(config.phone_number_id)}?fields=display_phone_number,verified_name,quality_rating`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const phone: any = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(phone?.error?.message || 'A Meta nao confirmou a conexao deste numero.');
+
+    res.status(200).json({
+      active: true,
+      checkedAt: new Date().toISOString(),
+      updatedAt: config.updated_at,
+      phone: {
+        displayName: phone.verified_name || null,
+        displayNumber: phone.display_phone_number || null,
+        qualityRating: phone.quality_rating || null,
+      },
+      hasWabaId: Boolean(config.waba_id),
+    });
+  } catch (error) {
+    const message = errorMessage(error, 'Falha ao verificar a conexao do WhatsApp.');
+    res.status(/Sessao|Authorization/i.test(message) ? 401 : 400).json({ error: message });
+  }
+}
+
 export async function handleWhatsAppTemplates(req: ApiRequest, res: ApiResponse) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Metodo nao permitido.' });
