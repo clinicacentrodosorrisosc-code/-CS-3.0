@@ -157,6 +157,7 @@ interface ProcedureSplit {
   id: string;
   category: string;
   procedure: string;
+  professional: string;
   amount: string;
 }
 
@@ -720,14 +721,14 @@ export const Financial: React.FC<FinancialProps> = ({
     formData.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto");
   const isBoletoInstallmentSale =
     isBoletoPayment && !formData.id && formData.installments > 1;
-  const availablePaymentMethods = paymentMethods.some(
-    (method) => method.name.toLocaleLowerCase("pt-BR") === "boleto excalibur",
-  )
-    ? paymentMethods
-    : [
-        ...paymentMethods,
-        { id: "pm_boleto_excalibur", name: "Boleto Excalibur", daysToReceive: 0 },
-      ];
+  const requiredBoletoMethods = ["Boleto Excalibur", "Boleto Assas"];
+  const availablePaymentMethods = [
+    ...paymentMethods,
+    ...requiredBoletoMethods
+      .filter((name) => !paymentMethods.some((method) => method.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR")))
+      .map((name) => ({ id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`, name, daysToReceive: 0 })),
+  ];
+  const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
 
   useEffect(() => {
     const query = formData.description.trim();
@@ -1203,7 +1204,8 @@ export const Financial: React.FC<FinancialProps> = ({
           }))
         : [];
       if (isPaymentSplit) {
-        if (formData.status !== "Paid")
+        const includesBoleto = normalizedPaymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+        if (formData.status !== "Paid" && !includesBoleto)
           return toast.error("O pagamento dividido só pode ser usado para lançamentos recebidos.");
         if (normalizedPaymentSplits.length < 2)
           return toast.error("Adicione ao menos duas formas de pagamento.");
@@ -1231,10 +1233,11 @@ export const Financial: React.FC<FinancialProps> = ({
         const hasInvalidProcedure = normalizedProcedureSplits.some((item) => {
           const category = incomeCategories.find((entry) => entry.name === item.category);
           const procedureIsRequired = !!category?.subcategories?.length && item.category !== "Excalibur";
-          return !item.category || (procedureIsRequired && !item.procedure) || item.amountInCents <= 0;
+          const professionalIsRequired = item.category !== "Excalibur";
+          return !item.category || (procedureIsRequired && !item.procedure) || (professionalIsRequired && !item.professional) || item.amountInCents <= 0;
         });
         if (hasInvalidProcedure)
-          return toast.error("Informe categoria, procedimento e valor de cada item.");
+          return toast.error("Informe categoria, procedimento, profissional e valor de cada item.");
         const proceduresTotalInCents = normalizedProcedureSplits.reduce(
           (total, item) => total + item.amountInCents,
           0,
@@ -1247,7 +1250,7 @@ export const Financial: React.FC<FinancialProps> = ({
         const hasOnlyExcaliburProcedures = isProcedureSplit
           ? normalizedProcedureSplits.every((item) => item.category === "Excalibur")
           : formData.category === "Excalibur";
-        if (!formData.professional && !hasOnlyExcaliburProcedures)
+        if (!isProcedureSplit && !formData.professional && !hasOnlyExcaliburProcedures)
           return toast.error("Selecione o profissional responsável.");
 
       }
@@ -1275,7 +1278,7 @@ export const Financial: React.FC<FinancialProps> = ({
       const recurrenceCount =
         modalType === "expense" && !formData.id
           ? formData.recurrence || 1
-          : isBoletoInstallmentSale && !isPaymentSplit
+          : (isBoletoInstallmentSale && !isPaymentSplit) || hasBoletoPaymentSplit
             ? formData.installments
             : 1;
       const totalInCents = Math.round(amountVal * 100);
@@ -1291,11 +1294,13 @@ export const Financial: React.FC<FinancialProps> = ({
         ? normalizedProcedureSplits.map((item) => ({
             category: item.category,
             procedure: item.procedure,
+            professional: item.professional,
             amountInCents: item.amountInCents,
           }))
         : [{
             category: formData.category,
             procedure: formData.procedure,
+            professional: formData.professional,
             amountInCents: totalInCents,
           }];
 
@@ -1306,7 +1311,7 @@ export const Financial: React.FC<FinancialProps> = ({
 
       for (let i = 0; i < recurrenceCount; i++) {
         const currentTxDate = new Date(baseDate);
-        if (isBoletoInstallmentSale) {
+        if (isBoletoInstallmentSale || hasBoletoPaymentSplit) {
           currentTxDate.setDate(1);
           currentTxDate.setMonth(currentTxDate.getMonth() + i);
           const lastDayOfMonth = new Date(
@@ -1345,7 +1350,12 @@ export const Financial: React.FC<FinancialProps> = ({
           ? [{ paymentMethod: formData.paymentMethod, amount: installmentAmount }]
           : paymentEntries;
         currentPaymentEntries.forEach((paymentEntry, paymentIndex) => {
-          const paymentAmountInCents = Math.round(paymentEntry.amount * 100);
+          const paymentIsBoleto = paymentEntry.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto");
+          if (isPaymentSplit && !paymentIsBoleto && i > 0) return;
+          const originalPaymentAmountInCents = Math.round(paymentEntry.amount * 100);
+          const paymentAmountInCents = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
+            ? Math.floor(originalPaymentAmountInCents / recurrenceCount) + (i === recurrenceCount - 1 ? originalPaymentAmountInCents % recurrenceCount : 0)
+            : originalPaymentAmountInCents;
           let remainingPaymentCents = paymentAmountInCents;
           procedureEntries.forEach((procedureEntry, procedureIndex) => {
             const allocatedInCents = procedureIndex === procedureEntries.length - 1
@@ -1365,15 +1375,15 @@ export const Financial: React.FC<FinancialProps> = ({
               procedure: procedureEntry.procedure,
               date: currentTxDate.toISOString().split("T")[0],
               type: modalType,
-              status: isBoletoInstallmentSale ? "Pending" : formData.status,
+              status: isBoletoInstallmentSale || paymentIsBoleto ? "Pending" : formData.status,
               payment_method: paymentEntry.paymentMethod,
               account_id: formData.accountId || null,
-              professional: formData.professional,
+              professional: procedureEntry.professional,
               installments: isPaymentSplit || isProcedureSplit ? 1 : formData.installments,
               observation: formData.observation,
               is_partial: formData.isPartial,
               card_brand: formData.cardBrand || null,
-              settlement_date: isBoletoInstallmentSale
+              settlement_date: isBoletoInstallmentSale || paymentIsBoleto
                 ? null
                 : currentSettlementDate ||
                   (formData.status === "Paid"
@@ -1882,6 +1892,7 @@ export const Financial: React.FC<FinancialProps> = ({
     id: `procedure_${safeGenerateId()}`,
     category: incomeCategories[0]?.name || "",
     procedure: "",
+    professional: "",
     amount: "",
   });
 
@@ -1894,6 +1905,7 @@ export const Financial: React.FC<FinancialProps> = ({
             id: `procedure_${safeGenerateId()}`,
             category: formData.category,
             procedure: formData.procedure,
+            professional: formData.professional,
             amount: formData.amount,
           },
           createProcedureSplit(),
@@ -6199,7 +6211,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
                           const isExcalibur = item.category === "Excalibur";
                           return (
-                            <div key={item.id} className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(9rem,0.6fr)_2.5rem] md:items-end md:gap-4">
+                            <div key={item.id} className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)_minmax(8rem,0.55fr)_2.5rem] md:items-end md:gap-4">
                               <div className="flex flex-col gap-2">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categoria</label>
                                 <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
@@ -6211,6 +6223,13 @@ export const Financial: React.FC<FinancialProps> = ({
                                 <select value={item.procedure} disabled={isExcalibur} onChange={(event) => updateProcedureSplit(item.id, "procedure", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-surface [&>option]:text-text">
                                   <option value="">{isExcalibur ? "Não se aplica" : "Selecione..."}</option>
                                   {subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.name}>{subcategory.name}</option>)}
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{isExcalibur ? "Profissional (opcional)" : "Profissional"}</label>
+                                <select value={item.professional} onChange={(event) => updateProcedureSplit(item.id, "professional", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
+                                  <option value="">Selecione...</option>
+                                  {professionals.map((professional) => <option key={professional.id} value={professional.name}>{professional.name}</option>)}
                                 </select>
                               </div>
                               <div className="flex max-w-[16rem] flex-col gap-2">
@@ -6234,8 +6253,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         })}
                       </div>
                     )}
-                    <div className="flex items-center justify-between gap-3">
-                      {isProcedureSplit && <p className="text-[11px] text-slate-500">Total dos procedimentos: <span className="font-bold text-text">R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</span></p>}
+                    <div className="flex items-center justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => isProcedureSplit ? setProcedureSplits((current) => [...current, createProcedureSplit()]) : toggleProcedureSplit()}
@@ -6245,8 +6263,9 @@ export const Financial: React.FC<FinancialProps> = ({
                         + Incluir mais procedimentos
                       </button>
                     </div>
+                    {isProcedureSplit && <div className="border-t border-border pt-3 text-right text-[11px] text-slate-500">Total dos procedimentos: <span className="font-bold text-text">R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</span></div>}
                     <div className="animate-in slide-in-from-top-1">
-                      <div className="flex flex-col gap-2">
+                      {!isProcedureSplit && <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                           {formData.category === "Excalibur"
                             ? "PROFISSIONAL (OPCIONAL)"
@@ -6269,7 +6288,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             </option>
                           ))}
                         </select>
-                      </div>
+                      </div>}
                       {(!(formData.date >= "2026-06-01") ||
                         formData.salesTeam) && (
                         <div className="flex flex-col gap-2">
@@ -6380,7 +6399,7 @@ export const Financial: React.FC<FinancialProps> = ({
                               {paymentSplits.map((split, index) => (
                                 <div key={split.id} className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-center gap-2">
                                   <select value={split.paymentMethod} onChange={(e) => updatePaymentSplit(split.id, "paymentMethod", e.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">
-                                    {paymentMethods.filter((pm) => !pm.name.toLocaleLowerCase("pt-BR").includes("boleto")).map((pm) => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
+                                    {availablePaymentMethods.map((pm) => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
                                   </select>
                                   <input type="number" min="0" step="0.01" value={split.amount} onChange={(e) => updatePaymentSplit(split.id, "amount", e.target.value)} placeholder="0,00" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-right text-xs font-bold text-text outline-none" />
                                   <button type="button" onClick={() => setPaymentSplits((current) => current.length > 2 ? current.filter((item) => item.id !== split.id) : current)} disabled={paymentSplits.length <= 2} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={`Remover forma de pagamento ${index + 1}`}>
@@ -6389,6 +6408,13 @@ export const Financial: React.FC<FinancialProps> = ({
                                 </div>
                               ))}
                             </div>
+                            {hasBoletoPaymentSplit && (
+                              <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[var(--primary-border)] pt-3 sm:grid-cols-[minmax(0,1fr)_6rem_8rem]">
+                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Primeiro vencimento</label><input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value, dueDay: Number(e.target.value.slice(-2)) || formData.dueDay })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none" /></div>
+                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Dia</label><select value={formData.dueDay} onChange={(e) => setFormData({ ...formData, dueDay: Number(e.target.value) })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">{Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></div>
+                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Parcelas</label><select value={formData.installments} onChange={(e) => setFormData({ ...formData, installments: Number(e.target.value) || 1, status: "Pending", settlementDate: "" })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">{Array.from({ length: 12 }, (_, index) => index + 1).map((count) => <option key={count} value={count}>{count}x</option>)}</select></div>
+                              </div>
+                            )}
                             <button type="button" onClick={() => setPaymentSplits((current) => [...current, createPaymentSplit()])} className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline">+ Adicionar outra forma</button>
                           </div>
                         )}
