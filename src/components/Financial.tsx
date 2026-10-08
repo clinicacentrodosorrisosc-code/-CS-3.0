@@ -6464,22 +6464,9 @@ export const Financial: React.FC<FinancialProps> = ({
                         </select>
                       </div>}
                       <div className="relative flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            VENDEDOR
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setIsSellerPickerOpen((current) => !current)}
-                            disabled={
-                              formData.procedure === "Panorâmica" ||
-                              formData.procedure === "Documentação Inicial"
-                            }
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <Edit className="h-3 w-3" /> Alterar
-                          </button>
-                        </div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          VENDEDOR
+                        </label>
                         <select
                           value={formData.salesTeam}
                           onChange={(e) =>
@@ -6512,8 +6499,19 @@ export const Financial: React.FC<FinancialProps> = ({
                               <option value={formData.salesTeam}>
                                 {formData.salesTeam}
                               </option>
-                            )}
+                          )}
                         </select>
+                        <button
+                          type="button"
+                          onClick={() => setIsSellerPickerOpen((current) => !current)}
+                          disabled={
+                            formData.procedure === "Panorâmica" ||
+                            formData.procedure === "Documentação Inicial"
+                          }
+                          className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] px-3 py-2.5 text-xs font-bold text-[var(--primary)] transition-colors hover:bg-[var(--primary)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Users className="h-4 w-4" /> Escolher ou alterar vendedor
+                        </button>
                         {isSellerPickerOpen && (
                           <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-border bg-surface p-2 shadow-2xl">
                             <div className="mb-2 flex items-center justify-between gap-3 px-2 pt-1">
