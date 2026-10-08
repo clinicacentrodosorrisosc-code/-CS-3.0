@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { supabase } from '../supabaseClient';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
-import { Banknote, Calendar, ChevronLeft, ChevronRight, ClipboardCheck, ReceiptText, Settings, UserCheck, X } from 'lucide-react';
+import { Banknote, Calendar, ChevronLeft, ChevronRight, ReceiptText, Settings, UserCheck, UserPlus, X } from 'lucide-react';
 import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
@@ -78,6 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
   const [funnelMap, setFunnelMap] = useState<Record<string, MonthlyFunnelInput>>({});
   const [monthRevenueData, setMonthRevenueData] = useState<Record<string, DailyData>>({});
   const [evaluationCounts, setEvaluationCounts] = useState<Record<string, DailyEvalData>>({});
+  const [newOrthodonticsPatients, setNewOrthodonticsPatients] = useState(0);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
   
   useEffect(() => {
@@ -131,9 +132,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
           const endDate = `${currentMonthStr}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-          const [configsRes, evalsRes] = await Promise.all([
+          const [configsRes, evalsRes, orthodonticsPatientsRes] = await Promise.all([
               supabase.from('dashboard_configs').select('*'),
-              supabase.from('daily_evaluations').select('*').gte('date', startDate).lte('date', endDate)
+              supabase.from('daily_evaluations').select('*').gte('date', startDate).lte('date', endDate),
+              supabase
+                .from('ortho_patients')
+                .select('id', { count: 'exact', head: true })
+                .gte('start_date', startDate)
+                .lte('start_date', endDate)
           ]);
 
           if (configsRes.error) console.error("Erro ao carregar configs:", configsRes.error);
@@ -174,6 +180,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                   };
               });
               setEvaluationCounts(prev => ({ ...prev, ...evalMap }));
+          }
+
+          if (orthodonticsPatientsRes.error) {
+              console.error("Erro ao carregar novos pacientes de ortodontia:", orthodonticsPatientsRes.error);
+          } else {
+              setNewOrthodonticsPatients(orthodonticsPatientsRes.count || 0);
           }
 
           let allTxs: any[] = [];
@@ -254,7 +266,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
   useEffect(() => { loadDashboardData(); }, [currentDate, loadDashboardData]);
 
-  useRealtimeSubscription(['dashboard_configs', 'daily_evaluations', 'transactions', 'commercial_daily_reports', 'commercial_reports'], () => {
+  useRealtimeSubscription(['dashboard_configs', 'daily_evaluations', 'ortho_patients', 'transactions', 'commercial_daily_reports', 'commercial_reports'], () => {
       loadDashboardData();
   });
 
@@ -505,11 +517,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
               </article>
 
               <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--green"><ClipboardCheck size={16} /></div>
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--green"><UserPlus size={16} /></div>
                   <div className="min-w-0">
-                      <p className="dashboard-kpi-value">{evaluationSummary.evaluated.toLocaleString('pt-BR')}</p>
-                      <p className="dashboard-kpi-label">Avaliações realizadas</p>
-                      <p className="dashboard-kpi-helper">{evaluationSummary.scheduled.toLocaleString('pt-BR')} agendadas no período</p>
+                      <p className="dashboard-kpi-value">{newOrthodonticsPatients.toLocaleString('pt-BR')}</p>
+                      <p className="dashboard-kpi-label">Novos pacientes de ortodontia</p>
+                      <p className="dashboard-kpi-helper">Contratos iniciados no período</p>
                   </div>
               </article>
 

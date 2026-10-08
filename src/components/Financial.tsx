@@ -3041,7 +3041,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       <th className="p-4">Paciente</th>
                       <th className="p-4">Categoria</th>
                       <th className="p-4">Profissional</th>
-                      <th className="p-4">Time de Venda</th>
+                      <th className="p-4">Vendedor</th>
                       <th className="p-4">Forma Pagto</th>
                       <th className="p-4 text-right">Valor</th>
                       <th className="p-4 text-center">Auditoria</th>
@@ -4647,7 +4647,7 @@ export const Financial: React.FC<FinancialProps> = ({
         </div>
         <div className="glass-panel rounded-2xl border border-border bg-surface p-6">
           <h3 className="text-base font-bold text-text mb-6 flex items-center gap-2">
-            <Users className="text-purple-500 w-4 h-4" /> Times de Venda
+            <Users className="text-purple-500 w-4 h-4" /> Vendedores
           </h3>
           <div className="flex gap-2 mb-4">
             <input
@@ -4655,12 +4655,12 @@ export const Financial: React.FC<FinancialProps> = ({
               value={newSalesTeamColor}
               onChange={(e) => setNewSalesTeamColor(e.target.value)}
               className="w-10 h-10 rounded cursor-pointer bg-transparent border-none p-0"
-              title="Cor do Time"
+              title="Cor do vendedor"
             />
             <input
               value={newSalesTeam}
               onChange={(e) => setNewSalesTeam(e.target.value)}
-              placeholder="Nome do time..."
+              placeholder="Nome do vendedor..."
               className="flex-1 bg-panel border border-border rounded-lg px-4 py-2 text-sm text-text"
             />
             <button
@@ -6462,48 +6462,45 @@ export const Financial: React.FC<FinancialProps> = ({
                           ))}
                         </select>
                       </div>}
-                      {(!(formData.date >= "2026-06-01") ||
-                        formData.salesTeam) && (
-                        <div className="flex flex-col gap-2">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            TIME DE VENDA
-                          </label>
-                          <select
-                            value={formData.salesTeam}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                salesTeam: e.target.value,
-                              })
-                            }
-                            disabled={
-                              formData.procedure === "Panorâmica" ||
-                              formData.procedure === "Documentação Inicial"
-                            }
-                            className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
-                              formData.procedure === "Panorâmica" ||
-                              formData.procedure === "Documentação Inicial"
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
-                          >
-                            <option value="">Selecione...</option>
-                            {salesTeams.map((t) => (
-                              <option key={t.id} value={t.name}>
-                                {t.name}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          VENDEDOR
+                        </label>
+                        <select
+                          value={formData.salesTeam}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              salesTeam: e.target.value,
+                            })
+                          }
+                          disabled={
+                            formData.procedure === "Panorâmica" ||
+                            formData.procedure === "Documentação Inicial"
+                          }
+                          className={`w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text ${
+                            formData.procedure === "Panorâmica" ||
+                            formData.procedure === "Documentação Inicial"
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                        >
+                          <option value="">Selecione...</option>
+                          {salesTeams.map((t) => (
+                            <option key={t.id} value={t.name}>
+                              {t.name}
+                            </option>
+                          ))}
+                          {formData.salesTeam &&
+                            !salesTeams.find(
+                              (t) => t.name === formData.salesTeam,
+                            ) && (
+                              <option value={formData.salesTeam}>
+                                {formData.salesTeam}
                               </option>
-                            ))}
-                            {formData.salesTeam &&
-                              !salesTeams.find(
-                                (t) => t.name === formData.salesTeam,
-                              ) && (
-                                <option value={formData.salesTeam}>
-                                  {formData.salesTeam}
-                                </option>
-                              )}
-                          </select>
-                        </div>
-                      )}
+                            )}
+                        </select>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-top-1">
                       <div className="flex flex-col gap-2">
