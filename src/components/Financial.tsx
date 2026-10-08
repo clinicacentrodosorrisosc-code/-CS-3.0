@@ -319,6 +319,7 @@ export const Financial: React.FC<FinancialProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"income" | "expense">("income");
   const [isSaving, setIsSaving] = useState(false);
+  const [isSellerPickerOpen, setIsSellerPickerOpen] = useState(false);
 
   // Bulk States
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
@@ -6462,10 +6463,23 @@ export const Financial: React.FC<FinancialProps> = ({
                           ))}
                         </select>
                       </div>}
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          VENDEDOR
-                        </label>
+                      <div className="relative flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            VENDEDOR
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setIsSellerPickerOpen((current) => !current)}
+                            disabled={
+                              formData.procedure === "Panorâmica" ||
+                              formData.procedure === "Documentação Inicial"
+                            }
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <Edit className="h-3 w-3" /> Alterar
+                          </button>
+                        </div>
                         <select
                           value={formData.salesTeam}
                           onChange={(e) =>
@@ -6500,6 +6514,33 @@ export const Financial: React.FC<FinancialProps> = ({
                               </option>
                             )}
                         </select>
+                        {isSellerPickerOpen && (
+                          <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-border bg-surface p-2 shadow-2xl">
+                            <div className="mb-2 flex items-center justify-between gap-3 px-2 pt-1">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Vendedores cadastrados</span>
+                              <button type="button" onClick={() => setIsSellerPickerOpen(false)} className="rounded p-1 text-slate-400 hover:bg-panel hover:text-text" aria-label="Fechar vendedores"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                            <div className="max-h-48 space-y-1 overflow-y-auto custom-scrollbar">
+                              {salesTeams.length > 0 ? salesTeams.map((seller) => (
+                                <button
+                                  key={seller.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData((current) => ({ ...current, salesTeam: seller.name }));
+                                    setIsSellerPickerOpen(false);
+                                  }}
+                                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold transition-colors ${formData.salesTeam === seller.name ? "bg-[var(--primary-dim)] text-[var(--primary)]" : "text-text hover:bg-panel"}`}
+                                >
+                                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: seller.color || "#8b5cf6" }} />
+                                  <span className="truncate">{seller.name}</span>
+                                  {formData.salesTeam === seller.name && <Check className="ml-auto h-3.5 w-3.5" />}
+                                </button>
+                              )) : (
+                                <p className="px-3 py-4 text-center text-xs text-slate-500">Nenhum vendedor cadastrado.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-6 animate-in slide-in-from-top-1">
