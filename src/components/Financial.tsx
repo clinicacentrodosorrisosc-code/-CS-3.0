@@ -704,6 +704,7 @@ export const Financial: React.FC<FinancialProps> = ({
     supplier: "",
     salesTeam: "",
     recurrence: 1,
+    dueDay: Number(today.slice(-2)),
   });
   const [isPaymentSplit, setIsPaymentSplit] = useState(false);
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
@@ -719,6 +720,14 @@ export const Financial: React.FC<FinancialProps> = ({
     formData.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto");
   const isBoletoInstallmentSale =
     isBoletoPayment && !formData.id && formData.installments > 1;
+  const availablePaymentMethods = paymentMethods.some(
+    (method) => method.name.toLocaleLowerCase("pt-BR") === "boleto excalibur",
+  )
+    ? paymentMethods
+    : [
+        ...paymentMethods,
+        { id: "pm_boleto_excalibur", name: "Boleto Excalibur", daysToReceive: 0 },
+      ];
 
   useEffect(() => {
     const query = formData.description.trim();
@@ -1290,9 +1299,25 @@ export const Financial: React.FC<FinancialProps> = ({
             amountInCents: totalInCents,
           }];
 
+      const boletoDueDay = Math.min(
+        31,
+        Math.max(1, Number(formData.dueDay) || baseDate.getDate()),
+      );
+
       for (let i = 0; i < recurrenceCount; i++) {
         const currentTxDate = new Date(baseDate);
-        currentTxDate.setMonth(currentTxDate.getMonth() + i);
+        if (isBoletoInstallmentSale) {
+          currentTxDate.setDate(1);
+          currentTxDate.setMonth(currentTxDate.getMonth() + i);
+          const lastDayOfMonth = new Date(
+            currentTxDate.getFullYear(),
+            currentTxDate.getMonth() + 1,
+            0,
+          ).getDate();
+          currentTxDate.setDate(Math.min(boletoDueDay, lastDayOfMonth));
+        } else {
+          currentTxDate.setMonth(currentTxDate.getMonth() + i);
+        }
 
         let currentSettlementDate = null;
         if (baseSettlementDate) {
@@ -1663,6 +1688,7 @@ export const Financial: React.FC<FinancialProps> = ({
         supplier: editData.supplier || "",
         salesTeam: editData.salesTeam || "",
         recurrence: 1,
+        dueDay: Number((editData.date || today).slice(-2)),
       });
     } else {
       const defaultCat =
@@ -1689,6 +1715,7 @@ export const Financial: React.FC<FinancialProps> = ({
         supplier: "",
         salesTeam: "",
         recurrence: 1,
+        dueDay: Number(today.slice(-2)),
       });
     }
     setIsModalOpen(true);
@@ -1816,6 +1843,7 @@ export const Financial: React.FC<FinancialProps> = ({
           : 1,
       status: isBoleto ? "Pending" : prev.status,
       settlementDate: isBoleto ? "" : prev.settlementDate,
+      dueDay: isBoleto ? Number(prev.date.slice(-2)) : prev.dueDay,
     }));
   };
 
@@ -5775,7 +5803,7 @@ export const Financial: React.FC<FinancialProps> = ({
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-2xl h-[min(46rem,calc(100dvh-2rem))] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
+            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-5xl h-[min(46rem,calc(100dvh-2rem))] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
               <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                 <h3 className="text-xl font-bold text-text font-display">
                   {formData.id
@@ -6029,17 +6057,25 @@ export const Financial: React.FC<FinancialProps> = ({
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          {isBoletoPayment ? "PRIMEIRO VENCIMENTO" : "DATA DE RECEBIMENTO"}
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, date: e.target.value })
-                          }
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
-                        />
+                        {isBoletoPayment ? (
+                          <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-3">
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PRIMEIRO VENCIMENTO</label>
+                              <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value, dueDay: Number(e.target.value.slice(-2)) || formData.dueDay })} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DIA</label>
+                              <select value={formData.dueDay} onChange={(e) => setFormData({ ...formData, dueDay: Number(e.target.value) })} aria-label="Dia de vencimento do boleto" className="w-full bg-surface border border-border rounded-xl px-3 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
+                                {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DE RECEBIMENTO</label>
+                            <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -6163,9 +6199,9 @@ export const Financial: React.FC<FinancialProps> = ({
                           const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
                           const isExcalibur = item.category === "Excalibur";
                           return (
-                            <div key={item.id} className="relative grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                            <div key={item.id} className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(9rem,0.6fr)_2.5rem] md:items-end md:gap-4">
                               <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categoria{index > 0 ? ` ${index + 1}` : ''}</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categoria</label>
                                 <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
                                   {incomeCategories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
                                 </select>
@@ -6181,8 +6217,15 @@ export const Financial: React.FC<FinancialProps> = ({
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Valor (R$)</label>
                                 <input type="number" min="0" step="0.01" value={item.amount} onChange={(event) => updateProcedureSplit(item.id, "amount", event.target.value)} placeholder="0,00" className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none" />
                               </div>
+                              <div className="hidden md:flex md:h-12 md:items-center md:justify-end">
+                                {procedureSplits.length > 2 && (
+                                  <button type="button" onClick={() => removeProcedureSplit(item.id)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600" aria-label={`Remover procedimento ${index + 1}`}>
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
                               {procedureSplits.length > 2 && (
-                                <button type="button" onClick={() => removeProcedureSplit(item.id)} className="absolute right-0 top-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600" aria-label={`Remover procedimento ${index + 1}`}>
+                                <button type="button" onClick={() => removeProcedureSplit(item.id)} className="justify-self-start rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600 md:hidden" aria-label={`Remover procedimento ${index + 1}`}>
                                   <X className="h-4 w-4" />
                                 </button>
                               )}
@@ -6283,7 +6326,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           disabled={isPaymentSplit}
                           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
                         >
-                          {paymentMethods.map((pm) => (
+                          {availablePaymentMethods.map((pm) => (
                             <option key={pm.id} value={pm.name}>
                               {pm.name}
                             </option>
