@@ -1933,9 +1933,6 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </SpotlightCard>
           </div>
           
-        {/* Espaçamento mantido */}
-        <div className="mt-6" />
-
           <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
               <div className="flex flex-col h-full w-full">
                   <h3 className="text-lg font-bold text-text mb-4">Evolução do Tratamento ({currentYear})</h3>
@@ -3274,7 +3271,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 lg:px-6 custom-scrollbar relative z-10 w-full">
+        <div className="orthodontics-content-scroll flex-1 overflow-y-auto px-4 pb-4 pt-0 lg:px-6 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
                {/* Visual spacing for title */}
                <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">

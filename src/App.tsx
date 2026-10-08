@@ -566,7 +566,7 @@ const App: React.FC = () => {
           onMobileOpenChange={setIsMobileMenuOpen}
         />
 
-        <div className="workspace-column flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className={`workspace-column flex min-w-0 flex-1 flex-col overflow-hidden ${activeTab === Tab.DASHBOARD ? 'dashboard-active' : ''}`}>
           <AppHeader
             activeTab={activeTab}
             requestedSubTab={requestedSubTab}

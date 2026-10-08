@@ -970,6 +970,31 @@ select option {
   padding-top: 0.5rem !important;
 }
 
+/* Ortodontia já possui sua própria barra de título; não reservar faixa vazia acima dela. */
+.ce-app .orthodontics-content-scroll {
+  padding-top: 0 !important;
+}
+
+/* No dashboard desktop, o cabeçalho global ocupava uma faixa que duplicava o
+   título da própria tela. O conteúdo passa a usar toda a altura disponível. */
+@media (min-width: 1024px) {
+  .workspace-column.dashboard-active > .app-header {
+    display: none !important;
+  }
+
+  .workspace-column.dashboard-active .dashboard-content-scroll {
+    padding-top: 0 !important;
+  }
+}
+
+.dashboard-greeting {
+  display: inline-flex;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 /* frontend-design skill pass: quieter hierarchy, clinic-specific precision. */
 .module-view [class~="uppercase"] {
   letter-spacing: 0 !important;

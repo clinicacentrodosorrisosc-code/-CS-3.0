@@ -722,12 +722,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
         
         {/* View Content */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 lg:px-5 lg:py-4 custom-scrollbar">
+        <div className="dashboard-content-scroll flex-1 overflow-y-auto px-3 py-3 lg:px-5 lg:py-4 custom-scrollbar">
            <div className="dashboard-workspace w-full max-w-[1600px] mx-auto">
                
                <div className="dashboard-command-bar flex flex-col gap-5 p-4 md:flex-row md:items-center md:justify-between md:p-5">
                    <div>
-                       <span className="dashboard-eyebrow">Centro de operação</span>
+          <span className="dashboard-greeting">Bom dia, equipe.</span>
                        <h1 className="mt-2 text-2xl font-semibold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-[-0.035em] md:text-[28px]">
                           {activeSubTab === 'geral' ? 'Visão geral da clínica' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
                        </h1>
