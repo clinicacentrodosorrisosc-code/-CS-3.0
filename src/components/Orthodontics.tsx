@@ -764,6 +764,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               __aditivo_signed: isSigned,
               __aditivo_type: isSigned ? 'Digital' : null,
               __aditivo_signed_at: isSigned ? (editingPatient.aditivoSignedAt || nowStr) : null,
+              __contract_type: editingPatient.contractType || null,
               __due_date_changed: isDueDateChanged,
               __due_date_changed_at: isDueDateChanged ? (editingPatient.dueDateChangedAt || nowStr) : null,
               __due_day: editingPatient.dueDay || null,
@@ -2675,9 +2676,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </th>
                           {selectedDate && <th className="p-5 font-semibold text-center">Presença ({selectedDate.toLocaleDateString()})</th>}
                           <th className="p-5 font-semibold">Aparelho</th>
-                          <th className="p-5 font-semibold">Contrato Inicial</th>
+                          <th className="p-5 text-center font-semibold">Presença</th>
                           <th 
-                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            className="hidden"
                             onClick={() => toggleSort('aditivoMsg')}
                           >
                             <div className="flex items-center gap-1">
@@ -2688,7 +2689,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             </div>
                           </th>
                           <th 
-                            className="p-5 font-semibold cursor-pointer hover:text-text transition-colors group/sort"
+                            className="hidden"
                             onClick={() => toggleSort('aditivoSigned')}
                           >
                             <div className="flex items-center gap-1">
@@ -2790,7 +2791,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     </td>
                                 )}
                                 <td className="p-5 text-slate-600">{p.applianceType}</td>
-                                <td className="p-5">
+                                <td className="p-5 text-center">
                                     <button 
                                         onClick={() => setEditingPatientId(p.id)}
                                         className="bg-blue-600 text-text px-3 py-1 rounded text-xs block mb-2 shadow-lg"
@@ -2798,6 +2799,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         Marcar Presença
                                     </button>
                                     <select
+                                        hidden
                                         value={p.contractType || ''}
                                         onChange={(e) => handleUpdateContractType(p.id, e.target.value as 'Digital' | 'Papel' | '')}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all bg-surface hover:bg-surface ${
@@ -2815,7 +2817,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 
                                 {/* Coluna Msg Aditivo */}
-                                <td className="p-5">
+                                <td className="hidden">
                                     <button
                                         onClick={() => handleToggleAditivoMsg(p.id)}
                                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
@@ -2838,7 +2840,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
 
                                 {/* Coluna Aditivo Digital Assinado */}
-                                <td className="p-5">
+                                <td className="hidden">
                                     <button
                                         onClick={() => handleToggleAditivoSigned(p.id)}
                                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
@@ -4130,7 +4132,20 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-panel/50 rounded-xl border border-border">
+                      <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-panel/50 p-3 md:grid-cols-3">
+                          <div className="flex flex-col gap-2">
+                              <label className="text-xs font-bold uppercase text-slate-400">Contrato inicial</label>
+                              <select
+                                  value={editingPatient.contractType || ''}
+                                  onChange={(e) => setEditingPatient({ ...editingPatient, contractType: e.target.value as 'Digital' | 'Papel' | undefined })}
+                                  className="rounded-xl border border-border bg-surface px-3 py-2.5 text-xs font-bold text-text outline-none focus:border-[var(--primary)]"
+                              >
+                                  <option value="">Não informado</option>
+                                  <option value="Digital">Digital</option>
+                                  <option value="Papel">Papel</option>
+                              </select>
+                              <p className="text-[10px] text-slate-500">Atualizado ao salvar o paciente.</p>
+                          </div>
                           <div className="flex flex-col gap-2">
                               <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1.5">
                                   <span className="material-symbols-outlined text-sm text-emerald-400">send</span>
