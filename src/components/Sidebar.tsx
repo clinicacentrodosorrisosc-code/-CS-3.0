@@ -554,6 +554,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Main Sidebar Shell */}
       <motion.aside
         id="app-sidebar"
+        data-sidebar-expanded={isExpanded}
         initial={false}
         animate={{
           width: isExpanded ? 236 : 60
