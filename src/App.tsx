@@ -1,47 +1,42 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
-import { CRM } from './components/CRM';
-import { WhatsAppSettings } from './components/WhatsAppSettings';
-import { Financial } from './components/Financial';
-import { Orthodontics } from './components/Orthodontics';
-import { LabWork } from './components/LabWork';
-import { Meetings } from './components/Meetings';
-import { Support } from './components/Support';
-import { Passwords } from './components/Passwords';
-import { Biblioteca } from './components/Biblioteca';
-import { Responsibilities } from './components/Responsibilities';
 import { Login } from './components/Login';
-import { PermissionsModal } from './components/PermissionsModal';
-import { NotificationCenter } from './components/NotificationCenter';
 import { Tab } from './types';
 import { supabase } from './supabaseClient';
 import { Toaster, toast } from 'sonner';
-import { motion, AnimatePresence } from 'motion/react';
-import { ChatWidget } from './components/Chat/ChatWidget';
+import { AnimatePresence } from 'motion/react';
 import { AppHeader } from './components/Layout/AppHeader';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
 import { LoadingPanel } from './components/ui/loading-panel';
-import AuditLog from './components/AuditLog';
 import { recordAuditEvent } from './lib/audit';
+
+const Dashboard = lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
+const CRM = lazy(() => import('./components/CRM').then(module => ({ default: module.CRM })));
+const WhatsAppSettings = lazy(() => import('./components/WhatsAppSettings').then(module => ({ default: module.WhatsAppSettings })));
+const Financial = lazy(() => import('./components/Financial').then(module => ({ default: module.Financial })));
+const Orthodontics = lazy(() => import('./components/Orthodontics').then(module => ({ default: module.Orthodontics })));
+const LabWork = lazy(() => import('./components/LabWork').then(module => ({ default: module.LabWork })));
+const Meetings = lazy(() => import('./components/Meetings').then(module => ({ default: module.Meetings })));
+const Support = lazy(() => import('./components/Support').then(module => ({ default: module.Support })));
+const Passwords = lazy(() => import('./components/Passwords').then(module => ({ default: module.Passwords })));
+const Biblioteca = lazy(() => import('./components/Biblioteca').then(module => ({ default: module.Biblioteca })));
+const Responsibilities = lazy(() => import('./components/Responsibilities').then(module => ({ default: module.Responsibilities })));
+const InternalTasks = lazy(() => import('./components/InternalTasks').then(module => ({ default: module.InternalTasks })));
+const PermissionsModal = lazy(() => import('./components/PermissionsModal').then(module => ({ default: module.PermissionsModal })));
+const NotificationCenter = lazy(() => import('./components/NotificationCenter').then(module => ({ default: module.NotificationCenter })));
+const ChatWidget = lazy(() => import('./components/Chat/ChatWidget').then(module => ({ default: module.ChatWidget })));
+const AuditLog = lazy(() => import('./components/AuditLog'));
 
 const TabContainer = ({ children }: { children: React.ReactNode }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.995 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -12, scale: 0.995 }}
-      transition={{
-        duration: 0.35,
-        ease: [0.16, 1, 0.3, 1]
-      }}
+    <div
       className="module-view absolute inset-0 flex flex-col"
       style={{ zIndex: 10 }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
 
@@ -584,6 +579,14 @@ const App: React.FC = () => {
 
         <main id="main-content" tabIndex={-1} className="workspace-shell flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
 
+        <Suspense
+          fallback={(
+            <LoadingPanel
+              label="Abrindo módulo"
+              description="Carregando somente os recursos necessários para esta tela."
+            />
+          )}
+        >
         <NotificationCenter
           isOpen={isNotificationsOpen}
           onClose={() => setIsNotificationsOpen(false)}
@@ -638,6 +641,12 @@ const App: React.FC = () => {
               </TabContainer>
             )}
 
+            {activeTab === Tab.TASKS && (
+              <TabContainer key="tasks">
+                <InternalTasks currentUserId={session.user.id} />
+              </TabContainer>
+            )}
+
             {activeTab === Tab.MEETINGS && (
               <TabContainer key="meetings">
                 <Meetings requestedSubTab={requestedSubTab} />
@@ -679,6 +688,7 @@ const App: React.FC = () => {
 
         {/* Permissions Modal */}
         <PermissionsModal isOpen={isPermissionsOpen} onClose={() => setIsPermissionsOpen(false)} onlineUsers={onlineUsers} />
+        </Suspense>
         </main>
         </div>
       </div>

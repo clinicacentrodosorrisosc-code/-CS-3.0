@@ -235,7 +235,7 @@ export const BankingVault: React.FC = () => {
                 setCardFormData({ brand: 'Mastercard' });
                 setIsCardModalOpen(true);
               }}
-              className="px-4 py-2.5 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold flex items-center gap-2 transition-all"
+              className="px-4 py-2.5 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold flex items-center gap-2 transition"
             >
               <CreditCard className="w-4 h-4 text-purple-400" />
               <span>+ Novo Cartão</span>
@@ -246,7 +246,7 @@ export const BankingVault: React.FC = () => {
                 setBankFormData({ accountType: 'Corrente', color: BANK_COLORS[0].bg });
                 setIsBankModalOpen(true);
               }}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>+ Nova Conta Bancária</span>
@@ -266,7 +266,7 @@ export const BankingVault: React.FC = () => {
             {bankAccounts.map(bank => (
               <div
                 key={bank.id}
-                className={`p-6 rounded-3xl border bg-gradient-to-br ${bank.color || BANK_COLORS[0].bg} flex flex-col justify-between gap-5 relative group shadow-lg transition-all hover:scale-[1.01]`}
+                className={`p-6 rounded-3xl border bg-gradient-to-br ${bank.color || BANK_COLORS[0].bg} flex flex-col justify-between gap-5 relative group shadow-lg transition hover:scale-[1.01]`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-4">
@@ -404,7 +404,7 @@ export const BankingVault: React.FC = () => {
             {cards.map(card => (
               <div
                 key={card.id}
-                className="bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-950 p-6 rounded-3xl border border-purple-500/20 shadow-xl flex flex-col justify-between h-56 relative group hover:border-purple-500/40 transition-all"
+                className="bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-950 p-6 rounded-3xl border border-purple-500/20 shadow-xl flex flex-col justify-between h-56 relative group hover:border-purple-500/40 transition"
               >
                 <div>
                   <div className="flex items-start justify-between">

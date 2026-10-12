@@ -36,13 +36,13 @@ export const ChatWidget: React.FC<{ currentUserId: string; currentUserName: stri
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[100]">
+        <div className="fixed bottom-3 end-3 z-[100] sm:bottom-6 sm:end-6">
             <AnimatePresence>
                 {isOpen ? (
-                    <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="w-80 h-[28rem] glass-panel rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 border-white/20">
+                    <motion.div data-chat-panel initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="mb-3 flex h-[min(28rem,calc(100dvh-5.5rem))] w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-3xl border-white/20 glass-panel shadow-2xl sm:mb-4">
                         <div className="p-4 border-b border-border flex justify-between items-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl">
                             <h3 className="font-bold text-text text-sm uppercase tracking-wider">Chat Interno</h3>
-                            <button onClick={() => setIsOpen(false)} className="p-1.5 glass-button rounded-lg text-slate-400 hover:text-text transition-all"><X className="w-4 h-4" /></button>
+                            <button onClick={() => setIsOpen(false)} className="p-1.5 glass-button rounded-lg text-slate-400 hover:text-text transition" aria-label="Fechar chat interno"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                             {messages.map(m => (
@@ -57,7 +57,7 @@ export const ChatWidget: React.FC<{ currentUserId: string; currentUserName: stri
                         </div>
                         <div className="p-4 border-t border-border bg-black/20 dark:bg-black/60 backdrop-blur-2xl flex gap-2">
                             <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 bg-panel border border-border rounded-xl px-4 py-2.5 text-text outline-none focus:border-indigo-500/50 transition-colors text-sm" placeholder="Sua mensagem..." />
-                            <button onClick={handleSend} className="glass-button bg-indigo-500/30 p-2.5 rounded-xl text-text hover:text-indigo-300 transition-all shadow-lg active:scale-90"><Send className="w-5 h-5" /></button>
+                            <button onClick={handleSend} className="glass-button bg-indigo-500/30 p-2.5 rounded-xl text-text hover:text-indigo-300 transition shadow-lg active:scale-90"><Send className="w-5 h-5" /></button>
                         </div>
                     </motion.div>
                 ) : (
@@ -65,10 +65,11 @@ export const ChatWidget: React.FC<{ currentUserId: string; currentUserName: stri
                         whileHover={{ scale: 1.1, y: -5 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsOpen(true)} 
-                        className="w-16 h-16 rounded-full glass-button flex items-center justify-center text-text shadow-2xl group transition-all duration-500"
+                        aria-label="Abrir chat interno"
+                        className="group flex size-12 items-center justify-center rounded-full text-text shadow-2xl transition duration-500 glass-button sm:size-16"
                     >
                         <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <MessageSquare className="w-7 h-7 relative z-10 drop-shadow-lg" />
+                        <MessageSquare className="relative z-10 size-5 drop-shadow-lg sm:size-7" />
                     </motion.button>
                 )}
             </AnimatePresence>

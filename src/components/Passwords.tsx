@@ -7,6 +7,7 @@ import { NotionWorkspace } from './Vault/NotionWorkspace';
 import { PasswordVault } from './Vault/PasswordVault';
 import { BankingVault } from './Vault/BankingVault';
 import { ManagementProjects } from './Vault/ManagementProjects';
+import { PageHeader, StatusBadge } from './ui/operational-ui';
 
 interface PasswordsProps {
   requestedSubTab?: string | null;
@@ -106,7 +107,7 @@ export const Passwords: React.FC<PasswordsProps> = ({
 
             <button 
               type="submit" 
-              className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-900/40 transition-all active:scale-98 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold text-sm shadow-lg shadow-rose-900/40 transition active:scale-98 flex items-center justify-center gap-2"
             >
               <Unlock className="w-4 h-4" />
               <span>Desbloquear Cofre</span>
@@ -126,93 +127,58 @@ export const Passwords: React.FC<PasswordsProps> = ({
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       
-      {/* Top Bar Navigation */}
-      <div className="module-command-bar mx-4 mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0 z-20">
-        
-        {/* Title & Badge */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-text tracking-tight">Cofre & Diretrizes da Gestão</h1>
-              <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-black uppercase tracking-wider">
-                Confidencial
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400">Documentos & Diretrizes, Senhas de Serviços, Dados Bancários e Metas da Diretoria.</p>
-          </div>
-        </div>
-
-        {/* Sub-Tabs Nav Pill & Lock Button */}
-        <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
-          
-          <div className="module-segmented-control !mb-0">
+      <div className="mx-4 mt-4 flex-shrink-0">
+        <PageHeader
+          icon={Lock}
+          title="Cofre e diretrizes da gestão"
+          description="Documentos, credenciais, dados bancários e metas da diretoria."
+          actions={<><StatusBadge tone="danger">Confidencial</StatusBadge><button type="button" onClick={handleLockVault} className="btn btn-secondary" title="Bloquear cofre agora"><Lock className="size-4" /> Bloquear</button></>}
+          tabs={<div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Áreas do cofre">
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === 'docs'}
               data-active={activeSubTab === 'docs'}
               onClick={() => setSelectedSubTab('docs')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                activeSubTab === 'docs'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-900/40'
-                  : 'text-slate-400 hover:text-text'
-              }`}
             >
               <FileText className="w-4 h-4" />
               <span>Docs & Diretrizes</span>
             </button>
 
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === 'passwords'}
               data-active={activeSubTab === 'passwords'}
               onClick={() => setSelectedSubTab('passwords')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                activeSubTab === 'passwords'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-900/40'
-                  : 'text-slate-400 hover:text-text'
-              }`}
             >
               <KeyRound className="w-4 h-4" />
               <span>Senhas & Credenciais</span>
             </button>
 
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === 'banking'}
               data-active={activeSubTab === 'banking'}
               onClick={() => setSelectedSubTab('banking')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                activeSubTab === 'banking'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-900/40'
-                  : 'text-slate-400 hover:text-text'
-              }`}
             >
               <Building2 className="w-4 h-4" />
               <span>Bancos & Pix</span>
             </button>
 
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === 'projects'}
               data-active={activeSubTab === 'projects'}
               onClick={() => setSelectedSubTab('projects')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                activeSubTab === 'projects'
-                  ? 'bg-rose-600 text-white shadow-md shadow-rose-900/40'
-                  : 'text-slate-400 hover:text-text'
-              }`}
             >
               <Target className="w-4 h-4" />
               <span>Metas & Projetos</span>
             </button>
-          </div>
-
-          <button
-            onClick={handleLockVault}
-            className="p-2.5 rounded-2xl bg-panel hover:bg-rose-950/40 border border-border hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition-all flex items-center gap-1.5 text-xs font-bold"
-            title="Bloquear Cofre Agora"
-          >
-            <Lock className="w-4 h-4" />
-            <span className="hidden sm:inline">Bloquear</span>
-          </button>
-
-        </div>
-
+          </div>}
+        />
       </div>
 
       {/* Content Rendering based on selected sub-tab */}

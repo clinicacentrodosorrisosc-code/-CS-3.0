@@ -131,7 +131,7 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition-all shadow-inner"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition shadow-inner"
                   placeholder="seu.email@centrodosorriso.com"
                 />
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
@@ -155,7 +155,7 @@ export const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition-all shadow-inner"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none transition shadow-inner"
                   placeholder="••••••••"
                 />
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
@@ -163,6 +163,8 @@ export const Login: React.FC = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -206,7 +208,7 @@ export const Login: React.FC = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-950/40 transition-all flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-950/40 transition flex justify-center items-center gap-2 group mt-3 disabled:opacity-50 active:scale-[0.99]"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -225,7 +227,7 @@ export const Login: React.FC = () => {
               {isSignUp ? 'Já possui cadastro?' : 'Ainda não tem acesso?'}
               <button 
                 onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); setSuccessMsg(''); }}
-                className="ml-2 text-sky-400 hover:text-sky-300 font-semibold underline underline-offset-4 transition-all"
+                className="ml-2 text-sky-400 hover:text-sky-300 font-semibold underline underline-offset-4 transition"
               >
                 {isSignUp ? 'Fazer Login' : 'Solicitar Cadastro'}
               </button>
@@ -259,13 +261,13 @@ export const Login: React.FC = () => {
         {/* ============================================================ */}
         {/* RIGHT SIDE: Dedicated Space for "Centro do Sorriso" Image     */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 xl:col-span-7 relative min-h-[380px] lg:min-h-[640px] overflow-hidden group">
+        <div className="relative min-h-[160px] overflow-hidden sm:min-h-[260px] lg:col-span-6 lg:min-h-[640px] xl:col-span-7">
           
           {/* Main Showcase Image */}
           <img 
             src={clinicShowcaseImg} 
             alt="Centro do Sorriso - Clínica de Excelência"
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out"
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
 
         </div>
@@ -273,7 +275,7 @@ export const Login: React.FC = () => {
       </div>
 
       {/* Page Minimal Footer */}
-      <div className="absolute bottom-2 text-center w-full text-[10px] leading-relaxed text-slate-500 pointer-events-none">
+      <div className="pointer-events-none absolute bottom-2 hidden w-full text-center text-xs leading-relaxed text-slate-400 sm:block">
         <div>&copy; {new Date().getFullYear()} Centro do Sorriso | Todos os direitos reservados</div>
         <div>Feita por James Moraes, com muito carinho e litros de café</div>
       </div>

@@ -3,6 +3,7 @@ import { SupportTicket } from '../types';
 import { supabase } from '../supabaseClient';
 import { Plus, ClipboardCheck, Trash2, Tag, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
+import { PageHeader, StatusBadge } from './ui/operational-ui';
 
 interface SupportProps {
     userRole?: string;
@@ -148,34 +149,12 @@ export const Support: React.FC<SupportProps> = () => {
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full min-h-full space-y-10 relative z-10">
                
-               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-6">
-                   <div>
-                       <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
-                          Chamados & Suporte
-                       </h1>
-                       <p className="text-slate-400 text-sm">Relate problemas no sistema, operacionais ou de manutenção.</p>
-                   </div>
-
-                   <div className="flex gap-4 items-center">
-                       <div className="card p-3 flex items-center gap-3">
-                           <div className="flex flex-col">
-                               <span className="text-[10px] text-slate-400 uppercase font-bold">Pendentes</span>
-                               <span className="text-xl font-bold text-text">{stats.open}</span>
-                           </div>
-                           <div className="w-px h-8 bg-slate-800"></div>
-                           <div className="flex flex-col">
-                               <span className="text-[10px] text-slate-400 uppercase font-bold">Críticos</span>
-                               <span className="text-xl font-bold text-red-400">{stats.critical}</span>
-                           </div>
-                       </div>
-                       <button 
-                           onClick={() => setIsModalOpen(true)}
-                           className="btn btn-primary h-fit self-center py-3"
-                       >
-                           <Plus className="w-5 h-5" /> Novo Chamado
-                       </button>
-                   </div>
-               </div>
+               <PageHeader
+                   icon={ClipboardCheck}
+                   title="Chamados e suporte"
+                   description="Relate problemas no sistema, operacionais ou de manutenção."
+                   actions={<><StatusBadge tone="warning">{stats.open} pendentes</StatusBadge><StatusBadge tone={stats.critical ? 'danger' : 'neutral'}>{stats.critical} críticos</StatusBadge><button type="button" onClick={() => setIsModalOpen(true)} className="btn btn-primary"><Plus className="size-4" /> Novo chamado</button></>}
+               />
 
                <div className="flex-1 w-full pb-20">
                     {errorMessage && (
@@ -202,7 +181,7 @@ export const Support: React.FC<SupportProps> = () => {
                     <button
                         key={status}
                         onClick={() => setFilterStatus(status as any)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
                             filterStatus === status 
                             ? 'bg-purple-600 text-white shadow-md' 
                             : 'btn-ghost'
@@ -247,7 +226,7 @@ export const Support: React.FC<SupportProps> = () => {
                     if (ticket.priority === 'Baixa') priorityColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
 
                     return (
-                        <div key={ticket.id} className={`card p-5 flex flex-col transition-all hover:-translate-y-1 ${isResolved ? 'opacity-70 hover:opacity-100' : ''}`}>
+                        <div key={ticket.id} className={`card p-5 flex flex-col transition hover:-translate-y-1 ${isResolved ? 'opacity-70 hover:opacity-100' : ''}`}>
                             <div className="flex justify-between items-start mb-3">
                                 <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${priorityColor}`}>
                                     {ticket.priority}
@@ -284,17 +263,17 @@ export const Support: React.FC<SupportProps> = () => {
                                     {!isResolved && (
                                         <>
                                             {ticket.status === 'Aberto' && (
-                                                <button onClick={() => updateStatus(ticket.id, 'Em Andamento')} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-bold rounded-xl transition-all">
+                                                <button onClick={() => updateStatus(ticket.id, 'Em Andamento')} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-bold rounded-xl transition">
                                                     Iniciar
                                                 </button>
                                             )}
-                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-bold rounded-xl transition-all">
+                                            <button onClick={() => updateStatus(ticket.id, 'Resolvido')} className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-bold rounded-xl transition">
                                                 Resolver
                                             </button>
                                         </>
                                     )}
                                     {isResolved && (
-                                        <button onClick={() => updateStatus(ticket.id, 'Aberto')} className="px-3 py-1.5 btn-ghost text-xs font-bold rounded-xl transition-all">
+                                        <button onClick={() => updateStatus(ticket.id, 'Aberto')} className="px-3 py-1.5 btn-ghost text-xs font-bold rounded-xl transition">
                                             Reabrir
                                         </button>
                                     )}

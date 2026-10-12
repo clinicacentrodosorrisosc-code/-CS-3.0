@@ -175,7 +175,7 @@ export const SalesPlaybook: React.FC = () => {
         <div className="flex items-center gap-2 bg-[var(--bg-subtle)] p-1 rounded-xl border border-[var(--border)]">
           <button
             onClick={() => { setActiveTab('objections'); setFilterCat('all'); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
               activeTab === 'objections' 
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
                 : 'text-slate-400 hover:text-white'
@@ -185,7 +185,7 @@ export const SalesPlaybook: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveTab('scripts'); setFilterCat('all'); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
               activeTab === 'scripts' 
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
                 : 'text-slate-400 hover:text-white'
@@ -203,7 +203,7 @@ export const SalesPlaybook: React.FC = () => {
           <button
             key={cat}
             onClick={() => setFilterCat(cat)}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all shrink-0 ${
+            className={`px-3 py-1 rounded-full text-xs font-bold transition shrink-0 ${
               filterCat === cat
                 ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
                 : 'bg-panel border border-border text-slate-400 hover:text-white'
@@ -221,7 +221,7 @@ export const SalesPlaybook: React.FC = () => {
             {filteredObjections.map((obj) => (
               <div 
                 key={obj.id} 
-                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 transition-all shadow-sm flex flex-col justify-between"
+                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 transition shadow-sm flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -276,7 +276,7 @@ export const SalesPlaybook: React.FC = () => {
             {filteredScripts.map((script) => (
               <div 
                 key={script.id}
-                className="bg-panel border border-border p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-sm hover:border-indigo-500/30 transition-all"
+                className="bg-panel border border-border p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-sm hover:border-indigo-500/30 transition"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -285,7 +285,7 @@ export const SalesPlaybook: React.FC = () => {
                     </span>
                     <button
                       onClick={() => handleCopy(script.messageTemplate, script.id)}
-                      className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 transition"
                     >
                       {copiedId === script.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedId === script.id ? 'Copiado!' : 'Copiar Mensagem'}</span>

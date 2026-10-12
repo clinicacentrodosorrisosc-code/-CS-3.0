@@ -218,7 +218,7 @@ export const ManagementProjects: React.FC = () => {
 
         <button
           onClick={() => handleOpenNew('in_progress')}
-          className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all active:scale-95 self-start md:self-auto"
+          className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition active:scale-95 self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>+ Novo Projeto</span>
@@ -256,7 +256,7 @@ export const ManagementProjects: React.FC = () => {
                     return (
                       <div
                         key={proj.id}
-                        className="bg-panel hover:bg-surface border border-border hover:border-rose-500/40 p-4 rounded-2xl shadow-sm transition-all group flex flex-col gap-3"
+                        className="bg-panel hover:bg-surface border border-border hover:border-rose-500/40 p-4 rounded-2xl shadow-sm transition group flex flex-col gap-3"
                       >
                         <div>
                           <div className="flex items-start justify-between gap-2 mb-1">
@@ -303,7 +303,7 @@ export const ManagementProjects: React.FC = () => {
                             </div>
                             <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-rose-500 to-emerald-500 rounded-full transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-rose-500 to-emerald-500 rounded-full transition duration-300"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
@@ -382,7 +382,7 @@ export const ManagementProjects: React.FC = () => {
                 {/* Add Project to Column */}
                 <button
                   onClick={() => handleOpenNew(col.id)}
-                  className="w-full mt-2 py-2 px-3 rounded-xl border border-dashed border-border hover:border-rose-500/50 hover:bg-rose-950/20 text-slate-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  className="w-full mt-2 py-2 px-3 rounded-xl border border-dashed border-border hover:border-rose-500/50 hover:bg-rose-950/20 text-slate-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-1.5 transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Adicionar</span>

@@ -295,41 +295,39 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   };
 
   return (
-    <section id="performance-metrics-wrapper" className="glass-panel p-6 rounded-2xl border border-border bg-panel/30 flex flex-col gap-6 shadow-xl transition-all duration-300">
-      <div id="performance-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-5">
+    <section id="performance-metrics-wrapper" className="glass-panel flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <div id="performance-header" className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] pb-4 lg:flex-row lg:items-center">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Target className="text-[#D63FA3] w-5 h-5 animate-pulse" />
-            <h3 className="text-lg font-bold text-text">Métricas de Performance</h3>
+          <div className="mb-1 flex items-center gap-2">
+            <Target className="size-5 text-[var(--primary)]" />
+            <h3 className="text-base font-bold text-[var(--text)]">Performance de vendas</h3>
           </div>
-          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+          <p className="text-xs text-[var(--text-muted)]">
             Análise detalhada de faturamento diário vs metas planejadas para {monthName}
           </p>
         </div>
 
         {/* View Mode Switcher */}
-        <div id="performance-tab-triggers" className="flex bg-panel p-1.5 rounded-xl border border-border self-start lg:self-center">
+        <div id="performance-tab-triggers" className="module-segmented-control no-scrollbar self-start lg:self-center" role="tablist" aria-label="Visões da performance">
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'cumulative'}
+            data-active={activeTab === 'cumulative'}
             id="tab-trigger-cumulative"
             onClick={() => setActiveTab('cumulative')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
-              activeTab === 'cumulative'
-                ? 'bg-gradient-to-r from-indigo-500 to-[#D63FA3] text-text shadow-md'
-                : 'text-slate-400 hover:text-text hover:bg-panel'
-            }`}
           >
-            Ritmo Mensal (Pacing)
+            Ritmo mensal
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'daily'}
+            data-active={activeTab === 'daily'}
             id="tab-trigger-daily"
             onClick={() => setActiveTab('daily')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
-              activeTab === 'daily'
-                ? 'bg-[#5347CE] text-white shadow-sm'
-                : 'text-[#64748B] hover:text-[#181B26] dark:text-slate-400 dark:hover:text-white hover:bg-[#F4F6FB] dark:hover:bg-white/[0.04]'
-            }`}
           >
-            Detalhamento Diário
+            Detalhamento diário
           </button>
         </div>
       </div>

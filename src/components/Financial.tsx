@@ -61,6 +61,7 @@ import { SpotlightCard } from "./ui/spotlight-card";
 import { toast } from "sonner";
 import { useRealtimeSubscription, notifyDataChange } from "../lib/realtime";
 import { playCashRegisterSound } from "../lib/sound";
+import { PageHeader } from "./ui/operational-ui";
 
 // --- TYPES & INTERFACES ---
 
@@ -182,7 +183,7 @@ const ALL_TABS_CONFIG = [
   { id: "overview", label: "Visão Geral", permissionId: "financial_overview" },
   {
     id: "transactions",
-    label: "Receitas",
+    label: "Lançamentos",
     permissionId: "financial_transactions",
   },
   { id: "pricing", label: "Precificação", permissionId: "financial_pricing" },
@@ -270,7 +271,8 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const [loading, setLoading] = useState(true);
-  const externalSyncEnabled = import.meta.env.VITE_EXTERNAL_SYNC_ENABLED === 'true';
+  const externalSyncEnabled =
+    import.meta.env.VITE_EXTERNAL_SYNC_ENABLED === "true";
   const [syncingClinicPayments, setSyncingClinicPayments] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
@@ -688,11 +690,15 @@ export const Financial: React.FC<FinancialProps> = ({
     OrthoMaintenancePatient[]
   >([]);
   const [orthoMaintenanceSearch, setOrthoMaintenanceSearch] = useState("");
-  const [isLoadingOrthoMaintenancePatients, setIsLoadingOrthoMaintenancePatients] =
-    useState(false);
+  const [
+    isLoadingOrthoMaintenancePatients,
+    setIsLoadingOrthoMaintenancePatients,
+  ] = useState(false);
   const [isRegisteringOrthoMaintenance, setIsRegisteringOrthoMaintenance] =
     useState(false);
-  const [expandedIncomeGroups, setExpandedIncomeGroups] = useState<string[]>([]);
+  const [expandedIncomeGroups, setExpandedIncomeGroups] = useState<string[]>(
+    [],
+  );
 
   const [expFilters, setExpFilters] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -731,9 +737,9 @@ export const Financial: React.FC<FinancialProps> = ({
   const [paymentSplits, setPaymentSplits] = useState<PaymentSplit[]>([]);
   const [isProcedureSplit, setIsProcedureSplit] = useState(false);
   const [procedureSplits, setProcedureSplits] = useState<ProcedureSplit[]>([]);
-  const [patientMatches, setPatientMatches] = useState<OrthoMaintenancePatient[]>(
-    [],
-  );
+  const [patientMatches, setPatientMatches] = useState<
+    OrthoMaintenancePatient[]
+  >([]);
   const [selectedOrthoPatient, setSelectedOrthoPatient] =
     useState<OrthoMaintenancePatient | null>(null);
   const [shouldRegisterOrthoMaintenance, setShouldRegisterOrthoMaintenance] =
@@ -749,10 +755,25 @@ export const Financial: React.FC<FinancialProps> = ({
   const availablePaymentMethods = [
     ...paymentMethods,
     ...requiredBoletoMethods
-      .filter((name) => !paymentMethods.some((method) => method.name.toLocaleLowerCase("pt-BR") === name.toLocaleLowerCase("pt-BR")))
-      .map((name) => ({ id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`, name, daysToReceive: 0 })),
+      .filter(
+        (name) =>
+          !paymentMethods.some(
+            (method) =>
+              method.name.toLocaleLowerCase("pt-BR") ===
+              name.toLocaleLowerCase("pt-BR"),
+          ),
+      )
+      .map((name) => ({
+        id: `pm_${name.toLowerCase().replaceAll(" ", "_")}`,
+        name,
+        daysToReceive: 0,
+      })),
   ];
-  const hasBoletoPaymentSplit = isPaymentSplit && paymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+  const hasBoletoPaymentSplit =
+    isPaymentSplit &&
+    paymentSplits.some((split) =>
+      split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"),
+    );
   const orthoMaintenanceIncomeDefaults = useMemo(() => {
     const category =
       incomeCategories.find((entry) =>
@@ -770,12 +791,12 @@ export const Financial: React.FC<FinancialProps> = ({
   }, [incomeCategories]);
   const isSelectedOrthoMaintenancePayment = Boolean(
     selectedOrthoPatient &&
-      shouldRegisterOrthoMaintenance &&
-      modalType === "income" &&
-      formData.status === "Paid" &&
-      !isBoletoPayment &&
-      !hasBoletoPaymentSplit &&
-      !isProcedureSplit,
+    shouldRegisterOrthoMaintenance &&
+    modalType === "income" &&
+    formData.status === "Paid" &&
+    !isBoletoPayment &&
+    !hasBoletoPaymentSplit &&
+    !isProcedureSplit,
   );
   const matchingOrthoMaintenancePatients = useMemo(() => {
     const query = normalizePatientName(orthoMaintenanceSearch);
@@ -796,7 +817,8 @@ export const Financial: React.FC<FinancialProps> = ({
 
     if (
       selectedOrthoPatient &&
-      normalizePatientName(selectedOrthoPatient.name) === normalizePatientName(query)
+      normalizePatientName(selectedOrthoPatient.name) ===
+        normalizePatientName(query)
     ) {
       setPatientMatches([]);
       setPatientSearchError("");
@@ -809,13 +831,24 @@ export const Financial: React.FC<FinancialProps> = ({
       setIsPatientSearchLoading(true);
       setPatientSearchError("");
       try {
-        const { data, error } = await supabase.from("ortho_patients").select("id, name, attendance").eq("status", "Active").ilike("name", `%${query}%`).order("name").limit(12);
+        const { data, error } = await supabase
+          .from("ortho_patients")
+          .select("id, name, attendance")
+          .eq("status", "Active")
+          .ilike("name", `%${query}%`)
+          .order("name")
+          .limit(12);
         if (error) throw error;
-        if (!cancelled) setPatientMatches((data || []) as OrthoMaintenancePatient[]);
+        if (!cancelled)
+          setPatientMatches((data || []) as OrthoMaintenancePatient[]);
       } catch (error) {
         if (!cancelled) {
           setPatientMatches([]);
-          setPatientSearchError(error instanceof Error ? error.message : "Não foi possível buscar pacientes.");
+          setPatientSearchError(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível buscar pacientes.",
+          );
         }
       } finally {
         if (!cancelled) setIsPatientSearchLoading(false);
@@ -888,7 +921,10 @@ export const Financial: React.FC<FinancialProps> = ({
     })();
 
     const categoryProcedureRanking = (() => {
-      const map: Record<string, { procedure: string; category: string; value: number }> = {};
+      const map: Record<
+        string,
+        { procedure: string; category: string; value: number }
+      > = {};
       periodIncome.forEach((t) => {
         const category = t.category || "Outros";
         const procedure = t.procedure || "Procedimento não informado";
@@ -1153,24 +1189,44 @@ export const Financial: React.FC<FinancialProps> = ({
 
   const syncClinicaExpertsPayments = async () => {
     if (!externalSyncEnabled) {
-      toast.error('A extracao de lancamentos externos esta desativada para testes locais.');
+      toast.error(
+        "A extracao de lancamentos externos esta desativada para testes locais.",
+      );
       return;
     }
     setSyncingClinicPayments(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('Sua sessao expirou. Entre novamente.');
-      const response = await fetch('/api/integrations/clinica-experts/payments', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const payload = await response.json() as { data?: { imported?: number; deleted?: number }; error?: string };
-      if (!response.ok) throw new Error(payload.error || 'Nao foi possivel sincronizar os pagamentos.');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token)
+        throw new Error("Sua sessao expirou. Entre novamente.");
+      const response = await fetch(
+        "/api/integrations/clinica-experts/payments",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        },
+      );
+      const payload = (await response.json()) as {
+        data?: { imported?: number; deleted?: number };
+        error?: string;
+      };
+      if (!response.ok)
+        throw new Error(
+          payload.error || "Nao foi possivel sincronizar os pagamentos.",
+        );
       await fetchAllData();
-      notifyDataChange('transactions');
-      toast.success(`${payload.data?.imported || 0} pagamento(s) sincronizado(s). ${payload.data?.deleted || 0} lancamento(s) antigo(s) removido(s).`);
+      notifyDataChange("transactions");
+      toast.success(
+        `${payload.data?.imported || 0} pagamento(s) sincronizado(s). ${payload.data?.deleted || 0} lancamento(s) antigo(s) removido(s).`,
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao sincronizar pagamentos.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Falha ao sincronizar pagamentos.",
+      );
     } finally {
       setSyncingClinicPayments(false);
     }
@@ -1178,19 +1234,30 @@ export const Financial: React.FC<FinancialProps> = ({
 
   const updateIncomeClassification = async (
     transactionId: string,
-    field: 'category' | 'professional',
+    field: "category" | "professional",
     value: string,
   ) => {
-    const { error } = await supabase.from('transactions').update({ [field]: value }).eq('id', transactionId);
+    const { error } = await supabase
+      .from("transactions")
+      .update({ [field]: value })
+      .eq("id", transactionId);
     if (error) {
-      toast.error(`Nao foi possivel atualizar ${field === 'category' ? 'a categoria' : 'o profissional'}.`);
+      toast.error(
+        `Nao foi possivel atualizar ${field === "category" ? "a categoria" : "o profissional"}.`,
+      );
       return;
     }
-    setTransactions((current) => current.map((transaction) => transaction.id === transactionId
-      ? { ...transaction, [field]: value }
-      : transaction));
-    notifyDataChange('transactions');
-    toast.success(field === 'category' ? 'Categoria incluida.' : 'Profissional incluido.');
+    setTransactions((current) =>
+      current.map((transaction) =>
+        transaction.id === transactionId
+          ? { ...transaction, [field]: value }
+          : transaction,
+      ),
+    );
+    notifyDataChange("transactions");
+    toast.success(
+      field === "category" ? "Categoria incluida." : "Profissional incluido.",
+    );
   };
 
   useEffect(() => {
@@ -1264,19 +1331,29 @@ export const Financial: React.FC<FinancialProps> = ({
           }))
         : [];
       if (isPaymentSplit) {
-        const includesBoleto = normalizedPaymentSplits.some((split) => split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"));
+        const includesBoleto = normalizedPaymentSplits.some((split) =>
+          split.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto"),
+        );
         if (formData.status !== "Paid" && !includesBoleto)
-          return toast.error("O pagamento dividido só pode ser usado para lançamentos recebidos.");
+          return toast.error(
+            "O pagamento dividido só pode ser usado para lançamentos recebidos.",
+          );
         if (normalizedPaymentSplits.length < 2)
           return toast.error("Adicione ao menos duas formas de pagamento.");
-        if (normalizedPaymentSplits.some((split) => !split.paymentMethod || split.amountInCents <= 0))
+        if (
+          normalizedPaymentSplits.some(
+            (split) => !split.paymentMethod || split.amountInCents <= 0,
+          )
+        )
           return toast.error("Informe a forma e o valor de cada pagamento.");
         const splitTotalInCents = normalizedPaymentSplits.reduce(
           (total, split) => total + split.amountInCents,
           0,
         );
         if (splitTotalInCents !== Math.round(amountVal * 100))
-          return toast.error("A soma das formas de pagamento deve ser igual ao valor total.");
+          return toast.error(
+            "A soma das formas de pagamento deve ser igual ao valor total.",
+          );
       }
 
       const normalizedProcedureSplits = isProcedureSplit
@@ -1291,28 +1368,45 @@ export const Financial: React.FC<FinancialProps> = ({
         if (normalizedProcedureSplits.length < 2)
           return toast.error("Adicione ao menos dois procedimentos.");
         const hasInvalidProcedure = normalizedProcedureSplits.some((item) => {
-          const category = incomeCategories.find((entry) => entry.name === item.category);
-          const procedureIsRequired = !!category?.subcategories?.length && item.category !== "Excalibur";
+          const category = incomeCategories.find(
+            (entry) => entry.name === item.category,
+          );
+          const procedureIsRequired =
+            !!category?.subcategories?.length && item.category !== "Excalibur";
           const professionalIsRequired = item.category !== "Excalibur";
-          return !item.category || (procedureIsRequired && !item.procedure) || (professionalIsRequired && !item.professional) || item.amountInCents <= 0;
+          return (
+            !item.category ||
+            (procedureIsRequired && !item.procedure) ||
+            (professionalIsRequired && !item.professional) ||
+            item.amountInCents <= 0
+          );
         });
         if (hasInvalidProcedure)
-          return toast.error("Informe categoria, procedimento, profissional e valor de cada item.");
+          return toast.error(
+            "Informe categoria, procedimento, profissional e valor de cada item.",
+          );
         const proceduresTotalInCents = normalizedProcedureSplits.reduce(
           (total, item) => total + item.amountInCents,
           0,
         );
         if (proceduresTotalInCents !== Math.round(amountVal * 100))
-          return toast.error("A soma dos procedimentos deve ser igual ao valor total.");
+          return toast.error(
+            "A soma dos procedimentos deve ser igual ao valor total.",
+          );
       }
 
       if (modalType === "income") {
         const hasOnlyExcaliburProcedures = isProcedureSplit
-          ? normalizedProcedureSplits.every((item) => item.category === "Excalibur")
+          ? normalizedProcedureSplits.every(
+              (item) => item.category === "Excalibur",
+            )
           : formData.category === "Excalibur";
-        if (!isProcedureSplit && !formData.professional && !hasOnlyExcaliburProcedures)
+        if (
+          !isProcedureSplit &&
+          !formData.professional &&
+          !hasOnlyExcaliburProcedures
+        )
           return toast.error("Selecione o profissional responsável.");
-
       }
 
       const maintenancePaymentMonth = formData.date.slice(0, 7);
@@ -1324,7 +1418,9 @@ export const Financial: React.FC<FinancialProps> = ({
         (selectedOrthoPatient.attendance?.[maintenancePaymentKey] ||
           selectedOrthoPatient.attendance?.[legacyMaintenancePaymentKey])
       ) {
-        return toast.error("Este paciente já possui uma manutenção registrada neste mês.");
+        return toast.error(
+          "Este paciente já possui uma manutenção registrada neste mês.",
+        );
       }
 
       setIsSaving(true);
@@ -1350,7 +1446,8 @@ export const Financial: React.FC<FinancialProps> = ({
       const recurrenceCount =
         modalType === "expense" && !formData.id
           ? formData.recurrence || 1
-          : (isBoletoInstallmentSale && !isPaymentSplit) || hasBoletoPaymentSplit
+          : (isBoletoInstallmentSale && !isPaymentSplit) ||
+              hasBoletoPaymentSplit
             ? formData.installments
             : 1;
       const totalInCents = Math.round(amountVal * 100);
@@ -1369,12 +1466,14 @@ export const Financial: React.FC<FinancialProps> = ({
             professional: item.professional,
             amountInCents: item.amountInCents,
           }))
-        : [{
-            category: formData.category,
-            procedure: formData.procedure,
-            professional: formData.professional,
-            amountInCents: totalInCents,
-          }];
+        : [
+            {
+              category: formData.category,
+              procedure: formData.procedure,
+              professional: formData.professional,
+              amountInCents: totalInCents,
+            },
+          ];
 
       const boletoDueDay = Math.min(
         31,
@@ -1419,30 +1518,55 @@ export const Financial: React.FC<FinancialProps> = ({
             : formData.description;
 
         const currentPaymentEntries = isBoletoInstallmentSale
-          ? [{ paymentMethod: formData.paymentMethod, amount: installmentAmount }]
+          ? [
+              {
+                paymentMethod: formData.paymentMethod,
+                amount: installmentAmount,
+              },
+            ]
           : paymentEntries;
         currentPaymentEntries.forEach((paymentEntry, paymentIndex) => {
-          const paymentIsBoleto = paymentEntry.paymentMethod.toLocaleLowerCase("pt-BR").includes("boleto");
+          const paymentIsBoleto = paymentEntry.paymentMethod
+            .toLocaleLowerCase("pt-BR")
+            .includes("boleto");
           if (isPaymentSplit && !paymentIsBoleto && i > 0) return;
-          const originalPaymentAmountInCents = Math.round(paymentEntry.amount * 100);
-          const paymentAmountInCents = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
-            ? Math.floor(originalPaymentAmountInCents / recurrenceCount) + (i === recurrenceCount - 1 ? originalPaymentAmountInCents % recurrenceCount : 0)
-            : originalPaymentAmountInCents;
-          const paymentDate = paymentIsBoleto ? currentTxDate : modalType === "income" ? baseDate : currentTxDate;
-          const entryInstallmentDescription = isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
-            ? `${formData.description} (${i + 1}/${recurrenceCount}) - ${paymentEntry.paymentMethod}`
-            : isPaymentSplit
-              ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
-              : installmentDescription;
+          const originalPaymentAmountInCents = Math.round(
+            paymentEntry.amount * 100,
+          );
+          const paymentAmountInCents =
+            isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
+              ? Math.floor(originalPaymentAmountInCents / recurrenceCount) +
+                (i === recurrenceCount - 1
+                  ? originalPaymentAmountInCents % recurrenceCount
+                  : 0)
+              : originalPaymentAmountInCents;
+          const paymentDate = paymentIsBoleto
+            ? currentTxDate
+            : modalType === "income"
+              ? baseDate
+              : currentTxDate;
+          const entryInstallmentDescription =
+            isPaymentSplit && paymentIsBoleto && recurrenceCount > 1
+              ? `${formData.description} (${i + 1}/${recurrenceCount}) - ${paymentEntry.paymentMethod}`
+              : isPaymentSplit
+                ? `${installmentDescription} - ${paymentEntry.paymentMethod}`
+                : installmentDescription;
           let remainingPaymentCents = paymentAmountInCents;
           procedureEntries.forEach((procedureEntry, procedureIndex) => {
-            const allocatedInCents = procedureIndex === procedureEntries.length - 1
-              ? remainingPaymentCents
-              : Math.floor((paymentAmountInCents * procedureEntry.amountInCents) / totalInCents);
+            const allocatedInCents =
+              procedureIndex === procedureEntries.length - 1
+                ? remainingPaymentCents
+                : Math.floor(
+                    (paymentAmountInCents * procedureEntry.amountInCents) /
+                      totalInCents,
+                  );
             remainingPaymentCents -= allocatedInCents;
             transactionsToInsert.push({
               id:
-                i === 0 && paymentIndex === 0 && procedureIndex === 0 && formData.id
+                i === 0 &&
+                paymentIndex === 0 &&
+                procedureIndex === 0 &&
+                formData.id
                   ? formData.id
                   : "tx_" + safeGenerateId(),
               description: entryInstallmentDescription,
@@ -1451,20 +1575,25 @@ export const Financial: React.FC<FinancialProps> = ({
               procedure: procedureEntry.procedure,
               date: paymentDate.toISOString().split("T")[0],
               type: modalType,
-              status: isBoletoInstallmentSale || paymentIsBoleto ? "Pending" : formData.status,
+              status:
+                isBoletoInstallmentSale || paymentIsBoleto
+                  ? "Pending"
+                  : formData.status,
               payment_method: paymentEntry.paymentMethod,
               account_id: formData.accountId || null,
               professional: procedureEntry.professional,
-              installments: isPaymentSplit || isProcedureSplit ? 1 : formData.installments,
+              installments:
+                isPaymentSplit || isProcedureSplit ? 1 : formData.installments,
               observation: formData.observation,
               is_partial: formData.isPartial,
               card_brand: formData.cardBrand || null,
-              settlement_date: isBoletoInstallmentSale || paymentIsBoleto
-                ? null
-                : currentSettlementDate ||
-                  (formData.status === "Paid"
-                    ? paymentDate.toISOString().split("T")[0]
-                    : null),
+              settlement_date:
+                isBoletoInstallmentSale || paymentIsBoleto
+                  ? null
+                  : currentSettlementDate ||
+                    (formData.status === "Paid"
+                      ? paymentDate.toISOString().split("T")[0]
+                      : null),
               supplier: formData.supplier,
               sales_team:
                 procedureEntry.procedure === "Panorâmica" ||
@@ -1481,7 +1610,9 @@ export const Financial: React.FC<FinancialProps> = ({
         .upsert(transactionsToInsert);
       if (!error) {
         if (isSelectedOrthoMaintenancePayment && selectedOrthoPatient) {
-          const attendance = { ...(selectedOrthoPatient.attendance || {}) } as Record<string, unknown>;
+          const attendance = {
+            ...(selectedOrthoPatient.attendance || {}),
+          } as Record<string, unknown>;
           attendance[maintenancePaymentKey] = { paidAt: formData.date };
           const { error: maintenanceError } = await supabase
             .from("ortho_patients")
@@ -1489,7 +1620,10 @@ export const Financial: React.FC<FinancialProps> = ({
             .eq("id", selectedOrthoPatient.id);
 
           if (maintenanceError) {
-            toast.error("Lançamento salvo, mas não foi possível registrar a manutenção: " + maintenanceError.message);
+            toast.error(
+              "Lançamento salvo, mas não foi possível registrar a manutenção: " +
+                maintenanceError.message,
+            );
           } else {
             notifyDataChange("ortho_patients");
           }
@@ -1919,7 +2053,10 @@ export const Financial: React.FC<FinancialProps> = ({
 
     setIsLoadingOrthoMaintenancePatients(false);
     if (error) {
-      toast.error("Não foi possível carregar os pacientes de ortodontia: " + error.message);
+      toast.error(
+        "Não foi possível carregar os pacientes de ortodontia: " +
+          error.message,
+      );
       setMaintenanceTransaction(null);
       return;
     }
@@ -1934,10 +2071,15 @@ export const Financial: React.FC<FinancialProps> = ({
     const paymentMonth = paidAt.slice(0, 7);
     const paymentKey = `__monthly_payment_${paymentMonth}`;
     const legacyPaymentKey = `__post12_payment_${paymentMonth}`;
-    const attendance = { ...(patient.attendance || {}) } as Record<string, unknown>;
+    const attendance = { ...(patient.attendance || {}) } as Record<
+      string,
+      unknown
+    >;
 
     if (attendance[paymentKey] || attendance[legacyPaymentKey]) {
-      toast.error("Este paciente já possui uma manutenção registrada neste mês.");
+      toast.error(
+        "Este paciente já possui uma manutenção registrada neste mês.",
+      );
       return;
     }
 
@@ -1956,7 +2098,9 @@ export const Financial: React.FC<FinancialProps> = ({
 
     notifyDataChange("ortho_patients");
     setMaintenanceTransaction(null);
-    toast.success(`Manutenção de ${patient.name} registrada em ${paidAt.split("-").reverse().join("/")}.`);
+    toast.success(
+      `Manutenção de ${patient.name} registrada em ${paidAt.split("-").reverse().join("/")}.`,
+    );
   };
 
   const handleCategoryChange = (catName: string) => {
@@ -2006,7 +2150,9 @@ export const Financial: React.FC<FinancialProps> = ({
     }));
   };
 
-  const createPaymentSplit = (paymentMethod = paymentMethods[0]?.name || "Dinheiro"): PaymentSplit => ({
+  const createPaymentSplit = (
+    paymentMethod = paymentMethods[0]?.name || "Dinheiro",
+  ): PaymentSplit => ({
     id: `split_${safeGenerateId()}`,
     paymentMethod,
     amount: "",
@@ -2019,7 +2165,8 @@ export const Financial: React.FC<FinancialProps> = ({
         setPaymentSplits([
           {
             id: `split_${safeGenerateId()}`,
-            paymentMethod: formData.paymentMethod || paymentMethods[0]?.name || "Dinheiro",
+            paymentMethod:
+              formData.paymentMethod || paymentMethods[0]?.name || "Dinheiro",
             amount: formData.amount,
           },
           createPaymentSplit(),
@@ -2031,10 +2178,16 @@ export const Financial: React.FC<FinancialProps> = ({
     });
   };
 
-  const updatePaymentSplit = (id: string, field: keyof Omit<PaymentSplit, "id">, value: string) => {
-    setPaymentSplits((current) => current.map((split) => (
-      split.id === id ? { ...split, [field]: value } : split
-    )));
+  const updatePaymentSplit = (
+    id: string,
+    field: keyof Omit<PaymentSplit, "id">,
+    value: string,
+  ) => {
+    setPaymentSplits((current) =>
+      current.map((split) =>
+        split.id === id ? { ...split, [field]: value } : split,
+      ),
+    );
   };
 
   const createProcedureSplit = (): ProcedureSplit => ({
@@ -2066,7 +2219,11 @@ export const Financial: React.FC<FinancialProps> = ({
     });
   };
 
-  const updateProcedureSplit = (id: string, field: keyof Omit<ProcedureSplit, "id">, value: string) => {
+  const updateProcedureSplit = (
+    id: string,
+    field: keyof Omit<ProcedureSplit, "id">,
+    value: string,
+  ) => {
     setProcedureSplits((current) => {
       const next = current.map((item) => {
         if (item.id !== id) return item;
@@ -2075,10 +2232,14 @@ export const Financial: React.FC<FinancialProps> = ({
           : { ...item, [field]: value };
       });
       const total = next.reduce(
-        (sum, item) => sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
+        (sum, item) =>
+          sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
         0,
       );
-      setFormData((previous) => ({ ...previous, amount: total ? total.toFixed(2) : "" }));
+      setFormData((previous) => ({
+        ...previous,
+        amount: total ? total.toFixed(2) : "",
+      }));
       return next;
     });
   };
@@ -2088,10 +2249,14 @@ export const Financial: React.FC<FinancialProps> = ({
       if (current.length <= 2) return current;
       const next = current.filter((item) => item.id !== id);
       const total = next.reduce(
-        (sum, item) => sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
+        (sum, item) =>
+          sum + (parseFloat((item.amount || "0").replace(",", ".")) || 0),
         0,
       );
-      setFormData((previous) => ({ ...previous, amount: total ? total.toFixed(2) : "" }));
+      setFormData((previous) => ({
+        ...previous,
+        amount: total ? total.toFixed(2) : "",
+      }));
       return next;
     });
   };
@@ -2323,7 +2488,7 @@ export const Financial: React.FC<FinancialProps> = ({
             </div>
             <button
               onClick={handleExportBudget}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 shadow-lg"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-xl text-xs font-bold uppercase transition flex items-center gap-2 shadow-lg"
             >
               <Download className="w-4 h-4" /> Exportar Planilha Orçamentária
             </button>
@@ -2375,7 +2540,7 @@ export const Financial: React.FC<FinancialProps> = ({
               </select>
             </div>
 
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label className="text-[10px] font-bold text-slate-400 uppercase">
                 Descrição / Item
               </label>
@@ -2404,7 +2569,7 @@ export const Financial: React.FC<FinancialProps> = ({
 
             <button
               type="submit"
-              className="py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-bold uppercase transition-all shadow-lg flex items-center justify-center gap-1.5"
+              className="py-2.5 bg-purple-600 hover:bg-purple-500 text-text rounded-xl text-xs font-bold uppercase transition shadow-lg flex items-center justify-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Adicionar
             </button>
@@ -2635,35 +2800,93 @@ export const Financial: React.FC<FinancialProps> = ({
     ).length;
     return (
       <div className="flex flex-col gap-4 animate-in fade-in h-full">
-        <div className="module-context-bar" aria-label="Contexto dos lançamentos">
-          <span className="module-context-label">Financeiro › Receitas</span>
-          <span className="module-context-count">{filtered.length} lançamento{filtered.length === 1 ? '' : 's'}</span>
-          <span className="module-context-chip">{txFilters.start.split('-').reverse().join('/')} — {txFilters.end.split('-').reverse().join('/')}</span>
-          {txFilters.category !== 'all' && <span className="module-context-chip">{txFilters.category}<button type="button" onClick={() => setTxFilters({ ...txFilters, category: 'all', procedure: 'all' })} aria-label="Remover filtro de categoria"><X className="h-3 w-3" /></button></span>}
-          {txFilters.professional !== 'all' && <span className="module-context-chip">{txFilters.professional}<button type="button" onClick={() => setTxFilters({ ...txFilters, professional: 'all' })} aria-label="Remover filtro de profissional"><X className="h-3 w-3" /></button></span>}
-          {txFilters.status !== 'all' && <span className="module-context-chip">{txFilters.status === 'Paid' ? 'Recebido' : 'Pendente'}<button type="button" onClick={() => setTxFilters({ ...txFilters, status: 'all' })} aria-label="Remover filtro de status"><X className="h-3 w-3" /></button></span>}
-          {txFilters.search && <span className="module-context-chip">Busca: {txFilters.search}<button type="button" onClick={() => setTxFilters({ ...txFilters, search: '' })} aria-label="Limpar busca"><X className="h-3 w-3" /></button></span>}
-          <span className="module-context-spacer" />
-          <button type="button" onClick={() => openModal('income')} className="btn btn-primary !px-3 !py-1.5 !text-[11px]"><Plus className="h-3.5 w-3.5" />Nova receita</button>
+        <div
+          className="module-context-bar"
+          aria-label="Contexto dos lançamentos"
+        >
+          <span className="module-context-label">Financeiro › Lançamentos</span>
+          <span className="module-context-count">
+            {filtered.length} lançamento{filtered.length === 1 ? "" : "s"}
+          </span>
+          <span className="module-context-chip">
+            {txFilters.start.split("-").reverse().join("/")} —{" "}
+            {txFilters.end.split("-").reverse().join("/")}
+          </span>
+          {txFilters.category !== "all" && (
+            <span className="module-context-chip">
+              {txFilters.category}
+              <button
+                type="button"
+                onClick={() =>
+                  setTxFilters({
+                    ...txFilters,
+                    category: "all",
+                    procedure: "all",
+                  })
+                }
+                aria-label="Remover filtro de categoria"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {txFilters.professional !== "all" && (
+            <span className="module-context-chip">
+              {txFilters.professional}
+              <button
+                type="button"
+                onClick={() =>
+                  setTxFilters({ ...txFilters, professional: "all" })
+                }
+                aria-label="Remover filtro de profissional"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {txFilters.status !== "all" && (
+            <span className="module-context-chip">
+              {txFilters.status === "Paid" ? "Recebido" : "Pendente"}
+              <button
+                type="button"
+                onClick={() => setTxFilters({ ...txFilters, status: "all" })}
+                aria-label="Remover filtro de status"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {txFilters.search && (
+            <span className="module-context-chip">
+              Busca: {txFilters.search}
+              <button
+                type="button"
+                onClick={() => setTxFilters({ ...txFilters, search: "" })}
+                aria-label="Limpar busca"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
         </div>
         {isMyProfile && (
-          <div className="flex items-center justify-between bg-surface border border-border p-2 rounded-2xl">
-            <div className="flex items-center gap-2">
+          <div className="financial-view-switcher flex flex-col gap-2 bg-surface border border-border p-2 rounded-2xl sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="financial-view-options grid w-full min-w-0 grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
               <button
                 onClick={() => setTransactionsViewMode("realizado")}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === "realizado" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+                className={`w-full px-4 py-2 rounded-xl text-xs font-bold uppercase transition ${transactionsViewMode === "realizado" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
               >
                 Lançamentos Realizados
               </button>
               <button
                 onClick={() => setTransactionsViewMode("orcamento")}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${transactionsViewMode === "orcamento" ? "bg-purple-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+                className={`w-full px-4 py-2 rounded-xl text-xs font-bold uppercase transition ${transactionsViewMode === "orcamento" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
               >
                 Planejamento Orçamentário (Próximo Mês)
               </button>
             </div>
             {transactionsViewMode === "orcamento" && (
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">
                   Mês de Referência:
                 </span>
@@ -2683,28 +2906,38 @@ export const Financial: React.FC<FinancialProps> = ({
         ) : (
           <div className="flex flex-col gap-4 flex-1">
             <div className="module-filter-panel glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
-              <div className="flex justify-between items-center">
+              <div className="transaction-filter-toolbar flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
                   <Filter className="text-blue-400 w-3 h-3" /> Filtros
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void syncClinicaExpertsPayments()}
-                    disabled={!externalSyncEnabled || syncingClinicPayments}
-                    title={externalSyncEnabled ? undefined : 'Extracao de lancamentos desativada para testes locais.'}
-                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-blue-400 transition-colors hover:bg-blue-500/15 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${syncingClinicPayments ? 'animate-spin' : ''}`} />
-                    {syncingClinicPayments ? 'Sincronizando' : externalSyncEnabled ? 'Sincronizar Clinica Experts' : 'Extracao desativada'}
-                  </button>
+                <div className="transaction-filter-actions grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
                   <button
                     onClick={() => setIsIncomeFiltersOpen((value) => !value)}
-                    className="module-toolbar-action text-[9px] font-bold text-[#1F6F5B] dark:text-[#63B596] uppercase tracking-wider"
+                    className="module-toolbar-action justify-start text-[9px] font-bold text-[#1F6F5B] uppercase tracking-wider dark:text-[#63B596]"
                   >
                     {isIncomeFiltersOpen
                       ? "Ocultar filtros"
                       : "Mostrar filtros"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void syncClinicaExpertsPayments()}
+                    disabled={!externalSyncEnabled || syncingClinicPayments}
+                    title={
+                      externalSyncEnabled
+                        ? undefined
+                        : "Extracao de lancamentos desativada para testes locais."
+                    }
+                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-blue-400 transition-colors hover:bg-blue-500/15 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <RefreshCw
+                      className={`h-3 w-3 ${syncingClinicPayments ? "animate-spin" : ""}`}
+                    />
+                    {syncingClinicPayments
+                      ? "Sincronizando"
+                      : externalSyncEnabled
+                        ? "Sincronizar Clinica Experts"
+                        : "Extracao desativada"}
                   </button>
                   <button
                     onClick={() => handleExport(filtered)}
@@ -2919,9 +3152,9 @@ export const Financial: React.FC<FinancialProps> = ({
                 </div>
               )}
 
-              <div className="flex gap-4 justify-end border-t border-border pt-2 mt-0.5">
+              <div className="flex flex-col gap-3 border-t border-border pt-2 mt-0.5 sm:flex-row sm:items-center sm:justify-end">
                 {selectedIncomes.length > 0 && (
-                  <div className="flex gap-4 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 mr-auto animate-in fade-in slide-in-from-left-2 duration-200">
+                  <div className="flex flex-wrap gap-3 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 sm:me-auto animate-in fade-in slide-in-from-left-2 duration-200">
                     <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest">
                       Selecionados ({selectedIncomes.length})
                     </span>
@@ -2939,7 +3172,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       </div>
                     </div>
 
-                    <div className="relative border-l border-border pl-3 flex items-center">
+                    <div className="relative border-s border-border ps-3 flex items-center">
                       <button
                         onClick={() => {
                           setIsBulkChangeCatOpen(false);
@@ -2948,25 +3181,25 @@ export const Financial: React.FC<FinancialProps> = ({
                             activeBulkActionTab === "income" ? null : "income",
                           );
                         }}
-                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
                       >
                         Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
                       </button>
 
                       {activeBulkActionTab === "income" && (
-                        <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                        <div className="absolute end-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                           {!isBulkDeleteConfirmOpen && !isBulkChangeCatOpen && (
                             <>
                               <button
                                 onClick={() => setIsBulkChangeCatOpen(true)}
-                                className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
+                                className="w-full text-start px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition"
                               >
                                 <Edit className="w-3 h-3 text-indigo-400" />{" "}
                                 Alterar Categoria
                               </button>
                               <button
                                 onClick={() => setIsBulkDeleteConfirmOpen(true)}
-                                className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
+                                className="w-full text-start px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition border-t border-border"
                               >
                                 <Trash2 className="w-3 h-3 text-red-400" />{" "}
                                 Excluir Selecionados
@@ -2982,7 +3215,7 @@ export const Financial: React.FC<FinancialProps> = ({
                               <div className="flex gap-1">
                                 <button
                                   onClick={bulkDeleteIncomes}
-                                  className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
+                                  className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition"
                                 >
                                   Sim
                                 </button>
@@ -2990,7 +3223,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                   onClick={() =>
                                     setIsBulkDeleteConfirmOpen(false)
                                   }
-                                  className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
+                                  className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition"
                                 >
                                   Não
                                 </button>
@@ -3010,7 +3243,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                     onClick={() =>
                                       bulkChangeCategoryIncomes(cat.name)
                                     }
-                                    className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
+                                    className="w-full text-start px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition truncate"
                                   >
                                     {cat.name}
                                   </button>
@@ -3018,7 +3251,7 @@ export const Financial: React.FC<FinancialProps> = ({
                               </div>
                               <button
                                 onClick={() => setIsBulkChangeCatOpen(false)}
-                                className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
+                                className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition"
                               >
                                 Voltar
                               </button>
@@ -3029,38 +3262,40 @@ export const Financial: React.FC<FinancialProps> = ({
                     </div>
                   </div>
                 )}
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">
-                    Meta Diária
-                  </span>
-                  <span className="text-[10px] text-amber-400 font-bold">
-                    R${" "}
-                    {dailyMetaRequired.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">
-                    Receita
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-bold">
-                    R${" "}
-                    {totalRevenue.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">
-                    Total NF
-                  </span>
-                  <span className="text-[10px] text-blue-400 font-bold">
-                    R${" "}
-                    {totalNF.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
+                <div className="transaction-summary-metrics grid w-full grid-cols-3 gap-3 sm:w-auto sm:flex sm:gap-4">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">
+                      Meta Diária
+                    </span>
+                    <span className="text-[10px] text-amber-400 font-bold">
+                      R${" "}
+                      {dailyMetaRequired.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">
+                      Receita
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-bold">
+                      R${" "}
+                      {totalRevenue.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">
+                      Total NF
+                    </span>
+                    <span className="text-[10px] text-blue-400 font-bold">
+                      R${" "}
+                      {totalNF.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3077,7 +3312,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10">
                     <tr>
-                      <th className="p-4 w-10 text-center">
+                      <th className="w-8 p-2 text-center">
                         <input
                           type="checkbox"
                           onChange={(e) => {
@@ -3089,7 +3324,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             filtered.length > 0 &&
                             selectedIncomes.length === filtered.length
                           }
-                          className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer"
+                          className="clean-checkbox"
                         />
                       </th>
                       <th className="p-4">Data</th>
@@ -3106,16 +3341,18 @@ export const Financial: React.FC<FinancialProps> = ({
                   <tbody className="text-xs text-slate-300 divide-y divide-white/5">
                     {groupedFiltered.map(({ key: groupKey, items }) => {
                       const tx = items[0];
-                      const orthodonticTransaction = items.find(isOrthodonticIncome);
+                      const orthodonticTransaction =
+                        items.find(isOrthodonticIncome);
                       const hasMultipleProcedures = items.length > 1;
-                      const isExpanded = expandedIncomeGroups.includes(groupKey);
+                      const isExpanded =
+                        expandedIncomeGroups.includes(groupKey);
                       const isSelected = selectedIncomes.includes(tx.id);
                       return (
                         <tr
                           key={tx.id}
                           className={`hover:bg-panel transition-colors ${tx.reconciliationStatus === "verified" ? "bg-emerald-500/20" : tx.reconciliationStatus === "error" ? "bg-red-500/20" : ""} ${isSelected ? "bg-blue-500/10" : ""}`}
                         >
-                          <td className="p-4 text-center">
+                          <td className="p-2 text-center">
                             <input
                               type="checkbox"
                               checked={isSelected}
@@ -3130,7 +3367,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                     prev.filter((id) => id !== tx.id),
                                   );
                               }}
-                              className="w-3.5 h-3.5 rounded border-border bg-panel text-blue-500 cursor-pointer"
+                              className="clean-checkbox"
                             />
                           </td>
                           <td className="p-4 font-mono">
@@ -3148,9 +3385,27 @@ export const Financial: React.FC<FinancialProps> = ({
                                 <RefreshCw className="w-3 h-3 text-blue-400" />
                               )}
                               {hasMultipleProcedures && (
-                                <button type="button" onClick={() => setExpandedIncomeGroups((current) => current.includes(groupKey) ? current.filter((key) => key !== groupKey) : [...current, groupKey])} className="inline-flex items-center gap-1 rounded-md border border-[var(--primary-border)] bg-[var(--primary-dim)] px-2 py-1 text-[10px] font-bold text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white">
-                                  {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                                  {isExpanded ? "Fechar detalhes" : `${items.length} procedimentos`}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedIncomeGroups((current) =>
+                                      current.includes(groupKey)
+                                        ? current.filter(
+                                            (key) => key !== groupKey,
+                                          )
+                                        : [...current, groupKey],
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 rounded-md border border-[var(--primary-border)] bg-[var(--primary-dim)] px-2 py-1 text-[10px] font-bold text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-3 w-3" />
+                                  ) : (
+                                    <ChevronDown className="h-3 w-3" />
+                                  )}
+                                  {isExpanded
+                                    ? "Fechar detalhes"
+                                    : `${items.length} procedimentos`}
                                 </button>
                               )}
                             </div>
@@ -3158,25 +3413,73 @@ export const Financial: React.FC<FinancialProps> = ({
                           <td className="p-4">
                             {tx.category ? (
                               <div className="flex flex-col">
-                                <span className="font-medium text-text">{tx.category}</span>
-                                {tx.procedure && <span className="text-[10px] text-slate-500 font-medium">{tx.procedure}</span>}
+                                <span className="font-medium text-text">
+                                  {tx.category}
+                                </span>
+                                {tx.procedure && (
+                                  <span className="text-[10px] text-slate-500 font-medium">
+                                    {tx.procedure}
+                                  </span>
+                                )}
                                 {hasMultipleProcedures && (
-                                  <button type="button" onClick={() => setExpandedIncomeGroups((current) => current.includes(groupKey) ? current.filter((key) => key !== groupKey) : [...current, groupKey])} className="mt-2 inline-flex w-fit items-center gap-1 text-[10px] font-bold text-[var(--primary)] hover:underline">
-                                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                                    {isExpanded ? "Ocultar procedimentos" : `Ver ${items.length} procedimentos`}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedIncomeGroups((current) =>
+                                        current.includes(groupKey)
+                                          ? current.filter(
+                                              (key) => key !== groupKey,
+                                            )
+                                          : [...current, groupKey],
+                                      )
+                                    }
+                                    className="mt-2 inline-flex w-fit items-center gap-1 text-[10px] font-bold text-[var(--primary)] hover:underline"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronUp className="h-3 w-3" />
+                                    ) : (
+                                      <ChevronDown className="h-3 w-3" />
+                                    )}
+                                    {isExpanded
+                                      ? "Ocultar procedimentos"
+                                      : `Ver ${items.length} procedimentos`}
                                   </button>
                                 )}
                                 {hasMultipleProcedures && isExpanded && (
                                   <div className="mt-2 space-y-1 rounded-lg border border-border bg-panel/60 p-2 text-[10px] text-slate-400">
-                                    {items.map((item) => <div key={item.id}><span className="font-semibold text-text">{item.category}</span>{item.procedure ? ` - ${item.procedure}` : ""}<span className="text-slate-500"> · {item.professional || "Sem profissional"}</span></div>)}
+                                    {items.map((item) => (
+                                      <div key={item.id}>
+                                        <span className="font-semibold text-text">
+                                          {item.category}
+                                        </span>
+                                        {item.procedure
+                                          ? ` - ${item.procedure}`
+                                          : ""}
+                                        <span className="text-slate-500">
+                                          {" "}
+                                          ·{" "}
+                                          {item.professional ||
+                                            "Sem profissional"}
+                                        </span>
+                                      </div>
+                                    ))}
                                   </div>
                                 )}
                               </div>
                             ) : (
                               <SelectMenu
                                 value=""
-                                onChange={(value) => void updateIncomeClassification(tx.id, 'category', value)}
-                                options={incomeCategories.map((category) => ({ value: category.name, label: category.name }))}
+                                onChange={(value) =>
+                                  void updateIncomeClassification(
+                                    tx.id,
+                                    "category",
+                                    value,
+                                  )
+                                }
+                                options={incomeCategories.map((category) => ({
+                                  value: category.name,
+                                  label: category.name,
+                                }))}
                                 placeholder="Incluir categoria"
                                 searchPlaceholder="Buscar categoria..."
                                 className="min-w-[9rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold"
@@ -3184,11 +3487,24 @@ export const Financial: React.FC<FinancialProps> = ({
                             )}
                           </td>
                           <td className="p-4 text-slate-400">
-                            {hasMultipleProcedures ? "Vários profissionais" : tx.professional ? tx.professional : (
+                            {hasMultipleProcedures ? (
+                              "Vários profissionais"
+                            ) : tx.professional ? (
+                              tx.professional
+                            ) : (
                               <SelectMenu
                                 value=""
-                                onChange={(value) => void updateIncomeClassification(tx.id, 'professional', value)}
-                                options={professionals.map((professional) => ({ value: professional.name, label: professional.name }))}
+                                onChange={(value) =>
+                                  void updateIncomeClassification(
+                                    tx.id,
+                                    "professional",
+                                    value,
+                                  )
+                                }
+                                options={professionals.map((professional) => ({
+                                  value: professional.name,
+                                  label: professional.name,
+                                }))}
                                 placeholder="Incluir profissional"
                                 searchPlaceholder="Buscar profissional..."
                                 className="min-w-[10rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold"
@@ -3221,9 +3537,11 @@ export const Financial: React.FC<FinancialProps> = ({
                           </td>
                           <td className="p-4 text-right font-bold text-emerald-400">
                             R${" "}
-                            {items.reduce((total, item) => total + item.amount, 0).toLocaleString("pt-BR", {
-                              minimumFractionDigits: 2,
-                            })}
+                            {items
+                              .reduce((total, item) => total + item.amount, 0)
+                              .toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                              })}
                           </td>
                           <td className="p-4">
                             <div className="relative flex justify-center">
@@ -3236,7 +3554,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 }
                                 aria-label="Abrir ações de auditoria"
                                 aria-expanded={activeAuditMenuId === tx.id}
-                                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2 text-[10px] font-bold transition-all ${tx.reconciliationStatus === "verified" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : tx.reconciliationStatus === "error" ? "border-red-500/30 bg-red-500/15 text-red-400" : "border-border bg-panel text-slate-400 hover:text-text"}`}
+                                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2 text-[10px] font-bold transition ${tx.reconciliationStatus === "verified" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : tx.reconciliationStatus === "error" ? "border-red-500/30 bg-red-500/15 text-red-400" : "border-border bg-panel text-slate-400 hover:text-text"}`}
                               >
                                 {tx.reconciliationStatus === "verified" ? (
                                   <CheckCircle className="w-3.5 h-3.5" />
@@ -3249,14 +3567,17 @@ export const Financial: React.FC<FinancialProps> = ({
                                 <ChevronDown className="w-3 h-3" />
                               </button>
                               {activeAuditMenuId === tx.id && (
-                                <div role="menu" className="dropdown-surface absolute right-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border py-1 shadow-2xl">
+                                <div
+                                  role="menu"
+                                  className="dropdown-surface absolute end-0 top-full z-30 mt-1.5 w-48 overflow-hidden rounded-xl border border-border py-1 shadow-2xl"
+                                >
                                   <button
                                     type="button"
                                     onClick={() => {
                                       void toggleNF(tx);
                                       setActiveAuditMenuId(null);
                                     }}
-                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-text"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-text"
                                   >
                                     <FileText className="h-3.5 w-3.5 text-blue-400" />
                                     {tx.invoiceEmitted
@@ -3269,7 +3590,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                       void toggleAuditStatus(tx, "verified");
                                       setActiveAuditMenuId(null);
                                     }}
-                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
                                   >
                                     <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
                                     Marcar como verificado
@@ -3280,16 +3601,21 @@ export const Financial: React.FC<FinancialProps> = ({
                                       void toggleAuditStatus(tx, "error");
                                       setActiveAuditMenuId(null);
                                     }}
-                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-red-400"
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-red-400"
                                   >
                                     <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
                                     Marcar divergência
                                   </button>
-                                  {orthodonticTransaction?.reconciliationStatus === "verified" && (
+                                  {orthodonticTransaction?.reconciliationStatus ===
+                                    "verified" && (
                                     <button
                                       type="button"
-                                      onClick={() => void openOrthoMaintenanceRegistration(orthodonticTransaction)}
-                                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
+                                      onClick={() =>
+                                        void openOrthoMaintenanceRegistration(
+                                          orthodonticTransaction,
+                                        )
+                                      }
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-start text-[11px] font-medium text-slate-300 transition-colors hover:bg-panel hover:text-emerald-400"
                                     >
                                       <UserRoundCheck className="h-3.5 w-3.5 text-emerald-400" />
                                       Registrar manutenção
@@ -3480,7 +3806,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         : [...prev.statuses, "Paid"],
                     }))
                   }
-                  className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes("Paid") ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}
+                  className={`flex-1 text-[10px] font-bold rounded-md transition ${expFilters.statuses.includes("Paid") ? "bg-emerald-500/20 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}
                 >
                   Pago
                 </button>
@@ -3493,7 +3819,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         : [...prev.statuses, "Pending"],
                     }))
                   }
-                  className={`flex-1 text-[10px] font-bold rounded-md transition-all ${expFilters.statuses.includes("Pending") ? "bg-red-500/20 text-red-400" : "text-slate-500 hover:text-slate-300"}`}
+                  className={`flex-1 text-[10px] font-bold rounded-md transition ${expFilters.statuses.includes("Pending") ? "bg-red-500/20 text-red-400" : "text-slate-500 hover:text-slate-300"}`}
                 >
                   Pendente
                 </button>
@@ -3519,7 +3845,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute end-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400 pointer-events-none" />
               </div>
             </div>
 
@@ -3540,7 +3866,7 @@ export const Financial: React.FC<FinancialProps> = ({
           </div>
         </div>
         {selectedExpenses.length > 0 && (
-          <div className="flex gap-4 items-center bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 mr-auto animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
+          <div className="flex gap-4 items-center bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/20 me-auto animate-in fade-in slide-in-from-top-2 duration-200 mb-2">
             <span className="text-[9px] text-red-400 font-extrabold uppercase tracking-widest">
               Selecionados ({selectedExpenses.length})
             </span>
@@ -3558,7 +3884,7 @@ export const Financial: React.FC<FinancialProps> = ({
               </div>
             </div>
 
-            <div className="relative border-l border-border pl-3 flex items-center">
+            <div className="relative border-s border-border ps-3 flex items-center">
               <button
                 onClick={() => {
                   setIsBulkChangeCatExpensesOpen(false);
@@ -3567,19 +3893,19 @@ export const Financial: React.FC<FinancialProps> = ({
                     activeBulkActionTab === "expense" ? null : "expense",
                   );
                 }}
-                className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md"
+                className="px-2.5 py-1 bg-surface hover:bg-panel border border-border text-slate-300 rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition flex items-center gap-1.5 shadow-md"
               >
                 Ações em Massa <ChevronDown className="w-2.5 h-2.5" />
               </button>
 
               {activeBulkActionTab === "expense" && (
-                <div className="absolute right-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="absolute end-0 bottom-full mb-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                   {!isBulkDeleteExpensesConfirmOpen &&
                     !isBulkChangeCatExpensesOpen && (
                       <>
                         <button
                           onClick={() => setIsBulkChangeCatExpensesOpen(true)}
-                          className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition-all"
+                          className="w-full text-start px-3 py-1.5 text-[10px] font-bold text-slate-200 hover:bg-panel flex items-center gap-1.5 uppercase tracking-wider transition"
                         >
                           <Edit className="w-3 h-3 text-indigo-400" /> Alterar
                           Categoria
@@ -3588,7 +3914,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           onClick={() =>
                             setIsBulkDeleteExpensesConfirmOpen(true)
                           }
-                          className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition-all border-t border-border"
+                          className="w-full text-start px-3 py-1.5 text-[10px] font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-1.5 uppercase tracking-wider transition border-t border-border"
                         >
                           <Trash2 className="w-3 h-3 text-red-400" /> Excluir
                           Selecionados
@@ -3604,7 +3930,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       <div className="flex gap-1">
                         <button
                           onClick={bulkDeleteExpenses}
-                          className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition-all"
+                          className="flex-1 py-1 bg-red-600 hover:bg-red-500 text-text rounded text-[8px] font-bold uppercase transition"
                         >
                           Sim
                         </button>
@@ -3612,7 +3938,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           onClick={() =>
                             setIsBulkDeleteExpensesConfirmOpen(false)
                           }
-                          className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition-all"
+                          className="flex-1 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase transition"
                         >
                           Não
                         </button>
@@ -3630,7 +3956,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           <button
                             key={cat.id}
                             onClick={() => bulkChangeCategoryExpenses(cat.name)}
-                            className="w-full text-left px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition-all truncate"
+                            className="w-full text-start px-2 py-1 text-[9px] text-slate-300 hover:bg-panel hover:text-text rounded transition truncate"
                           >
                             {cat.name}
                           </button>
@@ -3638,7 +3964,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       </div>
                       <button
                         onClick={() => setIsBulkChangeCatExpensesOpen(false)}
-                        className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition-all"
+                        className="w-full py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[8px] font-bold uppercase mt-1 transition"
                       >
                         Voltar
                       </button>
@@ -3654,7 +3980,7 @@ export const Financial: React.FC<FinancialProps> = ({
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-surface text-[10px] font-bold text-slate-400 uppercase tracking-wider z-10">
                 <tr>
-                  <th className="p-4 w-10 text-center">
+                  <th className="w-8 p-2 text-center">
                     <input
                       type="checkbox"
                       onChange={(e) => {
@@ -3670,7 +3996,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           filtered.filter((tx) => tx.status === "Pending")
                             .length
                       }
-                      className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer"
+                      className="clean-checkbox"
                     />
                   </th>
                   <th className="p-4">Data</th>
@@ -3693,7 +4019,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       key={tx.id}
                       className="hover:bg-panel transition-colors"
                     >
-                      <td className="p-4 text-center">
+                      <td className="p-2 text-center">
                         {tx.status === "Pending" && (
                           <input
                             type="checkbox"
@@ -3706,7 +4032,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                   prev.filter((id) => id !== tx.id),
                                 );
                             }}
-                            className="w-3.5 h-3.5 rounded border-border bg-panel text-red-500 cursor-pointer"
+                            className="clean-checkbox"
                           />
                         )}
                       </td>
@@ -3775,7 +4101,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                   togglePaymentStatus(tx);
                                 }
                               }}
-                              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition-all ${tx.status === "Paid" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
+                              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase w-24 transition ${tx.status === "Paid" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"}`}
                             >
                               {tx.status === "Paid" ? "Pago" : "A Pagar"}
                             </button>
@@ -3948,13 +4274,13 @@ export const Financial: React.FC<FinancialProps> = ({
               type="month"
               value={selectedDreMonth}
               onChange={(e) => setSelectedDreMonth(e.target.value)}
-              className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="bg-surface border-none rounded-lg px-3 py-1.5 text-xs text-text focus:ring-2 focus:ring-blue-500 outline-none transition"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
             <p className="text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Total Entradas
             </p>
@@ -3968,7 +4294,7 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
             <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Total Saídas
             </p>
@@ -3982,7 +4308,7 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.totalExpense, prevData.totalExpense)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition-all duration-300">
+          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
             <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Resultado Líquido
             </p>
@@ -3998,7 +4324,7 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.result, prevData.result)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition-all">
+          <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition">
             <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">
               Projeção{" "}
               {new Date(
@@ -4279,19 +4605,17 @@ export const Financial: React.FC<FinancialProps> = ({
           <button
             onClick={async () => {
               if (newIncomeCategory) {
-                await supabase
-                  .from("income_categories")
-                  .insert({
-                    id: "inc_" + Date.now(),
-                    name: newIncomeCategory,
-                    subcategories: [],
-                    type: "income",
-                  });
+                await supabase.from("income_categories").insert({
+                  id: "inc_" + Date.now(),
+                  name: newIncomeCategory,
+                  subcategories: [],
+                  type: "income",
+                });
                 fetchAllData();
                 setNewIncomeCategory("");
               }
             }}
-            className="px-6 py-2 bg-emerald-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-emerald-500"
+            className="px-6 py-2 bg-emerald-600 text-text rounded-lg text-xs font-bold uppercase transition hover:bg-emerald-500"
           >
             Add
           </button>
@@ -4434,19 +4758,17 @@ export const Financial: React.FC<FinancialProps> = ({
           <button
             onClick={async () => {
               if (newExpenseCategory) {
-                await supabase
-                  .from("expense_categories")
-                  .insert({
-                    id: "exp_" + Date.now(),
-                    name: newExpenseCategory,
-                    type: newExpenseType,
-                    subcategories: [],
-                  });
+                await supabase.from("expense_categories").insert({
+                  id: "exp_" + Date.now(),
+                  name: newExpenseCategory,
+                  type: newExpenseType,
+                  subcategories: [],
+                });
                 fetchAllData();
                 setNewExpenseCategory("");
               }
             }}
-            className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition-all hover:bg-red-500"
+            className="px-6 py-2 bg-red-600 text-text rounded-lg text-xs font-bold uppercase transition hover:bg-red-500"
           >
             Add
           </button>
@@ -4616,12 +4938,10 @@ export const Financial: React.FC<FinancialProps> = ({
             <button
               onClick={async () => {
                 if (newProfessional) {
-                  await supabase
-                    .from("professionals")
-                    .insert({
-                      id: "prof_" + Date.now(),
-                      name: newProfessional,
-                    });
+                  await supabase.from("professionals").insert({
+                    id: "prof_" + Date.now(),
+                    name: newProfessional,
+                  });
                   fetchAllData();
                   setNewProfessional("");
                 }
@@ -4646,7 +4966,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       .eq("id", p.id);
                     fetchAllData();
                   }}
-                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -4692,7 +5012,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     await supabase.from("suppliers").delete().eq("id", s.id);
                     fetchAllData();
                   }}
-                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -4721,13 +5041,11 @@ export const Financial: React.FC<FinancialProps> = ({
             <button
               onClick={async () => {
                 if (newSalesTeam) {
-                  await supabase
-                    .from("sales_teams")
-                    .insert({
-                      id: "team_" + Date.now(),
-                      name: newSalesTeam,
-                      color: newSalesTeamColor,
-                    });
+                  await supabase.from("sales_teams").insert({
+                    id: "team_" + Date.now(),
+                    name: newSalesTeam,
+                    color: newSalesTeamColor,
+                  });
                   fetchAllData();
                   setNewSalesTeam("");
                   setNewSalesTeamColor("#8b5cf6");
@@ -4756,7 +5074,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     await supabase.from("sales_teams").delete().eq("id", t.id);
                     fetchAllData();
                   }}
-                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition-all"
+                  className="text-slate-600 hover:text-red-400 group-hover:opacity-100 opacity-0 transition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -4780,13 +5098,11 @@ export const Financial: React.FC<FinancialProps> = ({
           <button
             onClick={async () => {
               if (newPaymentMethod) {
-                await supabase
-                  .from("payment_methods")
-                  .insert({
-                    id: "pm_" + Date.now(),
-                    name: newPaymentMethod,
-                    days_to_receive: 0,
-                  });
+                await supabase.from("payment_methods").insert({
+                  id: "pm_" + Date.now(),
+                  name: newPaymentMethod,
+                  days_to_receive: 0,
+                });
                 fetchAllData();
                 setNewPaymentMethod("");
               }
@@ -4815,7 +5131,7 @@ export const Financial: React.FC<FinancialProps> = ({
                         .eq("id", pm.id);
                       fetchAllData();
                     }}
-                    className="text-slate-600 hover:text-red-400 transition-all"
+                    className="text-slate-600 hover:text-red-400 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -4981,22 +5297,16 @@ export const Financial: React.FC<FinancialProps> = ({
         {/* View Content */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 custom-scrollbar">
           <div className="w-full h-full space-y-4">
-            <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
-                  {visibleTabs.find((t) => t.id === activeSubTab)?.label ||
-                    "Financeiro"}
-                </h1>
-                <p className="text-slate-400 text-xs">
-                  Gestão de fluxo de caixa, DRE e auditoria.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2 text-xs justify-end">
+            <PageHeader
+              icon={Wallet}
+              title={visibleTabs.find((tab) => tab.id === activeSubTab)?.label || "Financeiro"}
+              description="Gestão de fluxo de caixa, DRE e auditoria."
+              actions={(
+                <>
                 <div className="relative">
                   <button
                     onClick={() => setIsBulkEntryMenuOpen((value) => !value)}
-                    className="px-3 py-1.5 glass-button text-text rounded-xl font-bold flex items-center gap-1.5 transition-all"
+                    className="btn btn-secondary"
                     aria-expanded={isBulkEntryMenuOpen}
                   >
                     <List className="w-3.5 h-3.5" /> Ações em massa{" "}
@@ -5005,13 +5315,13 @@ export const Financial: React.FC<FinancialProps> = ({
                     />
                   </button>
                   {isBulkEntryMenuOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="absolute end-0 top-full mt-1.5 w-48 bg-surface border border-border rounded-xl shadow-2xl py-1 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
                       <button
                         onClick={() => {
                           setIsBulkEntryMenuOpen(false);
                           openBulkModal("income");
                         }}
-                        className="w-full text-left px-3 py-2 text-[10px] font-bold text-sky-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all"
+                        className="w-full text-start px-3 py-2 text-[10px] font-bold text-sky-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition"
                       >
                         <List className="w-3.5 h-3.5" /> Receita em massa
                       </button>
@@ -5020,7 +5330,7 @@ export const Financial: React.FC<FinancialProps> = ({
                           setIsBulkEntryMenuOpen(false);
                           openBulkModal("expense");
                         }}
-                        className="w-full text-left px-3 py-2 text-[10px] font-bold text-rose-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition-all border-t border-border"
+                        className="w-full text-start px-3 py-2 text-[10px] font-bold text-rose-400 hover:bg-panel flex items-center gap-2 uppercase tracking-wider transition border-t border-border"
                       >
                         <List className="w-3.5 h-3.5" /> Despesa em massa
                       </button>
@@ -5029,33 +5339,29 @@ export const Financial: React.FC<FinancialProps> = ({
                 </div>
                 <button
                   onClick={() => openModal("income")}
-                  className="px-3 py-1.5 btn btn-primary rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-md"
+                  className="btn btn-primary"
                 >
                   <Plus className="w-3.5 h-3.5" /> Nova receita
                 </button>
-              </div>
-            </div>
-
-            {/* SUB NAVIGATION BAR */}
-            <div className="module-segmented-control no-scrollbar">
-              {visibleTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  data-active={activeSubTab === tab.id}
-                  onClick={() => setActiveSubTab(tab.id as SubTab)}
-                  className={`
-                                 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                 ${
-                                   activeSubTab === tab.id
-                                     ? "bg-[#5347CE]/10 text-[#5347CE] dark:bg-[#887CFD]/15 dark:text-[#887CFD] border border-[#5347CE]/30 dark:border-[#887CFD]/30 shadow-sm"
-                                     : "text-[#64748B] hover:text-[#181B26] hover:bg-[#F4F6FB] dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04] border border-transparent"
-                                 }
-                             `}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+                </>
+              )}
+              tabs={(
+                <div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Seções do financeiro">
+                  {visibleTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeSubTab === tab.id}
+                      data-active={activeSubTab === tab.id}
+                      onClick={() => setActiveSubTab(tab.id as SubTab)}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            />
 
             <div className="flex-1 w-full pb-10">
               {activeSubTab === "overview" && (
@@ -5098,20 +5404,63 @@ export const Financial: React.FC<FinancialProps> = ({
 
                   <div className="financial-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--blue"><Banknote size={16} /></div>
-                      <div className="min-w-0"><strong>R$ {overviewMetrics.currentMonthIncome.toLocaleString("pt-BR")}</strong><span>Receita realizada</span><small>No período selecionado</small></div>
+                      <div className="financial-kpi-icon financial-kpi-icon--blue">
+                        <Banknote size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <strong>
+                          R${" "}
+                          {overviewMetrics.currentMonthIncome.toLocaleString(
+                            "pt-BR",
+                          )}
+                        </strong>
+                        <span>Receita realizada</span>
+                        <small>No período selecionado</small>
+                      </div>
                     </article>
                     <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--green"><Receipt size={16} /></div>
-                      <div className="min-w-0"><strong>{overviewMetrics.transactionCount.toLocaleString("pt-BR")}</strong><span>Recebimentos</span><small>Lançamentos pagos</small></div>
+                      <div className="financial-kpi-icon financial-kpi-icon--green">
+                        <Receipt size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <strong>
+                          {overviewMetrics.transactionCount.toLocaleString(
+                            "pt-BR",
+                          )}
+                        </strong>
+                        <span>Recebimentos</span>
+                        <small>Lançamentos pagos</small>
+                      </div>
                     </article>
                     <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--yellow"><CreditCard size={16} /></div>
-                      <div className="min-w-0"><strong>R$ {overviewMetrics.ticketAverage.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong><span>Ticket médio</span><small>Média por recebimento</small></div>
+                      <div className="financial-kpi-icon financial-kpi-icon--yellow">
+                        <CreditCard size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <strong>
+                          R${" "}
+                          {overviewMetrics.ticketAverage.toLocaleString(
+                            "pt-BR",
+                            { minimumFractionDigits: 2 },
+                          )}
+                        </strong>
+                        <span>Ticket médio</span>
+                        <small>Média por recebimento</small>
+                      </div>
                     </article>
                     <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--purple"><ShieldCheck size={16} /></div>
-                      <div className="min-w-0"><strong>{overviewMetrics.errorCount}</strong><span>Pendências de auditoria</span><small>{overviewMetrics.errorCount === 0 ? "Tudo conciliado" : "Requer atenção"}</small></div>
+                      <div className="financial-kpi-icon financial-kpi-icon--purple">
+                        <ShieldCheck size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <strong>{overviewMetrics.errorCount}</strong>
+                        <span>Pendências de auditoria</span>
+                        <small>
+                          {overviewMetrics.errorCount === 0
+                            ? "Tudo conciliado"
+                            : "Requer atenção"}
+                        </small>
+                      </div>
                     </article>
                   </div>
 
@@ -5167,23 +5516,42 @@ export const Financial: React.FC<FinancialProps> = ({
                     ].map((chart, idx) => (
                       <div
                         key={idx}
-                        onClick={idx === 0 ? () => setIsCategoryRankingOpen(true) : undefined}
-                        onKeyDown={idx === 0 ? (event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setIsCategoryRankingOpen(true);
-                          }
-                        } : undefined}
+                        onClick={
+                          idx === 0
+                            ? () => setIsCategoryRankingOpen(true)
+                            : undefined
+                        }
+                        onKeyDown={
+                          idx === 0
+                            ? (event) => {
+                                if (
+                                  event.key === "Enter" ||
+                                  event.key === " "
+                                ) {
+                                  event.preventDefault();
+                                  setIsCategoryRankingOpen(true);
+                                }
+                              }
+                            : undefined
+                        }
                         role={idx === 0 ? "button" : undefined}
                         tabIndex={idx === 0 ? 0 : undefined}
-                        title={idx === 0 ? "Abrir ranking de procedimentos por categoria" : undefined}
+                        title={
+                          idx === 0
+                            ? "Abrir ranking de procedimentos por categoria"
+                            : undefined
+                        }
                         className={`financial-donut-card glass-panel rounded-xl p-4 border border-border flex flex-col min-h-[244px] ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
                       >
                         <div className="mb-3 flex items-center justify-between gap-1.5">
                           <h3 className="text-xs font-semibold text-text">
                             {chart.title}
                           </h3>
-                          {idx === 0 && <span className="material-symbols-outlined text-sm text-[var(--primary)]">open_in_new</span>}
+                          {idx === 0 && (
+                            <span className="material-symbols-outlined text-sm text-[var(--primary)]">
+                              open_in_new
+                            </span>
+                          )}
                         </div>
 
                         <div className="h-[210px] w-full relative flex items-center justify-center">
@@ -5245,7 +5613,7 @@ export const Financial: React.FC<FinancialProps> = ({
                               key={index}
                               onMouseEnter={() => chart.setActive(index)}
                               onMouseLeave={() => chart.setActive(null)}
-                              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase transition cursor-pointer ${
                                 chart.activeIndex === index
                                   ? "bg-sky-500/20 border-sky-400 text-sky-300 scale-105 shadow-sm"
                                   : "bg-panel/60 border-border/60 text-slate-400 hover:text-text hover:bg-panel"
@@ -5566,9 +5934,20 @@ export const Financial: React.FC<FinancialProps> = ({
             >
               <div className="flex items-start justify-between gap-4 border-b border-border p-5">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">Receitas por categoria</p>
-                  <h3 id="category-ranking-title" className="mt-1 text-lg font-bold text-text">Ranking de procedimentos</h3>
-                  <p className="mt-1 text-xs text-slate-500">Valores realizados entre {overviewFilters.start.split("-").reverse().join("/")} e {overviewFilters.end.split("-").reverse().join("/")}.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
+                    Receitas por categoria
+                  </p>
+                  <h3
+                    id="category-ranking-title"
+                    className="mt-1 text-lg font-bold text-text"
+                  >
+                    Ranking de procedimentos
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Valores realizados entre{" "}
+                    {overviewFilters.start.split("-").reverse().join("/")} e{" "}
+                    {overviewFilters.end.split("-").reverse().join("/")}.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -5589,20 +5968,36 @@ export const Financial: React.FC<FinancialProps> = ({
                           <th className="w-12 px-3 py-2.5 text-center">#</th>
                           <th className="px-3 py-2.5">Procedimento</th>
                           <th className="px-3 py-2.5">Categoria</th>
-                          <th className="px-3 py-2.5 text-right">Valor realizado</th>
+                          <th className="px-3 py-2.5 text-right">
+                            Valor realizado
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border text-sm">
-                        {overviewMetrics.categoryProcedureRanking.map((item, index) => (
-                          <tr key={`${item.category}-${item.procedure}`} className="transition-colors hover:bg-[var(--surface-hover)]">
-                            <td className="px-3 py-3 text-center text-xs font-bold text-[var(--primary)]">{index + 1}</td>
-                            <td className="px-3 py-3 font-semibold text-text">{item.procedure}</td>
-                            <td className="px-3 py-3 text-xs text-slate-500">{item.category}</td>
-                            <td className="px-3 py-3 text-right font-mono text-sm font-bold tabular-nums text-text">
-                              {item.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </td>
-                          </tr>
-                        ))}
+                        {overviewMetrics.categoryProcedureRanking.map(
+                          (item, index) => (
+                            <tr
+                              key={`${item.category}-${item.procedure}`}
+                              className="transition-colors hover:bg-[var(--surface-hover)]"
+                            >
+                              <td className="px-3 py-3 text-center text-xs font-bold text-[var(--primary)]">
+                                {index + 1}
+                              </td>
+                              <td className="px-3 py-3 font-semibold text-text">
+                                {item.procedure}
+                              </td>
+                              <td className="px-3 py-3 text-xs text-slate-500">
+                                {item.category}
+                              </td>
+                              <td className="px-3 py-3 text-right font-mono text-sm font-bold tabular-nums text-text">
+                                {item.value.toLocaleString("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                })}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -5619,36 +6014,90 @@ export const Financial: React.FC<FinancialProps> = ({
         {maintenanceTransaction && (
           <div
             className="fixed inset-0 z-[220] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
-            onMouseDown={() => !isRegisteringOrthoMaintenance && setMaintenanceTransaction(null)}
+            onMouseDown={() =>
+              !isRegisteringOrthoMaintenance && setMaintenanceTransaction(null)
+            }
           >
             <section
               role="dialog"
               aria-modal="true"
               aria-labelledby="ortho-maintenance-title"
-              className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
+              className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
               onMouseDown={(event) => event.stopPropagation()}
             >
-              <header className="flex items-start justify-between gap-4 border-b border-border p-5">
+              <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border p-5">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Receita conciliada</p>
-                  <h3 id="ortho-maintenance-title" className="mt-1 text-lg font-bold text-text">Registrar manutenção</h3>
-                  <p className="mt-1 text-xs text-slate-500">O pagamento será registrado em {maintenanceTransaction.date.split("-").reverse().join("/")}, a mesma data do lançamento.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                    Receita conciliada
+                  </p>
+                  <h3
+                    id="ortho-maintenance-title"
+                    className="mt-1 text-lg font-bold text-text"
+                  >
+                    Registrar manutenção
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    O pagamento será registrado em{" "}
+                    {maintenanceTransaction.date.split("-").reverse().join("/")}
+                    , a mesma data do lançamento.
+                  </p>
                 </div>
-                <button type="button" onClick={() => setMaintenanceTransaction(null)} disabled={isRegisteringOrthoMaintenance} className="grid size-8 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-[var(--surface-hover)] hover:text-text" aria-label="Fechar"><X className="size-4" /></button>
+                <button
+                  type="button"
+                  onClick={() => setMaintenanceTransaction(null)}
+                  disabled={isRegisteringOrthoMaintenance}
+                  className="grid size-8 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-[var(--surface-hover)] hover:text-text"
+                  aria-label="Fechar"
+                >
+                  <X className="size-4" />
+                </button>
               </header>
-              <div className="border-b border-border p-4">
+              <div className="shrink-0 border-b border-border p-4">
                 <label className="flex h-10 items-center gap-2 rounded-xl border border-border bg-[var(--background)] px-3">
                   <Search className="size-4 text-slate-400" />
-                  <input value={orthoMaintenanceSearch} onChange={(event) => setOrthoMaintenanceSearch(event.target.value)} placeholder="Buscar paciente de ortodontia" className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-slate-400" autoFocus />
+                  <input
+                    value={orthoMaintenanceSearch}
+                    onChange={(event) =>
+                      setOrthoMaintenanceSearch(event.target.value)
+                    }
+                    placeholder="Buscar paciente de ortodontia"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-slate-400"
+                    autoFocus
+                  />
                 </label>
               </div>
-              <div className="custom-scrollbar max-h-80 overflow-y-auto p-2">
-                {isLoadingOrthoMaintenancePatients ? <p className="px-3 py-8 text-center text-sm text-slate-500">Carregando pacientes...</p> : matchingOrthoMaintenancePatients.length ? matchingOrthoMaintenancePatients.map((patient) => (
-                  <button key={patient.id} type="button" disabled={isRegisteringOrthoMaintenance} onClick={() => void registerOrthoMaintenance(patient)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-wait disabled:opacity-60">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500"><UserRoundCheck className="size-4" /></span>
-                    <span className="min-w-0"><span className="block truncate text-sm font-semibold text-text">{patient.name}</span><span className="mt-0.5 block text-[11px] text-slate-500">Registrar manutenção deste mês</span></span>
-                  </button>
-                )) : <p className="px-3 py-8 text-center text-sm text-slate-500">Nenhum paciente de ortodontia encontrado.</p>}
+              <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
+                {isLoadingOrthoMaintenancePatients ? (
+                  <p className="px-3 py-8 text-center text-sm text-slate-500">
+                    Carregando pacientes...
+                  </p>
+                ) : matchingOrthoMaintenancePatients.length ? (
+                  matchingOrthoMaintenancePatients.map((patient) => (
+                    <button
+                      key={patient.id}
+                      type="button"
+                      disabled={isRegisteringOrthoMaintenance}
+                      onClick={() => void registerOrthoMaintenance(patient)}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                        <UserRoundCheck className="size-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-text">
+                          {patient.name}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] text-slate-500">
+                          Registrar manutenção deste mês
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-3 py-8 text-center text-sm text-slate-500">
+                    Nenhum paciente de ortodontia encontrado.
+                  </p>
+                )}
               </div>
             </section>
           </div>
@@ -5724,7 +6173,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 <button
                   onClick={handleSaveAccount}
                   disabled={isSaving}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text font-bold rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-text font-bold rounded-xl text-sm shadow-xl transition active:scale-95 disabled:opacity-50"
                 >
                   Criar Conta
                 </button>
@@ -5770,7 +6219,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     />
                     <button
                       onClick={handleProcessPastedData}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-xs font-bold uppercase transition-all"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-text rounded-lg text-xs font-bold uppercase transition"
                     >
                       Processar Cola
                     </button>
@@ -5780,7 +6229,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   <label className="text-[10px] font-bold text-slate-500 uppercase px-1 mb-1 block">
                     Ou subir arquivo CSV
                   </label>
-                  <label className="cursor-pointer px-4 py-2 bg-panel border border-border hover:bg-panel/80 text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-2 transition-all">
+                  <label className="cursor-pointer px-4 py-2 bg-panel border border-border hover:bg-panel/80 text-slate-300 rounded-lg text-xs font-bold uppercase flex items-center gap-2 transition">
                     <Upload className="w-4 h-4" />
                     Selecionar .CSV
                     <input
@@ -6008,7 +6457,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 </table>
                 <button
                   onClick={addBulkRow}
-                  className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition-all font-bold text-xs uppercase tracking-widest"
+                  className="mt-4 w-full py-4 border-2 border-dashed border-border rounded-xl text-slate-500 hover:text-text hover:border-border transition font-bold text-xs uppercase tracking-widest"
                 >
                   + Adicionar Nova Linha de Célula
                 </button>
@@ -6031,7 +6480,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 <button
                   onClick={handleSaveBulk}
                   disabled={isSaving}
-                  className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest"
+                  className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-text font-black rounded-xl text-sm shadow-xl transition active:scale-95 disabled:opacity-50 uppercase tracking-widest"
                 >
                   Processar Planilha
                 </button>
@@ -6226,7 +6675,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 settlementDate: "",
                               })
                             }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Pending" ? "bg-red-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${formData.status === "Pending" ? "bg-red-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                           >
                             A Pagar
                           </button>
@@ -6239,7 +6688,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 settlementDate: today,
                               })
                             }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                           >
                             Pago
                           </button>
@@ -6298,22 +6747,68 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
                         {isBoletoPayment ? (
-                          <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-3">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PRIMEIRO VENCIMENTO</label>
-                              <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value, dueDay: Number(e.target.value.slice(-2)) || formData.dueDay })} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                PRIMEIRO VENCIMENTO
+                              </label>
+                              <input
+                                type="date"
+                                value={formData.date}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    date: e.target.value,
+                                    dueDay:
+                                      Number(e.target.value.slice(-2)) ||
+                                      formData.dueDay,
+                                  })
+                                }
+                                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                              />
                             </div>
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DIA</label>
-                              <select value={formData.dueDay} onChange={(e) => setFormData({ ...formData, dueDay: Number(e.target.value) })} aria-label="Dia de vencimento do boleto" className="w-full bg-surface border border-border rounded-xl px-3 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text">
-                                {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                DIA
+                              </label>
+                              <select
+                                value={formData.dueDay}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    dueDay: Number(e.target.value),
+                                  })
+                                }
+                                aria-label="Dia de vencimento do boleto"
+                                className="w-full bg-surface border border-border rounded-xl px-3 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                              >
+                                {Array.from(
+                                  { length: 31 },
+                                  (_, index) => index + 1,
+                                ).map((day) => (
+                                  <option key={day} value={day}>
+                                    {day}
+                                  </option>
+                                ))}
                               </select>
                             </div>
                           </div>
                         ) : (
                           <>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DATA DE RECEBIMENTO</label>
-                            <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold" />
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                              DATA DE RECEBIMENTO
+                            </label>
+                            <input
+                              type="date"
+                              value={formData.date}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  date: e.target.value,
+                                })
+                              }
+                              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold"
+                            />
                           </>
                         )}
                       </div>
@@ -6322,136 +6817,184 @@ export const Financial: React.FC<FinancialProps> = ({
                           PACIENTE
                         </label>
                         <div className="relative">
-                          <Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Search className="pointer-events-none absolute start-3.5 top-3.5 h-4 w-4 text-slate-400" />
                           <input
                             value={formData.description}
-                            onChange={(e) =>
-                              {
-                                const description = e.target.value;
-                                setFormData({ ...formData, description });
-                                const keepsSelectedPatient =
-                                  selectedOrthoPatient &&
-                                  normalizePatientName(selectedOrthoPatient.name) === normalizePatientName(description);
-                                setSelectedOrthoPatient(keepsSelectedPatient ? selectedOrthoPatient : null);
-                                if (!keepsSelectedPatient) setShouldRegisterOrthoMaintenance(false);
-                              }
-                            }
+                            onChange={(e) => {
+                              const description = e.target.value;
+                              setFormData({ ...formData, description });
+                              const keepsSelectedPatient =
+                                selectedOrthoPatient &&
+                                normalizePatientName(
+                                  selectedOrthoPatient.name,
+                                ) === normalizePatientName(description);
+                              setSelectedOrthoPatient(
+                                keepsSelectedPatient
+                                  ? selectedOrthoPatient
+                                  : null,
+                              );
+                              if (!keepsSelectedPatient)
+                                setShouldRegisterOrthoMaintenance(false);
+                            }}
                             autoComplete="off"
                             placeholder="Digite ao menos 2 letras para buscar"
-                            className="w-full bg-surface border border-border rounded-xl py-3 pl-10 pr-4 text-text outline-none"
+                            className="w-full bg-surface border border-border rounded-xl py-3 ps-10 pe-4 text-text outline-none"
                           />
-                          {(isPatientSearchLoading || patientMatches.length > 0 || patientSearchError) && formData.description.trim().length >= 2 && (
-                            <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white shadow-xl dark:bg-slate-900">
-                              {isPatientSearchLoading && <p className="px-4 py-3 text-xs text-slate-500">Buscando pacientes ativos de ortodontia...</p>}
-                              {!isPatientSearchLoading && patientSearchError && <p className="px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{patientSearchError}</p>}
-                              {!isPatientSearchLoading && !patientSearchError && patientMatches.length === 0 && <p className="px-4 py-3 text-xs text-slate-500">Nenhum paciente ativo de ortodontia encontrado.</p>}
-                              {!isPatientSearchLoading && patientMatches.map((patient) => (
-                                <button
-                                  key={patient.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData((current) => ({
-                                      ...current,
-                                      description: patient.name,
-                                      category: orthoMaintenanceIncomeDefaults.category || current.category,
-                                      procedure: orthoMaintenanceIncomeDefaults.category
-                                        ? orthoMaintenanceIncomeDefaults.procedure
-                                        : current.procedure,
-                                    }));
-                                    setSelectedOrthoPatient(patient);
-                                    setShouldRegisterOrthoMaintenance(true);
-                                    setPatientMatches([]);
-                                  }}
-                                  className="flex w-full flex-col px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
-                                >
-                                  <span className="text-sm font-semibold text-text">{patient.name}</span>
-                                  <span className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">Paciente ativo de ortodontia</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          {(isPatientSearchLoading ||
+                            patientMatches.length > 0 ||
+                            patientSearchError) &&
+                            formData.description.trim().length >= 2 && (
+                              <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-border bg-white shadow-xl dark:bg-slate-900">
+                                {isPatientSearchLoading && (
+                                  <p className="px-4 py-3 text-xs text-slate-500">
+                                    Buscando pacientes ativos de ortodontia...
+                                  </p>
+                                )}
+                                {!isPatientSearchLoading &&
+                                  patientSearchError && (
+                                    <p className="px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                                      {patientSearchError}
+                                    </p>
+                                  )}
+                                {!isPatientSearchLoading &&
+                                  !patientSearchError &&
+                                  patientMatches.length === 0 && (
+                                    <p className="px-4 py-3 text-xs text-slate-500">
+                                      Nenhum paciente ativo de ortodontia
+                                      encontrado.
+                                    </p>
+                                  )}
+                                {!isPatientSearchLoading &&
+                                  patientMatches.map((patient) => (
+                                    <button
+                                      key={patient.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setFormData((current) => ({
+                                          ...current,
+                                          description: patient.name,
+                                          category:
+                                            orthoMaintenanceIncomeDefaults.category ||
+                                            current.category,
+                                          procedure:
+                                            orthoMaintenanceIncomeDefaults.category
+                                              ? orthoMaintenanceIncomeDefaults.procedure
+                                              : current.procedure,
+                                        }));
+                                        setSelectedOrthoPatient(patient);
+                                        setShouldRegisterOrthoMaintenance(true);
+                                        setPatientMatches([]);
+                                      }}
+                                      className="flex w-full flex-col px-4 py-3 text-start transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
+                                    >
+                                      <span className="text-sm font-semibold text-text">
+                                        {patient.name}
+                                      </span>
+                                      <span className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+                                        Paciente ativo de ortodontia
+                                      </span>
+                                    </button>
+                                  ))}
+                              </div>
+                            )}
                         </div>
                         {selectedOrthoPatient ? (
                           <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-[11px] text-text">
                             <input
                               type="checkbox"
                               checked={shouldRegisterOrthoMaintenance}
-                              onChange={(event) => setShouldRegisterOrthoMaintenance(event.target.checked)}
+                              onChange={(event) =>
+                                setShouldRegisterOrthoMaintenance(
+                                  event.target.checked,
+                                )
+                              }
                               className="mt-0.5 size-3.5 rounded border-emerald-500/40 text-emerald-600 focus:ring-emerald-500"
                             />
                             <span>
-                              <strong className="block text-emerald-700 dark:text-emerald-400">Registrar pagamento de manutenção</strong>
+                              <strong className="block text-emerald-700 dark:text-emerald-400">
+                                Registrar pagamento de manutenção
+                              </strong>
                               {isSelectedOrthoMaintenancePayment
                                 ? `O pagamento será marcado para ${selectedOrthoPatient.name} na Ortodontia. Categoria e procedimento foram preenchidos e podem ser alterados.`
                                 : "O registro só é feito para uma receita quitada, sem boleto pendente ou procedimentos divididos."}
                             </span>
                           </label>
                         ) : (
-                          <p className="text-[10px] text-slate-500">A busca mostra somente pacientes ativos de ortodontia.</p>
+                          <p className="text-[10px] text-slate-500">
+                            A busca mostra somente pacientes ativos de
+                            ortodontia.
+                          </p>
                         )}
                       </div>
                     </div>
                     {!isProcedureSplit && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          CATEGORIA
-                        </label>
-                        <select
-                          value={formData.category}
-                          onChange={(e) => handleCategoryChange(e.target.value)}
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
-                        >
-                          {(modalType === "income"
-                            ? incomeCategories
-                            : expenseCategories
-                          ).map((c) => (
-                            <option key={c.id} value={c.name}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          SUB-CATEGORIA / PROCEDIMENTO
-                        </label>
-                        <select
-                          value={formData.procedure}
-                          onChange={(e) =>
-                            handleSubCategoryChange(e.target.value)
-                          }
-                          disabled={
-                            modalType === "income" &&
-                            formData.category === "Excalibur"
-                          }
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
-                        >
-                          <option value="">
-                            {modalType === "income" &&
-                            formData.category === "Excalibur"
-                              ? "Não se aplica"
-                              : "Selecione..."}
-                          </option>
-                          {(
-                            (modalType === "income"
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            CATEGORIA
+                          </label>
+                          <select
+                            value={formData.category}
+                            onChange={(e) =>
+                              handleCategoryChange(e.target.value)
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                          >
+                            {(modalType === "income"
                               ? incomeCategories
                               : expenseCategories
-                            ).find((c) => c.name === formData.category)
-                              ?.subcategories || []
-                          ).map((s) => (
-                            <option key={s.id} value={s.name}>
-                              {s.name}
+                            ).map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            SUB-CATEGORIA / PROCEDIMENTO
+                          </label>
+                          <select
+                            value={formData.procedure}
+                            onChange={(e) =>
+                              handleSubCategoryChange(e.target.value)
+                            }
+                            disabled={
+                              modalType === "income" &&
+                              formData.category === "Excalibur"
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                          >
+                            <option value="">
+                              {modalType === "income" &&
+                              formData.category === "Excalibur"
+                                ? "Não se aplica"
+                                : "Selecione..."}
                             </option>
-                          ))}
-                        </select>
+                            {(
+                              (modalType === "income"
+                                ? incomeCategories
+                                : expenseCategories
+                              ).find((c) => c.name === formData.category)
+                                ?.subcategories || []
+                            ).map((s) => (
+                              <option key={s.id} value={s.name}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6" hidden={isProcedureSplit}>
+                    <div
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                      hidden={isProcedureSplit}
+                    >
                       <div className="flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          {isBoletoPayment ? "VALOR TOTAL DA VENDA (R$)" : "VALOR (R$)"}
+                          {isBoletoPayment
+                            ? "VALOR TOTAL DA VENDA (R$)"
+                            : "VALOR (R$)"}
                         </label>
                         <input
                           type="number"
@@ -6467,43 +7010,141 @@ export const Financial: React.FC<FinancialProps> = ({
                     {isProcedureSplit && (
                       <div className="space-y-5">
                         {procedureSplits.map((item, index) => {
-                          const subcategories = incomeCategories.find((category) => category.name === item.category)?.subcategories || [];
+                          const subcategories =
+                            incomeCategories.find(
+                              (category) => category.name === item.category,
+                            )?.subcategories || [];
                           const isExcalibur = item.category === "Excalibur";
                           return (
-                            <div key={item.id} className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)_minmax(8rem,0.55fr)_2.5rem] md:items-end md:gap-4">
+                            <div
+                              key={item.id}
+                              className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1fr)_minmax(8rem,0.55fr)_2.5rem] md:items-end md:gap-4"
+                            >
                               <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Categoria</label>
-                                <select value={item.category} onChange={(event) => updateProcedureSplit(item.id, "category", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
-                                  {incomeCategories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                  Categoria
+                                </label>
+                                <select
+                                  value={item.category}
+                                  onChange={(event) =>
+                                    updateProcedureSplit(
+                                      item.id,
+                                      "category",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text"
+                                >
+                                  {incomeCategories.map((category) => (
+                                    <option
+                                      key={category.id}
+                                      value={category.name}
+                                    >
+                                      {category.name}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                               <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sub-categoria / procedimento</label>
-                                <select value={item.procedure} disabled={isExcalibur} onChange={(event) => updateProcedureSplit(item.id, "procedure", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-surface [&>option]:text-text">
-                                  <option value="">{isExcalibur ? "Não se aplica" : "Selecione..."}</option>
-                                  {subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.name}>{subcategory.name}</option>)}
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                  Sub-categoria / procedimento
+                                </label>
+                                <select
+                                  value={item.procedure}
+                                  disabled={isExcalibur}
+                                  onChange={(event) =>
+                                    updateProcedureSplit(
+                                      item.id,
+                                      "procedure",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-surface [&>option]:text-text"
+                                >
+                                  <option value="">
+                                    {isExcalibur
+                                      ? "Não se aplica"
+                                      : "Selecione..."}
+                                  </option>
+                                  {subcategories.map((subcategory) => (
+                                    <option
+                                      key={subcategory.id}
+                                      value={subcategory.name}
+                                    >
+                                      {subcategory.name}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                               <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{isExcalibur ? "Profissional (opcional)" : "Profissional"}</label>
-                                <select value={item.professional} onChange={(event) => updateProcedureSplit(item.id, "professional", event.target.value)} className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                  {isExcalibur
+                                    ? "Profissional (opcional)"
+                                    : "Profissional"}
+                                </label>
+                                <select
+                                  value={item.professional}
+                                  onChange={(event) =>
+                                    updateProcedureSplit(
+                                      item.id,
+                                      "professional",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none [&>option]:bg-surface [&>option]:text-text"
+                                >
                                   <option value="">Selecione...</option>
-                                  {professionals.map((professional) => <option key={professional.id} value={professional.name}>{professional.name}</option>)}
+                                  {professionals.map((professional) => (
+                                    <option
+                                      key={professional.id}
+                                      value={professional.name}
+                                    >
+                                      {professional.name}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                               <div className="flex max-w-[16rem] flex-col gap-2">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Valor (R$)</label>
-                                <input type="number" min="0" step="0.01" value={item.amount} onChange={(event) => updateProcedureSplit(item.id, "amount", event.target.value)} placeholder="0,00" className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none" />
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                  Valor (R$)
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={item.amount}
+                                  onChange={(event) =>
+                                    updateProcedureSplit(
+                                      item.id,
+                                      "amount",
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="0,00"
+                                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 font-bold text-text outline-none"
+                                />
                               </div>
                               <div className="hidden md:flex md:h-12 md:items-center md:justify-end">
                                 {procedureSplits.length > 2 && (
-                                  <button type="button" onClick={() => removeProcedureSplit(item.id)} className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600" aria-label={`Remover procedimento ${index + 1}`}>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeProcedureSplit(item.id)
+                                    }
+                                    className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600"
+                                    aria-label={`Remover procedimento ${index + 1}`}
+                                  >
                                     <X className="h-4 w-4" />
                                   </button>
                                 )}
                               </div>
                               {procedureSplits.length > 2 && (
-                                <button type="button" onClick={() => removeProcedureSplit(item.id)} className="justify-self-start rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600 md:hidden" aria-label={`Remover procedimento ${index + 1}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => removeProcedureSplit(item.id)}
+                                  className="justify-self-start rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-600 md:hidden"
+                                  aria-label={`Remover procedimento ${index + 1}`}
+                                >
                                   <X className="h-4 w-4" />
                                 </button>
                               )}
@@ -6515,39 +7156,66 @@ export const Financial: React.FC<FinancialProps> = ({
                     <div className="flex items-center justify-end gap-3">
                       <button
                         type="button"
-                        onClick={() => isProcedureSplit ? setProcedureSplits((current) => [...current, createProcedureSplit()]) : toggleProcedureSplit()}
+                        onClick={() =>
+                          isProcedureSplit
+                            ? setProcedureSplits((current) => [
+                                ...current,
+                                createProcedureSplit(),
+                              ])
+                            : toggleProcedureSplit()
+                        }
                         disabled={!!formData.id}
-                        className="ml-auto text-[11px] font-bold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        className="ms-auto text-[11px] font-bold text-[var(--primary)] transition-colors hover:text-[var(--primary-hover)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         + Incluir mais procedimentos
                       </button>
                     </div>
-                    {isProcedureSplit && <div className="border-t border-border pt-3 text-right text-[11px] text-slate-500">Total dos procedimentos: <span className="font-bold text-text">R$ {procedureSplits.reduce((total, item) => total + (parseFloat((item.amount || "0").replace(",", ".")) || 0), 0).toFixed(2).replace(".", ",")}</span></div>}
+                    {isProcedureSplit && (
+                      <div className="border-t border-border pt-3 text-end text-[11px] text-slate-500">
+                        Total dos procedimentos:{" "}
+                        <span className="font-bold text-text">
+                          R${" "}
+                          {procedureSplits
+                            .reduce(
+                              (total, item) =>
+                                total +
+                                (parseFloat(
+                                  (item.amount || "0").replace(",", "."),
+                                ) || 0),
+                              0,
+                            )
+                            .toFixed(2)
+                            .replace(".", ",")}
+                        </span>
+                      </div>
+                    )}
                     <div className="animate-in slide-in-from-top-1">
-                      {!isProcedureSplit && <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                          {formData.category === "Excalibur"
-                            ? "PROFISSIONAL (OPCIONAL)"
-                            : "PROFISSIONAL"}
-                        </label>
-                        <select
-                          value={formData.professional}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              professional: e.target.value,
-                            })
-                          }
-                          className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
-                        >
-                          <option value="">Selecione...</option>
-                          {professionals.map((p) => (
-                            <option key={p.id} value={p.name}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>}
+                      {!isProcedureSplit && (
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            {formData.category === "Excalibur"
+                              ? "PROFISSIONAL (OPCIONAL)"
+                              : "PROFISSIONAL"}
+                          </label>
+                          <select
+                            value={formData.professional}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                professional: e.target.value,
+                              })
+                            }
+                            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text outline-none font-bold [&>option]:bg-surface [&>option]:text-text"
+                          >
+                            <option value="">Selecione...</option>
+                            {professionals.map((p) => (
+                              <option key={p.id} value={p.name}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <div className="relative flex flex-col gap-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                           VENDEDOR
@@ -6584,42 +7252,71 @@ export const Financial: React.FC<FinancialProps> = ({
                               <option value={formData.salesTeam}>
                                 {formData.salesTeam}
                               </option>
-                          )}
+                            )}
                         </select>
                         <button
                           type="button"
-                          onClick={() => setIsSellerPickerOpen((current) => !current)}
+                          onClick={() =>
+                            setIsSellerPickerOpen((current) => !current)
+                          }
                           disabled={
                             formData.procedure === "Panorâmica" ||
                             formData.procedure === "Documentação Inicial"
                           }
                           className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] px-3 py-2.5 text-xs font-bold text-[var(--primary)] transition-colors hover:bg-[var(--primary)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <Users className="h-4 w-4" /> Escolher ou alterar vendedor
+                          <Users className="h-4 w-4" /> Escolher ou alterar
+                          vendedor
                         </button>
                         {isSellerPickerOpen && (
                           <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-border bg-surface p-2 shadow-2xl">
                             <div className="mb-2 flex items-center justify-between gap-3 px-2 pt-1">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Vendedores cadastrados</span>
-                              <button type="button" onClick={() => setIsSellerPickerOpen(false)} className="rounded p-1 text-slate-400 hover:bg-panel hover:text-text" aria-label="Fechar vendedores"><X className="h-3.5 w-3.5" /></button>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                Vendedores cadastrados
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setIsSellerPickerOpen(false)}
+                                className="rounded p-1 text-slate-400 hover:bg-panel hover:text-text"
+                                aria-label="Fechar vendedores"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
                             </div>
                             <div className="max-h-48 space-y-1 overflow-y-auto custom-scrollbar">
-                              {salesTeams.length > 0 ? salesTeams.map((seller) => (
-                                <button
-                                  key={seller.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData((current) => ({ ...current, salesTeam: seller.name }));
-                                    setIsSellerPickerOpen(false);
-                                  }}
-                                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold transition-colors ${formData.salesTeam === seller.name ? "bg-[var(--primary-dim)] text-[var(--primary)]" : "text-text hover:bg-panel"}`}
-                                >
-                                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: seller.color || "#8b5cf6" }} />
-                                  <span className="truncate">{seller.name}</span>
-                                  {formData.salesTeam === seller.name && <Check className="ml-auto h-3.5 w-3.5" />}
-                                </button>
-                              )) : (
-                                <p className="px-3 py-4 text-center text-xs text-slate-500">Nenhum vendedor cadastrado.</p>
+                              {salesTeams.length > 0 ? (
+                                salesTeams.map((seller) => (
+                                  <button
+                                    key={seller.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setFormData((current) => ({
+                                        ...current,
+                                        salesTeam: seller.name,
+                                      }));
+                                      setIsSellerPickerOpen(false);
+                                    }}
+                                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs font-bold transition-colors ${formData.salesTeam === seller.name ? "bg-[var(--primary-dim)] text-[var(--primary)]" : "text-text hover:bg-panel"}`}
+                                  >
+                                    <span
+                                      className="h-2 w-2 shrink-0 rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          seller.color || "#8b5cf6",
+                                      }}
+                                    />
+                                    <span className="truncate">
+                                      {seller.name}
+                                    </span>
+                                    {formData.salesTeam === seller.name && (
+                                      <Check className="ms-auto h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                ))
+                              ) : (
+                                <p className="px-3 py-4 text-center text-xs text-slate-500">
+                                  Nenhum vendedor cadastrado.
+                                </p>
                               )}
                             </div>
                           </div>
@@ -6650,35 +7347,61 @@ export const Financial: React.FC<FinancialProps> = ({
                           !formData.id && (
                             <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-panel/60 px-4 py-3">
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-text">Dividir entre formas de pagamento</p>
-                                <p className="mt-0.5 text-[11px] text-slate-500">Ex.: R$ 200 no Pix e R$ 300 em Dinheiro.</p>
+                                <p className="text-xs font-bold text-text">
+                                  Dividir entre formas de pagamento
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                  Ex.: R$ 200 no Pix e R$ 300 em Dinheiro.
+                                </p>
                               </div>
                               <button
                                 type="button"
                                 onClick={togglePaymentSplit}
                                 className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition-colors ${isPaymentSplit ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border bg-surface text-slate-600 hover:bg-surface-high hover:text-text"}`}
                               >
-                                {isPaymentSplit ? "Pagamento dividido" : "Dividir pagamento"}
+                                {isPaymentSplit
+                                  ? "Pagamento dividido"
+                                  : "Dividir pagamento"}
                               </button>
                             </div>
                           )}
                         {isPaymentSplit && (
                           <div className="mt-3 rounded-xl border border-[var(--primary-border)] bg-[var(--primary-dim)] p-3">
                             {(() => {
-                              const totalVenda = parseFloat((formData.amount || "0").replace(",", ".")) || 0;
-                              const totalInformado = paymentSplits.reduce((total, split) => total + (parseFloat((split.amount || "0").replace(",", ".")) || 0), 0);
+                              const totalVenda =
+                                parseFloat(
+                                  (formData.amount || "0").replace(",", "."),
+                                ) || 0;
+                              const totalInformado = paymentSplits.reduce(
+                                (total, split) =>
+                                  total +
+                                  (parseFloat(
+                                    (split.amount || "0").replace(",", "."),
+                                  ) || 0),
+                                0,
+                              );
                               const restante = totalVenda - totalInformado;
-                              const statusClass = Math.abs(restante) < 0.005
-                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                : restante > 0
-                                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                                  : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300";
+                              const statusClass =
+                                Math.abs(restante) < 0.005
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                  : restante > 0
+                                    ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                                    : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300";
                               return (
                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                  <p className="text-[11px] font-bold text-[var(--primary)]">FORMAS DE PAGAMENTO</p>
+                                  <p className="text-[11px] font-bold text-[var(--primary)]">
+                                    FORMAS DE PAGAMENTO
+                                  </p>
                                   <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
-                                    <span className="text-[var(--text-secondary)]">Informado: R$ {totalInformado.toFixed(2).replace(".", ",")}</span>
-                                    <span className={`rounded-full border px-2 py-1 font-bold ${statusClass}`}>
+                                    <span className="text-[var(--text-secondary)]">
+                                      Informado: R${" "}
+                                      {totalInformado
+                                        .toFixed(2)
+                                        .replace(".", ",")}
+                                    </span>
+                                    <span
+                                      className={`rounded-full border px-2 py-1 font-bold ${statusClass}`}
+                                    >
                                       {Math.abs(restante) < 0.005
                                         ? "Total conferido"
                                         : restante > 0
@@ -6691,12 +7414,57 @@ export const Financial: React.FC<FinancialProps> = ({
                             })()}
                             <div className="space-y-2">
                               {paymentSplits.map((split, index) => (
-                                <div key={split.id} className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-center gap-2">
-                                  <select value={split.paymentMethod} onChange={(e) => updatePaymentSplit(split.id, "paymentMethod", e.target.value)} className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">
-                                    {availablePaymentMethods.map((pm) => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
+                                <div
+                                  key={split.id}
+                                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_8rem_auto]"
+                                >
+                                  <select
+                                    value={split.paymentMethod}
+                                    onChange={(e) =>
+                                      updatePaymentSplit(
+                                        split.id,
+                                        "paymentMethod",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none"
+                                  >
+                                    {availablePaymentMethods.map((pm) => (
+                                      <option key={pm.id} value={pm.name}>
+                                        {pm.name}
+                                      </option>
+                                    ))}
                                   </select>
-                                  <input type="number" min="0" step="0.01" value={split.amount} onChange={(e) => updatePaymentSplit(split.id, "amount", e.target.value)} placeholder="0,00" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-right text-xs font-bold text-text outline-none" />
-                                  <button type="button" onClick={() => setPaymentSplits((current) => current.length > 2 ? current.filter((item) => item.id !== split.id) : current)} disabled={paymentSplits.length <= 2} className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={`Remover forma de pagamento ${index + 1}`}>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={split.amount}
+                                    onChange={(e) =>
+                                      updatePaymentSplit(
+                                        split.id,
+                                        "amount",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="0,00"
+                                    className="col-start-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-end text-xs font-bold text-text outline-none sm:col-start-auto"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPaymentSplits((current) =>
+                                        current.length > 2
+                                          ? current.filter(
+                                              (item) => item.id !== split.id,
+                                            )
+                                          : current,
+                                      )
+                                    }
+                                    disabled={paymentSplits.length <= 2}
+                                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
+                                    aria-label={`Remover forma de pagamento ${index + 1}`}
+                                  >
                                     <X className="h-4 w-4" />
                                   </button>
                                 </div>
@@ -6704,12 +7472,90 @@ export const Financial: React.FC<FinancialProps> = ({
                             </div>
                             {hasBoletoPaymentSplit && (
                               <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[var(--primary-border)] pt-3 sm:grid-cols-[minmax(0,1fr)_6rem_8rem]">
-                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Primeiro vencimento</label><input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value, dueDay: Number(e.target.value.slice(-2)) || formData.dueDay })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none" /></div>
-                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Dia</label><select value={formData.dueDay} onChange={(e) => setFormData({ ...formData, dueDay: Number(e.target.value) })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">{Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></div>
-                                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Parcelas</label><select value={formData.installments} onChange={(e) => setFormData({ ...formData, installments: Number(e.target.value) || 1, status: "Pending", settlementDate: "" })} className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none">{Array.from({ length: 12 }, (_, index) => index + 1).map((count) => <option key={count} value={count}>{count}x</option>)}</select></div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                    Primeiro vencimento
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={formData.date}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        date: e.target.value,
+                                        dueDay:
+                                          Number(e.target.value.slice(-2)) ||
+                                          formData.dueDay,
+                                      })
+                                    }
+                                    className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                    Dia
+                                  </label>
+                                  <select
+                                    value={formData.dueDay}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        dueDay: Number(e.target.value),
+                                      })
+                                    }
+                                    className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none"
+                                  >
+                                    {Array.from(
+                                      { length: 31 },
+                                      (_, index) => index + 1,
+                                    ).map((day) => (
+                                      <option key={day} value={day}>
+                                        {day}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                    Parcelas
+                                  </label>
+                                  <select
+                                    value={formData.installments}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        installments:
+                                          Number(e.target.value) || 1,
+                                        status: "Pending",
+                                        settlementDate: "",
+                                      })
+                                    }
+                                    className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-text outline-none"
+                                  >
+                                    {Array.from(
+                                      { length: 12 },
+                                      (_, index) => index + 1,
+                                    ).map((count) => (
+                                      <option key={count} value={count}>
+                                        {count}x
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                               </div>
                             )}
-                            <button type="button" onClick={() => setPaymentSplits((current) => [...current, createPaymentSplit()])} className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline">+ Adicionar outra forma</button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPaymentSplits((current) => [
+                                  ...current,
+                                  createPaymentSplit(),
+                                ])
+                              }
+                              className="mt-3 text-[11px] font-bold text-[var(--primary)] hover:underline"
+                            >
+                              + Adicionar outra forma
+                            </button>
                           </div>
                         )}
                       </div>
@@ -6729,7 +7575,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 settlementDate: "",
                               })
                             }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Pending" ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${formData.status === "Pending" ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                           >
                             A Receber
                           </button>
@@ -6743,7 +7589,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                   settlementDate: today,
                                 })
                               }
-                              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${formData.status === "Paid" ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                             >
                               Recebido
                             </button>
@@ -6762,7 +7608,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             onClick={() =>
                               setFormData({ ...formData, isPartial: false })
                             }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${!formData.isPartial ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${!formData.isPartial ? "bg-emerald-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                           >
                             Integral
                           </button>
@@ -6771,14 +7617,14 @@ export const Financial: React.FC<FinancialProps> = ({
                             onClick={() =>
                               setFormData({ ...formData, isPartial: true })
                             }
-                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all ${formData.isPartial ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
+                            className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition ${formData.isPartial ? "bg-amber-600 text-text shadow-lg" : "text-slate-400 hover:text-text"}`}
                           >
                             Parcial
                           </button>
                         </div>
                       </div>
                     </div>
-                    {(((formData.paymentMethod || "")
+                    {((formData.paymentMethod || "")
                       .toLowerCase()
                       .includes("cartão") ||
                       (formData.paymentMethod || "")
@@ -6787,10 +7633,12 @@ export const Financial: React.FC<FinancialProps> = ({
                       isBoletoPayment) &&
                       !(formData.paymentMethod || "")
                         .toLowerCase()
-                        .includes("débito")) && (
+                        .includes("débito") && (
                         <div className="flex flex-col gap-2 animate-in slide-in-from-top-1">
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                            {isBoletoPayment ? "PARCELAS NO BOLETO" : "NÚMERO DE PARCELAS"}
+                            {isBoletoPayment
+                              ? "PARCELAS NO BOLETO"
+                              : "NÚMERO DE PARCELAS"}
                           </label>
                           <select
                             value={formData.installments}
@@ -6799,11 +7647,13 @@ export const Financial: React.FC<FinancialProps> = ({
                                 ...formData,
                                 installments: parseInt(e.target.value) || 1,
                                 status:
-                                  isBoletoPayment && parseInt(e.target.value) > 1
+                                  isBoletoPayment &&
+                                  parseInt(e.target.value) > 1
                                     ? "Pending"
                                     : formData.status,
                                 settlementDate:
-                                  isBoletoPayment && parseInt(e.target.value) > 1
+                                  isBoletoPayment &&
+                                  parseInt(e.target.value) > 1
                                     ? ""
                                     : formData.settlementDate,
                               })
@@ -6820,7 +7670,8 @@ export const Financial: React.FC<FinancialProps> = ({
                           </select>
                           {isBoletoPayment && (
                             <p className="text-xs leading-5 text-slate-500">
-                              Cada parcela será criada em aberto, com vencimentos mensais a partir da data informada.
+                              Cada parcela será criada em aberto, com
+                              vencimentos mensais a partir da data informada.
                             </p>
                           )}
                         </div>
@@ -6850,7 +7701,7 @@ export const Financial: React.FC<FinancialProps> = ({
                       );
                       if (transaction) void deleteIncome(transaction);
                     }}
-                    className="mr-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
+                    className="me-auto inline-flex items-center gap-2 text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
                   >
                     <Trash2 className="w-4 h-4" /> Excluir lançamento
                   </button>
@@ -6864,7 +7715,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 <button
                   onClick={handleSaveTransaction}
                   disabled={isSaving}
-                  className={`px-10 py-3 rounded-xl ${modalType === "income" ? "bg-surface" : "bg-surface"} text-text font-bold text-sm shadow-xl transition-all active:scale-95`}
+                  className={`px-10 py-3 rounded-xl ${modalType === "income" ? "bg-surface" : "bg-surface"} text-text font-bold text-sm shadow-xl transition active:scale-95`}
                 >
                   Confirmar
                 </button>
@@ -6876,8 +7727,8 @@ export const Financial: React.FC<FinancialProps> = ({
         {/* MODAL OBSERVAÇÃO RÁPIDA */}
         {isObsModalOpen && selectedTxForObs && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-            <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-3xl overflow-hidden">
-              <div className="p-5 border-b border-border bg-surface flex justify-between items-center">
+            <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-3xl">
+              <div className="flex shrink-0 items-center justify-between border-b border-border bg-surface p-5">
                 <h3 className="text-sm font-bold text-text uppercase">
                   Observação do Lançamento
                 </h3>
@@ -6888,7 +7739,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <p className="text-[10px] text-slate-500 font-bold uppercase mb-2">
                   DESCRIÇÃO: {selectedTxForObs.description}
                 </p>
@@ -6899,7 +7750,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   className="w-full bg-surface border border-border rounded-xl p-4 text-sm text-text outline-none h-40 resize-none focus:border-amber-500 transition-colors"
                 />
               </div>
-              <div className="p-4 border-t border-border bg-surface flex justify-end gap-3">
+              <div className="flex shrink-0 justify-end gap-3 border-t border-border bg-surface p-4">
                 <button
                   onClick={() => setIsObsModalOpen(false)}
                   className="px-4 py-2 text-xs font-bold text-slate-400"
@@ -7033,7 +7884,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                     const val = parseFloat(e.target.value) || 0;
                                     handleUpdateFee(tx.id, val);
                                   }}
-                                  className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition-all font-mono"
+                                  className="bg-transparent text-right w-20 outline-none border-b border-transparent group-hover/fee:border-border focus:border-red-500/50 transition font-mono"
                                 />
                               </div>
                             </td>
@@ -7090,7 +7941,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 </div>
                 <button
                   onClick={() => setSelectedAccountForStatement(null)}
-                  className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition-all active:scale-95"
+                  className="px-8 py-3 bg-white text-black font-bold rounded-xl text-sm transition active:scale-95"
                 >
                   Fechar Extrato
                 </button>

@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { supabase } from '../supabaseClient';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
-import { Banknote, Calendar, ChevronLeft, ChevronRight, ReceiptText, Settings, UserCheck, UserPlus, X } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight, ReceiptText, Settings, UserCheck, UserPlus, X } from 'lucide-react';
 import { CommercialDailyReport } from './CommercialDailyReport';
 import { ReceptionDailyReport } from './ReceptionDailyReport';
 import { PerformanceMetrics } from './PerformanceMetrics';
@@ -14,6 +14,7 @@ import { ClinicaExpertsAgenda } from './ClinicaExpertsAgenda';
 import { AnimatedNumber } from './ui/animated-number';
 import { DateRangePicker } from './ui/date-range-picker';
 import { DonutChart } from './ui/donut-chart';
+import { PageHeader } from './ui/operational-ui';
 
 // --- TYPES ---
 interface DailyData {
@@ -51,13 +52,23 @@ interface MonthlyFunnelInput {
     procedimentos?: Record<string, number>;
 }
 
+interface OverviewSnapshot {
+    paidExpenses: number;
+    pendingIncome: number;
+    activeOrthoPatients: number;
+    orthoAttendanceRate: number;
+    labOrders: number;
+    labInProduction: number;
+    labRevenue: number;
+    labCost: number;
+}
+
 interface DashboardProps {
     userRole?: string;
     allowedSubTabs?: string[];
     requestedSubTab?: string | null;
 }
 
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
@@ -79,6 +90,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
   const [monthRevenueData, setMonthRevenueData] = useState<Record<string, DailyData>>({});
   const [evaluationCounts, setEvaluationCounts] = useState<Record<string, DailyEvalData>>({});
   const [newOrthodonticsPatients, setNewOrthodonticsPatients] = useState(0);
+  const [overviewSnapshot, setOverviewSnapshot] = useState<OverviewSnapshot>({
+    paidExpenses: 0,
+    pendingIncome: 0,
+    activeOrthoPatients: 0,
+    orthoAttendanceRate: 0,
+    labOrders: 0,
+    labInProduction: 0,
+    labRevenue: 0,
+    labCost: 0
+  });
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
   
   useEffect(() => {
@@ -132,14 +153,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
           const endDate = `${currentMonthStr}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-          const [configsRes, evalsRes, orthodonticsPatientsRes] = await Promise.all([
+          const [configsRes, evalsRes, orthodonticsPatientsRes, activeOrthodonticsRes, labOrdersRes, labPaymentsRes] = await Promise.all([
               supabase.from('dashboard_configs').select('*'),
               supabase.from('daily_evaluations').select('*').gte('date', startDate).lte('date', endDate),
               supabase
                 .from('ortho_patients')
                 .select('id', { count: 'exact', head: true })
                 .gte('start_date', startDate)
-                .lte('start_date', endDate)
+                .lte('start_date', endDate),
+              supabase
+                .from('ortho_patients')
+                .select('id, attendance', { count: 'exact' })
+                .eq('status', 'Active'),
+              supabase.from('lab_orders').select('id, start_date, due_date, status, cost'),
+              supabase.from('lab_payments').select('order_id, amount, payment_date')
           ]);
 
           if (configsRes.error) console.error("Erro ao carregar configs:", configsRes.error);
@@ -188,6 +215,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
               setNewOrthodonticsPatients(orthodonticsPatientsRes.count || 0);
           }
 
+          const currentAttendanceKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+          const activePatients = activeOrthodonticsRes.data || [];
+          const orthoPresent = activePatients.filter((patient: any) => patient.attendance?.[currentAttendanceKey] === 'Present').length;
+          const labOrders = labOrdersRes.data || [];
+          const labOrdersInMonth = labOrders.filter((order: any) => (order.start_date || order.due_date || '').startsWith(currentMonthStr));
+          const labRevenue = (labPaymentsRes.data || [])
+            .filter((payment: any) => payment.payment_date?.startsWith(currentMonthStr))
+            .reduce((total: number, payment: any) => total + Number(payment.amount || 0), 0);
+
           let allTxs: any[] = [];
           let offset = 0;
           let hasMore = true;
@@ -195,8 +231,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           const yearEndDate = `${currentYear}-12-31`;
           while (hasMore) {
               const { data: pageTxs, error: pageError } = await supabase.from('transactions')
-                  .select('date, amount, category, description, procedure, sales_team, status')
-                  .eq('type', 'income')
+                  .select('date, amount, category, description, procedure, sales_team, status, type')
                   .gte('date', yearStartDate)
                   .lte('date', yearEndDate)
                   .order('date', { ascending: false })
@@ -213,9 +248,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           }
           const txs = allTxs;
           if (txs) {
+              const currentMonthTransactions = txs.filter((tx: any) => tx.date?.startsWith(currentMonthStr));
+              setOverviewSnapshot({
+                paidExpenses: currentMonthTransactions
+                  .filter((tx: any) => tx.type === 'expense' && tx.status === 'Paid')
+                  .reduce((total: number, tx: any) => total + Number(tx.amount || 0), 0),
+                pendingIncome: currentMonthTransactions
+                  .filter((tx: any) => tx.type === 'income' && tx.status === 'Pending')
+                  .reduce((total: number, tx: any) => total + Number(tx.amount || 0), 0),
+                activeOrthoPatients: activePatients.length,
+                orthoAttendanceRate: activePatients.length > 0 ? (orthoPresent / activePatients.length) * 100 : 0,
+                labOrders: labOrdersInMonth.length,
+                labInProduction: labOrdersInMonth.filter((order: any) => !['Entregue', 'Finalizado', 'Cancelled', 'Cancelado'].includes(order.status)).length,
+                labRevenue,
+                labCost: labOrdersInMonth.reduce((total: number, order: any) => total + Number(order.cost || 0), 0)
+              });
+
               const incomeMap: Record<string, DailyData> = {};
               txs.forEach((tx: any) => {
-                  if (!tx.date || tx.status !== 'Paid') return;
+                  if (!tx.date || tx.type !== 'income' || tx.status !== 'Paid') return;
                   const amount = Number(tx.amount);
                   const cat = (tx.category || '').toLowerCase();
                   const desc = (tx.description || '').toLowerCase();
@@ -398,7 +449,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
     }), { scheduled: 0, evaluated: 0, noShow: 0 });
     const evaluationRate = evaluationSummary.scheduled > 0 ? (evaluationSummary.evaluated / evaluationSummary.scheduled) * 100 : 0;
     const noShowRate = evaluationSummary.scheduled > 0 ? (evaluationSummary.noShow / evaluationSummary.scheduled) * 100 : 0;
-
     const trendData = Array.from({ length: daysInMonthCount }, (_, i) => {
         const day = i + 1;
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -467,70 +517,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         ? monthlyTrendData 
         : customTrendData;
 
-    const renderFinancialCalendarCell = (day: number) => {
-        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const revenue = monthRevenueData[dateStr]?.revenue || 0;
-        
-        // CÁLCULO DA META DINÂMICA PARA O DIA ESPECÍFICO (TRAVADO AO INÍCIO DO DIA)
-        let salesBeforeDay = 0;
-        for (let d = 1; d < day; d++) {
-            const prevDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            salesBeforeDay += monthRevenueData[prevDateStr]?.revenue || 0;
-        }
-
-        const workDaysFromThisDay = getWorkDaysInRange(day, daysInMonthCount);
-        const neededAtStartOfThisDay = Math.max(0, Number(currentGoals.revenue) - salesBeforeDay);
-        const daySpecificMeta = workDaysFromThisDay > 0 ? neededAtStartOfThisDay / workDaysFromThisDay : 0;
-
-        const isTargetMet = revenue >= daySpecificMeta;
-        const bgColor = revenue > 0 ? (isTargetMet ? 'bg-surface' : 'bg-surface') : 'hover:bg-panel';
-
-        return (
-            <div title={`${dateStr}\nRealizado: ${formatCurrency(revenue)}\nMeta diária: ${formatCurrency(daySpecificMeta)}`} className={`h-full flex flex-col justify-between p-1 border border-border transition-all group overflow-hidden ${bgColor}`}>
-                <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-text-muted">{day}</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                    <div className="flex flex-col">
-                        <span className="sr-only">Realizado</span>
-                        <span className="text-[9px] text-text font-black truncate">R$ {revenue.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[8px] text-slate-500 font-bold uppercase">Meta Diária</span>
-                        <span className="text-[9px] text-slate-400 font-bold truncate">R$ {daySpecificMeta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     return (
       <div className="flex flex-col gap-3.5 animate-in fade-in pb-6">
-          <section className="dashboard-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {insightView === 'performance' && (
+              <div className="flex flex-col gap-2">
+                  <div className="flex justify-end">
+                      <button type="button" onClick={() => setInsightView('trend')} className="btn btn-secondary">Voltar à tendência de vendas</button>
+                  </div>
+                  <PerformanceMetrics
+                      monthRevenueData={monthRevenueData}
+                      currentGoals={currentGoals}
+                      currentYear={currentYear}
+                      currentMonth={currentMonth}
+                  />
+              </div>
+          )}
+          <div className="dashboard-overview-top grid grid-cols-1 gap-4 xl:grid-cols-[minmax(340px,0.76fr)_minmax(560px,1.24fr)]">
+          <section aria-labelledby="dashboard-financeiro" className="flex min-w-0 flex-col">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                  <div><h2 id="dashboard-financeiro" className="text-sm font-bold text-[var(--text)]">Financeiro</h2><p className="text-[10px] text-[var(--text-muted)]">Resultados e previsibilidade do mês</p></div>
+              </div>
+              <div className="dashboard-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-3">
               <article className="metric-card dashboard-kpi-card">
                   <div className="dashboard-kpi-icon dashboard-kpi-icon--blue"><Banknote size={16} /></div>
                   <div className="min-w-0">
                       <AnimatedNumber value={totalRev} format={formatCurrency} className="dashboard-kpi-value block truncate" />
                       <p className="dashboard-kpi-label">Faturamento do mês</p>
                       <p className={`dashboard-kpi-helper ${perc >= 100 ? 'is-positive' : ''}`}>{perc.toFixed(1)}% da meta mensal</p>
-                  </div>
-              </article>
-
-              <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--green"><UserPlus size={16} /></div>
-                  <div className="min-w-0">
-                      <p className="dashboard-kpi-value">{newOrthodonticsPatients.toLocaleString('pt-BR')}</p>
-                      <p className="dashboard-kpi-label">Novos pacientes de ortodontia</p>
-                      <p className="dashboard-kpi-helper">Contratos iniciados no período</p>
-                  </div>
-              </article>
-
-              <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--yellow"><UserCheck size={16} /></div>
-                  <div className="min-w-0">
-                      <p className="dashboard-kpi-value">{evaluationRate.toFixed(1)}%</p>
-                      <p className="dashboard-kpi-label">Comparecimento</p>
-                      <p className="dashboard-kpi-helper">{evaluationSummary.noShow.toLocaleString('pt-BR')} faltas · {noShowRate.toFixed(1)}%</p>
                   </div>
               </article>
 
@@ -542,20 +555,63 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                       <p className="dashboard-kpi-helper">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
                   </div>
               </article>
+              <article className="metric-card dashboard-kpi-card">
+                  <div className="dashboard-kpi-icon dashboard-kpi-icon--yellow"><ReceiptText size={16} /></div>
+                  <div className="min-w-0"><p className="dashboard-kpi-value truncate">{formatCurrency(overviewSnapshot.pendingIncome)}</p><p className="dashboard-kpi-label">A receber</p><p className="dashboard-kpi-helper">Lançamentos pendentes no mês</p></div>
+              </article>
+              </div>
+              <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-high)] px-4 py-3">
+                  <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-semibold text-[var(--text-secondary)]">Meta mensal</p><p className="mt-1 text-sm font-semibold tabular-nums text-[var(--text)]">{formatCurrency(currentGoals.revenue)}</p></div><div className="text-right"><p className="text-[10px] text-[var(--text-muted)]">Falta realizar</p><p className="mt-1 text-sm font-semibold tabular-nums text-[var(--text)]">{formatCurrency(neededRevenueReal)}</p></div></div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/80 dark:bg-black/10"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${Math.min(perc, 100)}%` }} /></div>
+              </div>
           </section>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-3">
+              {insightView === 'trend' && (
+              <section aria-labelledby="dashboard-analise" className="rounded-xl border border-[var(--border)] bg-white p-4">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3"><div><h2 id="dashboard-analise" className="text-sm font-semibold text-[var(--text)]">Tendência de vendas</h2><p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Acompanhe a evolução do faturamento</p></div><div className="flex rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-high)] p-0.5"><button type="button" onClick={() => { setInsightView('trend'); setTrendViewMode('diaria'); }} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${trendViewMode === 'diaria' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)]'}`}>Diária</button><button type="button" onClick={() => { setInsightView('trend'); setTrendViewMode('mensal'); }} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${trendViewMode === 'mensal' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)]'}`}>Mensal</button><button type="button" onClick={() => setInsightView('performance')} className="rounded-md px-2 py-1 text-[10px] font-semibold text-[var(--text-secondary)]">Performance</button></div></div>
+                  <div className="h-[180px] w-full"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={trendViewMode === 'mensal' ? monthlyTrendData : trendData} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}><defs><linearGradient id="topSalesTrend" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3478F6" stopOpacity={0.22}/><stop offset="95%" stopColor="#3478F6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} tickFormatter={(value) => `R$${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`} /><RechartsTooltip contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text)', fontSize: '11px' }} formatter={(value: number) => formatCurrency(value)} /><Area type="monotone" dataKey="vendas" fill="url(#topSalesTrend)" stroke="none" /><Line type="monotone" dataKey="vendas" stroke="#3478F6" strokeWidth={2.5} dot={false} /></ComposedChart></ResponsiveContainer></div>
+              </section>
+              )}
+              <section className="dashboard-team-card rounded-xl border border-[var(--border)] bg-white p-4">
+                  <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-[var(--text)]">Vendas por time</h2><p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Distribuição do faturamento no período</p></div><strong className="text-sm font-semibold tabular-nums text-[var(--text)]">{perc.toFixed(1)}%</strong></div>
+                  <div className="mt-4 space-y-3">{Object.entries(teamRevenues).slice(0, 5).map(([team, amount], index) => { const totalTeams = Math.max(Object.values(teamRevenues).reduce((sum, value) => sum + Number(value), 0), 1); const share = Math.round((Number(amount) / totalTeams) * 100); return <div key={team} className="grid grid-cols-[minmax(0,1fr)_34px] items-center gap-2 text-[10px]"><div className="min-w-0"><div className="flex items-center gap-2"><span className={`size-1.5 shrink-0 rounded-full team-dot-${index % 4}`} /><span className="truncate font-medium text-[var(--text-secondary)]">{team}</span></div><div className="mt-1 h-1 overflow-hidden rounded-full bg-[#eef0f3]"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${share}%` }} /></div></div><span className="text-right font-semibold tabular-nums text-[var(--text)]">{share}%</span></div>; })}</div>
+              </section>
+          </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
+          <section aria-labelledby="dashboard-laboratorio" className="dashboard-domain-section">
+              <div className="mb-2"><h2 id="dashboard-laboratorio" className="text-sm font-bold text-[var(--text)]">Laboratório</h2><p className="text-[10px] text-[var(--text-muted)]">Produção, custos e recebimentos do período</p></div>
+              <div className="dashboard-kpi-grid dashboard-domain-kpi-grid grid gap-3">
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--blue"><ReceiptText size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value">{overviewSnapshot.labOrders}</p><p className="dashboard-kpi-label">Trabalhos no mês</p><p className="dashboard-kpi-helper">Pedidos iniciados ou com vencimento no período</p></div></article>
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--yellow"><UserCheck size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value">{overviewSnapshot.labInProduction}</p><p className="dashboard-kpi-label">Em produção</p><p className="dashboard-kpi-helper">Trabalhos ainda não finalizados</p></div></article>
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--green"><Banknote size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value truncate">{formatCurrency(overviewSnapshot.labRevenue)}</p><p className="dashboard-kpi-label">Recebido de pacientes</p><p className="dashboard-kpi-helper">Pagamentos registrados no mês</p></div></article>
+              </div>
+          </section>
+
+          <section aria-labelledby="dashboard-ortodontia" className="dashboard-domain-section">
+              <div className="mb-2"><h2 id="dashboard-ortodontia" className="text-sm font-bold text-[var(--text)]">Ortodontia</h2><p className="text-[10px] text-[var(--text-muted)]">Base ativa e adesão ao tratamento</p></div>
+              <div className="dashboard-kpi-grid dashboard-domain-kpi-grid grid gap-3">
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--purple"><UserCheck size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value">{overviewSnapshot.activeOrthoPatients}</p><p className="dashboard-kpi-label">Pacientes ativos</p><p className="dashboard-kpi-helper">Tratamentos em acompanhamento</p></div></article>
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--green"><UserPlus size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value">{newOrthodonticsPatients.toLocaleString('pt-BR')}</p><p className="dashboard-kpi-label">Novos pacientes</p><p className="dashboard-kpi-helper">Contratos iniciados no período</p></div></article>
+                  <article className="metric-card dashboard-kpi-card"><div className="dashboard-kpi-icon dashboard-kpi-icon--blue"><UserCheck size={16} /></div><div className="min-w-0"><p className="dashboard-kpi-value">{overviewSnapshot.orthoAttendanceRate.toFixed(1)}%</p><p className="dashboard-kpi-label">Presença ortodôntica</p><p className="dashboard-kpi-helper">Pacientes presentes sobre a base ativa</p></div></article>
+              </div>
+          </section>
+          </div>
+
+          <div className="hidden flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                  <h2 className="text-sm font-bold text-[#17211D] dark:text-white">Análise de Resultados</h2>
+                  <h2 className="text-sm font-bold text-[#17211D] dark:text-white">Detalhamento financeiro</h2>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">Tendência e performance no mesmo espaço</p>
               </div>
               <div className="flex w-fit rounded-xl border border-[#DFE6E2] bg-[#F0F4F2] p-0.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
-                  <button type="button" onClick={() => setInsightView('trend')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all ${insightView === 'trend' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Tendência</button>
-                  <button type="button" onClick={() => setInsightView('performance')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition-all ${insightView === 'performance' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Performance</button>
+                  <button type="button" onClick={() => setInsightView('trend')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition ${insightView === 'trend' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Tendência</button>
+                  <button type="button" onClick={() => setInsightView('performance')} className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight transition ${insightView === 'performance' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}>Performance</button>
               </div>
           </div>
 
-          <div className="dashboard-insights-grid grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
+          <div className="dashboard-insights-grid hidden grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
           {insightView === 'trend' ? (
           <section className="bg-white dark:bg-[#19231F] p-5 rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
@@ -570,21 +626,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('diaria')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'diaria' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${trendViewMode === 'diaria' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Diária
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('mensal')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'mensal' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${trendViewMode === 'mensal' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Mensal
                           </button>
                           <button
                               type="button"
                               onClick={() => setTrendViewMode('personalizado')}
-                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${trendViewMode === 'personalizado' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
+                              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${trendViewMode === 'personalizado' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text)]'}`}
                           >
                               Personalizado
                           </button>
@@ -703,27 +759,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
           </section>
           </div>
 
-          <section className="bg-white dark:bg-[#19231F] rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] overflow-hidden flex flex-col shadow-sm transition-colors duration-300">
-                <div className="p-3 bg-[#F5F7F6] dark:bg-white/[0.02] border-b border-[#DFE6E2] dark:border-white/[0.08] flex justify-between items-center">
-                    <h3 className="text-xs font-bold text-[#17211D] dark:text-slate-100 flex items-center gap-2">
-                        <Calendar className="text-[#1F6F5B] dark:text-[#63B596] w-4 h-4" />
-                        Calendário de Faturamento: Realizado vs Meta
-                    </h3>
-                </div>
-                <div className="grid grid-cols-7">
-                    {WEEKDAYS.map(day => <div key={day} className="p-1.5 text-center text-[9px] font-extrabold uppercase text-[#86938D] border-b border-[#DFE6E2] dark:border-white/[0.08] bg-[#F5F7F6]/50 dark:bg-white/[0.02]">{day}</div>)}
-                    {Array.from({ length: 35 }).map((_, idx) => {
-                        const daysInMonthCountCell = new Date(currentYear, currentMonth + 1, 0).getDate();
-                        const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                        const day = idx - firstDayOfMonth + 1;
-                        return (
-                            <div key={idx} className="min-h-[52px] border-b border-[#DFE6E2] dark:border-white/[0.08] border-r border-[#DFE6E2] dark:border-white/[0.08] last:border-r-0">
-                                {(day > 0 && day <= daysInMonthCountCell) ? renderFinancialCalendarCell(day) : <div className="w-full h-full bg-[#F5F7F6]/30 dark:bg-white/[0.01]"></div>}
-                            </div>
-                        );
-                    })}
-                </div>
-          </section>
       </div>
     );
   };
@@ -735,51 +770,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         
         {/* View Content */}
         <div className="dashboard-content-scroll flex-1 overflow-y-auto px-3 py-3 lg:px-5 lg:py-4 custom-scrollbar">
-           <div className="dashboard-workspace w-full max-w-[1600px] mx-auto">
+           <div className="dashboard-workspace w-full max-w-none">
                
-               <div className="dashboard-command-bar flex flex-col gap-5 p-4 md:flex-row md:items-center md:justify-between md:p-5">
-                   <div>
-          <span className="dashboard-greeting">Bom dia, equipe.</span>
-                       <h1 className="mt-2 text-2xl font-semibold text-text bg-transparent outline-none w-full block resize-none leading-tight tracking-[-0.035em] md:text-[28px]">
-                          {activeSubTab === 'geral' ? 'Visão geral da clínica' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
-                       </h1>
-                       <p className="mt-1 text-xs text-[var(--text-secondary)]">Acompanhe a operação, as metas e os próximos compromissos.</p>
-                   </div>
-
-                   <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <div className="flex items-center gap-2 bg-[var(--surface-high)] p-1 rounded-full">
-                          <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth()-1); setCurrentDate(d); }} className="p-1 hover:bg-panel rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"><ChevronLeft className="w-3.5 h-3.5" /></button>
-                          <div className="flex items-center gap-1.5 px-2"><span className="text-xs font-bold text-text uppercase">{currentDate.toLocaleDateString('pt-BR', { month: 'short' })}</span><span className="text-[10px] text-slate-400 font-mono font-bold">{currentDate.getFullYear()}</span></div>
-                          <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth()+1); setCurrentDate(d); }} className="p-1 hover:bg-panel rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"><ChevronRight className="w-3.5 h-3.5" /></button>
-                      </div>
-                      {activeSubTab === 'geral' && (
-                          <button onClick={() => setIsConfigModalOpen(true)} className="px-3 py-1.5 rounded-xl btn btn-primary flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer" title="Definir Metas do Mês"><Settings className="w-3.5 h-3.5" /> Metas</button>
-                      )}
-                   </div>
-               </div>
-
-               {/* SUB NAVIGATION BAR */}
-               <div className="dashboard-segmented-control flex items-center gap-1 overflow-x-auto no-scrollbar mb-6">
-                    {[
-                        { id: 'geral', label: 'Geral' },
-                        { id: 'commercial', label: 'Comercial' },
-                        { id: 'agenda', label: 'Agenda' },
-                        { id: 'reception', label: 'Recepção' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveSubTab(tab.id as 'geral' | 'commercial' | 'reception' | 'agenda')}
-                            className={`
-                                px-4 py-2 rounded-full text-[11px] font-semibold tracking-[-0.01em] transition-colors whitespace-nowrap cursor-pointer
-                                ${activeSubTab === tab.id 
-                                    ? 'bg-white text-[var(--primary)] shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:bg-white/[0.12]'
-                                    : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-white/65 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.04]'}
-                            `}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-               </div>
+               <PageHeader
+                   title={activeSubTab === 'geral' ? 'Visão geral da clínica' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}
+                   description="Acompanhe a operação, as metas e os próximos compromissos."
+                   actions={(
+                     <>
+                       <div className="flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-high)] p-1">
+                         <button type="button" aria-label="Mês anterior" onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() - 1); setCurrentDate(d); }} className="grid size-8 place-items-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"><ChevronLeft className="size-3.5" /></button>
+                         <div className="flex items-center gap-1.5 px-2"><span className="text-xs font-bold uppercase text-[var(--text)]">{currentDate.toLocaleDateString('pt-BR', { month: 'short' })}</span><span className="text-xs font-mono font-bold text-[var(--text-muted)]">{currentDate.getFullYear()}</span></div>
+                         <button type="button" aria-label="Próximo mês" onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() + 1); setCurrentDate(d); }} className="grid size-8 place-items-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"><ChevronRight className="size-3.5" /></button>
+                       </div>
+                       {activeSubTab === 'geral' && <button type="button" onClick={() => setIsConfigModalOpen(true)} className="btn btn-primary" title="Definir metas do mês"><Settings className="size-3.5" /> Metas</button>}
+                     </>
+                   )}
+                   tabs={(
+                     <div className="dashboard-segmented-control no-scrollbar" role="tablist" aria-label="Visões do dashboard">
+                       {[
+                         { id: 'geral', label: 'Geral' },
+                         { id: 'commercial', label: 'Comercial' },
+                         { id: 'agenda', label: 'Agenda' },
+                         { id: 'reception', label: 'Recepção' }
+                       ].map(tab => (
+                         <button key={tab.id} type="button" role="tab" aria-selected={activeSubTab === tab.id} data-active={activeSubTab === tab.id} onClick={() => setActiveSubTab(tab.id as 'geral' | 'commercial' | 'reception' | 'agenda')}>
+                           {tab.label}
+                         </button>
+                       ))}
+                     </div>
+                   )}
+               />
 
               <div className="flex-1 w-full pb-20">
                   {isLoadingDashboard ? (

@@ -186,7 +186,7 @@ export const MeetingMinutes: React.FC = () => {
 
           <button
             onClick={() => { setFormData(emptyForm); setIsModalOpen(true); }}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all shrink-0"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition shrink-0"
           >
             <FilePlus className="w-4 h-4" />
             <span>Nova Ata</span>
@@ -217,7 +217,7 @@ export const MeetingMinutes: React.FC = () => {
               <div
                 key={meeting.id}
                 onClick={() => setViewingMeeting(meeting)}
-                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 cursor-pointer transition-all hover:-translate-y-1 shadow-sm flex flex-col justify-between"
+                className="bg-panel border border-border hover:border-indigo-500/40 p-5 rounded-2xl space-y-4 cursor-pointer transition hover:-translate-y-1 shadow-sm flex flex-col justify-between"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
@@ -249,7 +249,7 @@ export const MeetingMinutes: React.FC = () => {
                   </div>
                   <div className="w-full bg-[var(--surface-high)] h-1.5 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-emerald-500 rounded-full transition-all"
+                      className="h-full bg-emerald-500 rounded-full transition"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -305,7 +305,7 @@ export const MeetingMinutes: React.FC = () => {
                     <div 
                       key={act.id}
                       onClick={() => toggleActionItem(viewingMeeting.id, act.id)}
-                      className="flex items-center justify-between p-3 rounded-xl bg-panel border border-border hover:border-indigo-500/40 cursor-pointer transition-all"
+                      className="flex items-center justify-between p-3 rounded-xl bg-panel border border-border hover:border-indigo-500/40 cursor-pointer transition"
                     >
                       <div className="flex items-center gap-2.5 text-xs">
                         {act.done ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Circle className="w-4 h-4 text-slate-500" />}

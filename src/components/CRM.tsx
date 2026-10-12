@@ -23,6 +23,8 @@ import { CRMAutomations } from './CRMAutomations';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
 import { WhatsAppQuickSend } from './WhatsAppQuickSend';
 import { CRMPhoneImport } from './CRMPhoneImport';
+import { BudgetReactivation } from './BudgetReactivation';
+import { MetricCard, PageHeader, StatePanel } from './ui/operational-ui';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -131,10 +133,10 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp' | 'campaigns'>('pipeline');
+  const [activeView, setActiveView] = useState<'pipeline' | 'automations' | 'whatsapp' | 'campaigns' | 'reactivation'>('pipeline');
 
   useEffect(() => {
-    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline' || requestedSubTab === 'automations' || requestedSubTab === 'campaigns') {
+    if (requestedSubTab === 'whatsapp' || requestedSubTab === 'pipeline' || requestedSubTab === 'automations' || requestedSubTab === 'campaigns' || requestedSubTab === 'reactivation') {
       setActiveView(requestedSubTab);
     }
   }, [requestedSubTab]);
@@ -338,42 +340,40 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     return <WhatsAppBulkCampaigns />;
   }
 
+  if (activeView === 'reactivation') {
+    return <BudgetReactivation />;
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
-          <header className="module-command-bar flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--primary)] dark:text-[var(--primary-hover)]">
-                <span className="h-px w-6 bg-current" />
-                Clínica Experts
-              </div>
-              <h1 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-3xl">CRM da clínica</h1>
-              <p className="mt-1 max-w-2xl text-sm text-[var(--text-secondary)]">
-                Espelho automático dos funis e oportunidades do sistema da clínica.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
+          <PageHeader
+            icon={UsersRound}
+            title="CRM da clínica"
+            description="Espelho automático dos funis e oportunidades do sistema da clínica."
+            actions={(
+              <>
               <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
                 {syncStatus?.lastSync?.status === 'success' ? <CheckCircle2 className="h-4 w-4 text-[#1F6F5B]" /> : <AlertCircle className="h-4 w-4" />}
                 <span>{formatLastSync(syncStatus?.lastSync?.finished_at)}</span>
               </div>
-              <button type="button" onClick={runReconciliation} disabled={isReconciling || !selectedPipeline} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] disabled:opacity-50"><BarChart3 className={`h-4 w-4 ${isReconciling ? 'animate-pulse' : ''}`} />{isReconciling ? 'Comparando...' : 'Reconciliar funil'}</button>
-              <button type="button" onClick={() => setDuplicatesOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><GitMerge className="h-4 w-4" />Duplicidades{duplicateGroups.length > 0 && <span className="rounded-full bg-[var(--primary-dim)] px-1.5 py-0.5 text-[10px] text-[var(--primary)]">{duplicateGroups.length}</span>}</button>
-              <button type="button" onClick={() => setPhoneImportOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"><Upload className="h-4 w-4" />Importar telefones</button>
+              <button type="button" onClick={runReconciliation} disabled={isReconciling || !selectedPipeline} className="btn btn-secondary"><BarChart3 className={`h-4 w-4 ${isReconciling ? 'animate-pulse' : ''}`} />{isReconciling ? 'Comparando...' : 'Reconciliar funil'}</button>
+              <button type="button" onClick={() => setDuplicatesOpen(true)} className="btn btn-secondary"><GitMerge className="h-4 w-4" />Duplicidades{duplicateGroups.length > 0 && <span className="rounded-full bg-[var(--primary-dim)] px-1.5 py-0.5 text-[10px] text-[var(--primary)]">{duplicateGroups.length}</span>}</button>
+              <button type="button" onClick={() => setPhoneImportOpen(true)} className="btn btn-secondary"><Upload className="h-4 w-4" />Importar telefones</button>
               <button
                 type="button"
                 onClick={handleSync}
                 disabled={!externalSyncEnabled || isSyncing || syncStatus?.configured === false}
                 title={externalSyncEnabled ? undefined : 'Sincronizacao externa desativada para testes locais.'}
-                className="flex h-10 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-xs font-bold text-white shadow-[0_8px_24px_rgba(37,99,235,0.18)] transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40"
+                className="btn btn-primary"
               >
                 <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
                 {isSyncing ? 'Sincronizando' : externalSyncEnabled ? 'Sincronizar agora' : 'Sincronizacao desativada'}
               </button>
-            </div>
-          </header>
+              </>
+            )}
+          />
 
           {error && (
             <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
@@ -385,20 +385,27 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
           <section className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Indicadores do CRM">
             {metrics.map(({ label, value, detail, icon: Icon }) => (
-              <article key={label} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-[var(--text-secondary)]">{label}</p>
-                    <AnimatedNumber value={value} className="mt-2 block font-mono text-3xl font-semibold tracking-[-0.04em] text-[var(--text)]" />
-                  </div>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF5F0] text-[#1F6F5B] dark:bg-[#63B596]/10 dark:text-[#63B596]">
-                    <Icon className="h-[18px] w-[18px]" />
-                  </span>
-                </div>
-                <p className="mt-3 text-[11px] text-[var(--text-muted)]">{detail}</p>
-              </article>
+              <MetricCard
+                key={label}
+                label={label}
+                value={<AnimatedNumber value={value} />}
+                helper={detail}
+                icon={Icon}
+                tone="primary"
+              />
             ))}
           </section>
+
+          <div className="module-context-bar" aria-label="Contexto do funil">
+            <span className="module-context-label">CRM › Funil comercial</span>
+            <span className="module-context-count">{visibleOpportunities.length} oportunidade{visibleOpportunities.length === 1 ? '' : 's'}</span>
+            {selectedPipeline?.name && <span className="module-context-chip">{selectedPipeline.name}</span>}
+            {query && <span className="module-context-chip">Busca: {query}<button type="button" onClick={() => setQuery('')} aria-label="Limpar busca"><X className="h-3 w-3" /></button></span>}
+            {selectedTag && <span className="module-context-chip">Tag: {selectedTag}<button type="button" onClick={() => setSelectedTag('')} aria-label="Remover filtro de tag"><X className="h-3 w-3" /></button></span>}
+            {phoneFilter !== 'all' && <span className="module-context-chip">{phoneFilter === 'missing' ? 'Sem telefone' : 'Telefone válido'}<button type="button" onClick={() => setPhoneFilter('all')} aria-label="Remover filtro de telefone"><X className="h-3 w-3" /></button></span>}
+            <span className="module-context-spacer" />
+            {(query || selectedTag || phoneFilter !== 'all') && <button type="button" onClick={() => { setQuery(''); setSelectedTag(''); setPhoneFilter('all'); }} className="module-toolbar-action text-[11px] font-bold text-[var(--text-secondary)]">Limpar filtros</button>}
+          </div>
 
           <section className="flex min-h-[430px] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
             <div className="flex flex-col gap-3 border-b border-[var(--border)] px-4 py-3.5 lg:flex-row lg:items-center lg:justify-between">
@@ -411,7 +418,7 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
                   <select
                     value={selectedPipelineId}
                     onChange={event => handlePipelineChange(event.target.value)}
-                    className="h-9 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-xs font-semibold text-[var(--text)] outline-none focus:border-[#1F6F5B]/50"
+                    className="module-filter-control h-9 px-3 text-xs font-semibold outline-none"
                   >
                     {pipelines.map(pipeline => <option key={pipeline.id} value={pipeline.id}>{pipeline.name}</option>)}
                   </select>
@@ -443,11 +450,12 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
             {isLoading ? (
               <LoadingPanel label="Carregando CRM" description="Organizando funis, etapas e oportunidades." />
             ) : visibleStages.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-                <UsersRound className="mb-3 h-8 w-8 text-[#1F6F5B] opacity-60" />
-                <p className="text-sm font-semibold text-[var(--text)]">Nenhum funil sincronizado</p>
-                <p className="mt-1 max-w-md text-xs text-[var(--text-muted)]">Configure as credenciais no servidor, aplique as migrations e use “Sincronizar agora”.</p>
-              </div>
+              <StatePanel
+                kind="empty"
+                title="Nenhum funil sincronizado"
+                description="Configure as credenciais no servidor, aplique as migrations e use “Sincronizar agora”."
+                className="m-4 flex-1"
+              />
             ) : (
               <div className="custom-scrollbar grid flex-1 auto-cols-[minmax(265px,1fr)] grid-flow-col gap-3 overflow-x-auto bg-[var(--bg-subtle)]/60 p-3">
                 {visibleStages.map(stage => {

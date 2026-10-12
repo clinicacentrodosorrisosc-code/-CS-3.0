@@ -101,6 +101,10 @@ export const ClinicaExpertsAgenda: React.FC = () => {
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [capacityHoursPerDay, setCapacityHoursPerDay] = useState(() => {
+    const stored = Number(window.localStorage.getItem('clinica_experts_capacity_hours_per_day'));
+    return Number.isFinite(stored) && stored > 0 ? stored : 8;
+  });
   const hasInvalidCustomRange = periodMode === 'custom' && fromDateInputValue(customStart) > fromDateInputValue(customEnd, true);
   const periodRange = useMemo(() => periodMode === 'custom'
     ? { start: fromDateInputValue(customStart), end: fromDateInputValue(customEnd, true) }
@@ -157,6 +161,14 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       const duration = new Date(event.ends_at).getTime() - new Date(event.starts_at).getTime();
       return total + (Number.isFinite(duration) && duration > 0 ? duration / 60_000 : 0);
     }, 0);
+    const workingDays = (() => {
+      let count = 0;
+      for (const cursor = new Date(periodRange.start); cursor <= periodRange.end; cursor.setDate(cursor.getDate() + 1)) {
+        if (cursor.getDay() !== 0 && cursor.getDay() !== 6) count += 1;
+      }
+      return count;
+    })();
+    const capacityMinutes = workingDays * Math.max(1, new Set(events.map(event => event.professional?.name?.trim()).filter(Boolean)).size) * capacityHoursPerDay * 60;
     const attendedBase = events.filter(event => ['done', 'noshow'].includes(String(event.status || '').toLowerCase())).length;
     const completedProcedures = new Map<string, number>();
     events.filter(event => String(event.status || '').toLowerCase() === 'done').forEach(event => {
@@ -178,6 +190,8 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       completed: countStatus('done'),
       professionals: new Set(events.map(event => event.professional?.name?.trim()).filter(Boolean)).size,
       bookedMinutes,
+      occupancyRate: capacityMinutes > 0 ? Math.min(100, (bookedMinutes / capacityMinutes) * 100) : 0,
+      capacityMinutes,
       attendanceRate: attendedBase ? (countStatus('done') / attendedBase) * 100 : 0,
       lossRate: events.length ? ((countStatus('canceled') + countStatus('noshow')) / events.length) * 100 : 0,
       topCompletedProcedure,
@@ -189,7 +203,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
         effectivenessRate: evaluationCompleted + evaluationLost > 0 ? (evaluationCompleted / (evaluationCompleted + evaluationLost)) * 100 : 0,
       },
     };
-  }, [events]);
+  }, [capacityHoursPerDay, events, periodRange]);
 
   const changePeriod = (amount: number) => setSelectedDate(current => {
     const next = new Date(current);
@@ -216,6 +230,10 @@ export const ClinicaExpertsAgenda: React.FC = () => {
             <div><h2 className="text-sm font-bold text-[#17211D] dark:text-white">Agenda Clínica Experts</h2><p className="text-xs text-[#5E6D66] dark:text-slate-400">Consultas e indicadores do período selecionado.</p></div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 rounded-xl border border-[#DFE6E2] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-slate-400">
+              Capacidade/dia
+              <input aria-label="Horas de capacidade por profissional por dia" type="number" min="1" max="24" step="0.5" value={capacityHoursPerDay} onChange={event => { const value = Math.max(1, Math.min(24, Number(event.target.value) || 1)); setCapacityHoursPerDay(value); window.localStorage.setItem('clinica_experts_capacity_hours_per_day', String(value)); }} className="w-12 rounded-md border border-[#DFE6E2] bg-transparent px-1.5 py-1 text-center text-xs font-bold normal-case tracking-normal text-[#17211D] outline-none dark:border-white/[0.12] dark:text-white" /> h
+            </label>
             <div className="flex rounded-xl border border-[#DFE6E2] bg-[#F5F7F6] p-0.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
               {[{ id: 'day', label: 'Dia' }, { id: 'week', label: 'Semana' }, { id: 'month', label: 'Mês' }, { id: 'custom', label: 'Personalizado' }].map(option => <button key={option.id} type="button" onClick={() => selectPeriodMode(option.id as PeriodMode)} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${periodMode === option.id ? 'bg-[#1F6F5B] text-white shadow-sm dark:bg-[#63B596] dark:text-[#101217]' : 'text-[#5E6D66] hover:bg-white hover:text-[#17211D] dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white'}`}>{option.label}</button>)}
             </div>
@@ -236,7 +254,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
       {loading ? <div className="space-y-2 animate-pulse"><div className="h-20 rounded-2xl bg-white dark:bg-white/[0.06]" /><div className="h-20 rounded-2xl bg-white dark:bg-white/[0.06]" /></div> : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200"><p className="font-bold">Não foi possível consultar a agenda.</p><p className="mt-1 text-xs">{error}</p></div>
       ) : <>
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {[
             { label: periodMode === 'day' ? 'Consultas do dia' : 'Consultas no período', value: summary.total, icon: CalendarDays, tone: 'text-[#1F6F5B] dark:text-[#63B596]', featured: true },
             { label: 'Concluídas', value: summary.completed, icon: UserCheck, tone: 'text-[#1F6F5B] dark:text-[#63B596]' },
@@ -251,6 +269,7 @@ export const ClinicaExpertsAgenda: React.FC = () => {
             { label: 'Horas reservadas', value: `${Math.floor(summary.bookedMinutes / 60)}h${String(Math.round(summary.bookedMinutes % 60)).padStart(2, '0')}`, icon: Clock3, helper: 'sem canceladas' },
             { label: 'Presença', value: `${summary.attendanceRate.toFixed(0)}%`, icon: UserCheck, helper: 'concluídas vs. faltas' },
             { label: 'Perdas', value: `${summary.lossRate.toFixed(0)}%`, icon: UserX, helper: 'canceladas e faltas' },
+            { label: 'Ocupação', value: `${summary.occupancyRate.toFixed(0)}%`, icon: Clock3, helper: 'horas reservadas ÷ capacidade' },
           ].map(item => <div key={item.label} className="rounded-xl border border-[#DFE6E2] bg-[#F8FAF9] p-3 dark:border-white/[0.08] dark:bg-white/[0.03]"><item.icon className="size-3.5 text-[#5E6D66] dark:text-slate-400" /><p className="mt-2 text-lg font-black tabular-nums text-[#17211D] dark:text-white">{item.value}</p><p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#5E6D66] dark:text-slate-400">{item.label}</p><p className="mt-0.5 text-[10px] text-[#86938D]">{item.helper}</p></div>)}
         </section>
         <section className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">

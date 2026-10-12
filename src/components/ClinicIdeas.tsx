@@ -141,7 +141,7 @@ const SortableIdeaCard = ({ idea, onEdit, onDelete, onStatusChange, onOpenCommen
     <div
       ref={setNodeRef}
       style={style}
-      className="group bg-surface border border-border p-4 rounded-xl hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5 transition-all cursor-default relative overflow-hidden flex flex-col gap-2"
+      className="group bg-surface border border-border p-4 rounded-xl hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/5 transition cursor-default relative overflow-hidden flex flex-col gap-2"
     >
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-indigo-500/30 transition-colors" />
       
@@ -208,7 +208,7 @@ const SortableIdeaCard = ({ idea, onEdit, onDelete, onStatusChange, onOpenCommen
           {idea.status !== 'Done' && idea.status !== 'Archived' && (
             <button 
               onClick={() => onStatusChange(idea)}
-              className="text-[9px] text-indigo-400 hover:text-text bg-indigo-500/10 hover:bg-indigo-600 px-2 py-0.5 rounded-lg transition-all font-black uppercase tracking-wider"
+              className="text-[9px] text-indigo-400 hover:text-text bg-indigo-500/10 hover:bg-indigo-600 px-2 py-0.5 rounded-lg transition font-black uppercase tracking-wider"
             >
               Avançar
             </button>
@@ -486,7 +486,7 @@ export const ClinicIdeas: React.FC = () => {
               placeholder="Pesquisar ideias..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-xl text-xs text-text focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+              className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-xl text-xs text-text focus:outline-none focus:border-indigo-500 transition placeholder:text-slate-600"
             />
           </div>
 
@@ -528,7 +528,7 @@ export const ClinicIdeas: React.FC = () => {
           
           <button 
             onClick={() => handleOpenModal()}
-            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
+            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition active:scale-95"
           >
             <Plus className="w-4 h-4" /> Nova Ideia
           </button>
@@ -689,7 +689,7 @@ export const ClinicIdeas: React.FC = () => {
                   <button 
                     onClick={handleAddComment}
                     disabled={!newComment.trim()}
-                    className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-text rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center"
+                    className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-text rounded-xl shadow-lg shadow-indigo-600/20 transition active:scale-95 flex items-center justify-center"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -802,7 +802,7 @@ export const ClinicIdeas: React.FC = () => {
                         key={status.id}
                         type="button"
                         onClick={() => setFormData({...formData, status: status.id as any})}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase transition ${
                           formData.status === status.id 
                             ? status.bg + ' ' + status.color + ' border border-' + status.color.split('-')[1] + '-500/50' 
                             : 'bg-panel text-slate-600 border border-transparent hover:bg-panel/80'
@@ -825,7 +825,7 @@ export const ClinicIdeas: React.FC = () => {
                 </button>
                 <button 
                   onClick={handleSaveIdea}
-                  className="flex-[2] px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all"
+                  className="flex-[2] px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition"
                 >
                   {editingIdea ? 'Salvar Alterações' : 'Criar Ideia'}
                 </button>

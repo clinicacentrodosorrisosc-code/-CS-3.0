@@ -771,14 +771,14 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         <div className="flex flex-wrap items-center gap-2">
           <button 
             onClick={handleCopySummary}
-            className="px-4 py-2.5 rounded-xl bg-surface hover:bg-panel border border-border text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-surface hover:bg-panel border border-border text-slate-300 hover:text-white text-xs font-bold flex items-center gap-2 transition shadow-sm active:scale-95"
             title="Copiar resumo para enviar no WhatsApp da diretoria"
           >
             <Copy className="w-3.5 h-3.5 text-indigo-400" /> Copiar Parecer
           </button>
           <button 
             onClick={handleOpenNewScenario}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/25 active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2 transition shadow-lg shadow-indigo-600/25 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Criar Novo Cenário
           </button>
@@ -789,7 +789,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
       <div className="flex items-center gap-2 border-b border-border/80 pb-4 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('simulator')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition cursor-pointer ${
             activeTab === 'simulator' 
               ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -799,7 +799,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('comparison')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition cursor-pointer ${
             activeTab === 'comparison' 
               ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -809,7 +809,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('historical')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition cursor-pointer ${
             activeTab === 'historical' 
               ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -819,7 +819,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition cursor-pointer ${
             activeTab === 'settings' 
               ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -845,7 +845,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     <button
                       key={m.month}
                       onClick={() => handleApplyHistoricalMonthToAll(m)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 ${
                         selectedHistoricalMonth === m.label
                           ? 'bg-amber-500 text-black font-black shadow-md'
                           : 'bg-surface hover:bg-panel text-slate-300 hover:text-white border border-border'
@@ -932,7 +932,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               return (
                 <div key={scenario.id} className="bezel-outer h-full">
                   <SpotlightCard 
-                    className={`bezel-inner rounded-[calc(1.25rem-0.375rem)] p-3.5 flex flex-col justify-between h-full transition-all duration-300 relative shadow-md ${
+                    className={`bezel-inner rounded-[calc(1.25rem-0.375rem)] p-3.5 flex flex-col justify-between h-full transition duration-300 relative shadow-md ${
                       isBase 
                         ? 'border-sky-500/50 bg-sky-950/15 ring-1 ring-sky-500/20' 
                         : 'border-white/[0.08] bg-surface/90 hover:border-slate-500/40'
@@ -1502,7 +1502,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                               handleApplyHistoricalMonthToAll(row);
                               setActiveTab('simulator');
                             }}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[10px] font-bold uppercase transition-all"
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[10px] font-bold uppercase transition"
                           >
                             Simular
                           </button>
@@ -1533,13 +1533,13 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="flex gap-2">
                 <button
                   onClick={handleResetDefaults}
-                  className="px-4 py-2 rounded-xl bg-surface hover:bg-panel border border-border text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 rounded-xl bg-surface hover:bg-panel border border-border text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1.5 transition"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Restaurar Padrões
                 </button>
                 <button
                   onClick={handleOpenNewScenario}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition"
                 >
                   <Plus className="w-4 h-4" /> Novo Cenário
                 </button>
@@ -1783,7 +1783,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               </button>
               <button 
                 onClick={handleSaveScenario}
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all active:scale-95"
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition active:scale-95"
               >
                 Salvar Cenário
               </button>

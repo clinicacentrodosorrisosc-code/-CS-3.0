@@ -1053,7 +1053,7 @@ export const CommercialDailyReport: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-3">
                     <button 
                          onClick={() => setShowSettings(!showSettings)}
-                         className={`p-3 rounded-2xl border transition-all ${showSettings ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400' : 'bg-panel border-border text-slate-400 hover:text-text hover:bg-panel/80'}`}
+                         className={`p-3 rounded-2xl border transition ${showSettings ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-400' : 'bg-panel border-border text-slate-400 hover:text-text hover:bg-panel/80'}`}
                          title="Configurar Metas Diárias"
                     >
                          <Settings className={`w-5 h-5 ${showSettings ? 'animate-spin-slow' : ''}`} />
@@ -1102,7 +1102,7 @@ export const CommercialDailyReport: React.FC = () => {
                     <div className="flex justify-end mt-4">
                         <button 
                             onClick={saveGoals}
-                            className="px-5 py-2.5 glass-button glass-button-primary text-text rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+                            className="px-5 py-2.5 glass-button glass-button-primary text-text rounded-xl text-xs font-bold transition shadow-md active:scale-95"
                         >
                             Salvar Configurações
                         </button>
@@ -1124,7 +1124,7 @@ export const CommercialDailyReport: React.FC = () => {
             <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-border w-full md:w-fit self-start">
                 <button 
                     onClick={() => setActiveTab('form')}
-                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
+                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition glass-button ${activeTab === 'form' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
                 >
                     <FileText className="w-4 h-4" />
                     Preencher Relatório Diário
@@ -1134,7 +1134,7 @@ export const CommercialDailyReport: React.FC = () => {
                         setActiveTab('dashboard');
                         loadHistory();
                     }}
-                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all glass-button ${activeTab === 'dashboard' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
+                    className={`flex-1 md:flex-initial px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition glass-button ${activeTab === 'dashboard' ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}
                 >
                     <BarChart3 className="w-4 h-4" />
                     Dashboard & Indicadores (BI)
@@ -1149,7 +1149,7 @@ export const CommercialDailyReport: React.FC = () => {
                     {/* Shift Selector */}
                     <div className="lg:col-span-12 flex gap-2 p-1 bg-panel rounded-xl border border-border shrink-0 w-fit mb-4">
                         {(['Manhã', 'Tarde'] as const).map(s => (
-                            <button key={s} onClick={() => setAnswers({...answers, shift: s})} className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all glass-button ${answers.shift === s ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}>
+                            <button key={s} onClick={() => setAnswers({...answers, shift: s})} className={`px-4 py-2 rounded-lg text-[10px] font-bold transition glass-button ${answers.shift === s ? 'bg-panel/80 text-text shadow-lg' : 'text-slate-500 opacity-60 hover:opacity-100'}`}>
                                 {s}
                             </button>
                         ))}
@@ -1184,7 +1184,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                   key={opt.value}
                                                   type="button"
                                                   onClick={() => setAnswers({...answers, q1_arrival: opt.value as any})}
-                                                  className={`p-3.5 text-left rounded-xl text-xs font-bold border transition-all flex items-center justify-between ${
+                                                  className={`p-3.5 text-left rounded-xl text-xs font-bold border transition flex items-center justify-between ${
                                                       answers.q1_arrival === opt.value 
                                                           ? 'bg-indigo-600/20 border-indigo-500 text-text shadow-md' 
                                                           : 'bg-panel border-border text-slate-400 hover:text-text hover:border-border hover:bg-panel'
@@ -1218,7 +1218,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                         <label className="text-xs font-bold text-slate-300 font-sans">Quantos novos Leads entraram hoje?</label>
                                                         <div className="group relative inline-block">
                                                             <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                                 Quantidade de leads novos inseridos no período
                                                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                             </div>
@@ -1242,7 +1242,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                         <label className="text-xs font-bold text-slate-300 font-sans">Quantas mensagens de Acompanhamento Recorrente e Reativamento da Carteira?</label>
                                                         <div className="group relative inline-block">
                                                             <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                                 Das mensagens que você enviou, quantas eram de acompanhamento de pacientes/leads ativos no CRM ou reativação de leads perdidos
                                                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                             </div>
@@ -1276,7 +1276,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-slate-300 font-sans">Quantos agendamentos Futuros?</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Preencher com a quantidade de agendamentos realizados no período
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1298,7 +1298,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-slate-300 font-sans">Quantos agendamentos presenciais novos?</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Preencher com a quantidade de agendamentos de leads que compareceram diretamente na recepção
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1320,7 +1320,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-indigo-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1342,7 +1342,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-indigo-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática das respostas (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1377,7 +1377,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                         <label className="text-xs font-bold text-slate-300 font-sans">Quantos novos Leads entraram hoje?</label>
                                                         <div className="group relative inline-block">
                                                             <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                                 Quantidade de leads novos inseridos no período
                                                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                             </div>
@@ -1401,7 +1401,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                         <label className="text-xs font-bold text-slate-300 font-sans">Quantas mensagens de Acompanhamento Recorrente e Reativamento da Carteira?</label>
                                                         <div className="group relative inline-block">
                                                             <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                                 Das mensagens que você enviou, quantas eram de acompanhamento de pacientes/leads ativos no CRM ou reativação de leads perdidos
                                                                 <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                             </div>
@@ -1435,7 +1435,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-slate-300 font-sans">Quantos agendamentos Futuros?</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Preencher com a quantidade de agendamentos realizados no período
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1457,7 +1457,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-slate-300 font-sans">Quantos agendamentos presenciais novos?</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Preencher com a quantidade de agendamentos de leads que compareceram diretamente na recepção
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1479,7 +1479,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-indigo-300 font-sans">Quantas pessoas você entrou em contato? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1501,7 +1501,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                     <label className="text-xs font-bold text-indigo-300 font-sans">Quantas responderam? (Calculado automaticamente)</label>
                                                     <div className="group relative inline-block">
                                                         <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                             Soma automática das respostas (Novos Leads + Acompanhamento Recorrente + Reativamento)
                                                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                         </div>
@@ -1537,7 +1537,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    <label className="text-xs font-bold text-indigo-300 font-sans">Agendamentos na agenda para hoje</label>
                                                    <div className="group relative inline-block">
                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-indigo-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-indigo-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Total de pacientes que já tinham agenda agendada marcados para comparecer no dia de hoje.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
@@ -1548,7 +1548,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    min="0"
                                                    value={answers.q5_scheduled_for_today_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_scheduled_for_today_count: Number(e.target.value)})}
-                                                   className="bg-indigo-950/10 border border-indigo-500/20 hover:border-indigo-500/40 rounded-xl px-4 py-3 text-indigo-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-indigo-950/10 border border-indigo-500/20 hover:border-indigo-500/40 rounded-xl px-4 py-3 text-indigo-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none text-sm font-bold w-full font-mono transition"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1558,7 +1558,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    <label className="text-xs font-bold text-emerald-400 font-sans">Quantos compareceram?</label>
                                                    <div className="group relative inline-block">
                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-emerald-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-emerald-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Quantos pacientes agendados compareceram no dia de hoje.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
@@ -1569,7 +1569,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    min="0"
                                                    value={answers.q5_attended_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_attended_count: Number(e.target.value)})}
-                                                   className="bg-emerald-950/10 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl px-4 py-3 text-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-emerald-950/10 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl px-4 py-3 text-emerald-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none text-sm font-bold w-full font-mono transition"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1579,7 +1579,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    <label className="text-xs font-bold text-amber-400 font-sans">Quantos remarcaram?</label>
                                                    <div className="group relative inline-block">
                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-amber-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-amber-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Pacientes agendados para hoje que solicitaram reagendamento/remarcação para outra data.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
@@ -1590,7 +1590,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    min="0"
                                                    value={answers.q5_rescheduled_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_rescheduled_count: Number(e.target.value)})}
-                                                   className="bg-amber-950/10 border border-amber-500/20 hover:border-amber-500/40 rounded-xl px-4 py-3 text-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-amber-950/10 border border-amber-500/20 hover:border-amber-500/40 rounded-xl px-4 py-3 text-amber-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 outline-none text-sm font-bold w-full font-mono transition"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1600,7 +1600,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    <label className="text-xs font-bold text-slate-400 font-sans">Quantos não compareceram (Faltaram)?</label>
                                                    <div className="group relative inline-block">
                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-slate-500/10 hover:bg-slate-500/20 text-slate-400 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-slate-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-slate-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Pacientes agendados para hoje que faltaram sem avisar (No-show).
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
@@ -1611,7 +1611,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    min="0"
                                                    value={answers.q5_no_show_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_no_show_count: Number(e.target.value)})}
-                                                   className="bg-slate-900/20 border border-slate-500/20 hover:border-slate-500/40 rounded-xl px-4 py-3 text-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-slate-900/20 border border-slate-500/20 hover:border-slate-500/40 rounded-xl px-4 py-3 text-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20 outline-none text-sm font-bold w-full font-mono transition"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1621,7 +1621,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    <label className="text-xs font-bold text-red-400 font-sans">Quantos cancelaram?</label>
                                                    <div className="group relative inline-block">
                                                        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-red-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-red-500/10 text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                            Pacientes agendados para hoje que cancelaram o agendamento em definitivo.
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                        </div>
@@ -1632,7 +1632,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                    min="0"
                                                    value={answers.q5_cancelled_count || ''}
                                                    onChange={(e) => setAnswers({...answers, q5_cancelled_count: Number(e.target.value)})}
-                                                   className="bg-red-950/10 border border-red-500/20 hover:border-red-500/40 rounded-xl px-4 py-3 text-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500/20 outline-none text-sm font-bold w-full font-mono transition-all"
+                                                   className="bg-red-950/10 border border-red-500/20 hover:border-red-500/40 rounded-xl px-4 py-3 text-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500/20 outline-none text-sm font-bold w-full font-mono transition"
                                                    placeholder="0"
                                                />
                                           </div>
@@ -1646,7 +1646,7 @@ export const CommercialDailyReport: React.FC = () => {
                                               </label>
                                               <div className="group relative inline-block">
                                                   <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-panel/80 hover:bg-white/20 text-slate-300 hover:text-text text-[10px] font-black cursor-help transition-colors select-none">?</span>
-                                                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition-all duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
+                                                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 p-2.5 bg-slate-950 border border-border text-slate-200 text-[11px] font-normal rounded-xl shadow-2xl transition duration-200 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 origin-bottom z-50 leading-relaxed font-sans">
                                                       Indique os horizontes de tempo para os quais você conseguiu agendar novos pacientes hoje.
                                                       <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-950" />
                                                   </div>
@@ -1673,7 +1673,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                                   : [...current, opt.value];
                                                               setAnswers({ ...answers, q6_timeframe_options: updated });
                                                           }}
-                                                          className={`py-3 px-3 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1.5 ${
+                                                          className={`py-3 px-3 rounded-xl text-xs font-bold border transition text-center flex flex-col items-center justify-center gap-1.5 ${
                                                               isSelected
                                                                   ? 'bg-purple-600/20 border-purple-500 text-purple-300 scale-[1.02] shadow-md'
                                                                   : 'bg-panel border-border text-slate-400 hover:text-text'
@@ -1777,7 +1777,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                   key={opt.value}
                                                   type="button"
                                                   onClick={() => setAnswers({...answers, q10_day_rating: opt.value as any})}
-                                                  className={`py-3 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                                                  className={`py-3 rounded-xl text-xs font-bold border transition text-center flex flex-col items-center justify-center gap-1 ${
                                                       answers.q10_day_rating === opt.value 
                                                           ? 'bg-indigo-600/20 border-indigo-500 text-text font-black scale-102 shadow-md' 
                                                           : 'bg-panel border-border text-slate-400 hover:text-text'
@@ -1850,7 +1850,7 @@ export const CommercialDailyReport: React.FC = () => {
                                      <button 
                                           onClick={handleSave}
                                           disabled={saving || loading}
-                                          className="flex-1 py-4.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-text rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-indigo-600/15 disabled:opacity-50 hover:shadow-indigo-600/25 text-sm"
+                                          className="flex-1 py-4.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-text rounded-2xl font-bold flex items-center justify-center gap-2 transition shadow-xl shadow-indigo-600/15 disabled:opacity-50 hover:shadow-indigo-600/25 text-sm"
                                      >
                                           {saving ? 'Gravando dados...' : (
                                                <>
@@ -1863,7 +1863,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           type="button"
                                           onClick={handleShareWhatsApp}
                                           disabled={saving || loading}
-                                          className="flex-1 py-4.5 bg-green-600/20 hover:bg-green-600/30 active:scale-[0.98] text-green-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-green-500/30 transition-all text-sm shadow-lg shadow-green-600/10"
+                                          className="flex-1 py-4.5 bg-green-600/20 hover:bg-green-600/30 active:scale-[0.98] text-green-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-green-500/30 transition text-sm shadow-lg shadow-green-600/10"
                                      >
                                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
@@ -1877,7 +1877,7 @@ export const CommercialDailyReport: React.FC = () => {
                                               type="button"
                                               onClick={() => setShowDeleteConfirm(true)}
                                               disabled={saving || loading}
-                                              className="py-4.5 px-6 bg-rose-500/11 hover:bg-rose-500/20 active:scale-[0.98] text-rose-400 hover:text-rose-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-rose-500/20 transition-all text-sm"
+                                              className="py-4.5 px-6 bg-rose-500/11 hover:bg-rose-500/20 active:scale-[0.98] text-rose-400 hover:text-rose-300 rounded-2xl font-bold flex items-center justify-center gap-2 border border-rose-500/20 transition text-sm"
                                          >
                                               <Trash2 className="w-5 h-5" />
                                               Excluir
@@ -1929,7 +1929,7 @@ export const CommercialDailyReport: React.FC = () => {
                                           return (
                                               <div 
                                                    key={log.id}
-                                                   className="p-3 bg-panel border border-border rounded-xl hover:border-indigo-500/40 hover:bg-white/[0.02] transition-all cursor-pointer flex flex-col gap-2 group relative"
+                                                   className="p-3 bg-panel border border-border rounded-xl hover:border-indigo-500/40 hover:bg-white/[0.02] transition cursor-pointer flex flex-col gap-2 group relative"
                                               >
                                                    <div className="flex justify-between items-center text-[10px]" onClick={() => setReportDate(log.report_date)}>
                                                        <span className="font-bold text-slate-300 group-hover:text-indigo-400 transition-colors">
@@ -1954,7 +1954,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                             setReportDate(log.report_date);
                                                             setShowDeleteConfirm(true);
                                                         }}
-                                                        className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 opacity-70 hover:opacity-100 transition-all border border-rose-500/10 flex items-center justify-center z-10"
+                                                        className="absolute top-2.5 right-2.5 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 opacity-70 hover:opacity-100 transition border border-rose-500/10 flex items-center justify-center z-10"
                                                         title="Excluir relatório"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
@@ -1986,7 +1986,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 <button
                                     key={range.id}
                                     onClick={() => setDateRange(range.id as any)}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition border ${
                                         dateRange === range.id
                                             ? 'bg-indigo-600 border-indigo-500 text-text shadow-lg shadow-indigo-500/20'
                                             : 'bg-panel border-border text-slate-400 hover:text-slate-200'
@@ -2014,7 +2014,7 @@ export const CommercialDailyReport: React.FC = () => {
                              <button
                                  onClick={handleExportImage}
                                  disabled={exportingImage}
-                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-text rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20 cursor-pointer"
+                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-text rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition shadow-lg shadow-indigo-500/20 cursor-pointer"
                              >
                                  <Image className="w-3.5 h-3.5" />
                                  Exportar Imagem
@@ -2037,7 +2037,7 @@ export const CommercialDailyReport: React.FC = () => {
                             <div className={`grid gap-4 ${exportingImage ? 'grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
                                 
                                 {/* Card 1: Efetividade da Agenda (Mini Dashboard) */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="text-[12px] text-emerald-400 uppercase font-black tracking-widest block mb-1 font-mono">Efetividade da Agenda</h3>
@@ -2119,7 +2119,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 </div>
 
                                 {/* Card 2: Performance Financeira */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-emerald-500/30 transition duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="text-[12px] text-emerald-400 uppercase font-black tracking-widest block mb-1 font-mono">Performance Financeira</h3>
@@ -2170,7 +2170,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 </div>
 
                                 {/* Card 3: Atividade de Leads */}
-                                <div className="glass-panel p-6 rounded-3xl border border-border hover:border-slate-500/30 transition-all duration-300 flex flex-col justify-between group">
+                                <div className="glass-panel p-6 rounded-3xl border border-border hover:border-slate-500/30 transition duration-300 flex flex-col justify-between group">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="text-[12px] text-slate-400 uppercase font-black tracking-widest block mb-1 font-mono">Atividade de Leads</h3>
@@ -2186,7 +2186,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 </div>
 
                                 {/* Card 4: Ortodontia (Removido Conversão de Agenda Redundante) */}
-                                 <div className="glass-panel p-6 rounded-3xl border border-border hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between group">
+                                 <div className="glass-panel p-6 rounded-3xl border border-border hover:border-blue-500/30 transition duration-300 flex flex-col justify-between group">
                                      <div className="flex justify-between items-start">
                                          <div>
                                              <h3 className="text-[12px] text-blue-400 uppercase font-black tracking-widest block mb-1 font-mono">Ortodontia</h3>
@@ -2204,7 +2204,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 
 
                                 {/* Card 5: Comparativo de Períodos */}
-                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-violet-500/30 transition-all duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
+                                <div className={`glass-panel p-6 rounded-3xl border border-border hover:border-violet-500/30 transition duration-300 flex flex-col justify-between group ${exportingImage ? 'col-span-2' : 'lg:col-span-2'}`}>
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="text-[12px] text-violet-400 uppercase font-black tracking-widest block mb-1 font-mono">Desempenho por Turno</h3>
@@ -2460,7 +2460,7 @@ export const CommercialDailyReport: React.FC = () => {
                                                                         isVisible ? prev.filter(id => id !== metric.id) : [...prev, metric.id]
                                                                    );
                                                               }}
-                                                              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight transition-all border ${
+                                                              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight transition border ${
                                                                    isVisible 
                                                                         ? 'bg-panel border-border text-text shadow-sm' 
                                                                         : 'bg-panel border-border text-slate-500 opacity-60'
@@ -2788,7 +2788,7 @@ export const CommercialDailyReport: React.FC = () => {
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={saving}
-                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition-all shadow-lg shadow-rose-600/20"
+                                className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-text rounded-xl font-bold text-xs transition shadow-lg shadow-rose-600/20"
                             >
                                 {saving ? 'Excluindo...' : 'Sim, Excluir'}
                             </button>

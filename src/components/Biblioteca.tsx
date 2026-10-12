@@ -3,6 +3,7 @@ import {
   Plus, Search, Trash2, ExternalLink, Folder, ArrowLeft, BookOpen
 } from 'lucide-react';
 import { SpotlightCard } from './ui/spotlight-card';
+import { PageHeader } from './ui/operational-ui';
 
 interface LinkDocument {
   id: string;
@@ -105,7 +106,7 @@ export const Biblioteca: React.FC = () => {
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-border">
                 <button 
                   onClick={() => setSelectedPreviewId(null)}
-                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-text transition-all glass-button px-4 py-2 rounded-xl"
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-text transition glass-button px-4 py-2 rounded-xl"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Voltar para Biblioteca
@@ -116,7 +117,7 @@ export const Biblioteca: React.FC = () => {
                     href={selectedLink.url} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-all glass-button bg-emerald-500/10 border-emerald-500/20 px-4 py-2 rounded-xl"
+                    className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition glass-button bg-emerald-500/10 border-emerald-500/20 px-4 py-2 rounded-xl"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Abrir link original
@@ -185,26 +186,12 @@ export const Biblioteca: React.FC = () => {
             /* ================= MAIN GALLERY VIEW ================= */
             <div className="space-y-8 animate-in fade-in duration-300">
               
-              {/* Header Title section */}
-              <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
-                    Biblioteca de Manuais
-                  </h1>
-                  <p className="text-slate-400 text-sm">
-                    Acesso centralizado aos documentos, links, manuais e materiais de apoio da clínica.
-                  </p>
-                </div>
-
-                <div className="flex gap-2 text-sm justify-end">
-                  <button 
-                    onClick={() => handleAddPage()}
-                    className="px-6 py-2 glass-button glass-button-primary text-text rounded-xl font-bold shadow-lg transition-all flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Adicionar Link
-                  </button>
-                </div>
-              </div>
+              <PageHeader
+                icon={BookOpen}
+                title="Biblioteca de manuais"
+                description="Acesso centralizado aos documentos, links, manuais e materiais de apoio da clínica."
+                actions={<button type="button" onClick={() => handleAddPage()} className="btn btn-primary"><Plus className="size-4" /> Adicionar link</button>}
+              />
 
               {/* Sub-navigation style Search and Category Pills Bar */}
               <div className="border-b border-border pb-6 space-y-4">
@@ -217,7 +204,7 @@ export const Biblioteca: React.FC = () => {
                         data-active={selectedCategory === cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`
-                          px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
+                          px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition whitespace-nowrap glass-button
                           ${selectedCategory === cat 
                             ? 'bg-panel/80 text-text shadow-lg' 
                             : 'text-slate-500 opacity-60 hover:opacity-100'}
@@ -236,7 +223,7 @@ export const Biblioteca: React.FC = () => {
                       placeholder="Pesquisar manuais..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full bg-panel hover:bg-panel/80 focus:bg-panel/80 border border-border rounded-xl py-2 pl-9 pr-4 text-xs text-text outline-none focus:border-indigo-500/50 transition-all"
+                      className="w-full bg-panel hover:bg-panel/80 focus:bg-panel/80 border border-border rounded-xl py-2 pl-9 pr-4 text-xs text-text outline-none focus:border-indigo-500/50 transition"
                     />
                   </div>
                 </div>
@@ -249,7 +236,7 @@ export const Biblioteca: React.FC = () => {
                     <SpotlightCard
                       key={link.id}
                       onClick={() => setSelectedPreviewId(link.id)}
-                      className="glass-panel rounded-2xl border border-border bg-surface p-6 relative overflow-hidden flex flex-col justify-between group transition-all hover:border-white/20 cursor-pointer h-48"
+                      className="glass-panel rounded-2xl border border-border bg-surface p-6 relative overflow-hidden flex flex-col justify-between group transition hover:border-white/20 cursor-pointer h-48"
                       spotlightColor="rgba(99, 102, 241, 0.3)"
                     >
                       <div className="space-y-4">
@@ -257,7 +244,7 @@ export const Biblioteca: React.FC = () => {
                           <span className="text-4xl">{link.emoji || '📄'}</span>
                           <button
                             onClick={(e) => removeLink(link.id, e)}
-                            className="p-1.5 rounded bg-panel hover:bg-red-500/20 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                            className="p-1.5 rounded bg-panel hover:bg-red-500/20 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
                             title="Remover documento"
                           >
                             <Trash2 className="w-4 h-4" />

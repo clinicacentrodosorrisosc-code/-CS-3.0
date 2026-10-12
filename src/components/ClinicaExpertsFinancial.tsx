@@ -425,7 +425,7 @@ export const ClinicaExpertsFinancial: React.FC = () => {
     </header>
 
     <nav aria-label="Seções financeiras da Clínica Experts" className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-white/70 bg-white/50 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,.8)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.04]">
-      {views.map((view) => <button key={view.id} type="button" onClick={() => setActiveView(view.id)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${activeView === view.id ? 'bg-white text-[var(--primary)] shadow-sm dark:bg-white/90' : 'text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text)] dark:hover:bg-white/[0.08]'}`}>{view.label}</button>)}
+      {views.map((view) => <button key={view.id} type="button" onClick={() => setActiveView(view.id)} className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition ${activeView === view.id ? 'bg-white text-[var(--primary)] shadow-sm dark:bg-white/90' : 'text-[var(--text-secondary)] hover:bg-white/50 hover:text-[var(--text)] dark:hover:bg-white/[0.08]'}`}>{view.label}</button>)}
     </nav>
 
     {data && activeView === 'procedures' ? <ProceduresPanel occurrences={procedures} /> : null}

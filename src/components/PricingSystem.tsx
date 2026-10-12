@@ -1874,7 +1874,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 <button
                                     onClick={handleManualSaveFichas}
                                     disabled={isSavingSupabase}
-                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition shadow-lg shadow-indigo-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0 disabled:opacity-50"
                                     title="Forçar salvamento das fichas técnicas no Supabase"
                                 >
                                     <Database className="w-3.5 h-3.5" />
@@ -1882,7 +1882,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </button>
                                 <button
                                     onClick={handleExportFichaTecnica}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-text rounded-lg text-[11px] font-bold uppercase tracking-wider transition shadow-lg shadow-emerald-900/20 h-10 self-end sm:self-center mt-4 sm:mt-0"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     Exportar Todas
@@ -2212,7 +2212,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             setNewFichaItemType('material');
                                                             setNewFichaMatQty('1');
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'material' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition ${newFichaItemType === 'material' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Insumo
                                                     </button>
@@ -2221,7 +2221,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                             setNewFichaItemType('labor');
                                                             setNewFichaMatQty('3.0'); // defaults to 30 mins
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'labor' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition ${newFichaItemType === 'labor' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Mão de Obra
                                                     </button>
@@ -2229,7 +2229,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         onClick={() => {
                                                             setNewFichaItemType('third_party');
                                                         }}
-                                                        className={`py-1.5 rounded text-[9px] font-bold transition-all ${newFichaItemType === 'third_party' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
+                                                        className={`py-1.5 rounded text-[9px] font-bold transition ${newFichaItemType === 'third_party' ? 'bg-indigo-600 text-text' : 'text-slate-400 hover:text-text'}`}
                                                     >
                                                         Terceiros
                                                     </button>
@@ -2316,7 +2316,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                     />
                                                                     <button 
                                                                         onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                                        className="bg-indigo-600 hover:bg-indigo-500 text-text px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                                                                        className="bg-indigo-600 hover:bg-indigo-500 text-text px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition"
                                                                     >
                                                                         Adicionar
                                                                     </button>
@@ -2333,7 +2333,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     {newFichaItemType === 'third_party' && (
                                                         <button 
                                                             onClick={() => handleAddFichaItem(selectedFichaServiceId)}
-                                                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-text py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                                                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-text py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition"
                                                         >
                                                             Adicionar Serviço Terceirizado
                                                         </button>
@@ -2354,7 +2354,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
                                                 <button 
                                                     onClick={() => handleSyncFichaCostToService(selectedFichaServiceId, totalFichaCost, totalFichaTime)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-text py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-6 shadow-lg shadow-emerald-900/20"
+                                                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-text py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition mt-6 shadow-lg shadow-emerald-900/20"
                                                 >
                                                     <Zap className="w-3.5 h-3.5" />
                                                     Vincular à Precificação
@@ -2546,7 +2546,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     const val = e.target.value === '' ? 0 : Number(e.target.value);
                                                     handleScenarioPriceChange(selectedServiceId, val);
                                                 }}
-                                                className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-emerald-500 transition-all placeholder-emerald-900"
+                                                className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-emerald-500 transition placeholder-emerald-900"
                                                 placeholder="Informe o preço cobrado hoje..."
                                             />
                                         </div>
@@ -3031,7 +3031,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     const valorHora = emp.hoursPerMonth > 0 ? totalCusto / emp.hoursPerMonth : 0;
 
                                                     return (
-                                                        <tr key={emp.id} className="hover:bg-panel transition-all text-slate-200">
+                                                        <tr key={emp.id} className="hover:bg-panel transition text-slate-200">
                                                             <td className="px-4 py-3 text-center font-mono text-slate-500 text-xs">{emp.code}</td>
                                                             <td className="px-4 py-3">
                                                                 <input 
@@ -3779,7 +3779,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         <div className="flex gap-2 p-1 bg-slate-900 border border-border rounded-xl max-w-lg">
                             <button 
                                 onClick={() => setRelatoriosSubTab('dre_gerencial')}
-                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition cursor-pointer ${
                                     relatoriosSubTab === 'dre_gerencial' 
                                         ? 'bg-surface text-text shadow-lg border border-border' 
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
@@ -3789,7 +3789,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             </button>
                             <button 
                                 onClick={() => setRelatoriosSubTab('analise_produto')}
-                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition cursor-pointer ${
                                     relatoriosSubTab === 'analise_produto' 
                                         ? 'bg-surface text-text shadow-lg border border-border' 
                                         : 'text-slate-400 hover:text-text hover:bg-panel'
@@ -4311,7 +4311,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <div className="flex bg-slate-100 rounded-lg p-0.5 border border-slate-300 shadow-sm shrink-0">
                                                 <button
                                                     onClick={() => setAnaliseType('revenda')}
-                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all cursor-pointer ${
+                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition cursor-pointer ${
                                                         analiseType === 'revenda'
                                                             ? 'bg-surface text-text shadow'
                                                             : 'text-slate-500 hover:text-slate-800'
@@ -4321,7 +4321,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </button>
                                                 <button
                                                     onClick={() => setAnaliseType('prod_serv')}
-                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all cursor-pointer ${
+                                                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition cursor-pointer ${
                                                         analiseType === 'prod_serv'
                                                             ? 'bg-surface text-text shadow'
                                                             : 'text-slate-500 hover:text-slate-800'
@@ -4355,7 +4355,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                                 <button
                                                                     key={s.id}
                                                                     onClick={() => setSelectedAnaliseServiceId(s.id)}
-                                                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center justify-between ${
+                                                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold tracking-tight transition cursor-pointer flex items-center justify-between ${
                                                                         isSelected 
                                                                             ? 'bg-surface text-text font-bold shadow' 
                                                                             : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-xs'

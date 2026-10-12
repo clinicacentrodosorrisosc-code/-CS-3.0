@@ -46,6 +46,7 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
     { id: 'crm_pipeline', label: 'Funil comercial' },
     { id: 'crm_automations', label: 'Automações' },
     { id: 'crm_campaigns', label: 'Disparador em massa' },
+    { id: 'crm_reactivation', label: 'Reativação de orçamentos' },
     { id: 'crm_whatsapp', label: 'WhatsApp Business' },
   ],
   [Tab.SETTINGS]: [
@@ -53,7 +54,7 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
   ],
   [Tab.FINANCIAL]: [
     { id: 'financial_overview', label: 'Visão Geral' },
-    { id: 'financial_transactions', label: 'Receitas' },
+    { id: 'financial_transactions', label: 'Lançamentos' },
     { id: 'financial_pricing', label: 'Precificação' },
     { id: 'financial_viability', label: 'Viabilidade & Comissões (Exclusivo Admin)' },
     { id: 'financial_settings', label: 'Configurações' },
@@ -95,7 +96,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
     tabs: [...Object.values(Tab)],
     subTabs: [
       'dash_financial', 'dash_agenda',
-      'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_whatsapp', 'settings_whatsapp',
+      'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_reactivation', 'crm_whatsapp', 'settings_whatsapp',
       'financial_overview', 'financial_transactions', 'financial_pricing', 'financial_viability', 'financial_settings', 'financial_clinica_experts',
       'ortho_vision', 'ortho_calendar', 'ortho_grid', 'ortho_patients', 'ortho_settings',
       'lab_dashboard', 'lab_kanban', 'lab_settings', 'campaign_calendar', 'meeting_minutes', 'clinic_ideas', 'sales_playbook',
@@ -139,7 +140,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
       Tab.DASHBOARD, Tab.CRM, Tab.FINANCIAL, Tab.MEETINGS, Tab.TASKS
     ],
     subTabs: [
-      'dash_financial', 'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
+      'dash_financial', 'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_reactivation', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
       'campaign_calendar', 'meeting_minutes', 'sales_playbook', 'clinic_ideas', 'tasks', 'reports'
     ]
   },
@@ -653,7 +654,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                     applyTemplateToNewUser('reception');
                   }
                 }}
-                className={`text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg cursor-pointer ${
+                className={`text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg cursor-pointer ${
                   showCreateForm 
                     ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700' 
                     : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-purple-900/40'
@@ -746,7 +747,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                       type="button"
                       key={key}
                       onClick={() => applyTemplateToNewUser(key)}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
                         isSelected 
                           ? 'bg-purple-600/20 border-purple-500 text-white ring-2 ring-purple-500/30 shadow-lg' 
                           : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -776,7 +777,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                   required
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
                   placeholder="usuario@centrodosorriso.com"
                 />
               </div>
@@ -801,7 +802,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:border-purple-500 outline-none transition-all"
+                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:border-purple-500 outline-none transition"
                     placeholder="Mínimo 6 dígitos"
                   />
                   <button
@@ -872,7 +873,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                           setNewSelectedTabs([...newSelectedTabs, tab]);
                         }
                       }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer flex items-center gap-1.5 ${
                         isChecked 
                           ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm' 
                           : 'bg-slate-950/60 border-slate-800 text-slate-500 hover:text-slate-300'
@@ -902,7 +903,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 <button 
                   type="submit"
                   disabled={creatingUser}
-                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-900/30 disabled:opacity-50"
+                  className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-lg shadow-purple-900/30 disabled:opacity-50"
                 >
                   {creatingUser ? (
                     <>
@@ -930,7 +931,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
               placeholder="Buscar por email ou nome do usuário..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 outline-none transition-all"
+              className="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 outline-none transition"
             />
           </div>
 
@@ -990,7 +991,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                 return (
                   <div 
                     key={user.id} 
-                    className={`bg-slate-900/70 border rounded-2xl overflow-hidden transition-all duration-200 ${
+                    className={`bg-slate-900/70 border rounded-2xl overflow-hidden transition duration-200 ${
                       isExpanded ? 'border-purple-500/40 ring-1 ring-purple-500/20 bg-slate-900' : 'border-slate-800 hover:border-slate-700'
                     }`}
                   >
@@ -1064,7 +1065,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                               setPasswordModalUser({ id: user.id, email: user.email });
                               setNewResetPassword(generateRandomPassword());
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                             title="Definir nova senha para este usuário"
                           >
                             <Key className="w-3.5 h-3.5 text-amber-400" />
@@ -1075,7 +1076,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                         {/* Detalhes / Permissões Toggle */}
                         <button 
                           onClick={() => setExpandedUser(isExpanded ? null : user.id)}
-                          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
                             isExpanded 
                               ? 'bg-purple-600/20 border-purple-500/50 text-purple-200' 
                               : 'bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200'
@@ -1138,7 +1139,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                 <button
                                   key={key}
                                   onClick={() => applyTemplateToExistingUser(user.id, key)}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-purple-900/30 border border-slate-800 hover:border-purple-500/40 text-slate-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                                  className="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-purple-900/30 border border-slate-800 hover:border-purple-500/40 text-slate-300 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
                                 >
                                   <span>{template.icon}</span>
                                   <span>{template.name}</span>
@@ -1161,7 +1162,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                   key={tab}
                                   onClick={() => toggleTabPermission(user.id, tab, safeTabs)}
                                   disabled={!isCurrentUserAdmin}
-                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed ${
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed ${
                                     hasAccess 
                                       ? 'bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30 shadow-sm' 
                                       : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
@@ -1318,7 +1319,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
               <button 
                 type="submit"
                 disabled={isUpdatingPassword || !newResetPassword}
-                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
               >
                 {isUpdatingPassword ? (
                   <>

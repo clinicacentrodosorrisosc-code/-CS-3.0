@@ -156,12 +156,12 @@ export const ProcessAssistant: React.FC = () => {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Ex: Como funciona o fechamento mensal?"
-                        className="w-full bg-panel border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+                        className="w-full bg-panel border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text placeholder:text-slate-600 focus:border-indigo-500 outline-none transition"
                     />
                     <button 
                         onClick={handleSendMessage}
                         disabled={isTyping || !input.trim()}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-indigo-600 hover:bg-indigo-500 text-text rounded-lg flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition"
                     >
                         <Send className="w-4 h-4" />
                     </button>

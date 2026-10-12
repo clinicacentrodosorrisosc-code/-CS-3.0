@@ -257,14 +257,14 @@ export const PasswordVault: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setShowGenerator(!showGenerator)}
-              className="px-4 py-2.5 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold flex items-center gap-2 transition-all"
+              className="px-4 py-2.5 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold flex items-center gap-2 transition"
             >
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span>Gerador de Senha</span>
             </button>
             <button
               onClick={handleOpenNew}
-              className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-rose-900/40 transition active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Nova Senha</span>
@@ -299,7 +299,7 @@ export const PasswordVault: React.FC = () => {
                 onClick={() => {
                   copyToClipboard(generatedPassword, 'gen_pwd');
                 }}
-                className="px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all"
+                className="px-4 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs flex items-center gap-2 transition"
               >
                 {copiedId === 'gen_pwd' ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
                 <span>Copiar</span>
@@ -372,7 +372,7 @@ export const PasswordVault: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                   selectedCategory === cat
                     ? 'bg-rose-600 text-white shadow-md shadow-rose-900/30'
                     : 'bg-panel border border-border text-slate-400 hover:text-slate-200'
@@ -393,7 +393,7 @@ export const PasswordVault: React.FC = () => {
             <p className="text-sm font-semibold text-slate-400">Nenhuma credencial encontrada.</p>
             <button
               onClick={handleOpenNew}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md transition-all"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md transition"
             >
               Cadastrar Nova Credencial
             </button>
@@ -403,7 +403,7 @@ export const PasswordVault: React.FC = () => {
             {filteredPasswords.map(pwd => (
               <div
                 key={pwd.id}
-                className="bg-surface/80 hover:bg-surface border border-border hover:border-rose-500/40 p-5 rounded-2xl flex flex-col justify-between gap-4 transition-all shadow-sm group"
+                className="bg-surface/80 hover:bg-surface border border-border hover:border-rose-500/40 p-5 rounded-2xl flex flex-col justify-between gap-4 transition shadow-sm group"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -609,7 +609,7 @@ export const PasswordVault: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={!formData.service_name || !formData.password_value}
-                className="px-5 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md transition-all"
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md transition"
               >
                 Salvar
               </button>

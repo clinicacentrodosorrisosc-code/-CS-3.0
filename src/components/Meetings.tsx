@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { 
   Megaphone, FileText, 
-  Lightbulb, BookOpen, Sparkles
+  Lightbulb, BookOpen
 } from 'lucide-react';
 import { CampaignCalendar } from './Management/CampaignCalendar';
 import { MeetingMinutes } from './Management/MeetingMinutes';
 import { ClinicIdeas } from './ClinicIdeas';
 import { SalesPlaybook } from './Management/SalesPlaybook';
+import { PageHeader } from './ui/operational-ui';
 
 interface MeetingsProps {
   requestedSubTab?: string | null;
@@ -52,52 +53,25 @@ export const Meetings: React.FC<MeetingsProps> = ({ requestedSubTab }) => {
       {/* Main Scrollable Area */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 custom-scrollbar relative z-10 w-full space-y-6">
         
-        {/* Top Header & Context */}
-        <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Módulo Executivo • Gestão & Comercial</span>
+        <PageHeader
+          icon={currentTabInfo.icon}
+          title={currentTabInfo.label}
+          description={currentTabInfo.description}
+          tabs={(
+            <div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Áreas de gestão e comercial">
+              {SUB_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeSubTab === tab.id;
+                return (
+                  <button key={tab.id} type="button" role="tab" aria-selected={isActive} data-active={isActive} onClick={() => setSelectedSubTab(tab.id)}>
+                    <Icon className="size-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
-              {currentTabInfo.label}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-              {currentTabInfo.description}
-            </p>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold font-mono">
-              {SUB_TABS.length} Módulos Integrados
-            </span>
-          </div>
-        </div>
-
-        {/* Sub Navigation Bar */}
-        <div className="module-segmented-control no-scrollbar">
-          {SUB_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSubTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                data-active={isActive}
-                onClick={() => setSelectedSubTab(tab.id)}
-                className={`
-                  flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap border
-                  ${isActive 
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-600/30' 
-                    : 'bg-panel/80 text-slate-400 border-border hover:text-white hover:border-white/20 hover:bg-panel'}
-                `}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-400'}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+          )}
+        />
 
         {/* Content Container */}
         <div className="relative z-10 pt-2">

@@ -490,7 +490,7 @@ export const NotionWorkspace: React.FC = () => {
 
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="p-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/30 transition-all active:scale-95"
+              className="p-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-900/30 transition active:scale-95"
               title="Nova Página ou Template"
             >
               <Plus className="w-4 h-4" />
@@ -521,7 +521,7 @@ export const NotionWorkspace: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategoryFilter(cat)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition ${
                   selectedCategoryFilter === cat 
                     ? 'bg-rose-600/30 text-rose-300 border border-rose-500/40' 
                     : 'text-slate-400 hover:text-slate-200 bg-panel border border-border/60'
@@ -548,7 +548,7 @@ export const NotionWorkspace: React.FC = () => {
                   <div
                     key={page.id}
                     onClick={() => handleSelectPage(page.id)}
-                    className={`group w-full flex items-center justify-between p-2 rounded-xl text-left transition-all cursor-pointer border ${
+                    className={`group w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer border ${
                       activePage?.id === page.id
                         ? 'bg-rose-950/40 border-rose-500/40 text-text shadow-sm'
                         : 'border-transparent hover:bg-panel hover:border-border text-slate-400 hover:text-text'
@@ -594,7 +594,7 @@ export const NotionWorkspace: React.FC = () => {
                   <div
                     key={page.id}
                     onClick={() => handleSelectPage(page.id)}
-                    className={`group w-full flex items-center justify-between p-2 rounded-xl text-left transition-all cursor-pointer border ${
+                    className={`group w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer border ${
                       activePage?.id === page.id
                         ? 'bg-rose-950/40 border-rose-500/40 text-text shadow-sm'
                         : 'border-transparent hover:bg-panel hover:border-border text-slate-400 hover:text-text'
@@ -635,7 +635,7 @@ export const NotionWorkspace: React.FC = () => {
         <div className="p-3 border-t border-border bg-panel/50">
           <button
             onClick={() => handleCreateFromTemplate(VAULT_TEMPLATES.find(t => t.id === 'tpl_blank')!)}
-            className="w-full py-2 px-3 rounded-xl border border-dashed border-border hover:border-rose-500/50 hover:bg-rose-950/20 text-slate-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+            className="w-full py-2 px-3 rounded-xl border border-dashed border-border hover:border-rose-500/50 hover:bg-rose-950/20 text-slate-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Página em Branco</span>
@@ -649,12 +649,12 @@ export const NotionWorkspace: React.FC = () => {
           <div className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar">
             
             {/* Top Cover Banner */}
-            <div className={`w-full h-32 md:h-40 bg-gradient-to-r ${activePage.coverGradient || COVER_GRADIENTS[0].css} relative border-b border-border flex items-end p-6 transition-all`}>
+            <div className={`w-full h-32 md:h-40 bg-gradient-to-r ${activePage.coverGradient || COVER_GRADIENTS[0].css} relative border-b border-border flex items-end p-6 transition`}>
               <div className="absolute top-4 right-4 flex items-center gap-2">
                 {isEditing ? (
                   <button
                     onClick={() => setShowCoverPicker(!showCoverPicker)}
-                    className="px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition-all flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     Alterar Capa
@@ -663,7 +663,7 @@ export const NotionWorkspace: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleCopyContent}
-                      className="px-3 py-1.5 rounded-lg bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-slate-200 text-xs font-bold transition flex items-center gap-1.5"
                       title="Copiar Conteúdo"
                     >
                       {copiedNotification ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -671,14 +671,14 @@ export const NotionWorkspace: React.FC = () => {
                     </button>
                     <button
                       onClick={handleExportText}
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-slate-200 hover:text-white transition-all"
+                      className="p-1.5 rounded-lg bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/10 text-slate-200 hover:text-white transition"
                       title="Exportar Markdown"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleTogglePin(activePage.id)}
-                      className={`p-1.5 rounded-lg backdrop-blur-md border transition-all ${
+                      className={`p-1.5 rounded-lg backdrop-blur-md border transition ${
                         activePage.isPinned 
                           ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' 
                           : 'bg-black/40 border-white/10 text-slate-300 hover:text-white'
@@ -698,7 +698,7 @@ export const NotionWorkspace: React.FC = () => {
                     <button
                       key={cg.id}
                       onClick={() => { setEditCover(cg.css); setShowCoverPicker(false); }}
-                      className={`p-2 rounded-xl border text-[11px] font-bold text-left bg-gradient-to-r ${cg.css} hover:brightness-125 transition-all text-white`}
+                      className={`p-2 rounded-xl border text-[11px] font-bold text-left bg-gradient-to-r ${cg.css} hover:brightness-125 transition text-white`}
                     >
                       {cg.label}
                     </button>
@@ -716,7 +716,7 @@ export const NotionWorkspace: React.FC = () => {
                   <button
                     onClick={() => isEditing && setShowEmojiPicker(!showEmojiPicker)}
                     disabled={!isEditing}
-                    className={`w-20 h-20 rounded-2xl bg-surface border-2 border-border flex items-center justify-center text-4xl shadow-xl transition-all ${
+                    className={`w-20 h-20 rounded-2xl bg-surface border-2 border-border flex items-center justify-center text-4xl shadow-xl transition ${
                       isEditing ? 'hover:scale-105 hover:border-rose-500/50 cursor-pointer' : ''
                     }`}
                   >
@@ -744,13 +744,13 @@ export const NotionWorkspace: React.FC = () => {
                     <>
                       <button
                         onClick={() => setIsEditing(false)}
-                        className="px-4 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold transition-all"
+                        className="px-4 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold transition"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={handleSaveEdit}
-                        className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-900/40 transition-all active:scale-95"
+                        className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-900/40 transition active:scale-95"
                       >
                         <Save className="w-4 h-4" />
                         Salvar Alterações
@@ -760,21 +760,21 @@ export const NotionWorkspace: React.FC = () => {
                     <>
                       <button
                         onClick={handleDuplicatePage}
-                        className="px-3 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold transition-all"
+                        className="px-3 py-2 rounded-xl bg-panel hover:bg-surface border border-border text-slate-300 text-xs font-bold transition"
                         title="Duplicar Página"
                       >
                         Duplicar
                       </button>
                       <button
                         onClick={(e) => handleDeletePage(activePage.id, e)}
-                        className="p-2 rounded-xl bg-panel hover:bg-rose-950/40 border border-border hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition-all"
+                        className="p-2 rounded-xl bg-panel hover:bg-rose-950/40 border border-border hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition"
                         title="Excluir Página"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={startEditingPage}
-                        className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-900/40 transition-all active:scale-95"
+                        className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-rose-900/40 transition active:scale-95"
                       >
                         <Edit3 className="w-4 h-4" />
                         Editar Página
@@ -941,7 +941,7 @@ export const NotionWorkspace: React.FC = () => {
             <p className="text-sm font-semibold">Nenhum documento selecionado.</p>
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs shadow-lg transition-all"
+              className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs shadow-lg transition"
             >
               Criar Primeira Página
             </button>
@@ -973,7 +973,7 @@ export const NotionWorkspace: React.FC = () => {
                 <div
                   key={tpl.id}
                   onClick={() => handleCreateFromTemplate(tpl)}
-                  className="p-4 rounded-2xl border border-border bg-panel hover:bg-surface hover:border-rose-500/40 transition-all cursor-pointer flex flex-col justify-between gap-3 group"
+                  className="p-4 rounded-2xl border border-border bg-panel hover:bg-surface hover:border-rose-500/40 transition cursor-pointer flex flex-col justify-between gap-3 group"
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-3xl p-2 rounded-xl bg-surface border border-border group-hover:scale-110 transition-transform">
@@ -1042,13 +1042,13 @@ export const NotionWorkspace: React.FC = () => {
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={() => setPageToDelete(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-panel hover:bg-panel/80 border border-border text-slate-300 text-xs font-bold transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-panel hover:bg-panel/80 border border-border text-slate-300 text-xs font-bold transition"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={confirmDeletePage}
-                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-900/40 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-900/40 transition flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Excluir</span>

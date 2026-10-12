@@ -32,6 +32,7 @@ const TAB_LABELS: Record<Tab, string> = {
   [Tab.RESPONSIBILITIES]: 'Processos e SOPs',
   [Tab.BIBLIOTECA]: 'Biblioteca Clinica',
   [Tab.TASKS]: 'Tarefas e Atividades',
+  [Tab.AUDIT]: 'Auditoria',
 };
 
 const CRM_JAMES_URL = String(
@@ -72,12 +73,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <header className="app-header z-50 flex h-10 min-h-10 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_96%,transparent)] px-3 sm:px-4 dark:bg-[var(--surface)]">
-      <div className="flex min-w-0 items-center gap-2.5">
+      <div className="app-header-title flex min-w-0 items-center gap-2.5">
         <button type="button" onClick={onMobileMenuToggle} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white lg:hidden" aria-label={isSidebarExpanded ? 'Fechar menu' : 'Abrir menu'} aria-expanded={isSidebarExpanded} aria-controls="app-sidebar">
           <Menu className="size-4" />
         </button>
 
-        <div className="flex min-w-0 flex-col">
+        <div className="header-module-copy flex min-w-0 flex-col">
           <span className="truncate text-sm font-semibold leading-tight tracking-[-0.025em] text-[var(--text)]">
             {activeTab === Tab.DASHBOARD ? 'Bom dia, equipe.' : moduleLabel}
           </span>
@@ -89,7 +90,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="app-header-actions flex items-center gap-1.5 sm:gap-2">
         <div className="header-date hidden h-8 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[10px] font-semibold text-[var(--text-secondary)] xl:flex">
           <CalendarDays className="size-3.5" />
           <span>{todayLabel}</span>
@@ -97,7 +98,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <button
           type="button"
           onClick={openCrmJames}
-          className="mr-1 inline-flex h-8 items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--primary)_28%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface))] px-2.5 text-[11px] font-semibold text-[var(--primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] sm:px-3"
+          className="me-1 inline-flex h-8 items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--primary)_28%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface))] px-2.5 text-[11px] font-semibold text-[var(--primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] sm:px-3"
           title="Abrir CRM James (beta)"
           aria-label="Abrir CRM James (beta)"
         >
@@ -106,8 +107,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <ExternalLink className="size-3.5" />
         </button>
 
-        <span className="mr-1 hidden items-center gap-1.5 text-[11px] text-[#667085] lg:flex dark:text-slate-400">
-          <span className="size-1.5 rounded-full bg-emerald-400" />
+        <span className="header-sync me-1 hidden items-center gap-1.5 text-[11px] text-[#667085] lg:flex dark:text-slate-400">
+          <span className="status-signal size-1.5 rounded-full bg-emerald-400" />
           {onlineUsers.length > 0 ? `${onlineUsers.length} online` : 'Sincronizado'}
         </span>
 
@@ -125,7 +126,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </button>
         )}
 
-        <button type="button" className="ml-1 rounded-lg p-1 hover:bg-[var(--surface-hover)]" title={userEmail || 'Perfil'} aria-label={userEmail || 'Perfil'}>
+        <button type="button" className="ms-1 rounded-lg p-1 hover:bg-[var(--surface-hover)]" title={userEmail || 'Perfil'} aria-label={userEmail || 'Perfil'}>
           <BorderAvatar fallback={(userEmail || 'CS').slice(0, 2).toUpperCase()} alt={userEmail ? `Perfil de ${userEmail}` : 'Perfil do usuário'} />
         </button>
       </div>

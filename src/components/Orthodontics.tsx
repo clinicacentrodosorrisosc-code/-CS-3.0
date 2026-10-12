@@ -16,6 +16,7 @@ import { MultiSelectMenu, type SelectMenuOption } from './ui/select-menu';
 import { LayoutPanelLeft, Search, BarChart3, X, Trash2, Calendar, ChevronLeft, ChevronRight, Plus, CheckCircle2, Clock, XCircle, UserPlus, StickyNote, Filter, MessageCircle, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
+import { PageHeader } from './ui/operational-ui';
 
 // --- TYPES ---
 type OrthoTab = 'vision' | 'calendar' | 'grid' | 'patients' | 'settings';
@@ -2147,7 +2148,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <button
                                   key={f.id}
                                   onClick={() => setCalendarStatusFilter(f.id as any)}
-                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                                       calendarStatusFilter === f.id
                                           ? 'bg-slate-700 text-white'
                                           : 'text-slate-500 hover:text-text hover:bg-surface-high'
@@ -2245,7 +2246,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   key={dateKey}
                                   onClick={() => setSelectedCalendarDay(dateObj)}
                                   className={`
-                                      group border rounded-xl p-3 min-h-[130px] flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden
+                                      group border rounded-xl p-3 min-h-[130px] flex flex-col justify-between transition cursor-pointer relative overflow-hidden
                                       ${isToday 
                                           ? 'bg-slate-50 border-slate-400 shadow-sm'
                                           : isOrtho 
@@ -2394,7 +2395,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               {eligiblePatients.map(patient => {
                                   const payment = getMonthlyPayment(patient, paymentMonth);
                                   const isPaid = Boolean(payment?.paidAt);
-                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}</td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => setPaymentCalendarPatient(patient)} disabled={savingPaymentPatientId === patient.id} className={`inline-flex min-w-36 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-[var(--primary-border)] bg-[var(--primary-dim)] text-[var(--primary)] hover:bg-[var(--surface-hover)]'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'calendar_month'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}</button></td></tr>;
+                                  return <tr key={patient.id} className="transition-colors hover:bg-panel/70"><td className="p-4 font-semibold text-text">{patient.name}</td><td className="p-4 text-xs text-slate-400">{patient.startDate.split('-').reverse().join('/')}</td><td className="p-4 text-right font-mono text-text">R$ {patient.maintenanceValue.toFixed(2)}</td><td className="p-4 text-center"><button onClick={() => setPaymentCalendarPatient(patient)} disabled={savingPaymentPatientId === patient.id} className={`inline-flex min-w-36 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition disabled:cursor-wait disabled:opacity-60 ${isPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-[var(--primary-border)] bg-[var(--primary-dim)] text-[var(--primary)] hover:bg-[var(--surface-hover)]'}`}><span className="material-symbols-outlined text-sm">{isPaid ? 'check_circle' : 'calendar_month'}</span>{isPaid ? `Pago em ${payment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}</button></td></tr>;
                               })}
                               {eligiblePatients.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-sm text-slate-400">Nenhum paciente ativo encontrado.</td></tr>}
                           </tbody>
@@ -2447,7 +2448,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono">{aditivoStats.msgSentPct}%</span>
                   </div>
                   <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
-                      <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
+                      <div className="bg-emerald-500 h-1.5 rounded-full transition duration-500" style={{ width: `${aditivoStats.msgSentPct}%` }} />
                   </div>
               </div>}
 
@@ -2465,7 +2466,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-mono">{aditivoStats.signedPct}%</span>
                   </div>
                   <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
-                      <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.signedPct}%` }} />
+                      <div className="bg-blue-500 h-1.5 rounded-full transition duration-500" style={{ width: `${aditivoStats.signedPct}%` }} />
                   </div>
               </div>}
 
@@ -2502,7 +2503,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">{aditivoStats.changedDueDatePct}%</span>
                       </div>
                       <div className="w-full bg-panel rounded-full h-1.5 mt-3 overflow-hidden">
-                          <div className="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${aditivoStats.changedDueDatePct}%` }} />
+                          <div className="bg-amber-500 h-1.5 rounded-full transition duration-500" style={{ width: `${aditivoStats.changedDueDatePct}%` }} />
                       </div>
                   </div>
               )}
@@ -2801,7 +2802,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         hidden
                                         value={p.contractType || ''}
                                         onChange={(e) => handleUpdateContractType(p.id, e.target.value as 'Digital' | 'Papel' | '')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all bg-surface hover:bg-surface ${
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer transition bg-surface hover:bg-surface ${
                                             p.contractType === 'Papel'
                                             ? 'text-amber-400 border-amber-500/30 font-bold focus:border-amber-500'
                                             : p.contractType === 'Digital'
@@ -2819,7 +2820,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 <td className="hidden">
                                     <button
                                         onClick={() => handleToggleAditivoMsg(p.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                                             p.aditivoMsgSent
                                             ? 'bg-surface-high text-slate-700 border-border hover:bg-panel'
                                             : 'bg-surface text-slate-500 border-border hover:bg-surface-high'
@@ -2842,7 +2843,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 <td className="hidden">
                                     <button
                                         onClick={() => handleToggleAditivoSigned(p.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                                             p.aditivoSigned
                                             ? 'bg-surface-high text-slate-700 border-border hover:bg-panel'
                                             : 'bg-surface text-slate-500 border-border hover:bg-surface-high'
@@ -2874,7 +2875,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                             disabled={isSavingPayment}
                                             onClick={() => setPaymentCalendarPatient(p)}
                                             title={isMonthlyPaymentPaid ? 'Clique para remover o pagamento deste mês' : `Registrar pagamento de ${paymentMonth.split('-').reverse().join('/')}`}
-                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${isMonthlyPaymentPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'}`}
+                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition disabled:cursor-wait disabled:opacity-60 ${isMonthlyPaymentPaid ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25' : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'}`}
                                         >
                                             <span className="material-symbols-outlined text-sm">{isSavingPayment ? 'progress_activity' : isMonthlyPaymentPaid ? 'check_circle' : 'payments'}</span>
                                             {isSavingPayment ? 'Salvando...' : isMonthlyPaymentPaid ? `Pago ${monthlyPayment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}
@@ -2894,14 +2895,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                     <div className="hidden">
                                         <button 
                                             onClick={() => setEditingPatient(p)}
-                                            className="size-8 flex items-center justify-center rounded-lg border border-border bg-surface text-slate-500 transition-all hover:bg-surface-high hover:text-text"
+                                            className="size-8 flex items-center justify-center rounded-lg border border-border bg-surface text-slate-500 transition hover:bg-surface-high hover:text-text"
                                             title="Editar Informações do Paciente"
                                         >
                                             <span className="material-symbols-outlined text-sm">edit</span>
                                         </button>
                                         <button 
                                             onClick={() => openNoteModal(p)}
-                                            className={`size-8 flex items-center justify-center rounded-lg transition-all border ${hasProblem ? 'bg-red-50 text-red-600 border-red-200' : 'bg-surface hover:bg-surface-high border-border text-slate-500'}`}
+                                            className={`size-8 flex items-center justify-center rounded-lg transition border ${hasProblem ? 'bg-red-50 text-red-600 border-red-200' : 'bg-surface hover:bg-surface-high border-border text-slate-500'}`}
                                             title="Relatar Problema / Observação"
                                         >
                                             <span className="material-symbols-outlined text-sm">warning</span>
@@ -2910,7 +2911,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         {p.status === 'Active' && (
                                             <button 
                                                 onClick={() => handleOpenFinishModal(p.id)}
-                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high"
+                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition hover:bg-surface-high"
                                             >
                                                 Finalizar
                                             </button>
@@ -2918,21 +2919,21 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         {(p.status === 'Finished' || p.status === 'Suspended') && (
                                             <button 
                                                 onClick={() => handleReactivate(p.id)}
-                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high"
+                                                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold text-slate-600 transition hover:bg-surface-high"
                                             >
                                                 Reativar
                                             </button>
                                         )}
                                         <button 
                                             onClick={() => handleDeletePatient(p.id, p.name)}
-                                            className="px-2 py-1.5 rounded-lg border border-border bg-surface text-slate-500 transition-all text-xs font-semibold flex items-center justify-center gap-1 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                            className="px-2 py-1.5 rounded-lg border border-border bg-surface text-slate-500 transition text-xs font-semibold flex items-center justify-center gap-1 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                                             title="Excluir Paciente Permanentemente"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                     <div className="relative inline-flex">
-                                        <button type="button" onClick={(event) => openActionMenu(event, p.id)} aria-expanded={openActionMenuId === p.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-surface-high hover:text-text">
+                                        <button type="button" onClick={(event) => openActionMenu(event, p.id)} aria-expanded={openActionMenuId === p.id} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-surface-high hover:text-text">
                                             Ações <span className="material-symbols-outlined text-base">more_horiz</span>
                                         </button>
                                     </div>
@@ -2972,13 +2973,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1">
                           <button 
                             onClick={() => setCurrentYear('2025')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${currentYear === '2025' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${currentYear === '2025' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               2025
                           </button>
                           <button 
                             onClick={() => setCurrentYear('2026')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${currentYear === '2026' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${currentYear === '2026' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               2026
                           </button>
@@ -3000,25 +3001,25 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1">
                           <button 
                             onClick={() => setGridStatusFilter('all')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'all' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${gridStatusFilter === 'all' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Todos
                           </button>
                           <button 
                             onClick={() => setGridStatusFilter('Scheduled')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Scheduled' ? 'bg-amber-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${gridStatusFilter === 'Scheduled' ? 'bg-amber-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Agendados
                           </button>
                           <button 
                             onClick={() => setGridStatusFilter('Present')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Present' ? 'bg-emerald-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${gridStatusFilter === 'Present' ? 'bg-emerald-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Presentes
                           </button>
                           <button 
                             onClick={() => setGridStatusFilter('Absent')}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${gridStatusFilter === 'Absent' ? 'bg-red-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase transition ${gridStatusFilter === 'Absent' ? 'bg-red-500 text-text shadow-lg' : 'text-slate-500 hover:text-text'}`}
                           >
                               Faltas
                           </button>
@@ -3094,7 +3095,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                         const statusDay = statusDayKey ? Number(statusDayKey.split('-')[2]) : null;
                                         const statusLabel = status === 'Present' ? 'Presente' : status === 'Scheduled' ? 'Agendado' : status === 'Absent' ? 'Faltou' : 'Sem registro';
                                         
-                                        let cellClass = "cursor-pointer transition-all duration-200 group/cell";
+                                        let cellClass = "cursor-pointer transition duration-200 group/cell";
                                         let content = null;
                                         
                                         if (status === 'Present') {
@@ -3273,31 +3274,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
         {/* Content */}
         <div className="orthodontics-content-scroll flex-1 overflow-y-auto px-4 pb-4 pt-0 lg:px-6 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
-               {/* Visual spacing for title */}
-               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-3">
-                   <div>
-                       <h1 className="text-xl md:text-2xl font-bold text-text leading-tight tracking-tight">
-                          {activeSubTab === 'vision' ? 'Visão Geral Ortodontia' : 
-                           activeSubTab === 'grid' ? 'Grade de Presença' : 
-                           activeSubTab === 'patients' ? 'Gestão de Pacientes' : 'Configurações'}
-                       </h1>
-                       <p className="text-slate-400 text-xs mt-0.5">
-                          {activeSubTab === 'vision' 
-                              ? 'Acompanhamento de performance, faturamento e fluxo de pacientes.' 
-                              : activeSubTab === 'grid' 
-                              ? 'Controle de mensalidades e presença mensal dos pacientes.' 
-                              : activeSubTab === 'patients' 
-                              ? 'Lista completa de pacientes, contratos e histórico de tratamento.' 
-                              : 'Gerencie aparelhos, custos e motivos de finalização.'}
-                       </p>
-                   </div>
-
-                   <div className="flex gap-2 text-xs justify-end items-center">
+               <PageHeader
+                   icon={Calendar}
+                   title={activeSubTab === 'vision' ? 'Visão geral da ortodontia' : activeSubTab === 'grid' ? 'Grade de presença' : activeSubTab === 'patients' ? 'Gestão de pacientes' : activeSubTab === 'calendar' ? 'Calendário ortodôntico' : 'Configurações'}
+                   description={activeSubTab === 'vision' ? 'Acompanhamento de performance, faturamento e fluxo de pacientes.' : activeSubTab === 'grid' ? 'Controle de mensalidades e presença mensal dos pacientes.' : activeSubTab === 'patients' ? 'Lista completa de pacientes, contratos e histórico de tratamento.' : activeSubTab === 'calendar' ? 'Consultas e retornos da operação ortodôntica.' : 'Gerencie aparelhos, custos e motivos de finalização.'}
+                   actions={(
+                     <>
                       {activeSubTab === 'patients' && (
                           <button
                               type="button"
                               onClick={() => setIsBulkReminderOpen(true)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/25 bg-emerald-500/10 px-3.5 py-2 font-bold text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300"
+                              className="btn btn-secondary"
                           >
                               <MessageCircle className="h-3.5 w-3.5" /> Lembrete em massa
                           </button>
@@ -3305,7 +3292,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       {activeSubTab === 'patients' && (
                           <button 
                               onClick={() => { setIsNewContractModalOpen(true); }}
-                              className="px-3.5 py-1.5 btn btn-primary text-white rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+                              className="btn btn-primary"
                           >
                               <LayoutPanelLeft className="w-3.5 h-3.5" /> Novo Paciente
                           </button>
@@ -3318,31 +3305,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                   value={searchTerm}
                                   onChange={(e) => setSearchTerm(e.target.value)}
                                   placeholder="Filtrar paciente..."
-                                  className="bg-panel border border-border rounded-lg pl-9 pr-3 py-1.5 text-text text-xs outline-none focus:border-sky-500 transition-colors"
+                                  className="h-10 rounded-lg pl-9 pr-3 text-xs"
                               />
                           </div>
                       )}
-                   </div>
-               </div>
-
-               {/* SUB NAVIGATION BAR */}
-               <div className="module-segmented-control no-scrollbar">
-                    {visibleTabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            data-active={activeSubTab === tab.id}
-                            onClick={() => setActiveSubTab(tab.id as OrthoTab)}
-                            className={`
-                                px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
-                                ${activeSubTab === tab.id 
-                                    ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm' 
-                                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'}
-                            `}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-               </div>
+                     </>
+                   )}
+                   tabs={<div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Áreas da ortodontia">{visibleTabs.map(tab => <button key={tab.id} type="button" role="tab" aria-selected={activeSubTab === tab.id} data-active={activeSubTab === tab.id} onClick={() => setActiveSubTab(tab.id as OrthoTab)}>{tab.label}</button>)}</div>}
+               />
 
                {activeSubTab === 'vision' && renderOverview()}
                {activeSubTab === 'calendar' && renderCalendar()}
@@ -3467,7 +3437,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
                   <footer className="flex items-center justify-end gap-3 border-t border-border bg-surface p-4">
                       <button type="button" onClick={() => setWhatsAppPatient(null)} className="rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-500 transition-colors hover:bg-surface-high hover:text-text">Cancelar</button>
-                      <button type="button" onClick={handleOpenWhatsApp} disabled={isFindingWhatsAppPhone || !whatsAppPhone.trim() || !whatsAppMessage.trim()} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                      <button type="button" onClick={handleOpenWhatsApp} disabled={isFindingWhatsAppPhone || !whatsAppPhone.trim() || !whatsAppMessage.trim()} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 dark:bg-emerald-600 dark:hover:bg-emerald-500">
                           <MessageCircle className="h-4 w-4" /> Abrir no WhatsApp
                       </button>
                   </footer>
@@ -3815,14 +3785,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                       <button 
                           onClick={() => setDeleteModalInfo(null)} 
                           disabled={isDeletingPatient}
-                          className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-all"
+                          className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition"
                       >
                           Cancelar
                       </button>
                       <button 
                           onClick={confirmDeletePatient} 
                           disabled={isDeletingPatient}
-                          className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                          className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-950/40 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                       >
                           {isDeletingPatient ? (
                               <>
@@ -4248,8 +4218,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </div>
                   </div>
                   <div className="p-4 border-t border-border bg-surface-high/50 flex justify-end gap-3">
-                      <button onClick={() => setEditingPatient(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
-                      <button onClick={handleSaveEditedPatient} className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-950/40 transition-all">Salvar Alterações</button>
+                      <button onClick={() => setEditingPatient(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">Cancelar</button>
+                      <button onClick={handleSaveEditedPatient} className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-950/40 transition">Salvar Alterações</button>
                   </div>
               </div>
           </div>

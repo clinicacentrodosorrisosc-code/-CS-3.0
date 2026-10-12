@@ -125,7 +125,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 group"
+          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-text rounded-xl font-bold transition shadow-lg shadow-indigo-600/20 group"
         >
           <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
           Exportar Relatório Excel
@@ -281,7 +281,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurren
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-surface border border-border rounded-2xl p-6 shadow-xl hover:border-white/20 transition-all group"
+    className="bg-surface border border-border rounded-2xl p-6 shadow-xl hover:border-white/20 transition group"
   >
     <div className="flex justify-between items-start mb-4">
       <div className="p-3 bg-panel rounded-xl group-hover:bg-panel/80 transition-colors">

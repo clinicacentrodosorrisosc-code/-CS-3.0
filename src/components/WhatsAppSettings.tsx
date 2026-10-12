@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CheckCircle2, FileText, KeyRound, Link2, Loader2, MessageCircle, PhoneCall, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { LoadingPanel } from './ui/loading-panel';
+import { PageHeader, StatusBadge } from './ui/operational-ui';
 
 type WhatsAppSettingsProps = { requestedSubTab?: string | null };
 type MetaTemplate = {
@@ -161,16 +162,12 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   return (
     <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
       <div className="mx-auto max-w-4xl">
-        <div className="module-command-bar flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#1F6F5B] dark:text-[#63B596]"><span className="h-px w-6 bg-current" /> Integrações</div>
-            <h1 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text)]">WhatsApp Business API</h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Conecte o número oficial da clínica para enviar templates aprovados pela Meta.</p>
-          </div>
-          <span className={`inline-flex items-center gap-2 self-start rounded-lg border px-3 py-2 text-xs font-semibold sm:self-auto ${connected ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'}`}>
-            <span className={`h-2 w-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-slate-400'}`} /> {connected ? 'Conectado' : 'Não conectado'}
-          </span>
-        </div>
+        <PageHeader
+          icon={MessageCircle}
+          title="WhatsApp Business API"
+          description="Conecte o número oficial da clínica para enviar templates aprovados pela Meta."
+          actions={<StatusBadge tone={connected ? 'success' : 'neutral'}>{connected ? 'Conectado' : 'Não conectado'}</StatusBadge>}
+        />
 
         {message && <div className={`mb-5 rounded-xl border px-4 py-3 text-xs ${message.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200'}`}>{message.text}</div>}
 

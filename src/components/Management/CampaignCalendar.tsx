@@ -198,7 +198,7 @@ export const CampaignCalendar: React.FC = () => {
               </div>
               <button
                 onClick={() => openModal(activeMonthCampaign.monthIndex)}
-                className="ml-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30"
+                className="ml-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/30"
               >
                 Editar
               </button>
@@ -237,7 +237,7 @@ export const CampaignCalendar: React.FC = () => {
               <div
                 key={idx}
                 onClick={() => openModal(idx)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer group hover:-translate-y-1 flex flex-col justify-between min-h-[160px] ${
+                className={`p-4 rounded-2xl border transition cursor-pointer group hover:-translate-y-1 flex flex-col justify-between min-h-[160px] ${
                   isCurrentMonth 
                     ? 'bg-indigo-950/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10' 
                     : 'bg-[var(--surface)] border-[var(--border)] hover:border-[var(--border-hover)]'

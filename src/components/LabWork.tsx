@@ -16,6 +16,7 @@ import {
 
 import { toast } from 'sonner';
 import { useRealtimeSubscription, notifyDataChange } from '../lib/realtime';
+import { PageHeader } from './ui/operational-ui';
 
 type ViewMode = 'kanban' | 'settings' | 'dashboard' | 'lab_payments_ctrl';
 
@@ -858,7 +859,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
 
                   <button
                       onClick={() => setShowPatientPaymentsRegistry(!showPatientPaymentsRegistry)}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition border ${
                           showPatientPaymentsRegistry
                               ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
                               : 'bg-panel hover:bg-panel/80 text-slate-300 border-border'
@@ -1047,14 +1048,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                               });
                                                               setIsLabPayModalOpen(true);
                                                           }}
-                                                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border-emerald-500/30"
+                                                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition border bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border-emerald-500/30"
                                                       >
                                                           {isPaid ? 'Editar' : 'Pagar ao Lab'}
                                                       </button>
                                                       {isPaid && (
                                                           <button
                                                               onClick={() => handleUndoLabPayment(order.id)}
-                                                              className="px-2 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border bg-panel hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border-border"
+                                                              className="px-2 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition border bg-panel hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border-border"
                                                               title="Remover pagamento"
                                                           >
                                                               Remover
@@ -1083,7 +1084,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
         <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-10">
             {/* KPI CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(59, 130, 246, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(59, 130, 246, 0.4)">
                     <div className="flex justify-between items-start">
                         <div className="size-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                             <Briefcase className="w-6 h-6" />
@@ -1093,7 +1094,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.inProgress}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
                     <div className="flex justify-between items-start">
                         <div className="size-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                             <Package className="w-6 h-6" />
@@ -1104,7 +1105,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.readyToDeliver}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition-all" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
                     <div className="flex justify-between items-start">
                         <div className="size-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                             <CheckCircle className="w-6 h-6" />
@@ -1115,12 +1116,12 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <h3 className="text-3xl font-bold text-text mt-1">{stats.trabalhosFinalizados}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition-all" onClick={() => setIsPendingModalOpen(true)} spotlightColor="rgba(245, 158, 11, 0.4)">
+                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition" onClick={() => setIsPendingModalOpen(true)} spotlightColor="rgba(245, 158, 11, 0.4)">
                     <div className="flex justify-between items-start">
                         <div className="size-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                             <DollarSign className="w-6 h-6" />
                         </div>
-                        <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full hover:bg-amber-400/20 transition-all flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full hover:bg-amber-400/20 transition flex items-center gap-1">
                             Ver ({pendingPaymentsList.length}) <ArrowRight className="w-3 h-3" />
                         </span>
                     </div>
@@ -1134,7 +1135,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         <div className="size-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
                             <TrendingUp className="w-6 h-6" />
                         </div>
-                        <span className="text-[10px] font-bold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded-full cursor-pointer hover:bg-purple-400/20 transition-all" onClick={() => setViewMode('settings')}>
+                        <span className="text-[10px] font-bold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded-full cursor-pointer hover:bg-purple-400/20 transition" onClick={() => setViewMode('settings')}>
                             Meta {goalProgress.toFixed(0)}%
                         </span>
                     </div>
@@ -1230,7 +1231,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                     </div>
                                     <div className="h-1 w-full bg-panel rounded-full overflow-hidden">
                                         <div 
-                                            className="h-full bg-indigo-500 transition-all duration-1000" 
+                                            className="h-full bg-indigo-500 transition duration-1000"
                                             style={{ width: `${(item.count / stats.prosthesisRanking[0].count) * 100}%` }}
                                         ></div>
                                     </div>
@@ -1320,7 +1321,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                         <td className="p-4 w-[200px]">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex-1 h-1.5 bg-panel rounded-full overflow-hidden">
-                                                    <div className={`h-full ${progressColor} transition-all duration-1000`} style={{ width: `${progress}%` }}></div>
+                                                    <div className={`h-full ${progressColor} transition duration-1000`} style={{ width: `${progress}%` }}></div>
                                                 </div>
                                                 <span className="text-[10px] font-bold text-text w-8">{progress}%</span>
                                             </div>
@@ -1333,8 +1334,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                         </td>
                                         <td className="p-4 text-center">
                                             <div className="flex justify-center gap-1">
-                                                <button onClick={() => handleEditOrder(order)} className="p-1.5 text-slate-600 hover:text-blue-400 rounded hover:bg-panel transition-all"><Edit2 className="w-4 h-4" /></button>
-                                                <button onClick={() => setOrderToDelete(order.id)} className="p-1.5 text-slate-600 hover:text-red-400 rounded hover:bg-panel transition-all"><Trash2 className="w-4 h-4" /></button>
+                                                <button onClick={() => handleEditOrder(order)} className="p-1.5 text-slate-600 hover:text-blue-400 rounded hover:bg-panel transition"><Edit2 className="w-4 h-4" /></button>
+                                                <button onClick={() => setOrderToDelete(order.id)} className="p-1.5 text-slate-600 hover:text-red-400 rounded hover:bg-panel transition"><Trash2 className="w-4 h-4" /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -1365,7 +1366,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                           className="w-full bg-panel border border-border rounded-xl pl-10 pr-4 py-3 text-text outline-none focus:border-purple-500 font-mono font-bold" 
                       />
                   </div>
-                  <button onClick={handleSaveLabGoal} disabled={isSaving || !canManage} className="bg-purple-600 hover:bg-purple-500 text-text font-bold px-8 py-3 rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50">
+                  <button onClick={handleSaveLabGoal} disabled={isSaving || !canManage} className="bg-purple-600 hover:bg-purple-500 text-text font-bold px-8 py-3 rounded-xl transition shadow-lg active:scale-95 disabled:opacity-50">
                       {isSaving ? 'Salvando...' : 'Definir Meta'}
                   </button>
               </div>
@@ -1380,7 +1381,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                   <input value={configForm.name} onChange={e => setConfigForm({...configForm, name: e.target.value})} placeholder="Serviço / Prótese" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500" />
                   <input value={configForm.value} onChange={e => setConfigForm({...configForm, value: e.target.value})} placeholder="Valor Venda (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500 font-mono" />
                   <input value={configForm.cost} onChange={e => setConfigForm({...configForm, cost: e.target.value})} placeholder="Custo Lab (0,00)" className="bg-panel border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-fuchsia-500 font-mono" />
-                  <button onClick={handleSavePriceItem} disabled={!canManage} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-text font-bold py-3 rounded-xl transition-all shadow-lg shadow-fuchsia-900/20 disabled:opacity-50">Salvador Item</button>
+                  <button onClick={handleSavePriceItem} disabled={!canManage} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-text font-bold py-3 rounded-xl transition shadow-lg shadow-fuchsia-900/20 disabled:opacity-50">Salvador Item</button>
               </div>
           </div>
           <div className="glass-panel rounded-2xl border border-border overflow-hidden shadow-2xl">
@@ -1551,7 +1552,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                   })();
 
                                   return (
-                                      <div key={order.id} className="p-4 bg-surface border border-border rounded-xl hover:border-white/20 transition-all group relative animate-in fade-in duration-300">
+                                      <div key={order.id} className="p-4 bg-surface border border-border rounded-xl hover:border-white/20 transition group relative animate-in fade-in duration-300">
                                           <div className="flex justify-between items-start mb-2">
                                               <div className="flex flex-col gap-1.5">
                                                   <span className="text-[10px] font-bold text-slate-500 uppercase">OS #{order.id.split('_')[1]?.slice(-4)}</span>
@@ -1636,38 +1637,23 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
     <div className="flex-1 flex w-full h-full bg-transparent text-slate-300 font-sans overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-pink-600/5 blur-[120px] pointer-events-none"></div>
-        
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 custom-scrollbar relative z-10 w-full">
            <div className="w-full h-full relative z-10">
-               {/* Visual spacing for title */}
-               <div className="module-command-bar flex flex-col md:flex-row md:items-center justify-between gap-4">
-                   <div>
-                       <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight tracking-tight mb-2">
-                          {viewMode === 'dashboard' ? 'Dashboard' : viewMode === 'kanban' ? 'Quadro Kanban' : 'Configuração de Lab'}
-                       </h1>
-                       <p className="text-slate-400 text-sm">
-                          {viewMode === 'dashboard' 
-                             ? 'Controle de produção de próteses e alinhadores.' 
-                             : viewMode === 'kanban'
-                               ? 'Gerencie o fluxo de trabalho dos pedidos.'
-                               : 'Configurações de laboratórios e preços.'}
-                       </p>
-                   </div>
-
-                   <div className="flex gap-3 text-sm">
+               <PageHeader
+                   icon={Package}
+                   title={viewMode === 'dashboard' ? 'Visão geral do laboratório' : viewMode === 'kanban' ? 'Quadro de produção' : viewMode === 'lab_payments_ctrl' ? 'Pagamentos ao laboratório' : 'Configurações do laboratório'}
+                   description={viewMode === 'dashboard' ? 'Controle de produção de próteses e alinhadores.' : viewMode === 'kanban' ? 'Gerencie o fluxo de trabalho dos pedidos.' : viewMode === 'lab_payments_ctrl' ? 'Conferência de custos e pagamentos dos fornecedores.' : 'Configurações de laboratórios e preços.'}
+                   actions={(
+                     <>
                       {canManage && (
-                          <button onClick={() => { setIsModalOpen(true); setEditingOrderId(null); setNewOrderForm({ patient_name: '', protese_id: '', details: '', lab_name: '', sale_value: '', cost: '', start_date: new Date().toISOString().split('T')[0] }); }} className="px-6 py-2 glass-button glass-button-primary text-text rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
+                          <button type="button" onClick={() => { setIsModalOpen(true); setEditingOrderId(null); setNewOrderForm({ patient_name: '', protese_id: '', details: '', lab_name: '', sale_value: '', cost: '', start_date: new Date().toISOString().split('T')[0] }); }} className="btn btn-primary">
                               <Plus className="w-4 h-4" /> Novo Pedido
                           </button>
                       )}
-                   </div>
-               </div>
-
-               {/* SUB NAVIGATION BAR */}
-               <div className="module-segmented-control no-scrollbar">
+                     </>
+                   )}
+                   tabs={<div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Áreas do laboratório">
                     {[
                         { id: 'dashboard', label: 'Dashboard', permission: 'lab_dashboard' },
                         { id: 'kanban', label: 'Kanban', permission: 'lab_kanban' },
@@ -1679,19 +1665,17 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     }).map(tab => (
                         <button
                             key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={viewMode === tab.id}
                             data-active={viewMode === tab.id}
                             onClick={() => setViewMode(tab.id as ViewMode)}
-                            className={`
-                                px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap glass-button
-                                ${viewMode === tab.id 
-                                    ? 'bg-panel/80 text-text shadow-lg' 
-                                    : 'text-slate-500 opacity-60 hover:opacity-100'}
-                            `}
                         >
                             {tab.label}
                         </button>
                     ))}
-               </div>
+                   </div>}
+               />
 
                 {viewMode === 'dashboard' && renderDashboard()}
                 {viewMode === 'kanban' && renderKanban()}
@@ -1716,14 +1700,14 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                         <button 
                             onClick={() => setOrderToDelete(null)}
                             disabled={isDeleting}
-                            className="flex-1 py-3 rounded-xl glass-button text-text font-bold transition-all disabled:opacity-50"
+                            className="flex-1 py-3 rounded-xl glass-button text-text font-bold transition disabled:opacity-50"
                         >
                             Cancelar
                         </button>
                         <button 
                             onClick={() => handleDeleteOrder(orderToDelete)}
                             disabled={isDeleting}
-                            className="flex-1 py-3 rounded-xl glass-button bg-red-600/20 border-red-500/30 text-text font-bold transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-1 py-3 rounded-xl glass-button bg-red-600/20 border-red-500/30 text-text font-bold transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
                         </button>
@@ -1831,7 +1815,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                 </p>
                             </div>
                         </div>
-                        <button onClick={() => setIsPendingModalOpen(false)} className="p-2 text-slate-400 hover:text-text rounded-lg hover:bg-panel transition-all">
+                        <button onClick={() => setIsPendingModalOpen(false)} className="p-2 text-slate-400 hover:text-text rounded-lg hover:bg-panel transition">
                             <X className="w-6 h-6" />
                         </button>
                     </div>
@@ -1926,7 +1910,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                                                     setSelectedOrderForPayment(order);
                                                                     setPaymentForm({ amount: remaining.toString(), date: new Date().toISOString().split('T')[0] });
                                                                 }}
-                                                                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1 mx-auto border border-emerald-500/30"
+                                                                className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-[10px] font-bold uppercase transition flex items-center justify-center gap-1 mx-auto border border-emerald-500/30"
                                                             >
                                                                 <CreditCard className="w-3 h-3" /> Pagar
                                                             </button>
@@ -1945,7 +1929,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <div className="p-4 border-t border-border bg-panel/30 flex justify-end">
                         <button
                             onClick={() => setIsPendingModalOpen(false)}
-                            className="px-6 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-border"
+                            className="px-6 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider transition border border-border"
                         >
                             Fechar
                         </button>
@@ -2026,13 +2010,13 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     <div className="flex justify-end gap-3 pt-4 border-t border-border">
                         <button
                             onClick={() => setIsLabPayModalOpen(false)}
-                            className="px-4 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider border border-border transition-all"
+                            className="px-4 py-2 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold uppercase tracking-wider border border-border transition"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={handleSaveLabPayment}
-                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/20 transition-all"
+                            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/20 transition"
                         >
                             Salvar Pagamento
                         </button>

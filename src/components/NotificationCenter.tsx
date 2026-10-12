@@ -283,7 +283,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   layout
                   key={n.id}
                   className={`
-                    group relative p-4 rounded-2xl border transition-all duration-200
+                    group relative p-4 rounded-2xl border transition duration-200
                     ${n.isRead ? 'bg-white/[0.02] border-border grayscale-[0.5]' : 'bg-white/[0.05] border-border hover:border-white/20'}
                     ${n.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ''}
                   `}
@@ -327,7 +327,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <div className="p-4 border-t border-border bg-surface shrink-0">
                 <button 
                   onClick={loadNotifications}
-                  className="w-full py-3 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold transition-all border border-border"
+                  className="w-full py-3 bg-panel hover:bg-panel/80 text-text rounded-xl text-xs font-bold transition border border-border"
                 >
                   Atualizar Agora
                 </button>
