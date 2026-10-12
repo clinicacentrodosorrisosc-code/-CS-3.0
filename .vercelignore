@@ -1,0 +1,9 @@
+.agents/
+.claude/
+.impeccable/
+scratch/
+app_shot.png
+system_shot.png
+test_shot.png
+skills-lock.json
+public/dashboard-meadow.png
