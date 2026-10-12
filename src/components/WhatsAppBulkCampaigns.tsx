@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, CheckCircle2, CircleAlert, Search, Send, Tag, UsersRound, X } from 'lucide-react';
+import { Check, CheckCircle2, CircleAlert, FileSpreadsheet, LayoutList, MessageSquareText, Search, Send, Tag, UsersRound, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { StepIndicator } from './ui/step-indicator';
 import { LoadingPanel } from './ui/loading-panel';
+import { WhatsAppContactLists } from './WhatsAppContactLists';
+import { WhatsAppTemplateManager } from './WhatsAppTemplateManager';
 
 type Pipeline = { id: string; name: string };
 type Stage = { id: string; pipeline_id: string; name: string };
-type Template = { name: string; language: string; status: string; components?: { type: string; text?: string }[] };
+type Template = { name: string; language: string; status: string; components?: { type: string; format?: string; text?: string; buttons?: Array<{ type: string; text?: string }> }[] };
 type Campaign = { id: string; name: string; template_name: string; sent_count: number; failed_count?: number; total_recipients: number; status?: string; created_at?: string };
+type ContactList = { id: string; name: string; valid_contacts: number; total_contacts: number };
 type Contact = { id: string; patient_name: string; opportunity_title: string; phone: string; status: 'ready' | 'skipped' | 'needs_confirmation'; reason: string; phoneSource?: string };
-type OpportunitySample = { patient_name: string | null; patient_phone: string | null; seller_name: string | null; title: string; amount_cents: number };
+type OpportunitySample = { patient_name: string | null; patient_phone: string | null; patient_email?: string | null; seller_name: string | null; title: string; amount_cents: number };
 type Preview = { template: { category: string; body: string }; sample: OpportunitySample | null; recipients: { totalCards: number; eligible: number; skippedInvalid: number; skippedDuplicate: number; awaitingConfirmation: number; contacts: Contact[] }; pricing: { unitPrice: number; total: number; estimated: boolean; note: string } };
 type RecipientReport = { id: string; opportunity_id: string; phone: string; status: string; error_message?: string | null; patient_name: string; opportunity_title: string };
 type TagFilterMode = 'all' | 'include' | 'exclude';
@@ -17,6 +20,7 @@ type TagFilterMode = 'all' | 'include' | 'exclude';
 const variableOptions = [
   { value: 'patient_name', label: 'Nome do paciente' },
   { value: 'patient_phone', label: 'Telefone do paciente' },
+  { value: 'contact_email', label: 'E-mail do contato' },
   { value: 'seller_name', label: 'Responsável comercial' },
   { value: 'opportunity_title', label: 'Nome da oportunidade' },
   { value: 'amount', label: 'Valor da oportunidade' },
@@ -30,19 +34,25 @@ async function authHeaders() {
 }
 
 export const WhatsAppBulkCampaigns: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<'campaigns' | 'lists' | 'templates'>('campaigns');
+  const [audienceSource, setAudienceSource] = useState<'crm' | 'contact_list'>('crm');
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [stages, setStages] = useState<Stage[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [contactLists, setContactLists] = useState<ContactList[]>([]);
+  const [contactListId, setContactListId] = useState('');
   const [pipelineId, setPipelineId] = useState('');
   const [stageId, setStageId] = useState('');
   const [templateKey, setTemplateKey] = useState('');
   const [name, setName] = useState('');
   const [successTag, setSuccessTag] = useState('');
+  const [campaignMediaUrl, setCampaignMediaUrl] = useState('');
   const [tagFilterMode, setTagFilterMode] = useState<TagFilterMode>('all');
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [variableMappings, setVariableMappings] = useState<Record<number, string>>({});
+  const [headerVariableMappings, setHeaderVariableMappings] = useState<Record<number, string>>({});
   const [preview, setPreview] = useState<Preview | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [contactSearch, setContactSearch] = useState('');
@@ -54,35 +64,47 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   const load = useCallback(async () => {
     const headers = await authHeaders();
-    const [pipelineResult, stageResult, templateResponse, campaignResponse] = await Promise.all([
+    const [pipelineResult, stageResult, templateResponse, campaignResponse, contactListResponse] = await Promise.all([
       supabase.from('clinic_experts_pipelines').select('id,name').order('name'),
       supabase.from('clinic_experts_stages').select('id,pipeline_id,name').order('position'),
       fetch('/api/integrations/whatsapp/templates', { headers }),
       fetch('/api/integrations/whatsapp/bulk-campaigns', { headers }),
+      fetch('/api/integrations/whatsapp/bulk-campaigns?action=contact-lists', { headers }),
     ]);
     const templateBody = await templateResponse.json();
     const campaignBody = await campaignResponse.json();
+    const contactListBody = await contactListResponse.json();
     const firstError = pipelineResult.error || stageResult.error;
-    if (firstError || !templateResponse.ok || !campaignResponse.ok) throw firstError || new Error(templateBody.error || campaignBody.error);
+    if (firstError || !templateResponse.ok || !campaignResponse.ok || !contactListResponse.ok) throw firstError || new Error(templateBody.error || campaignBody.error || contactListBody.error);
     setPipelines((pipelineResult.data || []) as Pipeline[]);
     setStages((stageResult.data || []) as Stage[]);
     setTemplates((templateBody.templates || []).filter((item: Template) => item.status === 'APPROVED'));
     setCampaigns(campaignBody.campaigns || []);
+    setContactLists(contactListBody.lists || []);
     setPipelineId(current => current || pipelineResult.data?.[0]?.id || '');
+    setContactListId(current => current || contactListBody.lists?.[0]?.id || '');
   }, []);
 
   useEffect(() => { load().catch(error => setNotice(error.message)).finally(() => setLoading(false)); }, [load]);
 
   const currentTemplate = templates.find(item => `${item.name}::${item.language}` === templateKey);
   const visibleStages = stages.filter(item => item.pipeline_id === pipelineId);
+  const currentHeader = currentTemplate?.components?.find(item => item.type === 'HEADER');
+  const mediaHeaderType = ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(String(currentHeader?.format || '').toUpperCase()) ? String(currentHeader?.format || '').toUpperCase() : '';
+  const headerTextTemplate = String(currentHeader?.format || '').toUpperCase() === 'TEXT' ? currentHeader?.text || '' : '';
   const templateBody = currentTemplate?.components?.find(item => item.type === 'BODY')?.text || '';
   const placeholderNumbers = Array.from(new Set(Array.from(templateBody.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
-  const variableMapping = Object.entries(variableMappings).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n');
+  const headerPlaceholderNumbers = Array.from(new Set(Array.from(headerTextTemplate.matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
+  const bodyVariableMapping = Object.entries(variableMappings).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `{{${position}}} = ${key}`).join('\n');
+  const headerVariableMapping = Object.entries(headerVariableMappings).sort(([a], [b]) => Number(a) - Number(b)).map(([position, key]) => `__header_text_${position} = ${key}`).join('\n');
+  const variableMapping = [bodyVariableMapping, headerVariableMapping, mediaHeaderType && campaignMediaUrl.trim() ? `__header_${mediaHeaderType.toLocaleLowerCase()}_url = ${campaignMediaUrl.trim()}` : ''].filter(Boolean).join('\n');
   const missingVariables = placeholderNumbers.filter(position => !variableMappings[position]);
-  const campaignStep = !pipelineId ? 0 : !currentTemplate ? 1 : !selectedIds.size ? 2 : 3;
+  const missingHeaderVariables = headerPlaceholderNumbers.filter(position => !headerVariableMappings[position]);
+  const audienceReady = audienceSource === 'crm' ? Boolean(pipelineId) : Boolean(contactListId);
+  const campaignStep = !audienceReady ? 0 : !currentTemplate ? 1 : !selectedIds.size ? 2 : 3;
 
   useEffect(() => {
-    if (!pipelineId) { setAvailableTags([]); return; }
+    if (audienceSource !== 'crm' || !pipelineId) { setAvailableTags([]); return; }
     void (async () => {
       let query = supabase.from('clinic_experts_opportunities').select('tags').eq('pipeline_id', pipelineId);
       if (stageId) query = query.eq('stage_id', stageId);
@@ -92,7 +114,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       setAvailableTags(tags);
       setTagFilters(current => current.filter(tag => tags.includes(tag)));
     })();
-  }, [pipelineId, stageId]);
+  }, [audienceSource, pipelineId, stageId]);
 
   const sampleValue = (key: string) => {
     const sample = preview?.sample;
@@ -100,6 +122,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     const values: Record<string, string> = {
       patient_name: sample.patient_name || 'Paciente sem nome',
       patient_phone: sample.patient_phone || 'Telefone não informado',
+      contact_email: sample.patient_email || 'E-mail não informado',
       seller_name: sample.seller_name || 'Responsável não informado',
       opportunity_title: sample.title || 'Oportunidade',
       amount: brl((sample.amount_cents || 0) / 100),
@@ -111,13 +134,20 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     const position = Number(rawPosition);
     return variableMappings[position] ? sampleValue(variableMappings[position]) : `{{${position}}}`;
   });
+  const renderedHeaderText = headerTextTemplate.replace(/\{\{(\d+)\}\}/g, (_, rawPosition: string) => {
+    const position = Number(rawPosition);
+    return headerVariableMappings[position] ? sampleValue(headerVariableMappings[position]) : `{{${position}}}`;
+  });
 
   const selectTemplate = (nextTemplateKey: string) => {
     setTemplateKey(nextTemplateKey);
+    setCampaignMediaUrl('');
     const nextTemplate = templates.find(item => `${item.name}::${item.language}` === nextTemplateKey);
     const positions = Array.from(new Set(Array.from((nextTemplate?.components?.find(item => item.type === 'BODY')?.text || '').matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
+    const headerPositions = Array.from(new Set(Array.from((nextTemplate?.components?.find(item => item.type === 'HEADER' && item.format === 'TEXT')?.text || '').matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))).sort((a, b) => a - b);
     const defaults = ['patient_name', 'seller_name', 'opportunity_title', 'amount'];
     setVariableMappings(Object.fromEntries(positions.map((position, index) => [position, defaults[index] || 'patient_name'])));
+    setHeaderVariableMappings(Object.fromEntries(headerPositions.map(position => [position, 'patient_name'])));
   };
 
   const setVariableMapping = (position: number, key: string) => {
@@ -130,12 +160,18 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!pipelineId || !currentTemplate) { setPreview(null); setSelectedIds(new Set()); return; }
+    if (!audienceReady || !currentTemplate) { setPreview(null); setSelectedIds(new Set()); return; }
     const controller = new AbortController();
     void (async () => {
       try {
-        const params = new URLSearchParams({ action: 'preview', pipelineId, stageId, templateName: currentTemplate.name, language: currentTemplate.language });
-        if (tagFilterMode !== 'all' && tagFilters.length) { params.set('tagFilterMode', tagFilterMode); params.set('tagFilters', JSON.stringify(tagFilters)); }
+        const params = new URLSearchParams({ action: 'preview', source: audienceSource, templateName: currentTemplate.name, language: currentTemplate.language });
+        if (audienceSource === 'crm') {
+          params.set('pipelineId', pipelineId);
+          params.set('stageId', stageId);
+          if (tagFilterMode !== 'all' && tagFilters.length) { params.set('tagFilterMode', tagFilterMode); params.set('tagFilters', JSON.stringify(tagFilters)); }
+        } else {
+          params.set('contactListId', contactListId);
+        }
         const response = await fetch(`/api/integrations/whatsapp/bulk-campaigns?${params}`, { headers: await authHeaders(), signal: controller.signal });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error);
@@ -146,7 +182,7 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [pipelineId, stageId, tagFilterMode, tagFilters, currentTemplate]);
+  }, [audienceReady, audienceSource, pipelineId, stageId, contactListId, tagFilterMode, tagFilters, currentTemplate]);
 
   const selectableContacts = preview?.recipients.contacts.filter(contact => contact.status !== 'skipped') || [];
   const selectedContacts = selectableContacts.filter(contact => selectedIds.has(contact.id));
@@ -163,15 +199,16 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
 
   const send = async () => {
     if (!name.trim() || !currentTemplate || !selectedIds.size) return;
-    if (tagFilterMode !== 'all' && !tagFilters.length) { setNotice('Selecione ao menos uma tag usada no filtro do público.'); return; }
-    if (missingVariables.length) { setNotice('Escolha o conteúdo de todas as variáveis do template antes de enviar.'); return; }
+    if (audienceSource === 'crm' && tagFilterMode !== 'all' && !tagFilters.length) { setNotice('Selecione ao menos uma tag usada no filtro do público.'); return; }
+    if (missingVariables.length || missingHeaderVariables.length) { setNotice('Escolha o conteúdo de todas as variáveis do template antes de enviar.'); return; }
+    if (mediaHeaderType && !/^https:\/\//i.test(campaignMediaUrl.trim())) { setNotice('Informe uma URL pública https:// para a mídia do cabeçalho.'); return; }
     const historicalSelected = selectedContacts.some(contact => contact.status === 'needs_confirmation');
     if (historicalSelected && !window.confirm('Há telefones recuperados do histórico entre os selecionados. Confirma o uso desses números?')) return;
     if (!window.confirm(`Confirmar envio para ${selectedIds.size} contato(s)?`)) return;
     setSending(true); setNotice('');
     try {
       const headers = await authHeaders();
-      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: Array.from(selectedIds), successTag, tagFilterMode, tagFilters }) });
+      const response = await fetch('/api/integrations/whatsapp/bulk-campaigns', { method: 'POST', headers, body: JSON.stringify({ name: name.trim(), source: audienceSource, templateName: currentTemplate.name, language: currentTemplate.language, variableMapping, pipelineId, stageId, contactListId, useHistoricalPhones: historicalSelected, selectedOpportunityIds: audienceSource === 'crm' ? Array.from(selectedIds) : undefined, selectedContactIds: audienceSource === 'contact_list' ? Array.from(selectedIds) : undefined, successTag, tagFilterMode, tagFilters }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       let pending = body.totalRecipients;
@@ -199,48 +236,63 @@ export const WhatsAppBulkCampaigns: React.FC = () => {
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Falha ao abrir o relatório.'); }
   };
 
+  const sectionNavigation = <nav className="mt-4 flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-sm">
+    {[
+      { id: 'campaigns' as const, label: 'Campanhas', icon: LayoutList },
+      { id: 'lists' as const, label: 'Listas de contatos', icon: FileSpreadsheet },
+      { id: 'templates' as const, label: 'Templates Meta', icon: MessageSquareText },
+    ].map(item => { const Icon = item.icon; const active = activeSection === item.id; return <button key={item.id} type="button" onClick={() => setActiveSection(item.id)} className={`flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-bold transition ${active ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}><Icon className="h-4 w-4" />{item.label}</button>; })}
+  </nav>;
+
   if (loading) return <LoadingPanel label="Carregando campanhas" description="Preparando públicos, tags e templates aprovados." />;
 
+  if (activeSection === 'lists') return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6"><div className="mx-auto max-w-7xl"><header className="module-command-bar"><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Central de campanhas</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Organize públicos importados e use-os nos disparos aprovados.</p></header>{sectionNavigation}<div className="mt-5"><WhatsAppContactLists onChanged={() => void load()} /></div></div></div>;
+
+  if (activeSection === 'templates') return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6"><div className="mx-auto max-w-7xl"><header className="module-command-bar"><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Central de campanhas</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Crie templates ricos e acompanhe a aprovação oficial da Meta.</p></header>{sectionNavigation}<div className="mt-5"><WhatsAppTemplateManager onTemplatesChanged={() => void load()} /></div></div></div>;
+
   return <div className="custom-scrollbar h-full overflow-y-auto p-4 text-[var(--text)] sm:p-6">
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       <header className="module-command-bar"><p className="text-[11px] font-semibold text-[var(--primary)]">WhatsApp oficial</p><h1 className="mt-1 text-2xl font-bold tracking-tight">Disparador em massa</h1><p className="mt-1 text-sm text-[var(--text-secondary)]">Escolha exatamente quem receberá a mensagem antes do envio.</p></header>
+      {sectionNavigation}
       <div className="mt-5"><StepIndicator steps={['Definir campanha', 'Escolher mensagem', 'Selecionar público', 'Revisar e enviar']} current={campaignStep} /></div>
       {notice && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">{notice}</p>}
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs font-semibold">Nome da campanha<input value={name} onChange={event => setName(event.target.value)} placeholder="Ex.: Retorno setembro" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none focus:border-[var(--primary)]" /></label>
-            <label className="text-xs font-semibold">Funil<select value={pipelineId} onChange={event => { setPipelineId(event.target.value); setStageId(''); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none">{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-            <label className="text-xs font-semibold">Etapa<select value={stageId} onChange={event => setStageId(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Todas as etapas</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+            <label className="text-xs font-semibold">Origem dos contatos<select value={audienceSource} onChange={event => { setAudienceSource(event.target.value as 'crm' | 'contact_list'); setSelectedIds(new Set()); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="crm">Leads do CRM</option><option value="contact_list">Lista importada</option></select></label>
+            {audienceSource === 'crm' ? <><label className="text-xs font-semibold">Funil<select value={pipelineId} onChange={event => { setPipelineId(event.target.value); setStageId(''); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none">{pipelines.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="text-xs font-semibold">Etapa<select value={stageId} onChange={event => setStageId(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Todas as etapas</option>{visibleStages.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></> : <label className="text-xs font-semibold sm:col-span-2">Lista de contatos<select value={contactListId} onChange={event => setContactListId(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Selecione uma lista</option>{contactLists.map(item => <option key={item.id} value={item.id}>{item.name} ({item.valid_contacts} válidos)</option>)}</select></label>}
             <label className="text-xs font-semibold">Template aprovado<select value={templateKey} onChange={event => selectTemplate(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 outline-none"><option value="">Selecione</option>{templates.map(item => <option key={`${item.name}-${item.language}`} value={`${item.name}::${item.language}`}>{item.name} ({item.language})</option>)}</select></label>
           </div>
-          <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+          {audienceSource === 'crm' && <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
             <div className="flex items-center gap-1.5 text-xs font-bold"><Tag className="h-3.5 w-3.5 text-[var(--primary)]" />Público por tag</div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="text-xs font-semibold">Regra do filtro<select value={tagFilterMode} onChange={event => { const mode = event.target.value as TagFilterMode; setTagFilterMode(mode); if (mode === 'all') setTagFilters([]); }} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"><option value="all">Não filtrar por tag</option><option value="include">Enviar para quem possui alguma das tags</option><option value="exclude">Não enviar para quem possui alguma das tags</option></select></label>
               {tagFilterMode !== 'all' && <div className="text-xs font-semibold"><span>Tags selecionadas ({tagFilters.length})</span><div className="mt-1.5 max-h-32 space-y-1 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2">{availableTags.map(tag => { const selected = tagFilters.includes(tag); return <button key={tag} type="button" onClick={() => setTagFilters(current => selected ? current.filter(item => item !== tag) : [...current, tag])} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium hover:bg-[var(--surface-hover)]"><span className={`flex h-4 w-4 items-center justify-center rounded border ${selected ? 'border-[var(--primary)] bg-[var(--primary)] text-white' : 'border-[var(--border)]'}`}>{selected && <Check className="h-3 w-3" />}</span><span className="truncate">{tag}</span></button>; })}{!availableTags.length && <span className="block p-2 text-[10px] font-normal text-[var(--text-muted)]">Nenhuma tag encontrada neste público.</span>}</div></div>}
             </div>
             {tagFilterMode !== 'all' && tagFilters.length > 0 && <p className="mt-3 text-[10px] text-[var(--text-muted)]">A prévia e o envio considerarão qualquer uma das tags selecionadas.</p>}
-          </section>
+          </section>}
           {currentTemplate && <section className="mt-5 grid gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10 md:grid-cols-[minmax(0,1fr)_280px]">
             <div>
               <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Como ficará a mensagem</p><span className="rounded-md bg-white/70 px-2 py-1 text-[9px] font-semibold text-emerald-700 dark:bg-white/10 dark:text-emerald-200">{currentTemplate.language}</span></div>
-              <div className="mt-3 max-w-xl rounded-xl rounded-tl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[var(--surface)]"><p className="whitespace-pre-wrap text-xs leading-5 text-[var(--text)]">{renderedMessage || 'Este template não possui texto no corpo.'}</p></div>
+              <div className="mt-3 max-w-xl rounded-xl rounded-tl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[var(--surface)]">{renderedHeaderText && <p className="mb-1.5 text-xs font-bold text-[var(--text)]">{renderedHeaderText}</p>}<p className="whitespace-pre-wrap text-xs leading-5 text-[var(--text)]">{renderedMessage || 'Este template não possui texto no corpo.'}</p></div>
               <p className="mt-2 text-[10px] text-[var(--text-muted)]">{preview?.sample ? `Exemplo usando o contato ${preview.sample.patient_name || preview.sample.title}.` : 'Os valores reais serão personalizados para cada contato selecionado.'}</p>
+              {mediaHeaderType && <label className="mt-3 block text-[10px] font-semibold text-[var(--text-secondary)]">URL pública da {mediaHeaderType === 'IMAGE' ? 'imagem' : mediaHeaderType === 'VIDEO' ? 'vídeo' : 'documento'} para este disparo<input value={campaignMediaUrl} onChange={event => setCampaignMediaUrl(event.target.value)} placeholder="https://..." className="mt-1 h-9 w-full rounded-lg border border-emerald-600/20 bg-white px-3 text-xs outline-none focus:border-[var(--primary)] dark:bg-[var(--surface)]" /></label>}
             </div>
             <div className="border-t border-emerald-600/15 pt-4 md:border-l md:border-t-0 md:pl-4 md:pt-0">
               <p className="text-xs font-bold text-[var(--text)]">Variáveis da mensagem</p>
+              {headerPlaceholderNumbers.length > 0 && <div className="mt-3 space-y-2"><p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Cabeçalho</p>{headerPlaceholderNumbers.map(position => <label key={`header-${position}`} className="block text-[10px] font-semibold text-[var(--text-secondary)]"><span>{`Variável {{${position}}}`}</span><select value={headerVariableMappings[position] || ''} onChange={event => setHeaderVariableMappings(current => ({ ...current, [position]: event.target.value }))} className="mt-1 h-9 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs text-[var(--text)] outline-none focus:border-[var(--primary)]"><option value="">Escolha o conteúdo</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}</div>}
               {placeholderNumbers.length > 0 ? <div className="mt-3 space-y-2">{placeholderNumbers.map(position => <label key={position} className="block text-[10px] font-semibold text-[var(--text-secondary)]"><span className="mb-1 flex items-center justify-between"><span>{`Variável {{${position}}}`}</span>{variableMappings[position] && <span className="max-w-[150px] truncate font-normal text-[var(--text-muted)]">{sampleValue(variableMappings[position])}</span>}</span><select value={variableMappings[position] || ''} onChange={event => setVariableMapping(position, event.target.value)} className="h-9 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2.5 text-xs text-[var(--text)] outline-none focus:border-[var(--primary)]"><option value="">Escolha o conteúdo</option>{variableOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}</div> : <p className="mt-3 rounded-lg bg-white/60 px-3 py-2 text-[10px] text-[var(--text-muted)] dark:bg-white/5">Este template não possui variáveis no corpo.</p>}
-              {missingVariables.length > 0 && <p className="mt-2 text-[10px] font-semibold text-amber-700 dark:text-amber-300">Defina {missingVariables.length === 1 ? 'a variável pendente' : `as ${missingVariables.length} variáveis pendentes`} para liberar o envio.</p>}
+              {missingVariables.length + missingHeaderVariables.length > 0 && <p className="mt-2 text-[10px] font-semibold text-amber-700 dark:text-amber-300">Defina todas as variáveis pendentes para liberar o envio.</p>}
             </div>
           </section>}
           {preview && <section className="mt-5 rounded-2xl bg-[var(--bg-subtle)] p-4">
             <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-[11px] font-semibold text-[var(--primary)]">Prévia do disparo</p><p className="mt-1 text-lg font-bold">{selectedIds.size} de {preview.recipients.totalCards} contatos selecionados</p><p className="mt-1 text-xs text-[var(--text-muted)]">{preview.recipients.skippedInvalid + preview.recipients.skippedDuplicate} bloqueados por telefone ou duplicidade</p></div><div className="text-right"><p className="font-mono text-xl font-semibold">{preview.pricing.estimated ? brl(selectedEstimate) : '--'}</p><p className="text-[10px] text-[var(--text-muted)]">estimativa da Meta</p></div></div>
             <button type="button" onClick={() => setSelectionOpen(true)} className="mt-4 flex h-10 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-semibold transition hover:border-[var(--primary)]/40 hover:bg-[var(--surface-hover)]"><UsersRound className="h-4 w-4" />Pré-selecionar contatos</button>
-            <label className="mt-4 block text-xs font-semibold"><span className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Tag após envio confirmado</span><input value={successTag} onChange={event => setSuccessTag(event.target.value)} maxLength={40} placeholder="Ex.: Campanha retorno" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-[var(--primary)]" /></label>
+            {audienceSource === 'crm' && <label className="mt-4 block text-xs font-semibold"><span className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />Tag após envio confirmado</span><input value={successTag} onChange={event => setSuccessTag(event.target.value)} maxLength={40} placeholder="Ex.: Campanha retorno" className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-[var(--primary)]" /></label>}
             <p className="mt-3 text-[10px] leading-relaxed text-[var(--text-muted)]">{preview.pricing.note}</p>
           </section>}
-          <button disabled={sending || !name.trim() || !selectedIds.size || missingVariables.length > 0 || (tagFilterMode !== 'all' && !tagFilters.length)} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
+          <button disabled={sending || !name.trim() || !selectedIds.size || missingVariables.length > 0 || missingHeaderVariables.length > 0 || Boolean(mediaHeaderType && !/^https:\/\//i.test(campaignMediaUrl.trim())) || (audienceSource === 'crm' && tagFilterMode !== 'all' && !tagFilters.length)} onClick={() => void send()} className="mt-5 flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition hover:bg-[var(--primary-hover)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" />{sending ? 'Enviando...' : `Enviar para ${selectedIds.size || 0} contatos`}</button>
         </main>
         <aside className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"><h2 className="text-sm font-bold">Histórico recente</h2><div className="mt-3 space-y-2">{campaigns.length ? campaigns.map(campaign => <button key={campaign.id} onClick={() => void openReport(campaign)} className="w-full rounded-xl border border-[var(--border-subtle)] p-3 text-left transition hover:bg-[var(--surface-hover)]"><span className="block truncate text-xs font-semibold">{campaign.name}</span><span className="mt-1 block text-[10px] text-[var(--text-muted)]">{campaign.sent_count}/{campaign.total_recipients} enviados · ver relatório</span></button>) : <p className="py-8 text-center text-xs text-[var(--text-muted)]">Nenhuma campanha enviada</p>}</div></aside>
       </div>

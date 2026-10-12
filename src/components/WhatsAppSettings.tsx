@@ -30,6 +30,7 @@ async function readApiResponse(response: Response) {
 export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [wabaId, setWabaId] = useState('');
+  const [metaAppId, setMetaAppId] = useState('');
   const [accessToken, setAccessToken] = useState('');
   const [twoFactorPin, setTwoFactorPin] = useState('');
   const [connected, setConnected] = useState(false);
@@ -58,6 +59,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
         setWebhook(body.webhook || null);
         setPhoneNumberId(body.config?.phone_number_id || '');
         setWabaId(body.config?.waba_id || '');
+        setMetaAppId(body.config?.meta_app_id || '');
       } catch (error) {
         setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Falha ao carregar configuração.' });
       } finally {
@@ -77,7 +79,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
       const response = await fetch('/api/integrations/whatsapp/config', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumberId, wabaId, accessToken, twoFactorPin }),
+        body: JSON.stringify({ phoneNumberId, wabaId, metaAppId, accessToken, twoFactorPin }),
       });
       const body = await readApiResponse(response);
       setConnected(true);
@@ -177,6 +179,7 @@ export const WhatsAppSettings: React.FC<WhatsAppSettingsProps> = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">Phone Number ID<input required value={phoneNumberId} onChange={event => setPhoneNumberId(event.target.value)} placeholder="Ex.: 123456789012345" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
               <label className="text-xs font-semibold text-[var(--text-secondary)]">WABA ID <span className="font-normal text-[var(--text-muted)]">(opcional)</span><input value={wabaId} onChange={event => setWabaId(event.target.value)} placeholder="ID da conta WhatsApp Business" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
+              <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">Meta App ID <span className="font-normal text-[var(--text-muted)]">(necessário para imagens nos templates)</span><input value={metaAppId} onChange={event => setMetaAppId(event.target.value.replace(/\D/g, ''))} placeholder="ID numérico do aplicativo Meta" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
               <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">Token de acesso permanente<input required type="password" value={accessToken} onChange={event => setAccessToken(event.target.value)} placeholder={connected ? 'Digite o token para validar ou substituir' : 'Cole o token da Meta'} className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
               <label className="text-xs font-semibold text-[var(--text-secondary)] sm:col-span-2">PIN de verificação em duas etapas <span className="font-normal text-[var(--text-muted)]">(opcional)</span><input inputMode="numeric" maxLength={6} value={twoFactorPin} onChange={event => setTwoFactorPin(event.target.value.replace(/\D/g, ''))} placeholder="PIN de 6 dígitos para registrar o número" className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm text-[var(--text)] outline-none focus:border-[#1F6F5B]/50" /></label>
             </div>
