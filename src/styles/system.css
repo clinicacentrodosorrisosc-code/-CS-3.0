@@ -1,6 +1,7 @@
 html {
   color-scheme: light;
   background: var(--background);
+  overflow-x: hidden;
 }
 
 html.dark {
@@ -9,10 +10,11 @@ html.dark {
 
 body {
   min-width: 320px;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 0.875rem;
+  font-size: 14px;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
 }
@@ -44,7 +46,7 @@ button:not(:disabled):active,
 }
 
 .ce-app {
-  --header-height: 50px;
+  --header-height: 60px;
   --sidebar-width-expanded: 244px;
   --sidebar-width-collapsed: 60px;
   background: var(--background) !important;
@@ -57,12 +59,22 @@ button:not(:disabled):active,
 }
 
 .ce-app .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   min-height: var(--header-height) !important;
   height: var(--header-height) !important;
   border-bottom: 1px solid var(--border-subtle) !important;
   background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
   box-shadow: none !important;
   backdrop-filter: blur(14px);
+}
+
+.ce-app :is(h1, h2, h3, h4) {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .ce-app .sidebar-shell {
@@ -73,12 +85,12 @@ button:not(:disabled):active,
 }
 
 .ce-app .sidebar-brand {
-  min-height: 58px !important;
+  min-height: 60px !important;
   background: transparent !important;
 }
 
 .ce-app .sidebar-nav-item {
-  min-height: 38px !important;
+  min-height: var(--control-height) !important;
   border-radius: var(--radius-control) !important;
   color: var(--text-secondary) !important;
   transition-property: color, background-color, border-color, transform !important;
@@ -90,9 +102,18 @@ button:not(:disabled):active,
 }
 
 .ce-app .sidebar-nav-item-active {
-  background: var(--primary-dim) !important;
-  color: var(--primary) !important;
-  box-shadow: inset 0 0 0 1px var(--primary-border) !important;
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.ce-app .sidebar-nav-item-active :is(svg, .sidebar-nav-icon-active) {
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-nav-icon-active {
+  background: color-mix(in srgb, #ffffff 16%, var(--primary)) !important;
+  color: #ffffff !important;
 }
 
 .ce-app .workspace-shell {
@@ -116,9 +137,9 @@ button:not(:disabled):active,
 }
 
 .ce-app :is(.module-command-bar, .dashboard-command-bar) {
-  min-height: auto !important;
+  min-height: 60px !important;
   margin: 0 0 0.75rem !important;
-  padding: 1rem 1.25rem !important;
+  padding: 0.75rem 1rem !important;
   overflow: visible;
   border: 0 !important;
   border-bottom: 1px solid var(--border-subtle) !important;
@@ -136,7 +157,7 @@ button:not(:disabled):active,
 .ce-app .module-command-bar h1,
 .ce-app .dashboard-command-bar h1 {
   color: var(--text) !important;
-  font-size: 1.5rem !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   letter-spacing: -0.03em !important;
@@ -153,13 +174,13 @@ button:not(:disabled):active,
   gap: 0.125rem !important;
   padding: 0.1875rem !important;
   border: 1px solid var(--border-subtle) !important;
-  border-radius: 0.625rem !important;
+  border-radius: var(--radius-control) !important;
   background: var(--surface-high) !important;
   box-shadow: none !important;
 }
 
 .ce-app :is(.module-segmented-control, .dashboard-segmented-control) button {
-  min-height: 2rem;
+  min-height: var(--control-height);
   border: 0 !important;
   border-radius: var(--radius-control) !important;
   font-size: 0.75rem !important;
@@ -174,6 +195,52 @@ button:not(:disabled):active,
   box-shadow: 0 1px 3px rgba(15, 23, 19, 0.08), inset 0 0 0 1px var(--border) !important;
 }
 
+/* Dashboard view switcher: keep labels separated and readable instead of
+   compressing the four views into one continuous text strip. */
+.ce-app .dashboard-segmented-control {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  gap: 4px !important;
+  padding: 4px !important;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.ce-app .dashboard-segmented-control::-webkit-scrollbar {
+  display: none;
+}
+
+.ce-app .dashboard-segmented-control > button {
+  display: inline-flex;
+  min-width: 68px;
+  min-height: var(--control-height) !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: var(--radius-control) !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+.ce-app .dashboard-segmented-control > button:hover {
+  background: var(--surface-hover) !important;
+  color: var(--text) !important;
+}
+
+.ce-app .dashboard-segmented-control > button[data-active="true"],
+.ce-app .dashboard-segmented-control > button[aria-selected="true"] {
+  background: var(--primary-dim) !important;
+  color: var(--primary) !important;
+  box-shadow: inset 0 0 0 1px var(--primary-border) !important;
+}
+
 .ce-app :is(.metric-card, .glass-panel, .nexus-card, .fintech-card, .financial-kpi-card, .financial-donut-card, .tasks-metric) {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-card) !important;
@@ -183,6 +250,14 @@ button:not(:disabled):active,
   transition-property: border-color, background-color, transform !important;
 }
 
+/* Section cards use a 4px radius and no elevation; hierarchy comes from
+   spacing, grouping and neutral surface contrast. */
+.ce-app :is(section, article, aside, div)[class*="rounded-2xl"][class*="border"],
+.ce-app :is(section, article, aside, div)[class*="rounded-xl"][class*="border"] {
+  border-radius: var(--radius-card) !important;
+  box-shadow: none !important;
+}
+
 .ce-app :is(.metric-card, .glass-panel, .nexus-card, .fintech-card, .financial-kpi-card, .financial-donut-card, .tasks-metric):hover {
   transform: none !important;
   border-color: var(--border-hover) !important;
@@ -190,7 +265,7 @@ button:not(:disabled):active,
 }
 
 .ce-app :is(input, select, textarea) {
-  min-height: 2.375rem;
+  min-height: var(--control-height);
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-control) !important;
   background: var(--surface) !important;
@@ -205,12 +280,21 @@ button:not(:disabled):active,
 }
 
 .ce-app .btn {
-  min-height: 2.375rem;
+  min-height: var(--control-height);
   border-radius: var(--radius-control);
   font-size: 0.8125rem;
   font-weight: 650;
   box-shadow: none;
   transition-property: color, background-color, border-color, transform;
+}
+
+.ce-app :is(button, [role="button"]) {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ce-app :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), select, textarea) {
+  padding-inline: 10px;
 }
 
 .ce-app .btn-primary {
@@ -263,6 +347,7 @@ button:not(:disabled):active,
   font-weight: 700 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
+  padding: 0.625rem 0.75rem !important;
 }
 
 .ce-app table tbody > tr {
@@ -272,6 +357,56 @@ button:not(:disabled):active,
 .ce-app table tbody > tr:hover {
   background: var(--surface-hover) !important;
   box-shadow: none !important;
+}
+
+.ce-app .sidebar-submenu,
+.ce-app .sidebar-context-submenu {
+  border-radius: var(--radius-card) !important;
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+.ce-app table tbody td {
+  padding: 0.625rem 0.75rem !important;
+  font-size: 13px;
+}
+
+.ce-app :is(.module-filter-panel, .module-filter-bar, .operational-filter-bar) {
+  border-color: var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  background: var(--surface-high) !important;
+  box-shadow: none !important;
+}
+
+.ce-app .module-filter-control,
+.ce-app .module-toolbar-action {
+  min-height: var(--control-height) !important;
+  border-radius: var(--radius-control) !important;
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text-secondary) !important;
+}
+
+.ce-app .module-filter-control:hover,
+.ce-app .module-toolbar-action:hover {
+  border-color: var(--border-hover) !important;
+  background: var(--surface-hover) !important;
+  color: var(--text) !important;
+}
+
+.ce-app :is(.apexcharts-canvas, .recharts-wrapper) {
+  font-family: var(--font-ui) !important;
+}
+
+.ce-app :is(.apexcharts-text, .recharts-cartesian-axis-tick-value, .recharts-legend-item-text) {
+  fill: var(--text-secondary) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+}
+
+.ce-app :is(.apexcharts-gridline, .recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line) {
+  stroke: var(--border-subtle) !important;
 }
 
 .ce-app :is(dialog, [role="dialog"]) {
@@ -306,7 +441,70 @@ button:not(:disabled):active,
   color: var(--text-secondary);
 }
 
+/* One quiet tooltip language for icon-only actions. Components can opt in with
+   data-tooltip while keeping native title/aria-label behavior as fallback. */
+.ce-app [data-tooltip] {
+  position: relative;
+}
+
+.ce-app [data-tooltip]::after {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: max-content;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  box-shadow: none;
+}
+
+.ce-app [data-tooltip]:hover::after,
+.ce-app [data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 @media (max-width: 1023px) {
+  .ce-app,
+  .ce-app .app-window,
+  .ce-app .workspace-column,
+  .ce-app .workspace-shell,
+  .ce-app .workspace-canvas {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .ce-app .sidebar-shell {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: min(88vw, 320px) !important;
+    max-width: calc(100vw - 24px) !important;
+    height: 100dvh !important;
+    z-index: 80 !important;
+    transform: translateX(-105%);
+    visibility: hidden;
+    border-radius: 0 var(--radius-panel) var(--radius-panel) 0 !important;
+    transition: transform 220ms var(--ease-out), visibility 220ms ease !important;
+  }
+
+  .ce-app .sidebar-shell.sidebar-mobile-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
   .ce-app .workspace-shell {
     padding: 0 !important;
   }
@@ -329,13 +527,23 @@ button:not(:disabled):active,
 
   .ce-app .module-command-bar h1,
   .ce-app .dashboard-command-bar h1 {
-    font-size: 1.25rem !important;
+    font-size: 18px !important;
   }
 
   .ce-app button,
   .ce-app [role="button"],
   .ce-app select {
-    min-height: 2.75rem;
+    min-height: var(--control-height);
+  }
+}
+
+@media (max-width: 390px) {
+  .ce-app .app-header {
+    padding-inline: 8px !important;
+  }
+
+  .ce-app :is(.module-command-bar, .dashboard-command-bar) {
+    padding-inline: 12px !important;
   }
 }
 
@@ -462,9 +670,9 @@ button:not(:disabled):active,
 
 .operational-icon-button {
   display: inline-grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  min-height: 2.25rem;
+  width: var(--control-height);
+  height: var(--control-height);
+  min-height: var(--control-height);
   flex: none;
   place-items: center;
   border: 1px solid var(--border);

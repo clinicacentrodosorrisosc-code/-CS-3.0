@@ -113,7 +113,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </span>
 
         {userRole === 'admin' && openPermissions && (
-          <button type="button" onClick={openPermissions} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[var(--primary)] dark:text-slate-400 dark:hover:bg-white/[0.05]" title="Gerenciar permissões">
+          <button type="button" onClick={openPermissions} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[var(--primary)] dark:text-slate-400 dark:hover:bg-white/[0.05]" title="Gerenciar permissões" aria-label="Gerenciar permissões">
             <ShieldCheck className="size-4" />
           </button>
         )}
@@ -121,7 +121,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         {openNotifications && <NotificationBell count={notificationCount} onClick={openNotifications} />}
 
         {toggleTheme && (
-          <button type="button" onClick={toggleTheme} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05]" title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}>
+          <button type="button" onClick={toggleTheme} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f4f5f7] hover:text-[#172033] dark:text-slate-400 dark:hover:bg-white/[0.05]" title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'} aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}>
             {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </button>
         )}

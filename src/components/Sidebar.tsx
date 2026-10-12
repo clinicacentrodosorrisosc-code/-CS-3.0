@@ -432,6 +432,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 handleTabClick(item.id, hasSubItems);
                 if (!isExpanded && hasSubItems) showFlyout(item.id, event.currentTarget);
               }}
+              aria-expanded={hasSubItems ? isAccordionOpen : undefined}
+              aria-haspopup={hasSubItems ? 'menu' : undefined}
+              aria-label={!isExpanded ? item.label : undefined}
+              data-tooltip={!isExpanded ? item.label : undefined}
               className={`
                 sidebar-nav-item group relative flex items-center min-h-9 py-0.5 rounded-lg transition duration-150 w-full text-start
                 ${isExpanded ? 'justify-between px-2.5' : 'justify-center px-0'}
@@ -479,7 +483,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="ps-8 pe-2 py-1 flex flex-col gap-0.5 relative before:absolute before:start-5 before:top-2 before:bottom-2 before:w-px before:bg-[#E2E5EA] dark:before:bg-white/10"
+                className="sidebar-submenu ps-8 pe-2 py-1 flex flex-col gap-0.5 relative before:absolute before:start-5 before:top-2 before:bottom-2 before:w-px before:bg-[#E2E5EA] dark:before:bg-white/10"
               >
                 {validSubItems.map(subItem => (
                   <button
@@ -529,7 +533,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         data-sidebar-expanded={isExpanded}
         initial={false}
         animate={{
-          width: isExpanded ? 236 : 60
+          width: isExpanded ? 244 : 60
         }}
         transition={{
           type: 'spring',
@@ -588,6 +592,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-white/[0.04]"
+            aria-label={isMobileMenuOpen ? 'Fechar menu lateral' : 'Abrir menu lateral'}
+            title={isMobileMenuOpen ? 'Fechar menu lateral' : 'Abrir menu lateral'}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -698,7 +704,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
             style={{ top: flyoutPosition.top, left: flyoutPosition.left }}
-            className="fixed w-52 rounded-xl bg-[var(--surface)] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-1.5 z-50 hidden lg:flex flex-col gap-1"
+            className="sidebar-context-submenu fixed w-52 rounded-xl bg-[var(--surface)] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-1.5 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
