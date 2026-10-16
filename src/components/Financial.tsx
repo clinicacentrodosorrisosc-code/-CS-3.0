@@ -210,6 +210,7 @@ interface FinancialProps {
   allowedSubTabs?: string[];
   requestedSubTab?: string | null;
   requestedAction?: string | null;
+  onOpenOrthoPatient?: (patientId: string) => void;
 }
 
 export const Financial: React.FC<FinancialProps> = ({
@@ -217,6 +218,7 @@ export const Financial: React.FC<FinancialProps> = ({
   allowedSubTabs = [],
   requestedSubTab,
   requestedAction,
+  onOpenOrthoPatient,
 }) => {
   const visibleTabs = useMemo(() => {
     let tabs = ALL_TABS_CONFIG;
@@ -6899,6 +6901,15 @@ export const Financial: React.FC<FinancialProps> = ({
                             )}
                         </div>
                         {selectedOrthoPatient ? (
+                          <>
+                          <button
+                            type="button"
+                            onClick={() => onOpenOrthoPatient?.(selectedOrthoPatient.id)}
+                            className="text-left text-xs font-bold text-emerald-700 underline decoration-emerald-500/50 underline-offset-2 transition hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
+                            title="Abrir perfil do paciente na Ortodontia"
+                          >
+                            {selectedOrthoPatient.name}
+                          </button>
                           <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-[11px] text-text">
                             <input
                               type="checkbox"
@@ -6919,6 +6930,7 @@ export const Financial: React.FC<FinancialProps> = ({
                                 : "O registro só é feito para uma receita quitada, sem boleto pendente ou procedimentos divididos."}
                             </span>
                           </label>
+                          </>
                         ) : (
                           <p className="text-[10px] text-slate-500">
                             A busca mostra somente pacientes ativos de

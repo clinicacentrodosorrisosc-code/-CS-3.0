@@ -132,6 +132,13 @@ const App: React.FC = () => {
 
 
   const [requestedSubTab, setRequestedSubTab] = useState<string | null>(null);
+  const [requestedOrthoPatientId, setRequestedOrthoPatientId] = useState<string | null>(null);
+
+  const openOrthoPatientProfile = useCallback((patientId: string) => {
+    setRequestedOrthoPatientId(patientId);
+    setRequestedSubTab('patients');
+    setActiveTab(Tab.ORTHODONTICS);
+  }, []);
 
   const fetchUserProfile = useCallback(async (currentUser: any) => {
     if (!currentUser || isFetchingProfile.current) return;
@@ -625,13 +632,13 @@ const App: React.FC = () => {
 
             {activeTab === Tab.FINANCIAL && (
               <TabContainer key="financial">
-                <Financial userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+                <Financial userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} onOpenOrthoPatient={openOrthoPatientProfile} />
               </TabContainer>
             )}
 
             {activeTab === Tab.ORTHODONTICS && (
               <TabContainer key="orthodontics">
-                <Orthodontics userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} />
+                <Orthodontics userRole={userRole} allowedSubTabs={allowedSubTabs} requestedSubTab={requestedSubTab} requestedPatientId={requestedOrthoPatientId} onRequestedPatientHandled={() => setRequestedOrthoPatientId(null)} />
               </TabContainer>
             )}
 

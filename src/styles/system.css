@@ -19,6 +19,27 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* The app is a full-viewport workspace. Keep this last-loaded system layer
+   responsible for eliminating any host-page gap above the application. */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#root > .ce-app {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--primary) 24%, transparent);
   color: var(--text);
@@ -117,7 +138,9 @@ button:not(:disabled):active,
 }
 
 .ce-app .workspace-shell {
-  padding: 0.75rem !important;
+  /* Keep the application canvas flush with the shared shell. Modules retain
+     their own internal spacing, without an empty strip above every screen. */
+  padding: 0 !important;
   background: var(--background) !important;
 }
 

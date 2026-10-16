@@ -143,9 +143,11 @@ interface OrthodonticsProps {
     allowedSubTabs?: string[];
     requestedSubTab?: string | null;
     requestedAction?: string | null;
+    requestedPatientId?: string | null;
+    onRequestedPatientHandled?: () => void;
 }
 
-export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSubTabs = [], requestedSubTab, requestedAction }) => {
+export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSubTabs = [], requestedSubTab, requestedAction, requestedPatientId, onRequestedPatientHandled }) => {
   // Filter Tabs
   const visibleTabs = useMemo(() => {
       // Allow all if admin OR if allowedSubTabs is empty (legacy/permissive mode)
@@ -178,7 +180,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           }
       }
   }, [requestedSubTab, visibleTabs]);
-  
+
   // --- LOCAL STATE ---
   const [patients, setPatients] = useState<OrthoPatient[]>([]);
   const [applianceTypes, setApplianceTypes] = useState<ApplianceType[]>([]);
@@ -201,6 +203,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const [whatsAppPhoneNotice, setWhatsAppPhoneNotice] = useState('');
   const skipNextOrthoRealtimeReload = useRef(false);
   const orthoReloadResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+      if (!requestedPatientId || patients.length === 0) return;
+      const patient = patients.find(entry => entry.id === requestedPatientId);
+      if (!patient) return;
+      setActiveSubTab('patients');
+      setEditingPatient(patient);
+      onRequestedPatientHandled?.();
+  }, [onRequestedPatientHandled, patients, requestedPatientId]);
 
   const getWhatsAppHistory = (patient: OrthoPatient): OrthoWhatsAppHistoryEntry[] => {
       const history = patient.attendance?.__whatsapp_history;
@@ -2869,7 +2880,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                 </td>
                                 <td className="p-5 text-right font-mono text-text">R$ {(p.maintenanceValue || 0).toFixed(2)}</td>
                                 <td className="p-5 text-center">
-                                    {p.status === 'Active' ? (
+                                    {(
                                         <button
                                             type="button"
                                             disabled={isSavingPayment}
@@ -2880,7 +2891,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                                             <span className="material-symbols-outlined text-sm">{isSavingPayment ? 'progress_activity' : isMonthlyPaymentPaid ? 'check_circle' : 'payments'}</span>
                                             {isSavingPayment ? 'Salvando...' : isMonthlyPaymentPaid ? `Pago ${monthlyPayment?.paidAt?.split('-').reverse().join('/')}` : 'Registrar pagamento'}
                                         </button>
-                                    ) : <span className="text-xs text-slate-500">—</span>}
+                                    )}
                                 </td>
                                 <td className="p-5 text-center">
                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${
