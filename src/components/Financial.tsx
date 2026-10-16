@@ -331,6 +331,17 @@ export const Financial: React.FC<FinancialProps> = ({
   >(null);
   const [isBulkEntryMenuOpen, setIsBulkEntryMenuOpen] = useState(false);
   const [isIncomeFiltersOpen, setIsIncomeFiltersOpen] = useState(false);
+  const [activeIncomeFilter, setActiveIncomeFilter] = useState<
+    | "period"
+    | "category"
+    | "procedure"
+    | "professional"
+    | "paymentMethod"
+    | "status"
+    | "audit"
+    | "invoice"
+    | "type"
+  >("category");
   const [bulkRows, setBulkRows] = useState<any[]>([]);
   const [pastedData, setPastedData] = useState("");
   const [selectedDreMonth, setSelectedDreMonth] = useState(
@@ -665,12 +676,8 @@ export const Financial: React.FC<FinancialProps> = ({
   });
 
   const initialTxFilters = {
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
-    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
-      .toISOString()
-      .split("T")[0],
+    start: "0000-01-01",
+    end: "9999-12-31",
     category: "all",
     status: "all",
     paymentMethods: [] as string[],
@@ -2800,77 +2807,85 @@ export const Financial: React.FC<FinancialProps> = ({
     const errorCount = filtered.filter(
       (t) => t.reconciliationStatus === "error",
     ).length;
+    const receivedIncome = filtered
+      .filter((t) => t.status === "Paid")
+      .reduce((acc, curr) => acc + curr.amount, 0);
+    const incomeFilterItems = [
+      ["period", "Período"], ["category", "Categorias"], ["procedure", "Procedimento"],
+      ["professional", "Profissional"], ["paymentMethod", "Método de pagamento"],
+      ["status", "Situação"], ["audit", "Auditoria"],
+      ["invoice", "Nota fiscal"], ["type", "Tipo"],
+    ] as const;
+    const incomeFilterTitles = {
+      period: "Período de lançamento", category: "Categorias", procedure: "Procedimento", professional: "Profissional",
+      paymentMethod: "Método de pagamento", status: "Situação do recebimento",
+      audit: "Auditoria", invoice: "Nota fiscal", type: "Tipo de lançamento",
+    };
+    const renderIncomeFilterControl = () => {
+      switch (activeIncomeFilter) {
+        case "period":
+          return <DateRangePicker value={{ start: txFilters.start, end: txFilters.end }} onChange={(range) => setTxFilters({ ...txFilters, start: range.start, end: range.end })} clinicaExpertsLayout className="w-full" />;
+        case "category":
+          return <SelectMenu value={txFilters.category} onChange={(value) => setTxFilters({ ...txFilters, category: value, procedure: "all" })} options={[{ value: "all", label: "Todas as categorias" }, ...incomeCategories.map((c) => ({ value: c.name, label: c.name }))]} searchPlaceholder="Buscar categoria..." />;
+        case "procedure":
+          return <SelectMenu value={txFilters.procedure} onChange={(value) => setTxFilters({ ...txFilters, procedure: value })} options={[{ value: "all", label: "Todos os procedimentos" }, ...(txFilters.category !== "all" ? (incomeCategories.find((c) => c.name === txFilters.category)?.subcategories || []).map((s) => ({ value: s.name, label: s.name })) : Array.from(new Set(incomeCategories.flatMap((c) => c.subcategories.map((s) => s.name)))).sort().map((name) => ({ value: name, label: name })))]} searchPlaceholder="Buscar procedimento..." />;
+        case "professional":
+          return <SelectMenu value={txFilters.professional} onChange={(value) => setTxFilters({ ...txFilters, professional: value })} options={[{ value: "all", label: "Todos os profissionais" }, ...professionals.map((p) => ({ value: p.name, label: p.name }))]} searchPlaceholder="Buscar profissional..." />;
+        case "paymentMethod":
+          return <MultiSelectMenu values={txFilters.paymentMethods} onChange={(paymentMethods) => setTxFilters({ ...txFilters, paymentMethods })} options={paymentMethods.map((pm) => ({ value: pm.name, label: pm.name }))} placeholder="Todas as formas" searchPlaceholder="Buscar forma..." />;
+        case "status":
+          return <SelectMenu value={txFilters.status} onChange={(value) => setTxFilters({ ...txFilters, status: value })} options={[{ value: "all", label: "Todos" }, { value: "Paid", label: "Recebido" }, { value: "Pending", label: "Pendente" }]} />;
+        case "audit":
+          return <SelectMenu value={txFilters.auditStatus} onChange={(value) => setTxFilters({ ...txFilters, auditStatus: value })} options={[{ value: "all", label: "Todas" }, { value: "verified", label: "Verificado" }, { value: "error", label: "Divergência" }, { value: "pending", label: "Pendente" }]} />;
+        case "invoice":
+          return <SelectMenu value={txFilters.hasNF} onChange={(value) => setTxFilters({ ...txFilters, hasNF: value })} options={[{ value: "all", label: "Todas" }, { value: "true", label: "Emitida" }, { value: "false", label: "Não emitida" }]} />;
+        case "type":
+          return <SelectMenu value={txFilters.isPartial} onChange={(value) => setTxFilters({ ...txFilters, isPartial: value })} options={[{ value: "all", label: "Todos" }, { value: "false", label: "Integral" }, { value: "true", label: "Parcial" }]} />;
+      }
+    };
+    const renderIncomeFilterPopover = () => (
+      <div className="absolute left-0 top-[calc(100%+8px)] z-50 flex w-[660px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-[#e4e7ec] bg-white shadow-2xl dark:border-white/[0.12] dark:bg-[var(--surface)] max-sm:flex-col">
+        <nav className="w-52 shrink-0 border-r border-[#edf0f4] bg-[#fbfcfe] p-2 dark:border-white/[0.08] dark:bg-white/[0.03] max-sm:flex max-sm:w-full max-sm:overflow-x-auto max-sm:border-b max-sm:border-r-0" aria-label="Tipos de filtro">
+          {incomeFilterItems.map(([value, label]) => (
+            <button key={value} type="button" onClick={() => setActiveIncomeFilter(value)} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold transition max-sm:w-auto max-sm:shrink-0 ${activeIncomeFilter === value ? "bg-[var(--primary)] text-white shadow-sm" : "text-[#667085] hover:bg-[#f0f2f5] dark:text-[var(--text-secondary)] dark:hover:bg-white/[0.07]"}`}>
+              <Filter className="size-3.5" />{label}
+            </button>
+          ))}
+        </nav>
+        <div className="min-h-[246px] flex-1 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h4 className="text-sm font-bold text-[#344054] dark:text-[var(--text)]">{incomeFilterTitles[activeIncomeFilter]}</h4>
+            <button type="button" onClick={() => setIsIncomeFiltersOpen(false)} className="grid size-7 place-items-center rounded-md text-[#98a2b3] transition hover:bg-[#f2f4f7] hover:text-[#344054] dark:hover:bg-white/[0.08]" aria-label="Fechar filtros"><X className="size-4" /></button>
+          </div>
+          {renderIncomeFilterControl()}
+          <button type="button" onClick={() => setTxFilters(initialTxFilters)} className="mt-5 text-xs font-semibold text-[var(--primary)] hover:underline">Limpar filtros</button>
+        </div>
+      </div>
+    );
     return (
       <div className="flex flex-col gap-4 animate-in fade-in h-full">
-        <div
-          className="module-context-bar"
-          aria-label="Contexto dos lançamentos"
-        >
-          <span className="module-context-label">Financeiro › Lançamentos</span>
-          <span className="module-context-count">
-            {filtered.length} lançamento{filtered.length === 1 ? "" : "s"}
-          </span>
-          <span className="module-context-chip">
-            {txFilters.start.split("-").reverse().join("/")} —{" "}
-            {txFilters.end.split("-").reverse().join("/")}
-          </span>
-          {txFilters.category !== "all" && (
-            <span className="module-context-chip">
-              {txFilters.category}
-              <button
-                type="button"
-                onClick={() =>
-                  setTxFilters({
-                    ...txFilters,
-                    category: "all",
-                    procedure: "all",
-                  })
-                }
-                aria-label="Remover filtro de categoria"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {txFilters.professional !== "all" && (
-            <span className="module-context-chip">
-              {txFilters.professional}
-              <button
-                type="button"
-                onClick={() =>
-                  setTxFilters({ ...txFilters, professional: "all" })
-                }
-                aria-label="Remover filtro de profissional"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {txFilters.status !== "all" && (
-            <span className="module-context-chip">
-              {txFilters.status === "Paid" ? "Recebido" : "Pendente"}
-              <button
-                type="button"
-                onClick={() => setTxFilters({ ...txFilters, status: "all" })}
-                aria-label="Remover filtro de status"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {txFilters.search && (
-            <span className="module-context-chip">
-              Busca: {txFilters.search}
-              <button
-                type="button"
-                onClick={() => setTxFilters({ ...txFilters, search: "" })}
-                aria-label="Limpar busca"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-        </div>
+        <section className="rounded-xl border border-[#e8ebf0] bg-white shadow-sm dark:border-white/[0.09] dark:bg-[#141A29]">
+          <header className="flex items-center justify-between border-b border-[#e8ebf0] px-4 py-4 dark:border-white/[0.08] sm:px-5">
+            <div className="flex min-w-0 items-baseline gap-3">
+              <h3 className="truncate text-lg font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Lançamentos</h3>
+              <span className="shrink-0 text-[13px] text-[#a7abb6]">{filtered.length} registros</span>
+            </div>
+            <button onClick={() => handleExport(filtered)} className="grid size-8 place-items-center rounded-lg text-[#596274] transition hover:bg-[#f3f4f6] dark:text-slate-300 dark:hover:bg-white/[0.08]" title="Exportar lançamentos" aria-label="Exportar lançamentos"><Download className="size-4" /></button>
+          </header>
+          <div className="px-4 py-3 sm:px-5">
+            <div className="flex flex-wrap items-center gap-3 border-b border-[#e8ebf0] pb-3 dark:border-white/[0.08]">
+              <div className="relative">
+                <button type="button" onClick={() => setIsIncomeFiltersOpen((value) => !value)} aria-expanded={isIncomeFiltersOpen} className="inline-flex h-10 items-center gap-1 rounded-[7px] px-2 text-sm font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-dim)]"><Plus className="size-4" /> Adicionar filtro</button>
+                {isIncomeFiltersOpen && renderIncomeFilterPopover()}
+              </div>
+            </div>
+            <div className="flex gap-5 overflow-x-auto border-b border-[#e8ebf0] py-3 dark:border-white/[0.08]">
+              {[
+                ['Recebidos', receivedIncome, 'bg-emerald-500'], ['Total', totalRevenue, 'bg-violet-500'],
+              ].map(([label, value, dot]) => <div key={label as string} className="min-w-[120px]"><div className="flex items-center gap-2 text-[13px] text-[#3a4354] dark:text-[var(--text-secondary)]"><span className={`size-2 rounded-full ${dot}`} /><span>{label}</span><span className="grid size-4 place-items-center rounded-full border border-current text-[10px] opacity-60">?</span></div><strong className="mt-1 block whitespace-nowrap text-[17px] font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">R$ {(value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>)}
+            </div>
+          </div>
+        </section>
         {isMyProfile && (
           <div className="financial-view-switcher flex flex-col gap-2 bg-surface border border-border p-2 rounded-2xl sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="financial-view-options grid w-full min-w-0 grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
@@ -2914,14 +2929,6 @@ export const Financial: React.FC<FinancialProps> = ({
                 </h3>
                 <div className="transaction-filter-actions grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
                   <button
-                    onClick={() => setIsIncomeFiltersOpen((value) => !value)}
-                    className="module-toolbar-action justify-start text-[9px] font-bold text-[#1F6F5B] uppercase tracking-wider dark:text-[#63B596]"
-                  >
-                    {isIncomeFiltersOpen
-                      ? "Ocultar filtros"
-                      : "Mostrar filtros"}
-                  </button>
-                  <button
                     type="button"
                     onClick={() => void syncClinicaExpertsPayments()}
                     disabled={!externalSyncEnabled || syncingClinicPayments}
@@ -2956,7 +2963,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 </div>
               </div>
 
-              {isIncomeFiltersOpen && (
+              {false && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="col-span-1 md:col-span-2 lg:col-span-2 flex flex-col gap-0.5">
                     <label className="text-[9px] font-bold text-slate-500 uppercase px-1">
@@ -3489,53 +3496,15 @@ export const Financial: React.FC<FinancialProps> = ({
                             )}
                           </td>
                           <td className="p-4 text-slate-400">
-                            {hasMultipleProcedures ? (
-                              "Vários profissionais"
-                            ) : tx.professional ? (
-                              tx.professional
-                            ) : (
-                              <SelectMenu
-                                value=""
-                                onChange={(value) =>
-                                  void updateIncomeClassification(
-                                    tx.id,
-                                    "professional",
-                                    value,
-                                  )
-                                }
-                                options={professionals.map((professional) => ({
-                                  value: professional.name,
-                                  label: professional.name,
-                                }))}
-                                placeholder="Incluir profissional"
-                                searchPlaceholder="Buscar profissional..."
-                                className="min-w-[10rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold"
-                              />
+                            {hasMultipleProcedures ? "Vários profissionais" : tx.professional ? tx.professional : (
+                              <SelectMenu value="" onChange={(value) => void updateIncomeClassification(tx.id, "professional", value)} options={professionals.map((professional) => ({ value: professional.name, label: professional.name }))} placeholder="Incluir profissional" searchPlaceholder="Buscar profissional..." className="min-w-[10rem] [&>button]:h-8 [&>button]:border-blue-500/25 [&>button]:bg-blue-500/10 [&>button]:px-2 [&>button]:text-[10px] [&>button]:font-bold" />
                             )}
                           </td>
                           <td className="p-4 text-slate-400">
-                            {tx.salesTeam ? (
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-2 h-2 rounded-full"
-                                  style={{
-                                    backgroundColor:
-                                      salesTeams.find(
-                                        (t) => t.name === tx.salesTeam,
-                                      )?.color || "#8b5cf6",
-                                  }}
-                                ></div>
-                                <span>{tx.salesTeam}</span>
-                              </div>
-                            ) : (
-                              "-"
-                            )}
+                            {tx.salesTeam ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: salesTeams.find((t) => t.name === tx.salesTeam)?.color || "#8b5cf6" }}></div><span>{tx.salesTeam}</span></div> : "-"}
                           </td>
                           <td className="p-4">
-                            {tx.paymentMethod}{" "}
-                            {tx.installments && tx.installments > 1
-                              ? `(${tx.installments}x)`
-                              : ""}
+                            {tx.paymentMethod}{" "}{tx.installments && tx.installments > 1 ? `(${tx.installments}x)` : ""}
                           </td>
                           <td className="p-4 text-right font-bold text-emerald-400">
                             R${" "}

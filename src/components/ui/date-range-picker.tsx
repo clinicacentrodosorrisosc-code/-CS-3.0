@@ -10,6 +10,8 @@ interface DateRangePickerProps {
   value: { start: string; end: string };
   onChange: (range: { start: string; end: string }) => void;
   className?: string;
+  /** Exibe atalhos e calendário fixos, no padrão do filtro de período da Clínica Experts. */
+  clinicaExpertsLayout?: boolean;
   /** Ativa o seletor Semana/Mês translúcido usado nos painéis financeiros e operacionais. */
   periodSelector?: boolean;
   onPeriodModeChange?: (mode: PeriodMode) => void;
@@ -36,7 +38,7 @@ const endOfWeek = (date: Date) => {
   return end;
 };
 
-export function DateRangePicker({ value, onChange, className = '', periodSelector = false, onPeriodModeChange }: DateRangePickerProps) {
+export function DateRangePicker({ value, onChange, className = '', clinicaExpertsLayout = false, periodSelector = false, onPeriodModeChange }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,19 +65,53 @@ export function DateRangePicker({ value, onChange, className = '', periodSelecto
     setIsOpen(false);
   };
 
+  const setClinicaPreset = (preset: 'today' | 'week' | 'month' | 'last7' | 'last30') => {
+    const baseDate = new Date();
+    const today = toDateKey(baseDate);
+    const range = preset === 'today'
+      ? { start: today, end: today }
+      : preset === 'week'
+        ? { start: toDateKey(startOfWeek(baseDate)), end: toDateKey(endOfWeek(baseDate)) }
+        : preset === 'month'
+          ? { start: toDateKey(new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)), end: toDateKey(new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0)) }
+          : preset === 'last7'
+            ? { start: toDateKey(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - 6)), end: today }
+            : { start: toDateKey(new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - 29)), end: today };
+    setPeriodMode('custom');
+    onPeriodModeChange?.('custom');
+    onChange(range);
+  };
+
   const handleSelect = (range: DateRange | undefined) => {
     const next = { start: toDateKey(range?.from), end: toDateKey(range?.to) };
     onChange(next);
     if (range?.from && range?.to) {
       setPeriodMode('custom');
       onPeriodModeChange?.('custom');
-      setIsOpen(false);
+      if (!clinicaExpertsLayout) setIsOpen(false);
     }
   };
 
   const label = value.start
     ? value.end ? `${formatDate(value.start)} a ${formatDate(value.end)}` : formatDate(value.start)
     : 'Selecionar período';
+
+  if (clinicaExpertsLayout) {
+    const presets = [
+      ['today', 'Hoje'], ['week', 'Esta semana'], ['month', 'Este mês'],
+      ['last7', 'Últimos 7 dias'], ['last30', 'Últimos 30 dias'],
+    ] as const;
+    return <div className={`grid grid-cols-[148px_minmax(0,1fr)] gap-3 max-sm:grid-cols-1 ${className}`}>
+      <div className="space-y-1 pt-1">
+        {presets.map(([preset, label]) => <button key={preset} type="button" onClick={() => setClinicaPreset(preset)} className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left text-xs font-medium text-[#475467] transition hover:bg-[#f2edff] hover:text-[var(--primary)] dark:text-[var(--text-secondary)] dark:hover:bg-white/[0.08]">
+          <span className="size-4 rounded-full border-2 border-[#d0d5dd] bg-white dark:border-white/[0.25] dark:bg-transparent" />{label}
+        </button>)}
+      </div>
+      <div className="min-w-0 border-l border-[#edf0f4] pl-3 dark:border-white/[0.08] max-sm:border-l-0 max-sm:border-t max-sm:pl-0 max-sm:pt-3">
+        <Calendar mode="range" locale={ptBR} defaultMonth={selected?.from} selected={selected} onSelect={handleSelect} className="rounded-xl bg-transparent p-0 text-xs [&_.rdp-caption_label]:text-xs [&_.rdp-head_cell]:text-[10px] [&_.rdp-day_button]:size-7 [&_.rdp-day_button]:text-xs" />
+      </div>
+    </div>;
+  }
 
   return <div ref={containerRef} className={`relative ${className}`}>
     <button type="button" aria-haspopup="dialog" aria-expanded={isOpen} onClick={() => setIsOpen(open => !open)} className="flex min-w-[170px] w-full items-center justify-between gap-2 rounded-xl border border-white/25 bg-white/35 px-3 py-2 text-xs font-semibold text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_12px_28px_rgba(31,111,91,0.10)] backdrop-blur-xl transition-colors hover:bg-white/50 dark:border-white/[0.13] dark:bg-white/[0.06] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_28px_rgba(0,0,0,0.16)] dark:hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F6F5B]/40"><span className="flex min-w-0 items-center gap-2"><CalendarIcon className="size-4 shrink-0 text-[#1F6F5B] dark:text-[#63B596]" /><span className="truncate capitalize">{label}</span></span><ChevronDown className={`size-3.5 shrink-0 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} /></button>
