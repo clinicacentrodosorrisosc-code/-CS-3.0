@@ -64,6 +64,11 @@ interface MenuItem {
   }>;
 }
 
+const sidebarContentTransition = {
+  duration: 0.16,
+  ease: 'easeOut' as const,
+};
+
 const CRM_JAMES_URL = String(
   import.meta.env.VITE_CRM_JAMES_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')
 ).trim();
@@ -425,6 +430,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="flex flex-col relative w-full"
             onMouseEnter={(event) => showFlyout(item.id, event.currentTarget)}
             onMouseLeave={hideFlyout}
+            onFocus={(event) => showFlyout(item.id, event.currentTarget)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setFlyoutTab(null);
+                (event.currentTarget.querySelector('button') as HTMLButtonElement | null)?.focus();
+              }
+            }}
           >
             <button
               type="button"
@@ -455,18 +467,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <IconComponent className="w-4 h-4" />
                 </div>
 
-                {isExpanded && (
-                  <span className="text-xs tracking-tight truncate font-semibold">
-                    {item.label}
-                  </span>
-                )}
+                <AnimatePresence initial={false}>
+                  {isExpanded && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      transition={sidebarContentTransition}
+                      className="text-xs tracking-tight truncate font-semibold"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {isExpanded && hasSubItems && (
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[#8b3dff]' : ''}`}
-                />
-              )}
+              <AnimatePresence initial={false}>
+                {isExpanded && hasSubItems && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -4 }}
+                    transition={sidebarContentTransition}
+                  >
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAccordionOpen ? 'rotate-180 text-[#8b3dff]' : ''}`}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {isActive && (
                 <motion.div
@@ -555,21 +584,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               CS
             </div>
 
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                className="flex flex-col min-w-0"
-              >
-                <span className="text-xs font-bold text-[#172033] dark:text-slate-100 tracking-tight truncate leading-tight">
-                  Centro do Sorriso
-                </span>
-                <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide">
-                  Gestão Clínica
-                </span>
-              </motion.div>
-            )}
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={sidebarContentTransition}
+                  className="flex flex-col min-w-0"
+                >
+                  <span className="text-xs font-bold text-[#172033] dark:text-slate-100 tracking-tight truncate leading-tight">
+                    Centro do Sorriso
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)] font-medium tracking-wide">
+                    Gestão Clínica
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Desktop Toggle Button */}
@@ -577,8 +609,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="button"
             onClick={toggleExpanded}
             className="hidden lg:flex p-1.5 rounded-lg text-[#667085] hover:text-[#172033] hover:bg-[#F5F6F8] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.06] border border-transparent transition"
-            title={isExpanded ? "Recolher Menu" : "Expandir Menu"}
-            aria-label="Alternar Menu Lateral"
+            title={isExpanded ? "Recolher menu lateral" : "Expandir menu lateral"}
+            aria-label={isExpanded ? "Recolher menu lateral" : "Expandir menu lateral"}
+            aria-pressed={!isExpanded}
           >
             {isExpanded ? (
               <PanelLeftClose className="w-4 h-4" />

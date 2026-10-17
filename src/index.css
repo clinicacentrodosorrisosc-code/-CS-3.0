@@ -1755,6 +1755,8 @@ select option {
     var(--surface)
   ) !important;
   box-shadow: 1px 0 0 rgba(31, 58, 48, 0.025);
+  overflow: visible;
+  will-change: width;
 }
 
 .sidebar-nav-item {
@@ -2258,6 +2260,14 @@ select option {
 @media (min-width: 1024px) {
   .sidebar-shell {
     width: 236px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-shell,
+  .sidebar-shell * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
 
