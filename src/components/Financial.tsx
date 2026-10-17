@@ -341,7 +341,7 @@ export const Financial: React.FC<FinancialProps> = ({
     | "audit"
     | "invoice"
     | "type"
-  >("category");
+  >("period");
   const [bulkRows, setBulkRows] = useState<any[]>([]);
   const [pastedData, setPastedData] = useState("");
   const [selectedDreMonth, setSelectedDreMonth] = useState(
@@ -676,8 +676,12 @@ export const Financial: React.FC<FinancialProps> = ({
   });
 
   const initialTxFilters = {
-    start: "0000-01-01",
-    end: "9999-12-31",
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split("T")[0],
+    end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0],
     category: "all",
     status: "all",
     paymentMethods: [] as string[],
