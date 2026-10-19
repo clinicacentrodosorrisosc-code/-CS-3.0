@@ -24,6 +24,7 @@ import {
     Download
 } from 'lucide-react';
 import { DonutChart } from './ui/donut-chart';
+import { PageHeader } from './ui/operational-ui';
 import { Service } from '../types';
 import { initialRawMaterials, RawMaterial } from '../data/rawMaterials';
 import { toast } from 'sonner';
@@ -1640,34 +1641,41 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     }, [cHora, time, cDireto, cLaboratorio, mLiquida, tTributos, tFinanceira, cComissao]);
 
     return (
-        <div className="pricing-system flex h-full flex-col gap-4 p-4 animate-in fade-in sm:p-5">
-            <div className="flex flex-col gap-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--primary)]">Gestão financeira</p>
-                <h2 className="text-xl font-bold tracking-[-0.03em] text-[var(--text)] sm:text-2xl">Precificação inteligente e automatizada</h2>
-            </div>
-            
-            <div className="pricing-tabs flex flex-wrap gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-1.5">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        id={`pricing-tab-${tab.id}`}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                            activeTab === tab.id 
-                                ? 'bg-[var(--primary)] text-white shadow-sm'
-                                : 'text-[var(--text-secondary)] hover:bg-[var(--surface)] hover:text-[var(--text)]'
-                        }`}
-                    >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+        <div className="module-view pricing-system flex h-full flex-col gap-3 overflow-hidden p-4 animate-in fade-in sm:p-5">
+            <PageHeader
+                title="Precificação"
+                description="Cadastre custos, componha procedimentos e simule preços com os mesmos dados financeiros da clínica."
+                icon={DollarSign}
+                actions={(
+                    <div className="pricing-header-status" aria-label="Status da área de precificação">
+                        <span aria-hidden="true" />
+                        8 áreas integradas
+                    </div>
+                )}
+                tabs={(
+                    <div className="module-segmented-control pricing-tabs no-scrollbar" role="tablist" aria-label="Áreas de precificação">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === tab.id}
+                                data-active={activeTab === tab.id}
+                                id={`pricing-tab-${tab.id}`}
+                                onClick={() => setActiveTab(tab.id)}
+                            >
+                                <tab.icon className="size-3.5" aria-hidden="true" />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            />
 
-            <div className="pricing-content min-h-0 flex-1 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_40px_rgba(24,39,32,0.05)] sm:p-5">
+            <div className="pricing-content min-h-0 flex-1 overflow-auto" data-pricing-tab={activeTab}>
                 {activeTab === 'produtos' && (
-                    <div className="space-y-4 animate-in fade-in duration-300">
-                        <div>
+                    <div className="pricing-tab-panel space-y-4 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading">
                             <h3 className="text-xl font-bold text-text">Cadastro de Serviços & Procedimentos</h3>
                             <p className="text-xs text-slate-400 mt-1">Lista completa de serviços odontológicos importados do financeiro com respectivos valores padrão</p>
                         </div>
@@ -1704,7 +1712,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'materia_prima' && (
-                    <div className="space-y-4 animate-in fade-in duration-300">
+                    <div className="pricing-tab-panel space-y-4 animate-in fade-in duration-300">
                         {materials.length < initialRawMaterials.length && (
                             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div className="flex items-start gap-3">
@@ -1727,7 +1735,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div className="pricing-section-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                             <div>
                                 <h3 className="text-xl font-bold text-text">Matéria-prima / Insumos / Ingredientes</h3>
                                 <p className="text-xs text-slate-400 mt-1">Gerencie custos unitários, pesos brutos e líquidos, embalagens e fator de correção</p>
@@ -1864,8 +1872,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'ficha_tecnica' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                             <div>
                                 <h3 className="text-xl font-bold text-text">Ficha Técnica dos Procedimentos</h3>
                                 <p className="text-xs text-slate-400 mt-1">Gerencie a composição de materiais e calcule o custo real de insumos de cada procedimento</p>
@@ -2462,8 +2470,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'precificacao' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <div>
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading">
                             <h3 className="text-xl font-bold text-text">Calculadora de Precificação Odontológica</h3>
                             <p className="text-xs text-slate-400 mt-1">Calculadora baseada em custos reais de hora clínica ativa, insumos diretos e margens operacionais</p>
                         </div>
@@ -2563,6 +2571,16 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 <span className="text-5xl font-black text-indigo-400 font-mono">
                                     R$ {price.toFixed(2)}
                                 </span>
+
+                                {!selectedServiceId && (
+                                    <div className="pricing-empty-guidance">
+                                        <DollarSign className="size-5" aria-hidden="true" />
+                                        <div>
+                                            <strong>Selecione um procedimento</strong>
+                                            <p>Os custos, a margem real e a comparação com o preço praticado aparecerão aqui.</p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {selectedServiceId && (() => {
                                     const currentPracticedPrice = customPracticedPrices[selectedServiceId] !== undefined 
@@ -2779,8 +2797,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'pagamento' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <div>
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading">
                             <h3 className="text-xl font-bold text-text">Simulador de Folha de Pagamento & Encargos</h3>
                             <p className="text-xs text-slate-400 mt-1">
                                 Calcule o custo real de cada funcionário e dentista para o consultório incluindo impostos, benefícios, encargos sociais e trabalhistas.
@@ -3172,8 +3190,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'fixas' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
                                 <h3 className="text-xl font-bold text-text">Gestão de Despesas Fixas</h3>
                                 <p className="text-xs text-slate-400 mt-1">
@@ -3332,9 +3350,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'cenarios' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
                         {/* Header & Controls */}
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <div className="pricing-section-heading flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                             <div>
                                 <h3 className="text-xl font-bold text-text">Simulador de Cenários & Forecast</h3>
                                 <p className="text-xs text-slate-400 mt-1">
@@ -3774,26 +3792,28 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 )}
 
                 {activeTab === 'relatorios' && (
-                    <div className="p-6 space-y-6 animate-in fade-in duration-300">
+                    <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
+                        <div className="pricing-section-heading">
+                            <h3 className="text-xl font-bold text-text">Relatórios gerenciais</h3>
+                            <p className="mt-1 text-xs text-slate-400">Acompanhe o DRE simulado, o ponto de equilíbrio e a rentabilidade por procedimento.</p>
+                        </div>
                         {/* Sub Tab Switcher */}
-                        <div className="flex gap-2 p-1 bg-slate-900 border border-border rounded-xl max-w-lg">
+                        <div className="module-segmented-control no-scrollbar" role="tablist" aria-label="Tipos de relatório">
                             <button 
+                                type="button"
+                                role="tab"
+                                aria-selected={relatoriosSubTab === 'dre_gerencial'}
+                                data-active={relatoriosSubTab === 'dre_gerencial'}
                                 onClick={() => setRelatoriosSubTab('dre_gerencial')}
-                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition cursor-pointer ${
-                                    relatoriosSubTab === 'dre_gerencial' 
-                                        ? 'bg-surface text-text shadow-lg border border-border' 
-                                        : 'text-slate-400 hover:text-text hover:bg-panel'
-                                }`}
                             >
                                 DRE Simulado & PE Geral
                             </button>
                             <button 
+                                type="button"
+                                role="tab"
+                                aria-selected={relatoriosSubTab === 'analise_produto'}
+                                data-active={relatoriosSubTab === 'analise_produto'}
                                 onClick={() => setRelatoriosSubTab('analise_produto')}
-                                className={`flex-1 text-center py-2 text-xs font-extrabold uppercase tracking-wider rounded-lg transition cursor-pointer ${
-                                    relatoriosSubTab === 'analise_produto' 
-                                        ? 'bg-surface text-text shadow-lg border border-border' 
-                                        : 'text-slate-400 hover:text-text hover:bg-panel'
-                                }`}
                             >
                                 Análise por Produto
                             </button>

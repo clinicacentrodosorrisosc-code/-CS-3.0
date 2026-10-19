@@ -769,3 +769,300 @@ button:not(:disabled):active,
     flex: 1 1 auto;
   }
 }
+
+/* Precificação: normalize every workspace without touching its calculations. */
+.pricing-system .operational-page-header {
+  flex: 0 0 auto;
+}
+
+.pricing-system .operational-page-header__tabs {
+  min-width: 0;
+}
+
+.pricing-system .pricing-header-status {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-high);
+  padding: 0.35rem 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.pricing-system .pricing-header-status > span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-dim);
+}
+
+.pricing-system .pricing-tabs {
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+
+.pricing-system .pricing-tabs button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.pricing-system .pricing-content {
+  scrollbar-gutter: stable;
+  background: transparent;
+}
+
+.pricing-system .pricing-tab-panel {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 1rem;
+  box-shadow: none;
+}
+
+.pricing-system .pricing-section-heading {
+  margin: -1rem -1rem 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0.75rem 0.75rem 0 0;
+  background: var(--surface-high);
+}
+
+.pricing-system .pricing-section-heading h3 {
+  color: var(--text) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-transform: none !important;
+}
+
+.pricing-system .pricing-section-heading p {
+  max-width: 76ch;
+  color: var(--text-secondary) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.45;
+}
+
+.pricing-system .pricing-tab-panel > :not(.pricing-section-heading) {
+  min-width: 0;
+}
+
+.pricing-system .pricing-tab-panel :is(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl) {
+  box-shadow: none !important;
+}
+
+.pricing-system .pricing-tab-panel :is(input, select, textarea):not([class*="bg-transparent"]) {
+  min-height: 2.25rem;
+  border-color: var(--border) !important;
+  border-radius: 0.5rem !important;
+  background: var(--surface-high) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.pricing-system .pricing-tab-panel :is(input, select, textarea)::placeholder {
+  color: var(--text-dim) !important;
+}
+
+.pricing-system .pricing-tab-panel :is(input, select, textarea):focus {
+  border-color: var(--primary) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-dim) !important;
+}
+
+.pricing-system .pricing-tab-panel button:not([role="tab"]) {
+  border-radius: 0.5rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.pricing-system .pricing-tab-panel button:not([role="tab"]):not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.pricing-system .pricing-tab-panel button[class*="bg-indigo"] {
+  border-color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+.pricing-system .pricing-tab-panel button[class*="bg-indigo"]:not(:disabled):hover {
+  background: var(--primary-hover) !important;
+}
+
+.pricing-system .pricing-tab-panel button[class*="bg-slate"] {
+  border-color: var(--border) !important;
+  background: var(--surface-high) !important;
+  color: var(--text-secondary) !important;
+}
+
+.pricing-system .pricing-tab-panel button[class*="bg-slate"]:not(:disabled):hover {
+  border-color: var(--border-hover) !important;
+  background: var(--surface-hover) !important;
+  color: var(--text) !important;
+}
+
+.pricing-system .pricing-tab-panel table {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+  color: var(--text-secondary) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-system .pricing-tab-panel table thead {
+  background: var(--bg-subtle) !important;
+}
+
+.pricing-system .pricing-tab-panel table th {
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+.pricing-system .pricing-tab-panel table td {
+  border-color: var(--border-subtle) !important;
+  color: var(--text-secondary);
+}
+
+.pricing-system .pricing-tab-panel table td[class*="font-semibold"],
+.pricing-system .pricing-tab-panel table td[class*="font-bold"]:not([class*="text-emerald"]):not([class*="text-red"]):not([class*="text-rose"]) {
+  color: var(--text) !important;
+}
+
+.pricing-system .pricing-tab-panel table tbody tr:hover {
+  background: var(--surface-hover) !important;
+}
+
+.pricing-system .pricing-tab-panel :is(
+  [class*="bg-slate-8"],
+  [class*="bg-slate-9"],
+  [class*="bg-indigo-9"],
+  [class*="from-indigo-9"],
+  [class*="to-slate-9"]
+) {
+  background-color: var(--surface-high) !important;
+  background-image: none !important;
+  border-color: var(--border) !important;
+}
+
+.pricing-system .pricing-tab-panel :is(
+  [class*="text-slate-100"],
+  [class*="text-slate-200"],
+  [class*="text-slate-300"]
+) {
+  color: var(--text) !important;
+}
+
+.pricing-system .pricing-tab-panel :is(
+  [class*="text-indigo-300"],
+  [class*="text-indigo-400"],
+  [class*="text-indigo-500"]
+) {
+  color: var(--primary) !important;
+}
+
+.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid {
+  align-items: stretch;
+}
+
+.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid > div:last-child {
+  justify-content: flex-start;
+  border-color: var(--primary-border) !important;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface)) !important;
+  padding: 1.25rem !important;
+  text-align: left;
+}
+
+.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid > div:last-child > span:nth-of-type(1) {
+  color: var(--text-secondary) !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: none !important;
+}
+
+.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid > div:last-child > span:nth-of-type(2) {
+  color: var(--primary) !important;
+  font-size: clamp(2rem, 4vw, 2.75rem) !important;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.pricing-system .pricing-empty-guidance {
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--primary-border);
+  padding-top: 1rem;
+  color: var(--primary);
+  text-align: left;
+}
+
+.pricing-system .pricing-empty-guidance strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pricing-system .pricing-empty-guidance p {
+  max-width: 38ch;
+  margin-top: 0.2rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.pricing-system .pricing-content[data-pricing-tab="relatorios"] .pricing-tab-panel > div[class*="bg-white"] {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.pricing-system .pricing-tab-panel [class*="rounded-2xl"][class*="border"] {
+  border-color: var(--border);
+  border-radius: 0.75rem !important;
+}
+
+.pricing-system .pricing-tab-panel .module-segmented-control {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .pricing-system {
+    padding: 0.75rem !important;
+  }
+
+  .pricing-system .pricing-section-heading {
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 768px) {
+  .pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+  }
+}
