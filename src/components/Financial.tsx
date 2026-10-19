@@ -2867,55 +2867,66 @@ export const Financial: React.FC<FinancialProps> = ({
       </div>
     );
     return (
-      <div className="flex flex-col gap-4 animate-in fade-in h-full">
-        <section className="rounded-xl border border-[#e8ebf0] bg-white shadow-sm dark:border-white/[0.09] dark:bg-[#141A29]">
-          <header className="flex items-center justify-between border-b border-[#e8ebf0] px-4 py-4 dark:border-white/[0.08] sm:px-5">
-            <div className="flex min-w-0 items-baseline gap-3">
-              <h3 className="truncate text-lg font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Lançamentos</h3>
-              <span className="shrink-0 text-[13px] text-[#a7abb6]">{filtered.length} registros</span>
+      <div className="flex h-full flex-col gap-2 animate-in fade-in">
+        <section className="rounded-xl border border-[#e8ebf0] bg-white px-3 py-2.5 shadow-sm dark:border-white/[0.09] dark:bg-[#141A29] sm:px-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex min-w-0 items-baseline gap-2">
+              <h3 className="truncate text-base font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Lançamentos</h3>
+              <span className="shrink-0 text-xs text-[#98a2b3]">{filtered.length} registros</span>
             </div>
-            <button onClick={() => handleExport(filtered)} className="grid size-8 place-items-center rounded-lg text-[#596274] transition hover:bg-[#f3f4f6] dark:text-slate-300 dark:hover:bg-white/[0.08]" title="Exportar lançamentos" aria-label="Exportar lançamentos"><Download className="size-4" /></button>
-          </header>
-          <div className="px-4 py-3 sm:px-5">
-            <div className="flex flex-wrap items-center gap-3 border-b border-[#e8ebf0] pb-3 dark:border-white/[0.08]">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1.5">
+              {[
+                ['Recebidos', receivedIncome, 'bg-emerald-500'],
+                ['Total', totalRevenue, 'bg-violet-500'],
+                ['Meta diária', dailyMetaRequired, 'bg-amber-400'],
+                ['Total NF', totalNF, 'bg-blue-500'],
+              ].map(([label, value, dot]) => <div key={label as string} className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs"><span className={`size-1.5 shrink-0 rounded-full ${dot}`} /><span className="text-[#667085] dark:text-[var(--text-secondary)]">{label}</span><strong className="font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">R$ {(value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>)}
+            </div>
+            <div className="ms-auto flex items-center gap-1">
               <div className="relative">
-                <button type="button" onClick={() => setIsIncomeFiltersOpen((value) => !value)} aria-expanded={isIncomeFiltersOpen} className="inline-flex h-10 items-center gap-1 rounded-[7px] px-2 text-sm font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-dim)]"><Plus className="size-4" /> Adicionar filtro</button>
+                <button type="button" onClick={() => setIsIncomeFiltersOpen((value) => !value)} aria-expanded={isIncomeFiltersOpen} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-dim)]"><Plus className="size-3.5" /> Adicionar filtro</button>
                 {isIncomeFiltersOpen && renderIncomeFilterPopover()}
               </div>
-            </div>
-            <div className="flex gap-5 overflow-x-auto border-b border-[#e8ebf0] py-3 dark:border-white/[0.08]">
-              {[
-                ['Recebidos', receivedIncome, 'bg-emerald-500'], ['Total', totalRevenue, 'bg-violet-500'],
-              ].map(([label, value, dot]) => <div key={label as string} className="min-w-[120px]"><div className="flex items-center gap-2 text-[13px] text-[#3a4354] dark:text-[var(--text-secondary)]"><span className={`size-2 rounded-full ${dot}`} /><span>{label}</span><span className="grid size-4 place-items-center rounded-full border border-current text-[10px] opacity-60">?</span></div><strong className="mt-1 block whitespace-nowrap text-[17px] font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">R$ {(value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>)}
+              <button
+                type="button"
+                onClick={() => void syncClinicaExpertsPayments()}
+                disabled={!externalSyncEnabled || syncingClinicPayments}
+                className="grid size-8 place-items-center rounded-lg text-blue-500 transition hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                title={externalSyncEnabled ? "Sincronizar Clínica Experts" : "Extração desativada para testes locais"}
+                aria-label={externalSyncEnabled ? "Sincronizar Clínica Experts" : "Extração desativada para testes locais"}
+              >
+                <RefreshCw className={`size-3.5 ${syncingClinicPayments ? "animate-spin" : ""}`} />
+              </button>
+              <button onClick={() => handleExport(filtered)} className="grid size-8 place-items-center rounded-lg text-[#596274] transition hover:bg-[#f3f4f6] dark:text-slate-300 dark:hover:bg-white/[0.08]" title="Exportar lançamentos" aria-label="Exportar lançamentos"><Download className="size-4" /></button>
             </div>
           </div>
         </section>
         {isMyProfile && (
-          <div className="financial-view-switcher flex flex-col gap-2 bg-surface border border-border p-2 rounded-2xl sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <div className="financial-view-options grid w-full min-w-0 grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
+          <div className="financial-view-switcher flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="financial-view-options grid w-full min-w-0 grid-cols-2 gap-1 sm:w-auto">
               <button
                 onClick={() => setTransactionsViewMode("realizado")}
-                className={`w-full px-4 py-2 rounded-xl text-xs font-bold uppercase transition ${transactionsViewMode === "realizado" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+                className={`min-h-8 w-full rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase leading-tight transition ${transactionsViewMode === "realizado" ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:bg-panel hover:text-text"}`}
               >
                 Lançamentos Realizados
               </button>
               <button
                 onClick={() => setTransactionsViewMode("orcamento")}
-                className={`w-full px-4 py-2 rounded-xl text-xs font-bold uppercase transition ${transactionsViewMode === "orcamento" ? "bg-blue-600 text-text shadow-lg" : "text-slate-400 hover:text-text hover:bg-panel"}`}
+                className={`min-h-8 w-full rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase leading-tight transition ${transactionsViewMode === "orcamento" ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:bg-panel hover:text-text"}`}
               >
-                Planejamento Orçamentário (Próximo Mês)
+                Planejamento Orçamentário
               </button>
             </div>
             {transactionsViewMode === "orcamento" && (
-              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">
-                  Mês de Referência:
+              <div className="flex w-full flex-wrap items-center gap-1.5 px-1 sm:w-auto sm:justify-end">
+                <span className="text-[9px] font-bold uppercase text-slate-400">
+                  Mês de referência
                 </span>
                 <input
                   type="month"
                   value={budgetMonth}
                   onChange={(e) => setBudgetMonth(e.target.value)}
-                  className="bg-panel border border-border rounded-xl px-3 py-1.5 text-xs text-text font-bold outline-none focus:border-purple-500"
+                  className="h-8 rounded-lg border border-border bg-panel px-2 text-xs font-bold text-text outline-none focus:border-purple-500"
                 />
               </div>
             )}
@@ -2926,46 +2937,7 @@ export const Financial: React.FC<FinancialProps> = ({
           renderBudgetPlanner()
         ) : (
           <div className="flex flex-col gap-4 flex-1">
-            <div className="module-filter-panel glass-panel p-3 rounded-2xl border border-border flex flex-col gap-3 bg-surface relative z-20">
-              <div className="transaction-filter-toolbar flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="text-xs font-bold text-text uppercase tracking-widest flex items-center gap-2">
-                  <Filter className="text-blue-400 w-3 h-3" /> Filtros
-                </h3>
-                <div className="transaction-filter-actions grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => void syncClinicaExpertsPayments()}
-                    disabled={!externalSyncEnabled || syncingClinicPayments}
-                    title={
-                      externalSyncEnabled
-                        ? undefined
-                        : "Extracao de lancamentos desativada para testes locais."
-                    }
-                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-blue-400 transition-colors hover:bg-blue-500/15 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <RefreshCw
-                      className={`h-3 w-3 ${syncingClinicPayments ? "animate-spin" : ""}`}
-                    />
-                    {syncingClinicPayments
-                      ? "Sincronizando"
-                      : externalSyncEnabled
-                        ? "Sincronizar Clinica Experts"
-                        : "Extracao desativada"}
-                  </button>
-                  <button
-                    onClick={() => handleExport(filtered)}
-                    className="module-toolbar-action text-[9px] font-bold text-[#1F6F5B] dark:text-[#63B596] uppercase tracking-wider flex items-center gap-1"
-                  >
-                    <Download className="w-3 h-3" /> Exportar
-                  </button>
-                  <button
-                    onClick={() => setTxFilters(initialTxFilters)}
-                    className="module-toolbar-action text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider"
-                  >
-                    Limpar Filtros
-                  </button>
-                </div>
-              </div>
+            <div className={`module-filter-panel glass-panel rounded-xl border border-border bg-surface p-2 relative z-20 ${selectedIncomes.length > 0 ? "flex flex-col" : "hidden"}`}>
 
               {false && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -3165,7 +3137,7 @@ export const Financial: React.FC<FinancialProps> = ({
                 </div>
               )}
 
-              <div className="flex flex-col gap-3 border-t border-border pt-2 mt-0.5 sm:flex-row sm:items-center sm:justify-end">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 {selectedIncomes.length > 0 && (
                   <div className="flex flex-wrap gap-3 items-center bg-emerald-500/10 px-3 py-1 rounded border border-emerald-500/20 sm:me-auto animate-in fade-in slide-in-from-left-2 duration-200">
                     <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest">
@@ -3275,41 +3247,6 @@ export const Financial: React.FC<FinancialProps> = ({
                     </div>
                   </div>
                 )}
-                <div className="transaction-summary-metrics grid w-full grid-cols-3 gap-3 sm:w-auto sm:flex sm:gap-4">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[8px] text-amber-500 font-bold uppercase tracking-widest mb-0">
-                      Meta Diária
-                    </span>
-                    <span className="text-[10px] text-amber-400 font-bold">
-                      R${" "}
-                      {dailyMetaRequired.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mb-0">
-                      Receita
-                    </span>
-                    <span className="text-[10px] text-emerald-400 font-bold">
-                      R${" "}
-                      {totalRevenue.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mb-0">
-                      Total NF
-                    </span>
-                    <span className="text-[10px] text-blue-400 font-bold">
-                      R${" "}
-                      {totalNF.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
             {errorCount > 0 && (
