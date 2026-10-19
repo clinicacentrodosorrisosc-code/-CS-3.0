@@ -993,18 +993,123 @@ button:not(:disabled):active,
   text-align: left;
 }
 
-.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid > div:last-child > span:nth-of-type(1) {
-  color: var(--text-secondary) !important;
-  font-size: 0.68rem !important;
-  letter-spacing: 0.04em !important;
-  text-transform: none !important;
+.pricing-system .pricing-result-price {
+  border-bottom: 1px solid var(--primary-border);
+  padding-bottom: 1rem;
 }
 
-.pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid > div:last-child > span:nth-of-type(2) {
-  color: var(--primary) !important;
-  font-size: clamp(2rem, 4vw, 2.75rem) !important;
+.pricing-system .pricing-current-price-input {
+  padding-left: 2.75rem !important;
+}
+
+.pricing-system .pricing-result-price > span,
+.pricing-system .pricing-result-grid article > span,
+.pricing-system .pricing-result-current span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.pricing-system .pricing-result-price > strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--primary);
+  font-family: var(--font-data);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 750;
   line-height: 1;
   letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-system .pricing-result-price > p {
+  max-width: 50ch;
+  margin-top: 0.55rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.pricing-system .pricing-result-summary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pricing-system .pricing-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.pricing-system .pricing-result-grid article {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  padding: 0.8rem;
+}
+
+.pricing-system .pricing-result-grid article > strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.3rem;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 1.05rem;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-system .pricing-result-grid article > small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.pricing-system .pricing-result-grid article[data-tone="success"] > strong {
+  color: var(--success);
+}
+
+.pricing-system .pricing-result-grid article[data-tone="warning"] > strong {
+  color: var(--warning);
+}
+
+.pricing-system .pricing-result-grid article[data-tone="danger"] > strong {
+  color: var(--danger);
+}
+
+.pricing-system .pricing-result-current {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+}
+
+.pricing-system .pricing-result-current > div:last-child {
+  text-align: right;
+}
+
+.pricing-system .pricing-result-current strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-system .pricing-result-footnote {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  line-height: 1.45;
 }
 
 .pricing-system .pricing-empty-guidance {

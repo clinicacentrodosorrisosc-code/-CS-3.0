@@ -1144,9 +1144,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
             tTributos: 6,
             tFinanceira: 3,
             cComissao: 0,
-            precoPraticado: 0
+            precoPraticado: services.find(service => service.id === serviceId)?.defaultValue || 0
         };
-    }, [fichaTecnicas, thirdPartyCosts, getFichaCostBreakdown, calculateFichaTime, suggestedCHora]);
+    }, [fichaTecnicas, thirdPartyCosts, getFichaCostBreakdown, calculateFichaTime, suggestedCHora, services]);
 
     // Scenario Simulation calculations
     const scenarioData = useMemo(() => {
@@ -1362,6 +1362,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
             };
         });
     };
+
+    const getPracticedPrice = useCallback((serviceId: string) => {
+        const savedPrice = serviceSettings[serviceId]?.precoPraticado;
+        if (typeof savedPrice === 'number' && Number.isFinite(savedPrice) && savedPrice > 0) {
+            return savedPrice;
+        }
+        return services.find(service => service.id === serviceId)?.defaultValue || 0;
+    }, [serviceSettings, services]);
 
     // Ficha Técnica CRUD handlers
     const syncMaintenanceFichas = (
@@ -2549,245 +2557,92 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             <input 
                                                 type="number"
                                                 step="any"
-                                                value={customPracticedPrices[selectedServiceId] !== undefined ? customPracticedPrices[selectedServiceId] : (services.find(s => s.id === selectedServiceId)?.defaultValue || 0)}
+                                                value={getPracticedPrice(selectedServiceId)}
                                                 onChange={(e) => {
                                                     const val = e.target.value === '' ? 0 : Number(e.target.value);
-                                                    handleScenarioPriceChange(selectedServiceId, val);
+                                                    updateServiceSetting('precoPraticado', val);
                                                 }}
-                                                className="w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-emerald-500 transition placeholder-emerald-900"
+                                                className="pricing-current-price-input w-full bg-emerald-950/20 border border-emerald-500/30 rounded-xl pl-10 pr-4 py-3 text-text text-lg font-mono font-black focus:outline-none focus:border-emerald-500 transition placeholder-emerald-900"
                                                 placeholder="Informe o preço cobrado hoje..."
                                             />
                                         </div>
                                         <p className="text-[10px] text-slate-500 mt-2 italic leading-relaxed">
-                                            💡 Informe quanto você cobra atualmente por este procedimento para comparar com a sugestão ideal e analisar suas margens reais.
+                                            Este valor é usado somente nesta precificação para calcular a margem e o lucro atuais.
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-slate-800/80 p-8 rounded-2xl border border-border flex flex-col justify-center items-center gap-5 text-center relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full filter blur-2xl -mr-10 -mt-10"></div>
-                                <span className="text-xs uppercase font-bold text-slate-400 tracking-widest leading-none">Preço de Venda Sugerido</span>
-                                <span className="text-5xl font-black text-indigo-400 font-mono">
-                                    R$ {price.toFixed(2)}
-                                </span>
+                            <div className="pricing-result-panel bg-slate-800/80 p-8 rounded-2xl border border-border flex flex-col gap-5 relative overflow-hidden">
+                                <div className="pricing-result-price">
+                                    <span>Preço de venda sugerido</span>
+                                    <strong>R$ {price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                    <p>Valor calculado diretamente pelos custos e percentuais informados nesta tela.</p>
+                                </div>
 
                                 {!selectedServiceId && (
                                     <div className="pricing-empty-guidance">
                                         <DollarSign className="size-5" aria-hidden="true" />
                                         <div>
                                             <strong>Selecione um procedimento</strong>
-                                            <p>Os custos, a margem real e a comparação com o preço praticado aparecerão aqui.</p>
+                                            <p>A margem e o lucro por procedimento aparecerão aqui.</p>
                                         </div>
                                     </div>
                                 )}
 
                                 {selectedServiceId && (() => {
-                                    const currentPracticedPrice = customPracticedPrices[selectedServiceId] !== undefined 
-                                        ? customPracticedPrices[selectedServiceId] 
-                                        : (services.find(s => s.id === selectedServiceId)?.defaultValue || 0);
+                                    const currentPracticedPrice = getPracticedPrice(selectedServiceId);
                                     
                                     const costNumerator = (cHora * time) + cDireto + cLaboratorio;
                                     const variableRate = (tTributos + tFinanceira + cComissao) / 100;
                                     const practicedDeductions = currentPracticedPrice * variableRate;
                                     const practicedRealProfit = currentPracticedPrice - practicedDeductions - costNumerator;
                                     const practicedRealMarginPercent = currentPracticedPrice > 0 ? (practicedRealProfit / currentPracticedPrice) * 100 : 0;
+                                    const suggestedProfit = price * (mLiquida / 100);
+                                    const priceGap = currentPracticedPrice - price;
+                                    const isOnTarget = practicedRealMarginPercent >= mLiquida;
 
                                     return (
-                                        <div className="w-full space-y-3 mt-2 px-4">
-                                            {/* KPI CARD: MARGEM REAL PRATICADA */}
-                                            {currentPracticedPrice > 0 && (
-                                                <div className="bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-xl p-3.5 shadow-lg relative overflow-hidden text-left">
-                                                    <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2 mb-2">
-                                                        <span className="text-[10px] uppercase font-extrabold text-indigo-300 tracking-wider flex items-center gap-1.5">
-                                                            <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                            Margem Real com Preço Praticado (R$ {currentPracticedPrice.toFixed(2)})
-                                                        </span>
-                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                                                            practicedRealMarginPercent >= mLiquida 
-                                                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                                                                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                                                        }`}>
-                                                            {practicedRealMarginPercent >= mLiquida 
-                                                                ? `+${(practicedRealMarginPercent - mLiquida).toFixed(1)}% acima da meta` 
-                                                                : `${(mLiquida - practicedRealMarginPercent).toFixed(1)}% abaixo da meta`}
-                                                        </span>
-                                                    </div>
+                                        <div className="pricing-result-summary">
+                                            <div className="pricing-result-grid">
+                                                <article>
+                                                    <span>Margem desejada</span>
+                                                    <strong>{mLiquida.toFixed(1)}%</strong>
+                                                    <small>Aplicada ao preço sugerido</small>
+                                                </article>
+                                                <article>
+                                                    <span>Lucro no preço sugerido</span>
+                                                    <strong>R$ {suggestedProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                                    <small>Por procedimento</small>
+                                                </article>
+                                                <article data-tone={isOnTarget ? 'success' : 'warning'}>
+                                                    <span>Margem no preço atual</span>
+                                                    <strong>{practicedRealMarginPercent.toFixed(1)}%</strong>
+                                                    <small>{isOnTarget ? 'Dentro da margem desejada' : 'Abaixo da margem desejada'}</small>
+                                                </article>
+                                                <article data-tone={practicedRealProfit >= 0 ? 'success' : 'danger'}>
+                                                    <span>Lucro no preço atual</span>
+                                                    <strong>R$ {practicedRealProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                                    <small>Por procedimento</small>
+                                                </article>
+                                            </div>
 
-                                                    <div className="grid grid-cols-2 gap-2 text-center pt-1">
-                                                        <div className="bg-panel/60 p-2 rounded-lg border border-border">
-                                                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Margem de Lucro Real</span>
-                                                            <span className={`text-lg font-black font-mono ${practicedRealMarginPercent >= mLiquida ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                                {practicedRealMarginPercent.toFixed(1)}%
-                                                            </span>
-                                                            <span className="text-[8px] text-slate-500 block">Meta configurada: {mLiquida}%</span>
-                                                        </div>
-                                                        <div className="bg-panel/60 p-2 rounded-lg border border-border">
-                                                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Lucro Líquido Real / Proced.</span>
-                                                            <span className={`text-lg font-black font-mono ${practicedRealProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                R$ {practicedRealProfit.toFixed(2)}
-                                                            </span>
-                                                            <span className="text-[8px] text-slate-500 block">Deduções Variáveis: R$ {practicedDeductions.toFixed(2)}</span>
-                                                        </div>
-                                                    </div>
+                                            <div className="pricing-result-current">
+                                                <div>
+                                                    <span>Preço praticado</span>
+                                                    <strong>R$ {currentPracticedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                                 </div>
-                                            )}
-
-                                            <div className="flex justify-between items-center bg-panel rounded-xl p-3 border border-border">
-                                                <div className="text-left">
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Diferença de Preço (Gap):</span>
-                                                    <span className={`text-[9px] font-bold ${
-                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : (price - currentPracticedPrice) < 0 ? 'text-emerald-400' : 'text-blue-400'
-                                                    }`}>
-                                                        {(price - currentPracticedPrice) > 0 
-                                                            ? 'Abaixo do Sugerido (Defasado)' 
-                                                            : (price - currentPracticedPrice) < 0 
-                                                            ? 'Acima do Sugerido (Lucro Extra)' 
-                                                            : 'Exatamente no Preço Sugerido'}
-                                                    </span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className={`text-sm font-mono font-black ${
-                                                        (price - currentPracticedPrice) > 0 ? 'text-amber-400' : 'text-emerald-400'
-                                                    }`}>
-                                                        {(price - currentPracticedPrice) > 0 
-                                                            ? `-R$ ${(price - currentPracticedPrice).toFixed(2)}` 
-                                                            : (price - currentPracticedPrice) < 0 
-                                                            ? `+R$ ${(currentPracticedPrice - price).toFixed(2)}` 
-                                                            : 'R$ 0.00'}
-                                                    </span>
-                                                    <span className="block text-[9px] text-slate-400 font-mono">
-                                                        {currentPracticedPrice > 0 
-                                                            ? (price - currentPracticedPrice) > 0
-                                                                ? `${(((price / currentPracticedPrice) - 1) * 100).toFixed(1)}% abaixo do ideal`
-                                                                : (price - currentPracticedPrice) < 0
-                                                                ? `${(((currentPracticedPrice / price) - 1) * 100).toFixed(1)}% acima do sugerido`
-                                                                : 'Preço alinhado com o sugerido'
-                                                            : 'Informe o preço atual'}
-                                                    </span>
+                                                <div>
+                                                    <span>Diferença para o sugerido</span>
+                                                    <strong className={priceGap >= 0 ? 'text-emerald-500' : 'text-amber-500'}>
+                                                        {priceGap >= 0 ? '+' : '-'} R$ {Math.abs(priceGap).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </strong>
                                                 </div>
                                             </div>
 
-                                            <div className="text-[11px] text-slate-400 space-y-2.5 w-full mt-4">
-                                                <div className="flex items-center justify-between border-b border-border pb-1">
-                                                    <p className="font-extrabold text-slate-200 uppercase tracking-wider text-[11px]">
-                                                        📊 Detalhamento Financeiro Comparativo
-                                                    </p>
-                                                    <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                                                        Meta de Lucro: {mLiquida}%
-                                                    </span>
-                                                </div>
-
-                                                {/* Comparative Table */}
-                                                <div className="bg-panel rounded-xl border border-border p-3 overflow-x-auto shadow-md">
-                                                    <table className="w-full text-left font-mono text-[10px] border-collapse">
-                                                        <thead>
-                                                            <tr className="border-b border-border text-slate-400 uppercase text-[9px]">
-                                                                <th className="pb-2 font-bold">Linha de Cálculo</th>
-                                                                <th className="pb-2 text-right text-indigo-300 font-bold">Preço Sugerido</th>
-                                                                <th className="pb-2 text-right text-emerald-400 font-bold">Preço Praticado</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-border/50 text-slate-300">
-                                                            {/* Preço de Venda */}
-                                                            <tr>
-                                                                <td className="py-1.5 font-bold text-slate-200">
-                                                                    (+) Preço de Venda Bruto
-                                                                </td>
-                                                                <td className="py-1.5 text-right font-black text-indigo-400">
-                                                                    R$ {price.toFixed(2)}
-                                                                </td>
-                                                                <td className="py-1.5 text-right font-black text-emerald-400">
-                                                                    R$ {currentPracticedPrice.toFixed(2)}
-                                                                </td>
-                                                            </tr>
-
-                                                            {/* Impostos + Taxas Financ */}
-                                                            <tr>
-                                                                <td className="py-1.5 text-slate-400">
-                                                                    (-) Impostos & Cartão ({tTributos + tFinanceira}%)
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-amber-400 font-medium">
-                                                                    -R$ {(price * ((tTributos + tFinanceira) / 100)).toFixed(2)}
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-amber-400 font-medium">
-                                                                    -R$ {(currentPracticedPrice * ((tTributos + tFinanceira) / 100)).toFixed(2)}
-                                                                </td>
-                                                            </tr>
-
-                                                            {/* Comissão */}
-                                                            <tr>
-                                                                <td className="py-1.5 text-slate-400">
-                                                                    (-) Comissão Dentista ({cComissao}%)
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-slate-300 font-medium">
-                                                                    -R$ {(price * (cComissao / 100)).toFixed(2)}
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-slate-300 font-medium">
-                                                                    -R$ {(currentPracticedPrice * (cComissao / 100)).toFixed(2)}
-                                                                </td>
-                                                            </tr>
-
-                                                            {/* Custo Operacional (Hora Cadeira + Direto + Lab) */}
-                                                            <tr>
-                                                                <td className="py-1.5 text-slate-400">
-                                                                    (-) Custo Fixo Operacional
-                                                                    <span className="block text-[8px] text-slate-500 italic">
-                                                                        (Cadeira R$ {(cHora * time).toFixed(2)} + Mat. R$ {cDireto.toFixed(2)} + Lab R$ {cLaboratorio.toFixed(2)})
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-red-400 font-medium">
-                                                                    -R$ {costNumerator.toFixed(2)}
-                                                                </td>
-                                                                <td className="py-1.5 text-right text-red-400 font-medium">
-                                                                    -R$ {costNumerator.toFixed(2)}
-                                                                </td>
-                                                            </tr>
-
-                                                            {/* Lucro Líquido Real */}
-                                                            <tr className="bg-white/[0.03] font-bold border-t border-border">
-                                                                <td className="py-2 text-slate-100">
-                                                                    (=) Lucro Líquido Real (R$)
-                                                                </td>
-                                                                <td className="py-2 text-right text-indigo-300 font-black">
-                                                                    R$ {(price - (price * variableRate) - costNumerator).toFixed(2)}
-                                                                </td>
-                                                                <td className="py-2 text-right text-emerald-400 font-black">
-                                                                    R$ {practicedRealProfit.toFixed(2)}
-                                                                </td>
-                                                            </tr>
-
-                                                            {/* Margem Líquida % */}
-                                                            <tr className="bg-indigo-500/10 font-bold">
-                                                                <td className="py-2 text-indigo-300">
-                                                                    (=) Margem Líquida Real (%)
-                                                                </td>
-                                                                <td className="py-2 text-right text-indigo-300 font-black">
-                                                                    {mLiquida.toFixed(1)}% <span className="text-[8px] text-slate-400 font-normal">(Meta)</span>
-                                                                </td>
-                                                                <td className={`py-2 text-right font-black ${practicedRealMarginPercent >= mLiquida ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                                    {practicedRealMarginPercent.toFixed(1)}%
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-
-                                                {/* Clarifying Legend Box */}
-                                                <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-lg p-2.5 text-[9.5px] text-slate-300 space-y-1 text-left">
-                                                    <p className="font-bold text-indigo-300 flex items-center gap-1">
-                                                        💡 O que estes números mostram?
-                                                    </p>
-                                                    <p>
-                                                        • <strong className="text-white">Preço Sugerido (R$ {price.toFixed(2)}):</strong> É o valor exato calculado pela fórmula da folha para garantir a sua meta de <strong className="text-emerald-400">{mLiquida}% de margem líquida</strong>.
-                                                    </p>
-                                                    {currentPracticedPrice > 0 && (
-                                                        <p>
-                                                            • <strong className="text-white">Preço Praticado (R$ {currentPracticedPrice.toFixed(2)}):</strong> Como seu preço atual é maior que o sugerido, você ganha <strong className="text-emerald-400">R$ {(practicedRealProfit - (price - (price * variableRate) - costNumerator)).toFixed(2)} a mais de lucro por procedimento</strong>, elevando sua margem real para <strong className="text-emerald-400">{practicedRealMarginPercent.toFixed(1)}%</strong>!
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <p className="pricing-result-footnote">
+                                                Custo considerado: R$ {costNumerator.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Impostos, taxas e comissão: {(variableRate * 100).toFixed(1)}%
+                                            </p>
                                         </div>
                                     );
                                 })()}
