@@ -1140,12 +1140,12 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
                     </div>
 
                     {/* 4. RESULTADO LÍQUIDO DOS SÓCIOS */}
-                    <div className="bg-gradient-to-r from-panel to-surface p-3.5 rounded-2xl border border-border flex justify-between items-center">
+                    <div className="analytics-card analytics-metric bg-gradient-to-r from-panel to-surface p-3.5 rounded-2xl border border-border flex justify-between items-center">
                       <div>
                         <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">
                           Lucro Líquido dos Sócios
                         </span>
-                        <span className={`text-xl font-black font-mono ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span className={`analytics-value--money analytics-value text-xl font-black font-mono ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           R$ {netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -1292,9 +1292,9 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
         </div>
 
           {/* GRÁFICO COMPARATIVO DE CURVAS */}
-          <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
+          <div className="analytics-card analytics-chart glass-panel p-6 rounded-2xl border border-border flex flex-col gap-6">
             <div>
-              <h3 className="text-base font-bold text-text uppercase tracking-widest flex items-center gap-2">
+              <h3 className="analytics-chart-title text-base font-bold text-text uppercase tracking-widest flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-400" /> Custo Total de Comissões por Nível de Faturamento
               </h3>
               <p className="text-[11px] text-slate-400">

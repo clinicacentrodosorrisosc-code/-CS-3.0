@@ -92,7 +92,7 @@ const isOrthoDay = (date: Date) => {
     return true;
 }
 
-const COLORS = ['#2563EB', '#60A5FA', '#0F766E', '#F59E0B', '#EF4444', '#1D4ED8'];
+const COLORS = ["var(--analytics-blue)", "var(--analytics-orange)", "var(--analytics-green)", "var(--analytics-purple)", "var(--analytics-blue-soft)", "var(--analytics-gray)"];
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const DEFAULT_WHATSAPP_MESSAGE = 'Olá, {nome}! Passando para lembrar que o valor da sua mensalidade de ortodontia é {valor}.';
 
@@ -1717,13 +1717,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
           )}
 
           {/* Top KPIs */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="analytics-metric-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
               {/* Active Total */}
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pacientes ativos</p>
-                          <p className="mt-2 text-3xl font-display font-bold text-text">{activeCount}</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Pacientes ativos</p>
+                          <p className="analytics-value mt-2 text-3xl font-display font-bold text-text">{activeCount}</p>
                           <p className="mt-1 text-xs text-slate-500">Em tratamento no quadro</p>
                       </div>
                       <div className="grid size-10 place-items-center rounded-lg bg-[var(--primary-dim)] text-[var(--primary)]">
@@ -1733,11 +1733,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Started In Month */}
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
-                          <p className="mt-2 text-3xl font-display font-bold text-emerald-500">+{startedInMonth}</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Iniciados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                          <p className="analytics-value mt-2 text-3xl font-display font-bold text-emerald-500">+{startedInMonth}</p>
                           <p className="mt-1 truncate text-xs text-slate-500">{startedNames.length ? startedNames.join(', ') : 'Nenhum início no período'}</p>
                       </div>
                       <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -1747,11 +1747,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Finished In Month */}
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
-                          <p className="mt-2 text-3xl font-display font-bold text-[var(--primary)]">{finishedInMonth}</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Finalizados em {MONTHS[parseInt(selectedMonth)-1]}</p>
+                          <p className="analytics-value mt-2 text-3xl font-display font-bold text-[var(--primary)]">{finishedInMonth}</p>
                           <p className="mt-1 truncate text-xs text-slate-500">{finishedNames.length ? finishedNames.join(', ') : 'Nenhuma finalização no período'}</p>
                       </div>
                       <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-[var(--primary-dim)] text-[var(--primary)]">
@@ -1761,10 +1761,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* Attendance */}
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Motivo mais registrado</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Motivo mais registrado</p>
                           <p className="mt-2 truncate text-lg font-display font-bold text-text" title={topFinishReason?.name}>
                               {topFinishReason?.name ?? '—'}
                           </p>
@@ -1778,13 +1778,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                   </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Taxa de Presença</p>
-                          <p className="mt-2 text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Taxa de Presença</p>
+                          <p className="analytics-value mt-2 text-3xl font-display font-bold text-text">{attendanceRate.toFixed(0)}%</p>
                       </div>
-                      <span className={`rounded-full px-2 py-1 text-[10px] font-black uppercase ${
+                      <span className={`analytics-label rounded-full px-2 py-1 text-[10px] font-black uppercase ${
                           attendanceRate < 85 ? 'text-red-500' :
                           attendanceRate <= 90 ? 'text-amber-500' :
                           'text-emerald-500'
@@ -1800,11 +1800,11 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
               {/* Estimated Monthly Revenue */}
               {userRole === 'admin' && (
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <div className="analytics-card analytics-metric rounded-xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                       <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Receita mensal estimada</p>
-                          <p className="mt-2 text-2xl font-display font-bold text-text">{estimatedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                          <p className="analytics-label text-[10px] font-bold uppercase tracking-widest text-slate-500">Receita mensal estimada</p>
+                          <p className="analytics-value--money analytics-value mt-2 text-2xl font-display font-bold text-text">{estimatedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                           <p className="mt-1 text-xs text-slate-500">Mensalidades dos pacientes ativos</p>
                       </div>
                       <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -1856,10 +1856,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 const daysRemaining = Math.max(0, orthoDaysTotal - orthoDaysPassed);
 
                 return (
-                  <SpotlightCard className="glass-panel h-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
+                  <SpotlightCard className="analytics-card analytics-chart glass-panel h-full rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(59, 130, 246, 0.4)">
                       <div className="flex flex-col mb-6">
                           <div className="flex justify-between items-center mb-6">
-                              <h4 className="text-text font-bold text-sm">Pacing de Presença Ortodontia</h4>
+                              <h4 className="analytics-chart-title text-text font-bold text-sm">Pacing de Presença Ortodontia</h4>
                               <div className={`px-2 py-1 rounded text-[10px] font-bold ${isOnPacing ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                   {isOnPacing ? 'Meta Atingida' : 'Abaixo da Meta'}
                               </div>
@@ -1867,17 +1867,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           
                           {/* Summary KPIs */}
                           <div className="grid grid-cols-3 gap-4 mb-6">
-                              <div className="bg-panel p-4 rounded-xl border border-border">
-                                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Presenças</p>
-                                  <p className="text-xl font-bold text-text mt-1">{currentActual}</p>
+                              <div className="analytics-card analytics-metric analytics-metric--compact bg-panel p-4 rounded-xl border border-border">
+                                  <p className="analytics-label text-[10px] text-slate-400 uppercase tracking-widest font-bold">Presenças</p>
+                                  <p className="analytics-value text-xl font-bold text-text mt-1">{currentActual}</p>
                               </div>
-                              <div className="bg-panel p-4 rounded-xl border border-border">
-                                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Meta Atual</p>
-                                  <p className="text-xl font-bold text-text mt-1">{Math.round(currentMeta)}</p>
+                              <div className="analytics-card analytics-metric analytics-metric--compact bg-panel p-4 rounded-xl border border-border">
+                                  <p className="analytics-label text-[10px] text-slate-400 uppercase tracking-widest font-bold">Meta Atual</p>
+                                  <p className="analytics-value text-xl font-bold text-text mt-1">{Math.round(currentMeta)}</p>
                               </div>
-                              <div className="bg-panel p-4 rounded-xl border border-border">
-                                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Dias Restantes</p>
-                                  <p className="text-xl font-bold text-text mt-1">{daysRemaining}</p>
+                              <div className="analytics-card analytics-metric analytics-metric--compact bg-panel p-4 rounded-xl border border-border">
+                                  <p className="analytics-label text-[10px] text-slate-400 uppercase tracking-widest font-bold">Dias Restantes</p>
+                                  <p className="analytics-value text-xl font-bold text-text mt-1">{daysRemaining}</p>
                               </div>
                           </div>
 
@@ -1896,13 +1896,13 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                             />
                             <Legend verticalAlign="top" height={36} iconType="plainline" formatter={(value) => <span className="text-xs text-slate-400 font-bold uppercase">{value}</span>} />
                             <Line type="monotone" dataKey="meta" stroke="#94a3b8" strokeDasharray="5 5" name="Trajetória Padrão Linear" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={800} />
-                            <Line type="monotone" dataKey="atual" stroke="#10b981" name="Acumulado Realizado" strokeWidth={3} dot={false} isAnimationActive={true} animationDuration={800} />
+                            <Line type="monotone" dataKey="atual" stroke="var(--analytics-green)" name="Acumulado Realizado" strokeWidth={3} dot={false} isAnimationActive={true} animationDuration={800} />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
                       
                       <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
-                        <h4 className="text-text font-bold text-sm mb-3">Adicionar Observação</h4>
+                        <h4 className="analytics-chart-title text-text font-bold text-sm mb-3">Adicionar Observação</h4>
                         <div className="flex gap-2">
                             <input 
                                 type="text" 
@@ -1935,9 +1935,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                 );
               })()}
 
-              <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
+              <SpotlightCard className="analytics-card analytics-chart glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
                   <div className="flex flex-col h-full w-full">
-                      <h3 className="text-lg font-bold text-text mb-4">Pacientes Ativos por Aparelho</h3>
+                      <h3 className="analytics-chart-title text-lg font-bold text-text mb-4">Pacientes Ativos por Aparelho</h3>
                       <div className="flex-1 w-full">
                       <DonutChart data={applianceDistribution.map((entry: any, index: number) => ({ ...entry, label: entry.name, color: COLORS[index % COLORS.length] }))} size={220} strokeWidth={30} onSegmentHover={(segment) => setActiveApplianceIndex(segment ? applianceDistribution.findIndex((entry: any) => entry.name === segment.label) : null)} centerContent={activeApplianceIndex !== null && applianceDistribution[activeApplianceIndex] ? <><span className="text-3xl font-bold text-text">{applianceDistribution[activeApplianceIndex].value}</span><span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-widest text-slate-400">{applianceDistribution[activeApplianceIndex].name}</span></> : <span className="text-xs font-bold text-slate-400">Pacientes</span>} />
                       </div>
@@ -1945,9 +1945,9 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </SpotlightCard>
           </div>
           
-          <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+          <SpotlightCard className="analytics-card analytics-chart glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
               <div className="flex flex-col h-full w-full">
-                  <h3 className="text-lg font-bold text-text mb-4">Evolução do Tratamento ({currentYear})</h3>
+                  <h3 className="analytics-chart-title text-lg font-bold text-text mb-4">Evolução do Tratamento ({currentYear})</h3>
                   <div className="h-[350px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={monthlyFlowData} margin={{ top: 24, right: 20, left: 0, bottom: 5 }} barCategoryGap="28%">
@@ -1956,8 +1956,8 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                               <YAxis stroke="var(--text-muted)" fontSize={12} allowDecimals={false} tickLine={false} axisLine={false} />
                               <RechartsTooltip cursor={{fill: 'var(--primary-dim)'}} contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '8px' }} itemStyle={{ color: 'var(--text)' }} />
                               <Legend verticalAlign="top" height={36} iconType="circle" formatter={(value) => <span className="text-xs text-slate-500 font-bold">{value}</span>} />
-                              <Bar dataKey="Iniciou" name="Iniciados" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Iniciou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
-                              <Bar dataKey="Finalizou" name="Finalizados" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Finalizou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
+                              <Bar dataKey="Iniciou" name="Iniciados" fill="var(--analytics-green)" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Iniciou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
+                              <Bar dataKey="Finalizou" name="Finalizados" fill="var(--analytics-blue)" radius={[4, 4, 0, 0]} maxBarSize={40}><LabelList dataKey="Finalizou" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
                               <Bar dataKey="Documentacao" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={40} name="Doc. Inicial"><LabelList dataKey="Documentacao" position="top" fill="var(--text-muted)" fontSize={10} /></Bar>
                           </BarChart>
                       </ResponsiveContainer>
@@ -1967,10 +1967,10 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Maintenance Value Chart */}
-              <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
+              <SpotlightCard className="analytics-card analytics-chart glass-panel rounded-2xl p-6 border border-border min-h-[350px]" spotlightColor="rgba(255, 255, 255, 0.1)">
                   <div className="flex flex-col h-full w-full">
                       <div className="flex justify-between items-start mb-4">
-                          <h3 className="text-lg font-bold text-text">Distribuição Financeira</h3>
+                          <h3 className="analytics-chart-title text-lg font-bold text-text">Distribuição Financeira</h3>
                       {userRole === 'admin' && <div className="text-right">
                           <p className="text-[10px] text-slate-400 uppercase font-bold">Receita Estimada (Ativos)</p>
                           <p className="text-xl font-bold text-emerald-400">R$ {estimatedRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -2173,40 +2173,40 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>
 
               {/* KPI Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
+              <div className="analytics-metric-grid grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="analytics-card analytics-metric bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Dias de Ortodontia</span>
+                          <span className="analytics-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Dias de Ortodontia</span>
                           <Calendar className="w-4 h-4 text-slate-400" />
                       </div>
-                      <span className="text-2xl font-bold font-display text-text">{orthoDaysCount} <span className="text-xs font-normal text-slate-400">dias</span></span>
+                      <span className="analytics-value text-2xl font-bold font-display text-text">{orthoDaysCount} <span className="text-xs font-normal text-slate-400">dias</span></span>
                       <span className="text-[10px] text-slate-400">Atendimento oficial no mês</span>
                   </div>
 
-                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
+                  <div className="analytics-card analytics-metric bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Agendados</span>
+                          <span className="analytics-label text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total Agendados</span>
                           <Clock className="w-4 h-4 text-slate-400" />
                       </div>
-                      <span className="text-2xl font-bold font-display text-text">{totalScheduledCount} <span className="text-xs font-normal text-slate-400">consultas</span></span>
+                      <span className="analytics-value text-2xl font-bold font-display text-text">{totalScheduledCount} <span className="text-xs font-normal text-slate-400">consultas</span></span>
                       <span className="text-[10px] text-slate-400">Pacientes com horário marcado</span>
                   </div>
 
-                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
+                  <div className="analytics-card analytics-metric bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Atendidos / Presentes</span>
+                          <span className="analytics-label text-[10px] font-bold uppercase tracking-wider text-emerald-400">Atendidos / Presentes</span>
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       </div>
-                      <span className="text-2xl font-bold font-display text-emerald-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
+                      <span className="analytics-value text-2xl font-bold font-display text-emerald-400">{totalPresentCount} <span className="text-xs font-normal text-slate-400">pacientes</span></span>
                       <span className="text-[10px] text-slate-400">Presença confirmada</span>
                   </div>
 
-                  <div className="bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
+                  <div className="analytics-card analytics-metric bg-surface p-4 rounded-xl border border-border flex flex-col gap-1">
                       <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Faltas / Ausentes</span>
+                          <span className="analytics-label text-[10px] font-bold uppercase tracking-wider text-rose-400">Faltas / Ausentes</span>
                           <XCircle className="w-4 h-4 text-rose-400" />
                       </div>
-                      <span className="text-2xl font-bold font-display text-rose-400">{totalAbsentCount} <span className="text-xs font-normal text-slate-400">ausências</span></span>
+                      <span className="analytics-value text-2xl font-bold font-display text-rose-400">{totalAbsentCount} <span className="text-xs font-normal text-slate-400">ausências</span></span>
                       <span className="text-[10px] text-slate-400">Pacientes que faltaram</span>
                   </div>
               </div>
@@ -2432,28 +2432,28 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
   const renderPatients = () => (
       <div className="ortho-patient-list flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* ADITIVO DIGITAL & MESSAGE CONTROL KPI CARDS */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="analytics-metric-grid grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* Card 1: Total Pacientes Ativos */}
-              <div className="max-w-xs rounded-xl border border-border bg-surface p-4 flex flex-col justify-between shadow-sm">
+              <div className="analytics-card analytics-metric max-w-xs rounded-xl border border-border bg-surface p-4 flex flex-col justify-between shadow-sm">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
+                      <span className="analytics-label text-xs font-bold uppercase tracking-wider text-slate-400">Pacientes Ativos</span>
                       <span className="p-2 rounded-lg bg-panel text-slate-500 material-symbols-outlined text-base">groups</span>
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-text font-mono">{aditivoStats.totalActive}</span>
+                      <span className="analytics-value text-2xl font-black text-text font-mono">{aditivoStats.totalActive}</span>
                       <span className="text-xs text-slate-400">em tratamento</span>
                   </div>
               </div>
 
               {/* Card 2: Mensagens Enviadas */}
-              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="analytics-card analytics-metric glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
+                      <span className="analytics-label text-xs font-bold uppercase tracking-wider text-slate-400">Mensagens Enviadas</span>
                       <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 material-symbols-outlined text-base">send</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-emerald-400 font-mono">{aditivoStats.msgSentCount}</span>
+                          <span className="analytics-value text-2xl font-black text-emerald-400 font-mono">{aditivoStats.msgSentCount}</span>
                           <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
                       </div>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-mono">{aditivoStats.msgSentPct}%</span>
@@ -2464,14 +2464,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>}
 
               {/* Card 3: Aditivos Assinados Digitalmente */}
-              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="analytics-card analytics-metric glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados (Digital)</span>
+                      <span className="analytics-label text-xs font-bold uppercase tracking-wider text-slate-400">Aditivos Assinados (Digital)</span>
                       <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400 material-symbols-outlined text-base">draw</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-blue-400 font-mono">{aditivoStats.signedCount}</span>
+                          <span className="analytics-value text-2xl font-black text-blue-400 font-mono">{aditivoStats.signedCount}</span>
                           <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
                       </div>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 font-mono">{aditivoStats.signedPct}%</span>
@@ -2482,14 +2482,14 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
               </div>}
 
               {/* Card 4: Pendências */}
-              {false && <div className="glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
+              {false && <div className="analytics-card analytics-metric glass-panel p-4 rounded-xl border border-border bg-surface flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Assinatura</span>
+                      <span className="analytics-label text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes de Assinatura</span>
                       <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">pending_actions</span>
                   </div>
                   <div className="mt-2 flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-amber-400 font-mono">{aditivoStats.pendingSignedCount}</span>
+                          <span className="analytics-value text-2xl font-black text-amber-400 font-mono">{aditivoStats.pendingSignedCount}</span>
                           <span className="text-xs text-slate-400">não assinados</span>
                       </div>
                       <span className="text-xs text-slate-400">({aditivoStats.msgPendingCount} sem msg)</span>
@@ -2498,17 +2498,17 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
               {/* Card 5: Vencimentos Alterados (Visível Somente para Administrador) */}
               {false && isAdmin && (
-                  <div className="glass-panel p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between shadow-lg shadow-amber-950/10">
+                  <div className="analytics-card analytics-metric glass-panel p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col justify-between shadow-lg shadow-amber-950/10">
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Vencimento Alterado</span>
+                              <span className="analytics-label text-xs font-bold uppercase tracking-wider text-amber-400">Vencimento Alterado</span>
                               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 uppercase">Admin</span>
                           </div>
                           <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 material-symbols-outlined text-base">edit_calendar</span>
                       </div>
                       <div className="mt-2 flex items-baseline justify-between">
                           <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-amber-400 font-mono">{aditivoStats.changedDueDateCount}</span>
+                              <span className="analytics-value text-2xl font-black text-amber-400 font-mono">{aditivoStats.changedDueDateCount}</span>
                               <span className="text-xs text-slate-400">/ {aditivoStats.totalActive}</span>
                           </div>
                           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">{aditivoStats.changedDueDatePct}%</span>

@@ -163,10 +163,10 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
       {/* Main Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Monthly Trend */}
-        <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
+        <div className="analytics-card analytics-chart bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="w-5 h-5 text-indigo-400" />
-            <h3 className="font-bold text-lg text-text">Evolução Mensal de Vendas</h3>
+            <h3 className="analytics-chart-title font-bold text-lg text-text">Evolução Mensal de Vendas</h3>
           </div>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -178,12 +178,12 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => [`R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
                 />
-                <Area type="monotone" dataKey="total" fill="url(#colorTotal)" stroke="#6366f1" strokeWidth={3} />
-                <Bar dataKey="total" barSize={30} fill="#6366f1" radius={[4, 4, 0, 0]} opacity={0.3} />
+                <Area type="monotone" dataKey="total" fill="url(#colorTotal)" stroke="var(--analytics-blue)" strokeWidth={3} />
+                <Bar dataKey="total" barSize={30} fill="var(--analytics-blue)" radius={[4, 4, 0, 0]} opacity={0.3} />
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--analytics-blue)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--analytics-blue)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
               </ComposedChart>
@@ -192,10 +192,10 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
         </div>
 
         {/* Sales by Category */}
-        <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
+        <div className="analytics-card analytics-chart bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
             <Target className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-lg text-text">Vendas por Categoria</h3>
+            <h3 className="analytics-chart-title font-bold text-lg text-text">Vendas por Categoria</h3>
           </div>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -207,17 +207,17 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 />
-                <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+                <Bar dataKey="value" fill="var(--analytics-green)" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Sales by Professional */}
-        <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl">
+        <div className="analytics-card analytics-chart bg-surface border border-border rounded-2xl p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-6">
             <Users className="w-5 h-5 text-indigo-400" />
-            <h3 className="font-bold text-lg text-text">Vendas por Profissional</h3>
+            <h3 className="analytics-chart-title font-bold text-lg text-text">Vendas por Profissional</h3>
           </div>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -229,7 +229,7 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({ transactions }) 
                   contentStyle={{ backgroundColor: '#11131f', borderColor: '#1f2937', color: '#fff' }}
                   formatter={(v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="value" fill="var(--analytics-purple)" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -281,7 +281,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurren
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-surface border border-border rounded-2xl p-6 shadow-xl hover:border-white/20 transition group"
+    className="analytics-card analytics-metric bg-surface border border-border rounded-2xl p-6 shadow-xl hover:border-white/20 transition group"
   >
     <div className="flex justify-between items-start mb-4">
       <div className="p-3 bg-panel rounded-xl group-hover:bg-panel/80 transition-colors">
@@ -296,7 +296,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, isCurren
     </div>
     <div className="space-y-1">
       <h4 className="text-slate-400 text-sm font-medium">{title}</h4>
-      <p className="text-2xl font-bold text-text font-mono">
+      <p className="analytics-value--money analytics-value text-2xl font-bold text-text font-mono">
         {isCurrency 
           ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
           : value.toLocaleString('pt-BR')}

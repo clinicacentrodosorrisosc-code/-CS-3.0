@@ -825,52 +825,52 @@ export const ReceptionDailyReport: React.FC = () => {
                         <div id="dashboard-export-area" className={`flex flex-col space-y-6 ${exportingImage ? 'w-[1200px] max-w-[1200px] p-8 bg-surface rounded-[24px]' : ''}`}>
                             
                             {/* Dashboard KPI cards */}
-                            <div className={`grid gap-4 ${exportingImage ? 'grid-cols-4' : 'grid-cols-2 md:grid-cols-4'}`}>
-                                <div className="glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
-                                    <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <div className={`analytics-metric-grid grid gap-4 ${exportingImage ? 'grid-cols-4' : 'grid-cols-2 md:grid-cols-4'}`}>
+                                <div className="analytics-card analytics-metric glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
+                                    <div className="analytics-decoration absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <CalendarIcon className="w-10 h-10 text-blue-400" />
                                     </div>
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500/30" />
-                                    <span className="text-[9px] text-blue-400 font-extrabold uppercase tracking-widest block leading-tight">Agendados Fim do Dia</span>
+                                    <div className="analytics-decoration absolute left-0 top-0 bottom-0 w-1 bg-blue-500/30" />
+                                    <span className="analytics-label text-[9px] text-blue-400 font-extrabold uppercase tracking-widest block leading-tight">Agendados Fim do Dia</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.agendamentosTotal}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
+                                        <span className="analytics-value text-2xl font-black text-text tracking-tight">{kpiMetrics.agendamentosTotal}</span>
+                                        <span className="analytics-label text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
                                 
-                                <div className="glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
-                                    <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <div className="analytics-card analytics-metric glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
+                                    <div className="analytics-decoration absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <Users className="w-10 h-10 text-emerald-400" />
                                     </div>
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/30" />
-                                    <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest block leading-tight">Comparecidos</span>
+                                    <div className="analytics-decoration absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/30" />
+                                    <span className="analytics-label text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest block leading-tight">Comparecidos</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.finalizadosTotal}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
+                                        <span className="analytics-value text-2xl font-black text-text tracking-tight">{kpiMetrics.finalizadosTotal}</span>
+                                        <span className="analytics-label text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
                                 
-                                <div className="glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
-                                    <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <div className="analytics-card analytics-metric glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
+                                    <div className="analytics-decoration absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <CalendarX className="w-10 h-10 text-amber-400" />
                                     </div>
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/30" />
-                                    <span className="text-[9px] text-amber-400 font-extrabold uppercase tracking-widest block leading-tight">Total Perdas</span>
+                                    <div className="analytics-decoration absolute left-0 top-0 bottom-0 w-1 bg-amber-500/30" />
+                                    <span className="analytics-label text-[9px] text-amber-400 font-extrabold uppercase tracking-widest block leading-tight">Total Perdas</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.totalLosses}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
+                                        <span className="analytics-value text-2xl font-black text-text tracking-tight">{kpiMetrics.totalLosses}</span>
+                                        <span className="analytics-label text-[9px] text-slate-500 font-bold uppercase tracking-widest">Geral</span>
                                     </div>
                                 </div>
                                 
-                                <div className="glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
-                                    <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <div className="analytics-card analytics-metric glass-panel p-4 rounded-2xl border border-border relative overflow-hidden group bg-white/[0.02] flex flex-col justify-between min-h-[100px]">
+                                    <div className="analytics-decoration absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                                         <Activity className="w-10 h-10 text-teal-400" />
                                     </div>
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500/30" />
-                                    <span className="text-[9px] text-teal-400 font-extrabold uppercase tracking-widest block leading-tight">Taxa de Presença</span>
+                                    <div className="analytics-decoration absolute left-0 top-0 bottom-0 w-1 bg-teal-500/30" />
+                                    <span className="analytics-label text-[9px] text-teal-400 font-extrabold uppercase tracking-widest block leading-tight">Taxa de Presença</span>
                                     <div className="flex items-baseline gap-1 mt-2">
-                                        <span className="text-2xl font-black text-text tracking-tight">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Média</span>
+                                        <span className="analytics-value text-2xl font-black text-text tracking-tight">{kpiMetrics.attendanceRate.toFixed(1)}%</span>
+                                        <span className="analytics-label text-[9px] text-slate-500 font-bold uppercase tracking-widest">Média</span>
                                     </div>
                                 </div>
                             </div>
@@ -904,51 +904,51 @@ export const ReceptionDailyReport: React.FC = () => {
                                 </div>
 
                                 <div className={`grid gap-4 mt-6 pt-5 border-t border-border ${exportingImage ? 'grid-cols-4' : 'grid-cols-2 md:grid-cols-4'}`}>
-                                    <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
+                                    <div className="analytics-card analytics-metric analytics-metric--compact p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-teal-400" />
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Finalizados</span>
+                                            <span className="analytics-label text-[9px] text-slate-400 font-bold uppercase tracking-wider">Finalizados</span>
                                         </div>
-                                        <span className="text-lg font-black text-text">{kpiMetrics.finalizadosTotal}</span>
+                                        <span className="analytics-value text-lg font-black text-text">{kpiMetrics.finalizadosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.attendanceRate.toFixed(1)}% do total</span>
                                     </div>
                                     
-                                    <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
+                                    <div className="analytics-card analytics-metric analytics-metric--compact p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-amber-400" />
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Remarcados</span>
+                                            <span className="analytics-label text-[9px] text-slate-400 font-bold uppercase tracking-wider">Remarcados</span>
                                         </div>
-                                        <span className="text-lg font-black text-text">{kpiMetrics.remarcadosTotal}</span>
+                                        <span className="analytics-value text-lg font-black text-text">{kpiMetrics.remarcadosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.rescheduledRate.toFixed(1)}% do total</span>
                                     </div>
                                     
-                                    <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
+                                    <div className="analytics-card analytics-metric analytics-metric--compact p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-rose-400" />
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Faltaram</span>
+                                            <span className="analytics-label text-[9px] text-slate-400 font-bold uppercase tracking-wider">Faltaram</span>
                                         </div>
-                                        <span className="text-lg font-black text-text">{kpiMetrics.naoCompareceramTotal}</span>
+                                        <span className="analytics-value text-lg font-black text-text">{kpiMetrics.naoCompareceramTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.noShowRate.toFixed(1)}% do total</span>
                                     </div>
                                     
-                                    <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
+                                    <div className="analytics-card analytics-metric analytics-metric--compact p-3 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl border border-border flex flex-col gap-1 transition">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-slate-500" />
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cancelados</span>
+                                            <span className="analytics-label text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cancelados</span>
                                         </div>
-                                        <span className="text-lg font-black text-text">{kpiMetrics.canceladosTotal}</span>
+                                        <span className="analytics-value text-lg font-black text-text">{kpiMetrics.canceladosTotal}</span>
                                         <span className="text-[8px] text-slate-500 font-bold">{kpiMetrics.cancelledRate.toFixed(1)}% do total</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Area Chart Card */}
-                            <div className="glass-panel p-6 rounded-3xl border border-border bg-white/[0.01] flex flex-col min-h-[300px]">
+                            <div className="analytics-card analytics-chart glass-panel p-6 rounded-3xl border border-border bg-white/[0.01] flex flex-col min-h-[300px]">
                                 <div className="flex items-center gap-2.5 mb-4 border-b border-border pb-3">
                                     <div className="p-1.5 bg-teal-500/10 text-teal-400 rounded-lg">
                                         <TrendingUp className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-xs font-bold text-text uppercase tracking-wider">Evolução Diária (Últimos 14 Dias)</h3>
+                                    <h3 className="analytics-chart-title text-xs font-bold text-text uppercase tracking-wider">Evolução Diária (Últimos 14 Dias)</h3>
                                 </div>
                                 <div className="flex-1 min-h-[250px] w-full">
                                     {chartData.length > 0 ? (
@@ -960,8 +960,8 @@ export const ReceptionDailyReport: React.FC = () => {
                                                         <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
                                                     </linearGradient>
                                                     <linearGradient id="colorPerdas" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.25} />
-                                                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                                                        <stop offset="5%" stopColor="var(--analytics-red)" stopOpacity={0.25} />
+                                                        <stop offset="95%" stopColor="var(--analytics-red)" stopOpacity={0} />
                                                     </linearGradient>
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
@@ -992,7 +992,7 @@ export const ReceptionDailyReport: React.FC = () => {
                                                     itemStyle={{ fontWeight: 'bold' }}
                                                 />
                                                 <Area type="monotone" dataKey="finalizados" name="Finalizados" stroke="#14b8a6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFin)" />
-                                                <Area type="monotone" dataKey="perdas" name="Perdas Totais" stroke="#f43f5e" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPerdas)" />
+                                                <Area type="monotone" dataKey="perdas" name="Perdas Totais" stroke="var(--analytics-red)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPerdas)" />
                                             </AreaChart>
                                         </ResponsiveContainer>
                                     ) : (

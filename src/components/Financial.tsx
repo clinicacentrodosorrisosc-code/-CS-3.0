@@ -171,12 +171,12 @@ interface ProcedureSplit {
 }
 
 const COLORS = [
-  "#2563EB",
-  "#60A5FA",
-  "#0F766E",
-  "#16A34A",
-  "#38BDF8",
-  "#1D4ED8",
+  "var(--analytics-blue)",
+  "var(--analytics-orange)",
+  "var(--analytics-green)",
+  "var(--analytics-purple)",
+  "var(--analytics-blue-soft)",
+  "var(--analytics-gray)",
 ];
 
 const ALL_TABS_CONFIG = [
@@ -2429,15 +2429,15 @@ export const Financial: React.FC<FinancialProps> = ({
     return (
       <div className="flex flex-col gap-6 animate-in fade-in pb-12">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-4 gap-4">
           <SpotlightCard
-            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            className="analytics-card analytics-metric glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
             spotlightColor="rgba(16, 185, 129, 0.3)"
           >
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-emerald-500 uppercase tracking-widest">
               Receita Prevista
             </span>
-            <h3 className="text-2xl font-black text-emerald-400">
+            <h3 className="analytics-value--money analytics-value text-2xl font-black text-emerald-400">
               R${" "}
               {totalProjectedIncome.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -2445,13 +2445,13 @@ export const Financial: React.FC<FinancialProps> = ({
             </h3>
           </SpotlightCard>
           <SpotlightCard
-            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            className="analytics-card analytics-metric glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
             spotlightColor="rgba(239, 68, 68, 0.3)"
           >
-            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-red-500 uppercase tracking-widest">
               Despesas Previstas
             </span>
-            <h3 className="text-2xl font-black text-red-400">
+            <h3 className="analytics-value--money analytics-value text-2xl font-black text-red-400">
               R${" "}
               {totalProjectedExpense.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -2459,14 +2459,14 @@ export const Financial: React.FC<FinancialProps> = ({
             </h3>
           </SpotlightCard>
           <SpotlightCard
-            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            className="analytics-card analytics-metric glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
             spotlightColor="rgba(59, 130, 246, 0.3)"
           >
-            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-blue-500 uppercase tracking-widest">
               Lucro Operacional Líquido
             </span>
             <h3
-              className={`text-2xl font-black ${projectedNetProfit >= 0 ? "text-blue-400" : "text-red-400"}`}
+              className={`analytics-value--money analytics-value text-2xl font-black ${projectedNetProfit >= 0 ? "text-blue-400" : "text-red-400"}`}
             >
               R${" "}
               {projectedNetProfit.toLocaleString("pt-BR", {
@@ -2475,13 +2475,13 @@ export const Financial: React.FC<FinancialProps> = ({
             </h3>
           </SpotlightCard>
           <SpotlightCard
-            className="glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
+            className="analytics-card analytics-metric glass-panel p-5 rounded-2xl flex flex-col gap-1 border border-border bg-surface"
             spotlightColor="rgba(168, 85, 247, 0.3)"
           >
-            <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-purple-500 uppercase tracking-widest">
               Margem de Lucro
             </span>
-            <h3 className="text-2xl font-black text-purple-400">
+            <h3 className="analytics-value text-2xl font-black text-purple-400">
               {projectedMargin.toFixed(1)}%
             </h3>
           </SpotlightCard>
@@ -3674,15 +3674,15 @@ export const Financial: React.FC<FinancialProps> = ({
 
     return (
       <div className="flex flex-col gap-4 animate-in fade-in h-full">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-3 gap-4">
           <SpotlightCard
-            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            className="analytics-card analytics-metric glass-panel p-4 rounded-2xl flex flex-col gap-1"
             spotlightColor="rgba(255, 255, 255, 0.2)"
           >
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-slate-500 uppercase tracking-widest">
               Total Despesas
             </span>
-            <h3 className="text-2xl font-black text-text">
+            <h3 className="analytics-value--money analytics-value text-2xl font-black text-text">
               R${" "}
               {totalExpense.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -3690,25 +3690,25 @@ export const Financial: React.FC<FinancialProps> = ({
             </h3>
           </SpotlightCard>
           <SpotlightCard
-            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            className="analytics-card analytics-metric glass-panel p-4 rounded-2xl flex flex-col gap-1"
             spotlightColor="rgba(16, 185, 129, 0.4)"
           >
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-emerald-500 uppercase tracking-widest">
               Total Pago
             </span>
-            <h3 className="text-2xl font-black text-emerald-400">
+            <h3 className="analytics-value--money analytics-value text-2xl font-black text-emerald-400">
               R${" "}
               {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </h3>
           </SpotlightCard>
           <SpotlightCard
-            className="glass-panel p-4 rounded-2xl flex flex-col gap-1"
+            className="analytics-card analytics-metric glass-panel p-4 rounded-2xl flex flex-col gap-1"
             spotlightColor="rgba(239, 68, 68, 0.4)"
           >
-            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+            <span className="analytics-label text-[10px] font-black text-red-500 uppercase tracking-widest">
               Total Pendente
             </span>
-            <h3 className="text-2xl font-black text-red-400">
+            <h3 className="analytics-value--money analytics-value text-2xl font-black text-red-400">
               R${" "}
               {totalPending.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -4254,12 +4254,12 @@ export const Financial: React.FC<FinancialProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
-            <p className="text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+        <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+          <div className="analytics-card analytics-metric glass-panel p-6 rounded-2xl border-t-2 border-t-emerald-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
+            <p className="analytics-label text-emerald-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Total Entradas
             </p>
-            <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
+            <p className="analytics-value--money analytics-value text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
               R${" "}
               {currentData.totalRevenue.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -4269,11 +4269,11 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.totalRevenue, prevData.totalRevenue)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
-            <p className="text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+          <div className="analytics-card analytics-metric glass-panel p-6 rounded-2xl border-t-2 border-t-rose-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
+            <p className="analytics-label text-rose-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Total Saídas
             </p>
-            <p className="text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
+            <p className="analytics-value--money analytics-value text-3xl text-text font-black tracking-tight group-hover:scale-105 transition-transform origin-left">
               R${" "}
               {currentData.totalExpense.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -4283,12 +4283,12 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.totalExpense, prevData.totalExpense)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
-            <p className="text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">
+          <div className="analytics-card analytics-metric glass-panel p-6 rounded-2xl border-t-2 border-t-blue-500 border border-border bg-surface flex flex-col gap-1 shadow-xl group hover:bg-surface transition duration-300">
+            <p className="analytics-label text-blue-400 font-bold uppercase text-[10px] tracking-wider mb-1">
               Resultado Líquido
             </p>
             <p
-              className={`text-3xl font-black tracking-tight group-hover:scale-105 transition-transform origin-left ${currentData.result >= 0 ? "text-text" : "text-rose-500"}`}
+              className={`analytics-value--money analytics-value text-3xl font-black tracking-tight group-hover:scale-105 transition-transform origin-left ${currentData.result >= 0 ? "text-text" : "text-rose-500"}`}
             >
               R${" "}
               {currentData.result.toLocaleString("pt-BR", {
@@ -4299,8 +4299,8 @@ export const Financial: React.FC<FinancialProps> = ({
               {getDiffDisplay(currentData.result, prevData.result)}
             </div>
           </div>
-          <div className="glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition">
-            <p className="text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">
+          <div className="analytics-card analytics-metric glass-panel p-6 rounded-2xl border border-primary/30 shadow-xl flex flex-col gap-1 group  transition">
+            <p className="analytics-label text-blue-300 font-bold uppercase text-[10px] tracking-widest mb-1">
               Projeção{" "}
               {new Date(
                 new Date(currentMonthDate).setMonth(
@@ -4308,22 +4308,22 @@ export const Financial: React.FC<FinancialProps> = ({
                 ),
               ).toLocaleDateString("pt-BR", { month: "short" })}
             </p>
-            <p className="text-3xl font-black tracking-tight text-text/90">
+            <p className="analytics-value--money analytics-value text-3xl font-black tracking-tight text-text/90">
               R${" "}
               {(currentData.totalRevenue * 1.05 || 0).toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
               })}
             </p>
-            <p className="text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1">
+            <p className="analytics-label text-[10px] text-blue-400/80 font-bold uppercase mt-2 flex items-center gap-1">
               <RefreshCw className="w-3 h-3 animate-spin-slow" /> Baseado em
               tendência (+5%)
             </p>
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border bg-surface h-[350px] shadow-2xl flex flex-col relative z-10">
+        <div className="analytics-card analytics-chart glass-panel p-6 rounded-2xl border border-border bg-surface h-[350px] shadow-2xl flex flex-col relative z-10">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+            <h3 className="analytics-chart-title text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-blue-500" /> Fluxo de Caixa
               (12 Meses)
             </h3>
@@ -4374,13 +4374,13 @@ export const Financial: React.FC<FinancialProps> = ({
               />
               <Bar
                 dataKey="income"
-                fill="#3b82f6"
+                fill="var(--analytics-blue)"
                 radius={[4, 4, 0, 0]}
                 barSize={24}
               />
               <Bar
                 dataKey="expense"
-                fill="#f43f5e"
+                fill="var(--analytics-red)"
                 radius={[4, 4, 0, 0]}
                 barSize={24}
               />
@@ -4388,10 +4388,10 @@ export const Financial: React.FC<FinancialProps> = ({
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pb-4">
+        <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pb-4">
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
-              <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+            <div className="analytics-card analytics-chart glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
+              <h3 className="analytics-chart-title text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-emerald-500" /> Receitas
                 Detalhadas
               </h3>
@@ -4428,8 +4428,8 @@ export const Financial: React.FC<FinancialProps> = ({
               </div>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
-              <h3 className="text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
+            <div className="analytics-card analytics-chart glass-panel p-6 rounded-2xl border border-border bg-surface shadow-xl">
+              <h3 className="analytics-chart-title text-text font-bold mb-6 uppercase text-xs tracking-wider opacity-80 flex items-center gap-2">
                 <Minus className="w-4 h-4 text-rose-500" /> Despesas Detalhadas
               </h3>
               <div className="flex flex-col gap-5">
@@ -4466,12 +4466,12 @@ export const Financial: React.FC<FinancialProps> = ({
             </div>
           </div>
 
-          <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col gap-8 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+          <div className="analytics-card analytics-chart analytics-card analytics-metric glass-panel p-6 rounded-2xl border border-border flex flex-col gap-8 shadow-2xl relative overflow-hidden group">
+            <div className="analytics-decoration absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <ShieldCheck className="w-24 h-24 text-text" />
             </div>
 
-            <h3 className="text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
+            <h3 className="analytics-chart-title analytics-label text-text font-bold uppercase text-xs tracking-wider opacity-80 flex items-center gap-2 relative z-10">
               <TrendingUp className="w-4 h-4 text-indigo-400" /> Saúde
               Financeira
             </h3>
@@ -4479,10 +4479,10 @@ export const Financial: React.FC<FinancialProps> = ({
             <div className="flex flex-col gap-8 relative z-10">
               <div>
                 <div className="flex justify-between items-end mb-2">
-                  <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
+                  <p className="analytics-label text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
                     Margem de Lucro
                   </p>
-                  <p className="text-2xl font-black text-text">
+                  <p className="analytics-value text-2xl font-black text-text">
                     {currentData.totalRevenue > 0
                       ? (
                           (currentData.result / currentData.totalRevenue) *
@@ -4505,10 +4505,10 @@ export const Financial: React.FC<FinancialProps> = ({
 
               <div>
                 <div className="flex justify-between items-end mb-2">
-                  <p className="text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
+                  <p className="analytics-label text-[10px] uppercase text-slate-400 font-bold tracking-[0.15em]">
                     Comprometimento de Receita
                   </p>
-                  <p className="text-2xl font-black text-text">
+                  <p className="analytics-value text-2xl font-black text-text">
                     {currentData.totalRevenue > 0
                       ? (
                           (currentData.totalExpense /
@@ -4535,7 +4535,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                     <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
                   </div>
-                  <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">
+                  <p className="analytics-label text-[10px] text-indigo-300 font-black uppercase tracking-widest">
                     Recomendação Estratégica
                   </p>
                 </div>
@@ -5377,13 +5377,13 @@ export const Financial: React.FC<FinancialProps> = ({
                     </div>
                   )}
 
-                  <div className="financial-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--blue">
+                  <div className="analytics-metric-grid financial-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <article className="analytics-card analytics-metric financial-kpi-card">
+                      <div className="analytics-icon financial-kpi-icon financial-kpi-icon--blue">
                         <Banknote size={16} />
                       </div>
                       <div className="min-w-0">
-                        <strong>
+                        <strong className="analytics-value--money analytics-value">
                           R${" "}
                           {overviewMetrics.currentMonthIncome.toLocaleString(
                             "pt-BR",
@@ -5393,12 +5393,12 @@ export const Financial: React.FC<FinancialProps> = ({
                         <small>No período selecionado</small>
                       </div>
                     </article>
-                    <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--green">
+                    <article className="analytics-card analytics-metric financial-kpi-card">
+                      <div className="analytics-icon financial-kpi-icon financial-kpi-icon--green">
                         <Receipt size={16} />
                       </div>
                       <div className="min-w-0">
-                        <strong>
+                        <strong className="analytics-value">
                           {overviewMetrics.transactionCount.toLocaleString(
                             "pt-BR",
                           )}
@@ -5407,12 +5407,12 @@ export const Financial: React.FC<FinancialProps> = ({
                         <small>Lançamentos pagos</small>
                       </div>
                     </article>
-                    <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--yellow">
+                    <article className="analytics-card analytics-metric financial-kpi-card">
+                      <div className="analytics-icon financial-kpi-icon financial-kpi-icon--yellow">
                         <CreditCard size={16} />
                       </div>
                       <div className="min-w-0">
-                        <strong>
+                        <strong className="analytics-value--money analytics-value">
                           R${" "}
                           {overviewMetrics.ticketAverage.toLocaleString(
                             "pt-BR",
@@ -5423,12 +5423,12 @@ export const Financial: React.FC<FinancialProps> = ({
                         <small>Média por recebimento</small>
                       </div>
                     </article>
-                    <article className="financial-kpi-card">
-                      <div className="financial-kpi-icon financial-kpi-icon--purple">
+                    <article className="analytics-card analytics-metric financial-kpi-card">
+                      <div className="analytics-icon financial-kpi-icon financial-kpi-icon--purple">
                         <ShieldCheck size={16} />
                       </div>
                       <div className="min-w-0">
-                        <strong>{overviewMetrics.errorCount}</strong>
+                        <strong className="analytics-value">{overviewMetrics.errorCount}</strong>
                         <span>Pendências de auditoria</span>
                         <small>
                           {overviewMetrics.errorCount === 0
@@ -5440,7 +5440,7 @@ export const Financial: React.FC<FinancialProps> = ({
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
+                    <h3 className="analytics-chart-title text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
                       Ticket Médio por Categoria
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
@@ -5516,10 +5516,10 @@ export const Financial: React.FC<FinancialProps> = ({
                             ? "Abrir ranking de procedimentos por categoria"
                             : undefined
                         }
-                        className={`financial-donut-card glass-panel rounded-xl p-4 border border-border flex flex-col min-h-[244px] ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
+                        className={`analytics-card analytics-chart financial-donut-card glass-panel rounded-xl p-4 border border-border flex flex-col min-h-[244px] ${idx === 0 ? "cursor-pointer transition-colors hover:border-[var(--primary-border)] hover:bg-[var(--primary-dim)]/30" : ""}`}
                       >
                         <div className="mb-3 flex items-center justify-between gap-1.5">
-                          <h3 className="text-xs font-semibold text-text">
+                          <h3 className="analytics-chart-title text-xs font-semibold text-text">
                             {chart.title}
                           </h3>
                           {idx === 0 && (
@@ -5684,7 +5684,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             type="monotone"
                             dataKey="revenue"
                             name="revenue"
-                            stroke="#10b981"
+                            stroke="var(--analytics-green)"
                             strokeWidth={2.5}
                             dot={{
                               fill: "#10b981",
@@ -5710,7 +5710,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             type="monotone"
                             dataKey="goal"
                             name="goal"
-                            stroke="#f59e0b"
+                            stroke="var(--analytics-orange)"
                             strokeWidth={1.5}
                             strokeDasharray="4 4"
                             dot={false}
@@ -5721,8 +5721,8 @@ export const Financial: React.FC<FinancialProps> = ({
                   </div>
 
                   {/* VISUALIZAÇÃO MENSAL (COM DADOS HISTÓRICOS 2025) */}
-                  <div className="glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
-                    <h3 className="text-xs font-bold text-text uppercase tracking-wider">
+                  <div className="analytics-card analytics-chart glass-panel rounded-xl p-4 border border-border flex flex-col gap-4">
+                    <h3 className="analytics-chart-title text-xs font-bold text-text uppercase tracking-wider">
                       Visualização Mensal (Últimos 12 Meses)
                     </h3>
 
@@ -5799,7 +5799,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             type="monotone"
                             dataKey="goal"
                             name="goal"
-                            stroke="#f59e0b"
+                            stroke="var(--analytics-orange)"
                             strokeWidth={1.5}
                             strokeDasharray="4 4"
                             dot={false}
@@ -5809,7 +5809,7 @@ export const Financial: React.FC<FinancialProps> = ({
                     </div>
 
                     <div className="h-[140px] w-full border-t border-border pt-3">
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">
+                      <h4 className="analytics-chart-title text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">
                         Variance (%)
                       </h4>
                       <ResponsiveContainer width="100%" height="100%">
@@ -5861,7 +5861,7 @@ export const Financial: React.FC<FinancialProps> = ({
                             {monthlyRevenueData.map((entry, index) => (
                               <Cell
                                 key={`cell-${index}`}
-                                fill="#38bdf8"
+                                fill="var(--analytics-blue-soft)"
                                 opacity={entry.variance >= 0 ? 0.8 : 0.4}
                               />
                             ))}

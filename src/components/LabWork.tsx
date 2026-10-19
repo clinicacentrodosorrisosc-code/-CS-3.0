@@ -747,41 +747,41 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
       return (
           <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
               {/* KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+              <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                       <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Custos Lab</span>
-                          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                          <span className="analytics-label text-xs font-bold text-slate-400 uppercase tracking-widest">Total Custos Lab</span>
+                          <div className="analytics-icon p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                               <DollarSign className="w-5 h-5" />
                           </div>
                       </div>
-                      <div className="text-2xl font-black text-text font-mono">
+                      <div className="analytics-value--money analytics-value text-2xl font-black text-text font-mono">
                           R$ {totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <p className="text-[10px] text-slate-500 mt-1">{ordersWithCost.length} trabalhos com custo de laboratório</p>
                   </SpotlightCard>
 
-                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                  <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                       <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pago ao Laboratório</span>
-                          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="analytics-label text-xs font-bold text-slate-400 uppercase tracking-widest">Pago ao Laboratório</span>
+                          <div className="analytics-icon p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                               <CheckCircle className="w-5 h-5" />
                           </div>
                       </div>
-                      <div className="text-2xl font-black text-emerald-400 font-mono">
+                      <div className="analytics-value--money analytics-value text-2xl font-black text-emerald-400 font-mono">
                           R$ {totalPaidToLab.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <p className="text-[10px] text-slate-500 mt-1">Valores já quitados com os parceiros</p>
                   </SpotlightCard>
 
-                  <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                  <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                       <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pendente com Lab</span>
-                          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          <span className="analytics-label text-xs font-bold text-slate-400 uppercase tracking-widest">Pendente com Lab</span>
+                          <div className="analytics-icon p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
                               <Clock className="w-5 h-5" />
                           </div>
                       </div>
-                      <div className="text-2xl font-black text-amber-400 font-mono">
+                      <div className="analytics-value--money analytics-value text-2xl font-black text-amber-400 font-mono">
                           R$ {totalPendingToLab.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                       <p className="text-[10px] text-slate-500 mt-1">Ainda não pago aos laboratórios</p>
@@ -789,10 +789,10 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
               </div>
 
               {/* Monthly Comparative Chart */}
-              <div className="glass-panel border border-border rounded-2xl p-6 bg-panel/30 shadow-xl space-y-4">
+              <div className="analytics-card analytics-chart glass-panel border border-border rounded-2xl p-6 bg-panel/30 shadow-xl space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                       <div>
-                          <h3 className="text-sm font-bold text-text uppercase tracking-wider">Análise de Margem & Comparativo Mensal</h3>
+                          <h3 className="analytics-chart-title text-sm font-bold text-text uppercase tracking-wider">Análise de Margem & Comparativo Mensal</h3>
                           <p className="text-xs text-slate-400">Comparativo entre o Total Pago aos Laboratórios e o Recebimento dos Pacientes</p>
                       </div>
                       <div className="flex items-center gap-4 text-xs font-bold">
@@ -823,8 +823,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                           name === 'patientRevenue' ? 'Recebido Pacientes' : 'Pago ao Laboratório'
                                       ]}
                                   />
-                                  <Bar dataKey="patientRevenue" fill="#6366f1" radius={[6, 6, 0, 0]} name="patientRevenue" />
-                                  <Bar dataKey="labCostPaid" fill="#10b981" radius={[6, 6, 0, 0]} name="labCostPaid" />
+                                  <Bar dataKey="patientRevenue" fill="var(--analytics-blue)" radius={[6, 6, 0, 0]} name="patientRevenue" />
+                                  <Bar dataKey="labCostPaid" fill="var(--analytics-green)" radius={[6, 6, 0, 0]} name="labCostPaid" />
                               </BarChart>
                           </ResponsiveContainer>
                       )}
@@ -1083,72 +1083,72 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
     return (
         <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-10">
             {/* KPI CARDS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(59, 130, 246, 0.4)">
+            <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-blue-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(59, 130, 246, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <div className="analytics-icon size-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                             <Briefcase className="w-6 h-6" />
                         </div>
                     </div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Trabalhos em Curso</p>
-                    <h3 className="text-3xl font-bold text-text mt-1">{stats.inProgress}</h3>
+                    <p className="analytics-label text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Trabalhos em Curso</p>
+                    <h3 className="analytics-value text-3xl font-bold text-text mt-1">{stats.inProgress}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
+                <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(16, 185, 129, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                        <div className="analytics-icon size-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                             <Package className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 bg-panel px-2 py-0.5 rounded-full">Pronto</span>
                     </div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Pronto para Entrega</p>
-                    <h3 className="text-3xl font-bold text-text mt-1">{stats.readyToDeliver}</h3>
+                    <p className="analytics-label text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Pronto para Entrega</p>
+                    <h3 className="analytics-value text-3xl font-bold text-text mt-1">{stats.readyToDeliver}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
+                <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-indigo-500/30 transition" onClick={() => setViewMode('kanban')} spotlightColor="rgba(99, 102, 241, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                        <div className="analytics-icon size-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                             <CheckCircle className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 bg-panel px-2 py-0.5 rounded-full">Mês</span>
                     </div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Trabalhos Finalizados (Mês)</p>
-                    <h3 className="text-3xl font-bold text-text mt-1">{stats.trabalhosFinalizados}</h3>
+                    <p className="analytics-label text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Trabalhos Finalizados (Mês)</p>
+                    <h3 className="analytics-value text-3xl font-bold text-text mt-1">{stats.trabalhosFinalizados}</h3>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition" onClick={() => setIsPendingModalOpen(true)} spotlightColor="rgba(245, 158, 11, 0.4)">
+                <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 relative overflow-hidden group cursor-pointer hover:border-amber-500/30 transition" onClick={() => setIsPendingModalOpen(true)} spotlightColor="rgba(245, 158, 11, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                        <div className="analytics-icon size-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                             <DollarSign className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full hover:bg-amber-400/20 transition flex items-center gap-1">
                             Ver ({pendingPaymentsList.length}) <ArrowRight className="w-3 h-3" />
                         </span>
                     </div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Pagamentos Pendentes</p>
-                    <h3 className="text-3xl font-bold text-amber-400 mt-1">R$ {stats.pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</h3>
+                    <p className="analytics-label text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Pagamentos Pendentes</p>
+                    <h3 className="analytics-value--money analytics-value text-3xl font-bold text-amber-400 mt-1">R$ {stats.pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</h3>
                     <p className="text-[10px] text-slate-500 mt-1">Clique para ver lista detalhada</p>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(168, 85, 247, 0.4)">
+                <SpotlightCard className="analytics-card analytics-metric glass-panel rounded-2xl p-6 relative overflow-hidden group" spotlightColor="rgba(168, 85, 247, 0.4)">
                     <div className="flex justify-between items-start">
-                        <div className="size-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                        <div className="analytics-icon size-10 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
                             <TrendingUp className="w-6 h-6" />
                         </div>
                         <span className="text-[10px] font-bold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded-full cursor-pointer hover:bg-purple-400/20 transition" onClick={() => setViewMode('settings')}>
                             Meta {goalProgress.toFixed(0)}%
                         </span>
                     </div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Faturamento Mensal</p>
-                    <h3 className="text-3xl font-bold text-text mt-1">R$ {stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</h3>
+                    <p className="analytics-label text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-4">Faturamento Mensal</p>
+                    <h3 className="analytics-value--money analytics-value text-3xl font-bold text-text mt-1">R$ {stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</h3>
                 </SpotlightCard>
             </div>
 
             {/* CHARTS, RANKING & RECENT UPDATES */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <SpotlightCard className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
+                <SpotlightCard className="analytics-card analytics-chart lg:col-span-2 glass-panel rounded-2xl p-6 border border-border" spotlightColor="rgba(255, 255, 255, 0.1)">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <h3 className="text-lg font-bold text-text">Produção {productionPeriod === '7days' ? 'Semanal' : productionPeriod === 'month' ? 'Mensal' : 'Personalizada'}</h3>
+                        <h3 className="analytics-chart-title text-lg font-bold text-text">Produção {productionPeriod === '7days' ? 'Semanal' : productionPeriod === 'month' ? 'Mensal' : 'Personalizada'}</h3>
                         <div className="flex flex-wrap items-center gap-3">
                             {productionPeriod === 'custom' && (
                                 <div className="flex items-center gap-2 bg-panel border border-border rounded-lg p-1 animate-in slide-in-from-right-4 duration-300">
@@ -1188,7 +1188,7 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                                     cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
                                     contentStyle={{ backgroundColor: '#13151f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                 />
-                                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40}>
+                                <Bar dataKey="value" fill="var(--analytics-purple)" radius={[4, 4, 0, 0]} barSize={40}>
                                     {stats.weeklyData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={index === 2 ? '#d946ef' : '#8b5cf6'} opacity={0.8} />
                                     ))}
@@ -1198,8 +1198,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     </div>
                 </SpotlightCard>
 
-                <SpotlightCard className="glass-panel rounded-2xl p-6 border border-border flex flex-col justify-between lg:col-span-1" spotlightColor="rgba(255, 255, 255, 0.1)">
-                    <h3 className="text-sm font-bold text-text mb-2">Distribuição (Status)</h3>
+                <SpotlightCard className="analytics-card analytics-chart glass-panel rounded-2xl p-6 border border-border flex flex-col justify-between lg:col-span-1" spotlightColor="rgba(255, 255, 255, 0.1)">
+                    <h3 className="analytics-chart-title text-sm font-bold text-text mb-2">Distribuição (Status)</h3>
                     <div className="h-[250px] w-full flex items-center justify-center">
                         {stats.pieChartData.length > 0 ? (
                             <DonutChart data={stats.pieChartData.map((entry: any) => ({ ...entry, label: entry.name, color: entry.fill }))} size={170} strokeWidth={24} centerContent={<span className="text-xs font-bold text-text">Status</span>} />
@@ -1211,8 +1211,8 @@ export const LabWork: React.FC<LabWorkProps> = ({ userRole, allowedSubTabs = [],
                     </div>
                 </SpotlightCard>
 
-                <div className="glass-panel rounded-2xl p-6 border border-border flex flex-col lg:col-span-1">
-                    <h3 className="text-lg font-bold text-text mb-6">Ranking de Próteses</h3>
+                <div className="analytics-card analytics-chart glass-panel rounded-2xl p-6 border border-border flex flex-col lg:col-span-1">
+                    <h3 className="analytics-chart-title text-lg font-bold text-text mb-6">Ranking de Próteses</h3>
                     <div className="flex flex-col gap-4 flex-1">
                         {stats.prosthesisRanking.map((item, idx) => (
                             <div key={item.name} className="flex items-center gap-3 group">

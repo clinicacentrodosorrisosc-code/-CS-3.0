@@ -1,0 +1,115 @@
+.reference-overview,
+.reference-dialog {
+  --reference-series: #436da7;
+  --reference-team-0: #436da7;
+  --reference-team-1: #bd6922;
+  --reference-team-2: #208364;
+  --reference-team-3: #8061cf;
+  color: var(--text);
+}
+.dark .reference-overview,
+.dark .reference-dialog { --reference-series: #8cb0e2; }
+.reference-overview { display: grid; gap: 16px; min-width: 0; }
+.reference-section-heading,
+.reference-trend-heading,
+.reference-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.reference-section-heading h2, .ce-app .reference-section-heading h2 { font-size: 20px; font-weight: 400; letter-spacing: -.04em; }
+.reference-overview p,
+.reference-dialog p { color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.reference-section-heading p { margin-top: 3px; }
+.reference-badge { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 6px; background: var(--surface-high); color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
+.reference-badge[data-positive="true"] { background: var(--success-bg); color: var(--success-text); }
+.reference-summary { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 2fr); gap: 14px; }
+.reference-card { min-width: 0; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface); padding: 20px; box-shadow: 0 2px 5px rgb(22 32 45 / 3%); }
+.reference-card-heading { display: flex; align-items: center; gap: 7px; }
+.reference-card-heading > svg { color: var(--text-secondary); flex-shrink: 0; }
+.reference-overview h3,
+.reference-dialog h3,
+.ce-app .reference-overview h3,
+.ce-app .reference-dialog h3 { margin: 0; color: var(--text); font-size: 13px; font-weight: 500; line-height: 1.5; }
+.reference-goal { display: flex; flex-direction: column; }
+.reference-gauge { position: relative; max-width: 260px; width: 100%; margin: 12px auto 0; }
+.reference-gauge svg { display: block; width: 100%; fill: none; stroke-width: 11; stroke-linecap: round; }
+.reference-gauge-track { stroke: var(--surface-high); }
+.reference-gauge-fill { stroke: var(--reference-series); transition: stroke-dasharray 350ms ease; }
+.reference-gauge-value { position: absolute; inset: 45% 0 0; display: flex; align-items: center; flex-direction: column; gap: 4px; }
+.reference-gauge-value > strong { font-size: clamp(26px, 3vw, 38px); font-weight: 350; line-height: 1.2; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+.reference-goal-caption { text-align: center; margin: 12px 0 14px; }
+.reference-detail-button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border-top: 1px solid var(--border-subtle); padding: 10px 0 0; margin-top: auto; color: var(--reference-series); font-size: 12px; font-weight: 500; }
+.reference-detail-button:hover { text-decoration: underline; }
+.reference-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.reference-metric { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.reference-number { max-width: 100%; font-size: clamp(22px, 2.1vw, 32px); font-weight: 350; line-height: 1.25; letter-spacing: -.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.reference-metric > p { margin-top: auto; }
+.reference-analysis { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(230px, 1fr); align-items: start; gap: 14px; }
+.reference-trend-heading { align-items: flex-start; flex-wrap: wrap; }
+.reference-trend-heading p,
+.reference-teams > p { margin-top: 4px; }
+.reference-segments { display: flex; max-width: 100%; padding: 3px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-high); }
+.reference-segments button { min-height: 34px; padding: 5px 10px; border: 1px solid transparent; border-radius: 5px; color: var(--text-secondary); font-size: 12px; }
+.reference-segments button[aria-pressed="true"] { border-color: var(--border-subtle); background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 4%); }
+.reference-chart { height: 230px; width: 100%; min-width: 0; margin-top: 16px; }
+.reference-team-list { display: grid; gap: 20px; margin-top: 24px; max-height: 290px; overflow-y: auto; }
+.reference-team-label { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+.reference-team-label > span { display: flex; align-items: baseline; gap: 7px; overflow-wrap: anywhere; }
+.reference-team-label i { display: inline-block; width: 6px; height: 6px; background: var(--team-color); border-radius: 1px; flex-shrink: 0; }
+.reference-team-label strong { font-weight: 500; font-variant-numeric: tabular-nums; }
+.reference-team-track { height: 6px; background: var(--surface-high); border-radius: 2px; margin-top: 7px; overflow: hidden; }
+.reference-team-track > div { height: 100%; background: var(--team-color); transition: width 350ms ease; }
+.reference-team p { margin-top: 4px; font-size: 11px; text-align: right; }
+.reference-empty { margin: 12px 0; }
+.reference-data { margin-top: 12px; border-top: 1px solid var(--border-subtle); padding-top: 10px; font-size: 12px; color: var(--text-secondary); }
+.reference-data summary { cursor: pointer; min-height: 32px; padding: 6px 0; }
+.reference-data > div { max-height: 220px; overflow: auto; }
+.reference-data table { width: 100%; border-collapse: collapse; }
+.reference-data caption { text-align: left; padding: 8px; }
+.reference-data :is(th, td) { text-align: left; padding: 8px; border-bottom: 1px solid var(--border-subtle); font-weight: 400; }
+.reference-data td { text-align: right; font-variant-numeric: tabular-nums; }
+.reference-dialog { position: fixed; inset: 0; width: min(760px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); margin: auto; padding: 0; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: 0 20px 70px rgb(0 0 0 / 18%); overflow-y: auto; }
+.reference-dialog[open] { animation: reference-detail-enter 200ms ease-out; }
+.reference-dialog::backdrop { background: rgb(30 36 42 / 28%); backdrop-filter: blur(3px); }
+.reference-dialog-heading { padding: 22px 24px; border-bottom: 1px solid var(--border-subtle); }
+.reference-dialog-heading h2, .ce-app .reference-dialog-heading h2 { font-size: 23px; font-weight: 400; letter-spacing: -.035em; line-height: 1.25; }
+.reference-dialog-heading p { margin-top: 6px; }
+.reference-dialog-heading button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); }
+.reference-dialog-body { display: grid; gap: 16px; padding: 24px; }
+.reference-explanation { display: flex; align-items: center; gap: 24px; padding-bottom: 8px; }
+.reference-explanation > strong { font-size: 44px; font-weight: 350; letter-spacing: -.05em; flex-shrink: 0; }
+.reference-breakdown { margin: 12px 0; }
+.reference-breakdown > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+.reference-breakdown dt { color: var(--text-secondary); }
+.reference-breakdown dd { margin: 0; font-variant-numeric: tabular-nums; }
+.reference-method { margin-top: 12px; }
+.reference-comparison { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 16px; font-size: 12px; }
+.reference-comparison strong { font-weight: 500; }
+.reference-comparison > div { grid-column: 1 / -1; height: 8px; background: var(--surface-high); border-right: 2px solid var(--text-secondary); }
+.reference-comparison i { display: block; height: 100%; background: var(--reference-series); }
+.reference-comparison > span:last-child { grid-column: 1 / -1; color: var(--text-secondary); }
+.reference-overview :is(button, summary):focus-visible,
+.reference-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.reference-dashboard .dashboard-domain-section h2 { font-size: 16px; font-weight: 500; }
+.reference-dashboard .dashboard-kpi-card { grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+.reference-dashboard .dashboard-kpi-card > .min-w-0 { display: flex; flex-direction: column; gap: 8px; }
+.reference-dashboard .dashboard-kpi-icon { width: 18px; height: 20px; background: transparent !important; border: 0 !important; color: var(--text-secondary); }
+.reference-dashboard .dashboard-kpi-label { order: -1; margin: 0; font-size: 12px; font-weight: 500; color: var(--text); }
+.reference-dashboard .dashboard-kpi-value { font-size: 24px; font-weight: 400; line-height: 1.3; color: var(--text); }
+.reference-dashboard .dashboard-kpi-helper { margin: 0; font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+@keyframes reference-detail-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 1100px) { .reference-analysis { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) {
+  .reference-summary { grid-template-columns: minmax(0, 1fr); }
+  .reference-section-heading { align-items: flex-start; flex-wrap: wrap; }
+  .reference-card { padding: 16px; }
+  .reference-gauge { max-width: 240px; }
+  .reference-metrics { gap: 10px; }
+  .reference-metric .reference-number { font-size: 23px; }
+  .reference-segments button { min-height: 44px; }
+  .reference-dialog-heading { padding: 16px; align-items: flex-start; }
+  .reference-dialog-heading h2 { font-size: 21px; }
+  .reference-dialog-body { padding: 16px; }
+  .reference-explanation { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .reference-comparison { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reference-overview *, .reference-dialog[open] { animation: none; transition: none; }
+}

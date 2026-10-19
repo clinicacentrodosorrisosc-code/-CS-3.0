@@ -40,6 +40,11 @@ body,
   margin: 0 !important;
 }
 
+/* The tooltip positioning rule must not put the skip link into the flex flow. */
+.ce-app > a.skip-link {
+  position: fixed;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--primary) 24%, transparent);
   color: var(--text);

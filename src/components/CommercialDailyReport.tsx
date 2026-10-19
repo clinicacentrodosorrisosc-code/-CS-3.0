@@ -154,8 +154,8 @@ export const CommercialDailyReport: React.FC = () => {
                 <div className="mt-6 flex justify-end"><button type="button" onClick={save} disabled={loading || saving} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"><Save className="h-4 w-4" />{saving ? 'Salvando...' : 'Salvar resumo'}</button></div>
             </section>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {metrics.map(({ key, label, icon: Icon, color }) => <div key={key} className="glass-panel rounded-2xl border border-border p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-slate-400">Últimos 31 dias</p><p className="mt-3 text-sm font-semibold text-slate-300">{label}</p><strong className="mt-1 block text-2xl font-black text-text">{key === 'sold' || key === 'received' ? formatCurrency(totals[key]) : totals[key]}</strong></div><span className={`rounded-xl border p-2 ${color}`}><Icon className="h-5 w-5" /></span></div></div>)}
+            <section className="analytics-metric-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {metrics.map(({ key, label, icon: Icon, color }) => <div key={key} className="analytics-card analytics-metric glass-panel rounded-2xl border border-border p-5"><div className="flex items-start justify-between gap-3"><div><p className="analytics-label text-xs font-bold uppercase tracking-wider text-slate-400">Últimos 31 dias</p><p className="mt-3 text-sm font-semibold text-slate-300">{label}</p><strong className="analytics-value mt-1 block text-2xl font-black text-text">{key === 'sold' || key === 'received' ? formatCurrency(totals[key]) : totals[key]}</strong></div><span className={`analytics-icon ${`rounded-xl border p-2 ${color}`}`}><Icon className="h-5 w-5" /></span></div></div>)}
             </section>
 
             <section className="glass-panel overflow-hidden rounded-3xl border border-border">

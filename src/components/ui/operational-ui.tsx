@@ -49,12 +49,12 @@ type MetricCardProps = {
 
 export function MetricCard({ label, value, helper, icon: Icon, tone = 'neutral', className }: MetricCardProps) {
   return (
-    <article className={cn('operational-metric', 'operational-metric--' + tone, className)}>
+    <article className={`analytics-card analytics-metric ${cn('operational-metric', 'operational-metric--' + tone, className)}`}>
       <div className="operational-metric__top">
         <span>{label}</span>
         {Icon && <Icon className="size-4" aria-hidden="true" />}
       </div>
-      <strong>{value}</strong>
+      <strong className="analytics-value">{value}</strong>
       {helper && <small>{helper}</small>}
     </article>
   );

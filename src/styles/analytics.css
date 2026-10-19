@@ -1,0 +1,153 @@
+/* Shared analytics surfaces, adapted from the approved Dashboard.
+   Explicit hooks keep forms, patient records and navigation outside this style. */
+:root {
+  --analytics-blue: #436da7;
+  --analytics-orange: #bd6922;
+  --analytics-green: #208364;
+  --analytics-purple: #8061cf;
+  --analytics-red: #bc402c;
+  --analytics-blue-soft: #7396bd;
+  --analytics-gray: #777f8a;
+}
+.dark {
+  --analytics-blue: #8cb0e2;
+  --analytics-orange: #e8aa74;
+  --analytics-green: #75c4a6;
+  --analytics-purple: #b49ae8;
+  --analytics-red: #f19c8e;
+  --analytics-blue-soft: #b6cce8;
+  --analytics-gray: #b4bac5;
+}
+
+/* Match the specificity of the legacy rounded/border panel selectors. */
+.ce-app :is(div, section, article, aside).analytics-card[class] {
+  min-width: 0;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 2px 5px rgb(22 32 45 / 3%) !important;
+  backdrop-filter: none;
+}
+.ce-app .analytics-metric {
+  container-type: inline-size;
+  min-height: 132px;
+  padding: 20px !important;
+  gap: 12px;
+  isolation: isolate;
+}
+.ce-app .analytics-metric--compact { min-height: 110px; padding: 16px !important; }
+.ce-app .analytics-metric-grid { min-width: 0; gap: 14px; }
+.ce-app .analytics-metric > :is(div, p, span) { min-width: 0; }
+.ce-app .analytics-metric::before { display: none; }
+.ce-app .analytics-card:hover {
+  transform: none !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 3px 10px rgb(22 32 45 / 4%) !important;
+}
+.ce-app .analytics-decoration { display: none; }
+.ce-app .analytics-icon {
+  width: 20px !important;
+  height: 20px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  flex-shrink: 0;
+}
+.ce-app .analytics-metric [class*="size-10"]:has(> .material-symbols-outlined) {
+  width: 20px;
+  height: 20px;
+  background: transparent !important;
+}
+.ce-app .analytics-metric [class*="size-10"] > .material-symbols-outlined { font-size: 18px; }
+.ce-app .analytics-icon svg { width: 16px; height: 16px; }
+.ce-app .analytics-value,
+.ce-app .operational-metric > strong {
+  display: block;
+  max-width: 100%;
+  color: var(--text);
+  font-family: var(--font-ui) !important;
+  font-size: clamp(23px, 2.1vw, 32px) !important;
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25 !important;
+  letter-spacing: -.045em !important;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-overflow: clip;
+  transform: none !important;
+}
+.ce-app .analytics-value > :is(span, small) { font-size: 12px; letter-spacing: normal; }
+.ce-app .analytics-value--money {
+  font-size: clamp(18px, 10cqw, 30px) !important;
+  white-space: nowrap;
+}
+.ce-app .analytics-label,
+.ce-app .operational-metric__top {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.ce-app .operational-metric { gap: 12px; }
+.ce-app .operational-metric small { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+.ce-app .financial-kpi-card { grid-template-columns: 20px minmax(0, 1fr); }
+.ce-app .financial-kpi-card > .min-w-0 { display: flex; flex-direction: column; gap: 10px; }
+.ce-app .financial-kpi-card > .min-w-0 > span { order: -1; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.ce-app .financial-kpi-card small { font-size: 12px; line-height: 1.5; }
+.ce-app .analytics-summary-item { padding: 6px 0; }
+.ce-app .analytics-compact-value { font-family: var(--font-ui) !important; font-size: 23px !important; font-weight: 400 !important; line-height: 1.3; letter-spacing: -.035em; }
+
+/* Retain the meaning of positive, overdue and negative values in both themes. */
+.ce-app .analytics-value:is([class*="text-emerald"], [class*="text-green"], [class*="text-teal"]) { color: var(--success-text) !important; }
+.ce-app .analytics-value:is([class*="text-rose"], [class*="text-red"]) { color: var(--danger-text) !important; }
+.ce-app .analytics-value:is([class*="text-amber"], [class*="text-yellow"]) { color: var(--analytics-orange) !important; }
+
+.ce-app .analytics-chart { padding: 20px !important; }
+.ce-app .analytics-chart-title {
+  color: var(--text) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  text-transform: none !important;
+  letter-spacing: -.01em !important;
+}
+.ce-app .analytics-chart-title svg { width: 15px; height: 15px; color: var(--text-secondary); }
+.ce-app .analytics-chart .recharts-responsive-container { min-width: 0; }
+.ce-app .analytics-chart .recharts-cartesian-axis-tick text {
+  fill: var(--text-secondary) !important;
+  font-family: var(--font-ui);
+  font-size: 11px !important;
+  font-weight: 400;
+}
+.ce-app .analytics-chart :is(.recharts-cartesian-axis-line, .recharts-cartesian-axis-tick-line) { stroke: var(--border-subtle) !important; }
+.ce-app .analytics-chart :is(.recharts-cartesian-grid-horizontal, .recharts-cartesian-grid-vertical) line { stroke: var(--border-subtle) !important; }
+.ce-app .analytics-chart .recharts-default-tooltip,
+.ce-app .analytics-chart .recharts-tooltip-wrapper > div {
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%) !important;
+}
+.ce-app .analytics-chart .recharts-tooltip-label { color: var(--text) !important; font-size: 12px; font-weight: 500; }
+.ce-app .analytics-chart .recharts-tooltip-item { color: var(--text-secondary) !important; font-size: 12px !important; }
+.ce-app .analytics-chart .recharts-tooltip-wrapper [class*="text-white"] { color: var(--text) !important; }
+.ce-app .analytics-chart .recharts-legend-item-text { color: var(--text-secondary) !important; font-size: 12px; font-weight: 400; }
+.ce-app .analytics-card :is(button, [role="button"]):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .ce-app .analytics-metric { min-height: 116px; padding: 16px !important; }
+  .ce-app .analytics-value,
+  .ce-app .operational-metric > strong { font-size: 23px !important; }
+  .ce-app .analytics-value--money { font-size: clamp(18px, 10cqw, 23px) !important; }
+  .ce-app .analytics-chart { padding: 16px !important; }
+  .ce-app .analytics-metric-grid { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ce-app .analytics-card,
+  .ce-app .analytics-value { transition: none !important; animation: none !important; }
+}

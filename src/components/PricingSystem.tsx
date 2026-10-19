@@ -1989,10 +1989,10 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 const totalFichaTime = calculateFichaTime(items);
 
                                 return (
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div className="analytics-metric-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
                                         {/* Materials & Labor Table */}
                                         <div className="lg:col-span-2 space-y-4">
-                                            <div className="bg-panel border border-border rounded-xl p-4 flex justify-between items-center">
+                                            <div className="analytics-card analytics-metric bg-panel border border-border rounded-xl p-4 flex justify-between items-center">
                                                 <div>
                                                     <h4 className="text-md font-bold text-slate-200">{selectedService?.name}</h4>
                                                     <span className="text-xs text-slate-400">
@@ -2001,7 +2001,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-xs text-slate-400 block">Custo Total de Ficha</span>
-                                                    <span className="text-2xl font-black text-indigo-400 font-mono">R$ {totalFichaCost.toFixed(2)}</span>
+                                                    <span className="analytics-value--money analytics-value text-2xl font-black text-indigo-400 font-mono">R$ {totalFichaCost.toFixed(2)}</span>
                                                 </div>
                                             </div>
 
@@ -2957,22 +2957,22 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                             <div className="xl:col-span-3 space-y-6">
                                 
                                 {/* Metrics Cards Banner */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-panel p-5 border border-border rounded-2xl shadow-md">
-                                    <div className="p-4 bg-panel rounded-2xl border border-border">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Equipe Total</span>
-                                        <span className="text-2xl font-black text-text font-mono mt-2 block">
+                                <div className="analytics-metric-grid grid grid-cols-2 sm:grid-cols-4 gap-4 bg-panel p-5 border border-border rounded-2xl shadow-md">
+                                    <div className="analytics-card analytics-metric p-4 bg-panel rounded-2xl border border-border">
+                                        <span className="analytics-label text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Equipe Total</span>
+                                        <span className="analytics-value text-2xl font-black text-text font-mono mt-2 block">
                                             {employees.length.toString().padStart(2, '0')} <span className="text-xs text-slate-500 font-medium">Pessoas</span>
                                         </span>
                                     </div>
-                                    <div className="p-4 bg-panel rounded-2xl border border-border">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Salário Base Total</span>
-                                        <span className="text-2xl font-black text-text font-mono mt-2 block text-indigo-400">
+                                    <div className="analytics-card analytics-metric p-4 bg-panel rounded-2xl border border-border">
+                                        <span className="analytics-label text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Salário Base Total</span>
+                                        <span className="analytics-value--money analytics-value text-2xl font-black text-text font-mono mt-2 block text-indigo-400">
                                             R$ {employees.reduce((sum, e) => sum + e.salary, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
-                                    <div className="p-4 bg-panel rounded-2xl border border-border">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Total Encargos</span>
-                                        <span className="text-2xl font-black text-amber-500 font-mono mt-2 block">
+                                    <div className="analytics-card analytics-metric p-4 bg-panel rounded-2xl border border-border">
+                                        <span className="analytics-label text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Total Encargos</span>
+                                        <span className="analytics-value--money analytics-value text-2xl font-black text-amber-500 font-mono mt-2 block">
                                             R$ {employees.reduce((sum, e) => {
                                                 if (e.contractType !== 'CLT') return sum;
                                                 const totalTrab = (provFerias + prov13Salario + prov13Ferias) / 100;
@@ -2981,9 +2981,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                             }, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
-                                    <div className="p-4 bg-panel rounded-2xl border border-border">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Custo Folha Geral</span>
-                                        <span className="text-2xl font-black text-emerald-400 font-mono mt-2 block">
+                                    <div className="analytics-card analytics-metric p-4 bg-panel rounded-2xl border border-border">
+                                        <span className="analytics-label text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Custo Folha Geral</span>
+                                        <span className="analytics-value--money analytics-value text-2xl font-black text-emerald-400 font-mono mt-2 block">
                                             R$ {employees.reduce((sum, e) => {
                                                 const totalTrab = e.contractType === 'CLT' ? (provFerias + prov13Salario + prov13Ferias) / 100 : 0;
                                                 const totalSoc = e.contractType === 'CLT' ? (inss + satRat + salarioEducacao + incraSebrae + fgts + fgtsRescisao) / 100 : 0;
@@ -4249,7 +4249,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     ];
                                 };
 
-                                const COLORS = ['#1d63b8', '#ed7d31', '#a5a5a5', '#ffc000'];
+                                const COLORS = ["var(--analytics-blue)", "var(--analytics-orange)", "var(--analytics-green)", "var(--analytics-purple)"];
 
                                 const donutDataPracticed = getDonutData(practicedCustosVariaveis, practicedDespesasVariaveis, practicedRateioDF, practicedMargemLucro);
                                 const donutDataSuggested = getDonutData(suggestedCustosVariaveis, suggestedDespesasVariaveis, suggestedRateioDF, suggestedMargemLucro);
@@ -4415,7 +4415,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
 
                                                 {/* Left Donut Chart */}
-                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
+                                                <div className="analytics-card analytics-chart bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
                                                     <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">
@@ -4496,7 +4496,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                 </div>
 
                                                 {/* Right Donut Chart */}
-                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
+                                                <div className="analytics-card analytics-chart bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center">
                                                     <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Distribuição % do Preço</span>
                                                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                                                         <div className="shrink-0 flex items-center justify-center">

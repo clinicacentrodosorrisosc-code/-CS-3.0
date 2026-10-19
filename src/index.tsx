@@ -5,6 +5,7 @@ import './styles/tailwind.css';
 import './index.css';
 import './styles/tokens.css';
 import './styles/system.css';
+import './styles/analytics.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

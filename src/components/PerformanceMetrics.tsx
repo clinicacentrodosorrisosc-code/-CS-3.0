@@ -333,11 +333,11 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
       </div>
 
       {/* Mini Widget Cards */}
-      <div id="performance-kpis-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div id="performance-kpis-grid" className="analytics-metric-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Ritmo de Pacing */}
-        <div id="kpi-card-pacing" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div id="kpi-card-pacing" className="analytics-card analytics-metric bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
+            <span className="analytics-label text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Ritmo Mensal (Pacing)</span>
             <TrendingUp className={`w-4 h-4 ${
               summary.pacingStatus === 'ahead'
                 ? 'text-[#16C8C7]'
@@ -383,13 +383,13 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </div>
 
         {/* KPI 2: Realizado vs Meta */}
-        <div id="kpi-card-realized" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div id="kpi-card-realized" className="analytics-card analytics-metric bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Atingimento da Meta</span>
+            <span className="analytics-label text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Atingimento da Meta</span>
             <Award className="text-amber-500 w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{summary.progressPerc.toFixed(1)}%</h4>
+            <h4 className="analytics-value text-xl font-black text-[#181B26] dark:text-white tabular-nums">{summary.progressPerc.toFixed(1)}%</h4>
             <div className="w-full bg-[#F0F3F9] dark:bg-white/[0.08] h-1.5 rounded-full mt-2 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-[#5347CE] to-[#16C8C7] rounded-full" 
@@ -403,13 +403,13 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </div>
 
         {/* KPI 3: Desempenho Operacional */}
-        <div id="kpi-card-average" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div id="kpi-card-average" className="analytics-card analytics-metric bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Média por Dia Ativo</span>
+            <span className="analytics-label text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Média por Dia Ativo</span>
             <DollarSign className="text-[#5347CE] dark:text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">{formatBRL(summary.avgDailyRev)}</h4>
+            <h4 className="analytics-value text-xl font-black text-[#181B26] dark:text-white tabular-nums">{formatBRL(summary.avgDailyRev)}</h4>
             <p className="text-[10px] text-[#64748B] dark:text-slate-400 font-bold mt-1">
               Meta ideal: <span className="text-[#5347CE] dark:text-[#887CFD] font-mono">{formatBRL(staticDailyTarget)}</span>
             </p>
@@ -418,13 +418,13 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </div>
 
         {/* KPI 4: Meta Batida */}
-        <div id="kpi-card-days" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div id="kpi-card-days" className="analytics-card analytics-metric bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Dias Acima da Meta</span>
+            <span className="analytics-label text-[10px] font-bold uppercase text-[#64748B] dark:text-slate-400 tracking-wider">Dias Acima da Meta</span>
             <Calendar className="text-[#887CFD] w-4 h-4" />
           </div>
           <div className="my-2">
-            <h4 className="text-xl font-black text-[#181B26] dark:text-white tabular-nums">
+            <h4 className="analytics-value text-xl font-black text-[#181B26] dark:text-white tabular-nums">
               {summary.workDaysWithSalesMet} <span className="text-xs text-[#94A3B8] font-bold">de {summary.totalWorkDays} dias</span>
             </h4>
             <div className="flex items-center gap-1.5 mt-2">
@@ -438,12 +438,12 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
       </div>
 
       {/* Main Graph Area */}
-      <div id="performance-chart-container" className="bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm">
+      <div id="performance-chart-container" className="analytics-card analytics-chart bg-white dark:bg-[#141A29] border border-[#EAEFF6] dark:border-white/[0.08] p-5 rounded-2xl shadow-sm">
         {activeTab === 'daily' ? (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
               <div>
-                <h4 className="text-sm font-bold text-text">Faturamento Diário Geral vs Alvos</h4>
+                <h4 className="analytics-chart-title text-sm font-bold text-text">Faturamento Diário Geral vs Alvos</h4>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Contraste diário entre a receita realizada e o alvo padrão</p>
               </div>
               <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase font-mono">
@@ -516,7 +516,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                   />
                   <defs>
                     <linearGradient id="barRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
+                      <stop offset="0%" stopColor="var(--analytics-blue)" stopOpacity={0.8}/>
                       <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
@@ -528,7 +528,7 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
-                <h4 className="text-sm font-bold text-text">Faturamento Acumulado vs Curva Ideal (Pacing)</h4>
+                <h4 className="analytics-chart-title text-sm font-bold text-text">Faturamento Acumulado vs Curva Ideal (Pacing)</h4>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Acompanhe se a clínica está no compasso para atingir o faturamento mensal total</p>
               </div>
               <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase font-mono">

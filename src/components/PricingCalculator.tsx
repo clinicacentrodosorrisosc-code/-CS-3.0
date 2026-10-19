@@ -46,7 +46,7 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                 <Calculator className="w-5 h-5 text-indigo-400" /> Calculadora de Precificação Robusta
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="analytics-metric-grid grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="glass-panel p-6 rounded-2xl border border-border bg-surface space-y-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Serviço/Procedimento</label>
@@ -112,7 +112,7 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                         <input type="number" value={desiredMargin} onChange={(e) => setDesiredMargin(Number(e.target.value))} className="w-full bg-panel border border-border rounded-lg px-4 py-2 text-text" />
                     </div>
                     
-                    <div className="mt-8 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 space-y-2">
+                    <div className="analytics-card analytics-metric mt-8 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 space-y-2">
                         <div className="flex justify-between text-sm text-slate-400">
                             <span>Custo Fixo/Unit:</span>
                             <span>R$ {calculation.fixedCostPerUnit.toFixed(2)}</span>
@@ -127,7 +127,7 @@ export const PricingCalculator: React.FC<{ services: Service[]; products: Produc
                         </div>
                         <div className="flex justify-between text-lg pt-4">
                             <span className="text-slate-200 font-bold">Preço Sugerido:</span>
-                            <span className="font-black text-indigo-400 text-2xl">R$ {calculation.basePrice.toFixed(2)}</span>
+                            <span className="analytics-value--money analytics-value font-black text-indigo-400 text-2xl">R$ {calculation.basePrice.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

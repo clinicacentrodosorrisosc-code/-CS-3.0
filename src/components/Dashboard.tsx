@@ -15,6 +15,7 @@ import { AnimatedNumber } from './ui/animated-number';
 import { DateRangePicker } from './ui/date-range-picker';
 import { DonutChart } from './ui/donut-chart';
 import { PageHeader } from './ui/operational-ui';
+import { DashboardOverview } from './DashboardOverview';
 
 // --- TYPES ---
 interface DailyData {
@@ -519,66 +520,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
     return (
       <div className="flex flex-col gap-3.5 animate-in fade-in pb-6">
-          {insightView === 'performance' && (
-              <div className="flex flex-col gap-2">
-                  <div className="flex justify-end">
-                      <button type="button" onClick={() => setInsightView('trend')} className="btn btn-secondary">Voltar à tendência de vendas</button>
-                  </div>
-                  <PerformanceMetrics
-                      monthRevenueData={monthRevenueData}
-                      currentGoals={currentGoals}
-                      currentYear={currentYear}
-                      currentMonth={currentMonth}
-                  />
-              </div>
-          )}
-          <div className="dashboard-overview-top grid grid-cols-1 gap-4 xl:grid-cols-[minmax(340px,0.76fr)_minmax(560px,1.24fr)]">
-          <section aria-labelledby="dashboard-financeiro" className="flex min-w-0 flex-col">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                  <div><h2 id="dashboard-financeiro" className="text-sm font-bold text-[var(--text)]">Financeiro</h2><p className="text-[10px] text-[var(--text-muted)]">Resultados e previsibilidade do mês</p></div>
-              </div>
-              <div className="dashboard-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--blue"><Banknote size={16} /></div>
-                  <div className="min-w-0">
-                      <AnimatedNumber value={totalRev} format={formatCurrency} className="dashboard-kpi-value block truncate" />
-                      <p className="dashboard-kpi-label">Faturamento do mês</p>
-                      <p className={`dashboard-kpi-helper ${perc >= 100 ? 'is-positive' : ''}`}>{perc.toFixed(1)}% da meta mensal</p>
-                  </div>
-              </article>
-
-              <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--purple"><ReceiptText size={16} /></div>
-                  <div className="min-w-0">
-                      <p className="dashboard-kpi-value truncate">{formatCurrency(averageTicket)}</p>
-                      <p className="dashboard-kpi-label">Ticket médio</p>
-                      <p className="dashboard-kpi-helper">{totalSalesCount} recebimento{totalSalesCount === 1 ? '' : 's'} no mês</p>
-                  </div>
-              </article>
-              <article className="metric-card dashboard-kpi-card">
-                  <div className="dashboard-kpi-icon dashboard-kpi-icon--yellow"><ReceiptText size={16} /></div>
-                  <div className="min-w-0"><p className="dashboard-kpi-value truncate">{formatCurrency(overviewSnapshot.pendingIncome)}</p><p className="dashboard-kpi-label">A receber</p><p className="dashboard-kpi-helper">Lançamentos pendentes no mês</p></div>
-              </article>
-              </div>
-              <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-high)] px-4 py-3">
-                  <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-semibold text-[var(--text-secondary)]">Meta mensal</p><p className="mt-1 text-sm font-semibold tabular-nums text-[var(--text)]">{formatCurrency(currentGoals.revenue)}</p></div><div className="text-right"><p className="text-[10px] text-[var(--text-muted)]">Falta realizar</p><p className="mt-1 text-sm font-semibold tabular-nums text-[var(--text)]">{formatCurrency(neededRevenueReal)}</p></div></div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/80 dark:bg-black/10"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${Math.min(perc, 100)}%` }} /></div>
-              </div>
-          </section>
-
-          <div className="flex min-w-0 flex-col gap-3">
-              {insightView === 'trend' && (
-              <section aria-labelledby="dashboard-analise" className="rounded-xl border border-[var(--border)] bg-white p-4">
-                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3"><div><h2 id="dashboard-analise" className="text-sm font-semibold text-[var(--text)]">Tendência de vendas</h2><p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Acompanhe a evolução do faturamento</p></div><div className="flex rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-high)] p-0.5"><button type="button" onClick={() => { setInsightView('trend'); setTrendViewMode('diaria'); }} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${trendViewMode === 'diaria' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)]'}`}>Diária</button><button type="button" onClick={() => { setInsightView('trend'); setTrendViewMode('mensal'); }} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${trendViewMode === 'mensal' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-secondary)]'}`}>Mensal</button><button type="button" onClick={() => setInsightView('performance')} className="rounded-md px-2 py-1 text-[10px] font-semibold text-[var(--text-secondary)]">Performance</button></div></div>
-                  <div className="h-[180px] w-full"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={trendViewMode === 'mensal' ? monthlyTrendData : trendData} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}><defs><linearGradient id="topSalesTrend" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3478F6" stopOpacity={0.22}/><stop offset="95%" stopColor="#3478F6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} tickFormatter={(value) => `R$${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`} /><RechartsTooltip contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', color: 'var(--text)', fontSize: '11px' }} formatter={(value: number) => formatCurrency(value)} /><Area type="monotone" dataKey="vendas" fill="url(#topSalesTrend)" stroke="none" /><Line type="monotone" dataKey="vendas" stroke="#3478F6" strokeWidth={2.5} dot={false} /></ComposedChart></ResponsiveContainer></div>
-              </section>
-              )}
-              <section className="dashboard-team-card rounded-xl border border-[var(--border)] bg-white p-4">
-                  <div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-[var(--text)]">Vendas por time</h2><p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Distribuição do faturamento no período</p></div><strong className="text-sm font-semibold tabular-nums text-[var(--text)]">{perc.toFixed(1)}%</strong></div>
-                  <div className="mt-4 space-y-3">{Object.entries(teamRevenues).slice(0, 5).map(([team, amount], index) => { const totalTeams = Math.max(Object.values(teamRevenues).reduce((sum, value) => sum + Number(value), 0), 1); const share = Math.round((Number(amount) / totalTeams) * 100); return <div key={team} className="grid grid-cols-[minmax(0,1fr)_34px] items-center gap-2 text-[10px]"><div className="min-w-0"><div className="flex items-center gap-2"><span className={`size-1.5 shrink-0 rounded-full team-dot-${index % 4}`} /><span className="truncate font-medium text-[var(--text-secondary)]">{team}</span></div><div className="mt-1 h-1 overflow-hidden rounded-full bg-[#eef0f3]"><div className="h-full rounded-full bg-[var(--primary)]" style={{ width: `${share}%` }} /></div></div><span className="text-right font-semibold tabular-nums text-[var(--text)]">{share}%</span></div>; })}</div>
-              </section>
-          </div>
-          </div>
+          <DashboardOverview
+              key={currentKey}
+              revenue={totalRev}
+              goalRevenue={totalGoalRev}
+              goal={Number(currentGoals.revenue)}
+              averageTicket={averageTicket}
+              receipts={totalSalesCount}
+              pendingIncome={overviewSnapshot.pendingIncome}
+              teams={teamRevenues}
+              period={`${MONTHS[currentMonth]} de ${currentYear}`}
+              year={currentYear}
+              currentPeriod={isThisMonth}
+              trendData={trendViewMode === 'mensal' ? monthlyTrendData : trendData}
+              view={insightView === 'performance' ? 'performance' : trendViewMode === 'mensal' ? 'mensal' : 'diaria'}
+              onViewChange={(view) => {
+                  setInsightView(view === 'performance' ? 'performance' : 'trend');
+                  if (view !== 'performance') setTrendViewMode(view);
+              }}
+              performance={<PerformanceMetrics monthRevenueData={monthRevenueData} currentGoals={currentGoals} currentYear={currentYear} currentMonth={currentMonth} />}
+          />
 
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
           <section aria-labelledby="dashboard-laboratorio" className="dashboard-domain-section">
@@ -770,7 +731,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
         
         {/* View Content */}
         <div className="dashboard-content-scroll flex-1 overflow-y-auto px-3 py-3 lg:px-5 lg:py-4 custom-scrollbar">
-           <div className="dashboard-workspace w-full max-w-none">
+           <div className="dashboard-workspace reference-dashboard w-full max-w-none">
                
                <PageHeader
                    title={activeSubTab === 'geral' ? 'Visão geral da clínica' : activeSubTab === 'commercial' ? 'Comercial' : activeSubTab === 'reception' ? 'Recepção' : 'Agenda'}

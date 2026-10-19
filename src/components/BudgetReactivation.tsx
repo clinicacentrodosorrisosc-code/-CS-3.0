@@ -648,7 +648,7 @@ export const BudgetReactivation: React.FC = () => {
                       type="monotone"
                       dataKey="jamesCalls"
                       name="James · Ligações"
-                      stroke="#3478F6"
+                      stroke="var(--analytics-blue)"
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 4 }}
@@ -659,7 +659,7 @@ export const BudgetReactivation: React.FC = () => {
                       type="monotone"
                       dataKey="jamesMessages"
                       name="James · Mensagens"
-                      stroke="#10B981"
+                      stroke="var(--analytics-green)"
                       strokeWidth={2.5}
                       strokeDasharray="5 3"
                       dot={false}
@@ -693,13 +693,13 @@ export const BudgetReactivation: React.FC = () => {
               </ResponsiveContainer>
             </div>
           </section>
-          <section className="grid min-h-[620px] grid-cols-1 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] lg:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(760px,800px)_320px_minmax(440px,1fr)]">
+          <section className="analytics-card analytics-chart grid min-h-[620px] grid-cols-1 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] lg:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(760px,800px)_320px_minmax(440px,1fr)]">
             <div className="min-w-0 border-b border-[var(--border)] lg:border-b-0 lg:border-r">
               <div className="hidden">
                 <div>
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h2 className="text-xs font-bold">Atividade diária</h2>
+                      <h2 className="analytics-chart-title text-xs font-bold">Atividade diária</h2>
                       <p className="text-[10px] text-[var(--text-muted)]">
                         Ligações e mensagens · últimos 14 dias
                       </p>
@@ -754,7 +754,7 @@ export const BudgetReactivation: React.FC = () => {
                             type="monotone"
                             dataKey="jamesCalls"
                             name="James · Ligações"
-                            stroke="#3478F6"
+                            stroke="var(--analytics-blue)"
                             strokeWidth={2}
                             dot={false}
                           />
@@ -764,7 +764,7 @@ export const BudgetReactivation: React.FC = () => {
                             type="monotone"
                             dataKey="jamesMessages"
                             name="James · Mensagens"
-                            stroke="#10B981"
+                            stroke="var(--analytics-green)"
                             strokeWidth={2}
                             strokeDasharray="4 3"
                             dot={false}
@@ -945,7 +945,7 @@ export const BudgetReactivation: React.FC = () => {
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
                         Ficha do lead
                       </p>
-                      <h2 className="mt-1 text-lg font-bold">
+                      <h2 className="analytics-chart-title mt-1 text-lg font-bold">
                         {selected.patient_name}
                       </h2>
                       <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -996,7 +996,7 @@ export const BudgetReactivation: React.FC = () => {
                   >
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />
-                      <h3 className="text-xs font-bold">Registrar ações</h3>
+                      <h3 className="analytics-chart-title text-xs font-bold">Registrar ações</h3>
                     </div>
                     <div>
                       <select
@@ -1177,7 +1177,7 @@ export const BudgetReactivation: React.FC = () => {
                     </button>
                   </form>
                   <div>
-                    <h3 className="mb-2 text-xs font-bold">Histórico</h3>
+                    <h3 className="analytics-chart-title mb-2 text-xs font-bold">Histórico</h3>
                     <div className="space-y-2">
                       {selectedInteractions.map((item) => (
                         <div
@@ -1239,7 +1239,7 @@ export const BudgetReactivation: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--primary)]">
                       Desempenho da equipe
                     </p>
-                    <h2 className="mt-1 text-base font-bold">
+                    <h2 className="analytics-chart-title mt-1 text-base font-bold">
                       Atividade diária
                     </h2>
                     <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
@@ -1259,7 +1259,7 @@ export const BudgetReactivation: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                <div className="h-[190px] w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 pt-3">
+                <div className="analytics-card analytics-chart h-[190px] w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-2 pt-3">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={dailyActivity}
@@ -1296,7 +1296,7 @@ export const BudgetReactivation: React.FC = () => {
                           type="monotone"
                           dataKey="jamesCalls"
                           name="James · Ligações"
-                          stroke="#3478F6"
+                          stroke="var(--analytics-blue)"
                           strokeWidth={2}
                           dot={false}
                         />
@@ -1306,7 +1306,7 @@ export const BudgetReactivation: React.FC = () => {
                           type="monotone"
                           dataKey="jamesMessages"
                           name="James · Mensagens"
-                          stroke="#10B981"
+                          stroke="var(--analytics-green)"
                           strokeWidth={2}
                           strokeDasharray="4 3"
                           dot={false}
@@ -1343,7 +1343,7 @@ export const BudgetReactivation: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                       Indicadores
                     </p>
-                    <h3 className="mt-1 text-sm font-bold">
+                    <h3 className="analytics-chart-title mt-1 text-sm font-bold">
                       Resumo da campanha
                     </h3>
                   </div>
