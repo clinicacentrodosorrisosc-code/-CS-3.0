@@ -340,6 +340,8 @@ export const ClinicaExpertsFinancial: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<View>('overview');
+  const [receivablesSearch, setReceivablesSearch] = useState('');
+  const [receivableFilter, setReceivableFilter] = useState<'all' | 'open' | 'settled'>('all');
   const [loadedPeriod, setLoadedPeriod] = useState<{ start: string; end: string } | null>(null);
   const [period, setPeriod] = useState(() => {
     const today = new Date();
@@ -410,6 +412,33 @@ export const ClinicaExpertsFinancial: React.FC = () => {
     return [...groups.entries()].map(([name, values]) => ({ name, ...values, net: values.income - values.expense })).sort((a, b) => Math.abs(b.net) - Math.abs(a.net));
   }, [categoriesById, paidRecords, receivedRecords]);
   const procedures = useMemo(() => procedureOccurrences(data?.bookings || []), [data?.bookings]);
+  const receivableRows = useMemo(() => {
+    const query = receivablesSearch.trim().toLocaleLowerCase('pt-BR');
+    return incomeRecords
+      .filter((record) => receivableFilter === 'all' || (receivableFilter === 'settled' ? isSettled(record) : !isSettled(record)))
+      .filter((record) => !query || [
+        textValue(record, ['description', 'name', 'title', 'patient_name', 'supplier_name'], ''),
+        categoryName(record, categoriesById),
+      ].join(' ').toLocaleLowerCase('pt-BR').includes(query))
+      .sort((a, b) => recordDate(b).localeCompare(recordDate(a)));
+  }, [categoriesById, incomeRecords, receivableFilter, receivablesSearch]);
+  const receivableSummary = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const open = incomeRecords.filter((record) => !isSettled(record));
+    const dueOn = (record: FinancialRecord) => recordDate(record).slice(0, 10);
+    const sumOpen = (items: FinancialRecord[]) => sumValues(items, outstandingAmount);
+    const overdue = open.filter((record) => dueOn(record) && dueOn(record) < today);
+    const dueToday = open.filter((record) => dueOn(record) === today);
+    const future = open.filter((record) => dueOn(record) && dueOn(record) > today);
+    return {
+      overdue: sumOpen(overdue),
+      dueToday: sumOpen(dueToday),
+      future: sumOpen(future),
+      open: sumOpen(open),
+      settled: sumValues(receivedRecords, settledAmount),
+      total: sumOpen(open) + sumValues(receivedRecords, settledAmount),
+    };
+  }, [incomeRecords, receivedRecords]);
 
   const views: Array<{ id: View; label: string }> = [
     { id: 'overview', label: 'Visão do período' },
@@ -434,12 +463,31 @@ export const ClinicaExpertsFinancial: React.FC = () => {
 
     {loading && !data ? <div className="rounded-2xl border border-white/70 bg-white/55 p-8 text-center text-sm text-[var(--text-muted)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.05]">Consultando dados financeiros da Clínica Experts…</div> : null}
 
-    {data && activeView === 'overview' ? <>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={ArrowDownLeft} label="Recebido" value={received} description="Entradas liquidadas no período" tone="income" /><Metric icon={WalletCards} label="A receber" value={receivable} description="Entradas ainda em aberto" tone="income" /><Metric icon={ArrowUpRight} label="Pago" value={paid} description="Saídas liquidadas no período" tone="expense" /><Metric icon={ReceiptText} label="A pagar" value={payable} description="Saídas ainda em aberto" tone="expense" /></div>
-      <div className="grid gap-5 xl:grid-cols-2"><SectionCard title="Recebimentos" subtitle="Recebido e valores a receber no período" icon={ArrowDownLeft}><FinancialList records={[...receivedRecords, ...receivableRecords]} categoriesById={categoriesById} empty="Nenhum recebimento classificado no período." /></SectionCard><SectionCard title="Contas a pagar" subtitle="Pagamentos realizados e compromissos em aberto" icon={ArrowUpRight}><FinancialList records={[...paidRecords, ...payableRecords]} categoriesById={categoriesById} empty="Nenhuma conta a pagar classificada no período." /></SectionCard></div>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/55 px-4 py-3 backdrop-blur-xl dark:border-white/[0.09] dark:bg-white/[0.05]"><div><p className="analytics-label text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Base do período</p><p className="mt-1 text-xs text-[var(--text-secondary)]">{movementRecords.length} parcela(s) ou título(s) considerados na consulta.</p></div><div className="text-right"><p className="analytics-label text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Saldo de caixa realizado</p><p className={`mt-1 text-lg font-bold tabular-nums ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}>{formatMoney(netCashFlow)}</p></div></div>
-      {unclassified > 0 ? <p className="text-center text-[11px] text-[var(--text-muted)]">{unclassified} lançamento(s) sem natureza financeira identificada pela API não entram nos totais até receberem uma categoria de entrada ou saída.</p> : null}
-    </> : null}
+    {data && activeView === 'overview' ? <section className="mx-auto w-full max-w-4xl overflow-hidden rounded-xl border border-[#e8ebf0] bg-white shadow-sm dark:border-white/[0.09] dark:bg-[#141A29]">
+      <header className="flex items-center justify-between border-b border-[#e8ebf0] px-4 py-4 dark:border-white/[0.08] sm:px-5">
+        <div className="flex min-w-0 items-baseline gap-3"><h3 className="truncate text-lg font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Contas a receber</h3><span className="shrink-0 text-[13px] text-[#a7abb6]">{incomeRecords.length} registros</span></div>
+        <button type="button" onClick={() => void load(period)} disabled={loading} className="grid size-8 place-items-center rounded-lg text-[#596274] transition hover:bg-[#f3f4f6] disabled:opacity-60 dark:text-slate-300 dark:hover:bg-white/[0.08]" aria-label="Atualizar contas a receber" title="Atualizar dados"><RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /></button>
+      </header>
+      <div className="px-4 py-3 sm:px-5">
+        <div className="relative"><input value={receivablesSearch} onChange={(event) => setReceivablesSearch(event.target.value)} placeholder="Buscar" className="h-10 w-full rounded-[7px] border border-[#dfe3e9] bg-white px-3 text-sm text-[#344054] outline-none transition placeholder:text-[#a7abb6] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-dim)] dark:border-white/[0.12] dark:bg-white/[0.04] dark:text-[var(--text)]" /></div>
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-b border-[#e8ebf0] pb-3 dark:border-white/[0.08]">
+          <div className="min-w-0 sm:w-[320px]"><DateRangePicker value={period} onChange={handlePeriodChange} periodSelector className="w-full [&>button]:h-10 [&>button]:w-full [&>button]:justify-start [&>button]:rounded-[7px] [&>button]:border-0 [&>button]:bg-[#f1f3f5] [&>button]:px-3 [&>button]:text-sm [&>button]:font-semibold [&>button]:text-[#3a4354] dark:[&>button]:bg-white/[0.07] dark:[&>button]:text-[var(--text)]" /></div>
+          <div className="flex items-center gap-1 text-sm font-semibold text-[var(--primary)]"><span className="text-lg font-normal">+</span><select value={receivableFilter} onChange={(event) => setReceivableFilter(event.target.value as 'all' | 'open' | 'settled')} className="cursor-pointer bg-transparent outline-none"><option value="all">Adicionar filtro</option><option value="open">Em aberto</option><option value="settled">Recebidos</option></select></div>
+        </div>
+        <div className="flex gap-5 overflow-x-auto border-b border-[#e8ebf0] py-3 dark:border-white/[0.08]">
+          {[
+            ['Vencidos', receivableSummary.overdue, 'bg-rose-500'], ['Vencem hoje', receivableSummary.dueToday, 'bg-amber-400'], ['A vencer', receivableSummary.future, 'bg-sky-500'], ['A receber', receivableSummary.open, 'bg-blue-500'], ['Recebidos', receivableSummary.settled, 'bg-emerald-500'], ['Total do período', receivableSummary.total, 'bg-violet-500'],
+          ].map(([label, value, dot]) => <div key={label as string} className="analytics-summary-item min-w-[120px]"><div className="flex items-center gap-2 text-[13px] text-[#3a4354] dark:text-[var(--text-secondary)]"><span className={`size-2 rounded-full ${dot}`} /><span>{label}</span><span className="grid size-4 place-items-center rounded-full border border-current text-[10px] opacity-60">?</span></div><strong className="analytics-compact-value mt-1 block whitespace-nowrap text-[17px] font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">{formatMoney(value as number)}</strong></div>)}
+        </div>
+        <div className="divide-y divide-[#edf0f3] dark:divide-white/[0.07]">
+          {receivableRows.length ? receivableRows.map((record, index) => {
+            const settled = isSettled(record); const installment = textValue(record, ['installment_label', 'installment', 'installment_number', 'parcel_number'], ''); const amount = settled ? settledAmount(record) : outstandingAmount(record);
+            return <article key={textValue(record, ['uuid', 'id'], String(index))} className="flex min-h-[64px] items-center justify-between gap-3 py-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="max-w-full truncate text-sm font-semibold text-[#30394a] dark:text-[var(--text)]">{textValue(record, ['description', 'name', 'title', 'patient_name', 'supplier_name'])}</p>{installment && <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-600 dark:bg-violet-500/15 dark:text-violet-300">{installment}</span>}<span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${settled ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'}`}>{settled ? 'Recebido' : 'Em aberto'}</span></div><p className="mt-1 text-[13px] text-[#596274] dark:text-[var(--text-secondary)]">{formatDate(recordDate(record))} • {formatMoney(amount)}</p></div><span className="shrink-0 px-2 text-xl leading-none text-[#657083] dark:text-slate-400" aria-hidden="true">⋮</span></article>;
+          }) : <p className="py-10 text-center text-sm text-[var(--text-muted)]">Nenhum recebimento encontrado para os filtros selecionados.</p>}
+        </div>
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e8ebf0] pt-3 text-xs text-[#667085] dark:border-white/[0.08] dark:text-[var(--text-secondary)]"><span>{receivableRows.length} lançamento(s) exibido(s)</span><strong className="font-semibold tabular-nums text-[#344054] dark:text-[var(--text)]">Total do período: {formatMoney(receivableSummary.total)}</strong></footer>
+      </div>
+    </section> : null}
 
     {data && activeView === 'accounts' ? <><div className="grid gap-3 sm:grid-cols-3"><Metric icon={Landmark} label="Contas" value={data.accounts.length} description="Contas retornadas pela integração" tone="neutral" format="count" /><Metric icon={Building2} label="Títulos no período" value={data.bills.length} description="Documentos financeiros consultados" tone="neutral" format="count" /><Metric icon={ReceiptText} label="Parcelas no período" value={data.parcels.length} description="Movimentos para análise de caixa" tone="neutral" format="count" /></div><AccountsTable accounts={data.accounts} /></> : null}
 
