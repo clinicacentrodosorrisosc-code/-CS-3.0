@@ -8,7 +8,7 @@ O produto deve parecer um unico sistema, nao uma colecao de telas criadas em mom
 
 **Written against commit:** `c1ab45c`
 
-**Escopo auditado:** aplicacao React/Vite principal em `src/`. O `apps/crm-james` e um produto Next.js separado e deve receber uma auditoria propria antes de qualquer convergencia visual; nesta iniciativa ele entra apenas como destino externo da navegacao.
+**Escopo auditado:** aplicacao React/Vite principal em `src/`.
 
 **Limite desta entrega:** plano e auditoria estatica. Nenhum arquivo funcional foi alterado. As capturas locais disponiveis mostram login e Dashboard em loading, portanto a execucao deve comecar por uma linha de base autenticada em navegador.
 
@@ -29,7 +29,7 @@ O produto deve parecer um unico sistema, nao uma colecao de telas criadas em mom
 - 63 componentes de produto e apenas 18 componentes em `src/components/ui`.
 - Os maiores hotspots sao `Financial.tsx` (7.966 linhas), `PricingSystem.tsx` (4.545), `Orthodontics.tsx` (4.259) e `CommercialDailyReport.tsx` (2.819).
 - Foram encontrados 820 usos de cores hexadecimais, 1.104 textos com tamanho arbitrario em pixels, 123 larguras arbitrarias e 349 usos de `transition-all`.
-- A aplicacao principal nao possui testes visuais, testes de componentes nem stories. Os testes existentes pertencem majoritariamente ao produto separado `apps/crm-james`.
+- A aplicacao principal nao possui testes visuais, testes de componentes nem stories.
 - `index.html` carrega Tailwind por CDN em runtime, embora Tailwind 4 esteja listado nas dependencias. Isso deixa configuracao, desempenho e reproducibilidade visual mais frageis.
 - `src/index.css` contem varias camadas historicas de redesign e redefine os tokens principais em diferentes pontos, inclusive nas linhas aproximadas 1, 1.880 e 3.235.
 
@@ -166,7 +166,7 @@ Esses elementos podem permanecer em laboratorio/demos, mas nao devem definir o s
 2. Registrar capturas autenticadas dos fluxos por papel: admin, recepcao e vendedor.
 3. Cobrir pelo menos: Dashboard Geral/Comercial/Agenda; CRM Funil/Reativacao; Financeiro Visao Geral/Lancamentos; Ortodontia; Laboratorio; Tarefas; Configuracoes; Auditoria.
 4. Capturar 1440x900, 1280x720, 1024x768, 390x844 e 360x800, em light e dark.
-5. Adicionar smoke tests de navegacao e screenshots com Playwright para a aplicacao principal. Nao misturar a suite do `apps/crm-james`.
+5. Adicionar smoke tests de navegacao e screenshots com Playwright para a aplicacao principal.
 6. Definir fixtures para estados loading, vazio, erro, pouco dado, muito dado e texto longo em portugues.
 
 **Criterio de saida:** todas as superficies prioritarias possuem baseline reproduzivel e nenhuma mudanca posterior pode ser aprovada apenas por build.
@@ -328,7 +328,6 @@ Cada componente deve possuir tamanhos, estados, teclado, foco, loading, disabled
 - mudanca de regras financeiras, KPIs, formulas ou modelo de dados;
 - mudanca de permissoes, papeis ou rotas;
 - reescrita do React/Vite em outro framework;
-- redesign interno do `apps/crm-james`;
 - rebrand da clinica, novo logo ou nova identidade de marketing;
 - deploy automatico antes de validacao autenticada.
 
@@ -368,7 +367,6 @@ Cada componente deve possuir tamanhos, estados, teclado, foco, loading, disabled
 - Nao migrar um segundo modulo antes de os primitivos funcionarem em dois contextos reais.
 - Nao declarar uma fase concluida apenas com build; exigir navegador autenticado e matriz de resolucoes.
 - Preservar as alteracoes locais existentes e nunca fazer reset ou sobrescrever arquivos fora da fase.
-- Se o `apps/crm-james` precisar convergir visualmente, abrir plano separado com sua propria arquitetura, testes e deploy.
 
 ## Sequencia recomendada de entrega
 

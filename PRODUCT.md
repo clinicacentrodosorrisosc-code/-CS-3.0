@@ -30,7 +30,6 @@ O produto reúne em um mesmo ambiente os fluxos específicos da clínica: gestã
 - Trabalho frequente com tabelas, listas, filtros, períodos, valores monetários, datas, telefones e estados operacionais.
 - Ações recorrentes incluem registrar lançamentos, atualizar leads, enviar WhatsApp, registrar tentativas e resultados, agendar pacientes, acompanhar presença, movimentar tarefas e consultar indicadores.
 - O sistema possui temas claro e escuro.
-- O CRM James é uma aplicação separada acessada pelo sistema principal; sua arquitetura e publicação são independentes.
 
 ## Capabilities and Constraints
 

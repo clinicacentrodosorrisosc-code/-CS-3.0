@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, ShieldCheck, Menu, ExternalLink, CalendarDays } from 'lucide-react';
+import { Sun, Moon, ShieldCheck, Menu, CalendarDays } from 'lucide-react';
 import { Tab } from '../../types';
 import { NotificationBell } from '../ui/notification-bell';
 import BorderAvatar from '../ui/avatar-border';
@@ -35,10 +35,6 @@ const TAB_LABELS: Record<Tab, string> = {
   [Tab.AUDIT]: 'Auditoria',
 };
 
-const CRM_JAMES_URL = String(
-  import.meta.env.VITE_CRM_JAMES_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')
-).trim();
-
 export const AppHeader: React.FC<AppHeaderProps> = ({
   activeTab,
   requestedSubTab,
@@ -61,15 +57,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(now).replace('.', '');
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const todayLabel = `1 ${monthLabel} - ${monthEnd} ${monthLabel} ${now.getFullYear()}`;
-
-  const openCrmJames = () => {
-    if (!CRM_JAMES_URL) {
-      window.alert('O ambiente CRM James (beta) ainda não foi configurado para esta instalação.');
-      return;
-    }
-
-    window.open(CRM_JAMES_URL, '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <header className="app-header z-50 flex h-10 min-h-10 w-full items-center justify-between border-b border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_96%,transparent)] px-3 sm:px-4 dark:bg-[var(--surface)]">
@@ -95,18 +82,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <CalendarDays className="size-3.5" />
           <span>{todayLabel}</span>
         </div>
-        <button
-          type="button"
-          onClick={openCrmJames}
-          className="me-1 inline-flex h-8 items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--primary)_28%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface))] px-2.5 text-[11px] font-semibold text-[var(--primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] sm:px-3"
-          title="Abrir CRM James (beta)"
-          aria-label="Abrir CRM James (beta)"
-        >
-          <span className="hidden sm:inline">CRM James</span>
-          <span className="hidden rounded bg-[var(--primary)] px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white lg:inline">Beta</span>
-          <ExternalLink className="size-3.5" />
-        </button>
-
         <span className="header-sync me-1 hidden items-center gap-1.5 text-[11px] text-[#667085] lg:flex dark:text-slate-400">
           <span className="status-signal size-1.5 rounded-full bg-emerald-400" />
           {onlineUsers.length > 0 ? `${onlineUsers.length} online` : 'Sincronizado'}

@@ -21,7 +21,6 @@ import {
   LayoutDashboard,
   KanbanSquare,
   Settings2,
-  ExternalLink,
   ClipboardList,
   Search,
   CalendarPlus,
@@ -59,7 +58,6 @@ interface MenuItem {
     id: string;
     label: string;
     adminOnly?: boolean;
-    externalUrl?: string;
     permissionId?: string;
   }>;
 }
@@ -68,10 +66,6 @@ const sidebarContentTransition = {
   duration: 0.16,
   ease: 'easeOut' as const,
 };
-
-const CRM_JAMES_URL = String(
-  import.meta.env.VITE_CRM_JAMES_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '')
-).trim();
 
 const SUB_TAB_PERMISSION_IDS: Record<string, string> = {
   commercial: 'dash_financial',
@@ -122,8 +116,7 @@ const MENU_STRUCTURE: MenuItem[] = [
       { id: 'automations', label: 'Automações' },
       { id: 'campaigns', label: 'Disparador em massa' },
       { id: 'reactivation', label: 'Reativação de orçamentos' },
-      { id: 'whatsapp', label: 'WhatsApp Business' },
-      { id: 'crm-james', label: 'CRM James (beta)', externalUrl: CRM_JAMES_URL }
+      { id: 'whatsapp', label: 'WhatsApp Business' }
     ]
   },
   {
@@ -357,18 +350,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     tabId: Tab,
     subItem: MenuItem['subItems'][number],
   ) => {
-    if (subItem.externalUrl !== undefined) {
-      if (!subItem.externalUrl) {
-        window.alert('O ambiente CRM James (beta) ainda não foi configurado para esta instalação.');
-        return;
-      }
-
-      window.open(subItem.externalUrl, '_blank', 'noopener,noreferrer');
-      setIsMobileMenuOpen(false);
-      setFlyoutTab(null);
-      return;
-    }
-
     setActiveTab(tabId);
     if (onSubTabSelect) onSubTabSelect(subItem.id);
     setIsMobileMenuOpen(false);
@@ -530,9 +511,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     `}
                   >
                     <span>{subItem.label}</span>
-                    {subItem.externalUrl !== undefined
-                      ? <ExternalLink className="h-3 w-3 text-slate-400" />
-                      : <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />}
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />
                   </button>
                 ))}
               </motion.div>
@@ -769,9 +748,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           `}
                         >
                           <span>{sub.label}</span>
-                          {sub.externalUrl !== undefined
-                            ? <ExternalLink className="h-3 w-3 text-slate-400" />
-                            : <ChevronRight className="w-3 h-3 text-slate-400" />}
+                          <ChevronRight className="w-3 h-3 text-slate-400" />
                         </button>
                       ))}
                     </div>

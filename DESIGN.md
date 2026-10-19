@@ -123,7 +123,7 @@ components:
 
 ## Purpose
 
-This system governs the authenticated CS3.0 application in \`src/\`. It is an Operate interface for repeated clinical, commercial, financial and administrative tasks. It does not govern marketing pages or the separate \`apps/crm-james\` product.
+This system governs the authenticated CS3.0 application in \`src/\`. It is an Operate interface for repeated clinical, commercial, financial and administrative tasks. It does not govern marketing pages.
 
 ## Principles
 
