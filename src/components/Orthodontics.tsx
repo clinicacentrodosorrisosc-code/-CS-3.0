@@ -1162,7 +1162,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
       setWhatsAppPatient(patient);
       setWhatsAppPhone(patient.whatsappPhone || '');
       setWhatsAppMessage(renderWhatsAppTemplate(whatsAppTemplate, patient));
-      setWhatsAppPhoneNotice(patient.whatsappPhone ? 'Telefone salvo no cadastro de Ortodontia.' : 'Buscando telefone no CRM...');
+      setWhatsAppPhoneNotice(patient.whatsappPhone ? 'Telefone salvo no cadastro de Ortodontia.' : 'Buscando telefone na base de contatos...');
 
       if (patient.whatsappPhone) return;
 
@@ -1184,15 +1184,15 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
 
           if (exactPhones.length === 1) {
               setWhatsAppPhone(exactPhones[0]);
-              setWhatsAppPhoneNotice('Telefone localizado pelo nome exato no CRM. Confira antes de abrir o WhatsApp.');
+              setWhatsAppPhoneNotice('Telefone localizado pelo nome exato na base de contatos. Confira antes de abrir o WhatsApp.');
           } else if (exactPhones.length > 1) {
-              setWhatsAppPhoneNotice('Há mais de um telefone para este nome no CRM. Informe o número correto.');
+              setWhatsAppPhoneNotice('Há mais de um telefone para este nome na base de contatos. Informe o número correto.');
           } else {
               setWhatsAppPhoneNotice('Telefone não localizado. Informe o número com DDD.');
           }
       } catch (error) {
           console.error('Erro ao localizar telefone para WhatsApp', error);
-          setWhatsAppPhoneNotice('Não foi possível consultar o CRM. Informe o número com DDD.');
+          setWhatsAppPhoneNotice('Não foi possível consultar a base de contatos. Informe o número com DDD.');
       } finally {
           setIsFindingWhatsAppPhone(false);
       }
@@ -3427,7 +3427,7 @@ export const Orthodontics: React.FC<OrthodonticsProps> = ({ userRole, allowedSub
                           />
                       </label>
                       <p className={`mt-2 text-[11px] ${whatsAppPhoneNotice.includes('mais de um') || whatsAppPhoneNotice.includes('não') || whatsAppPhoneNotice.includes('Não') ? 'text-amber-600 dark:text-amber-300' : 'text-slate-500'}`}>
-                          {isFindingWhatsAppPhone ? 'Buscando telefone no CRM...' : whatsAppPhoneNotice}
+                          {isFindingWhatsAppPhone ? 'Buscando telefone na base de contatos...' : whatsAppPhoneNotice}
                       </p>
 
                       <label className="mt-5 block text-xs font-semibold text-text">

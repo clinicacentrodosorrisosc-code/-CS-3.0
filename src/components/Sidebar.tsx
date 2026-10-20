@@ -19,7 +19,7 @@ import {
   CheckSquare,
   BookOpen,
   LayoutDashboard,
-  KanbanSquare,
+  HeartHandshake,
   Settings2,
   ClipboardList,
   Search,
@@ -70,9 +70,6 @@ const sidebarContentTransition = {
 const SUB_TAB_PERMISSION_IDS: Record<string, string> = {
   commercial: 'dash_financial',
   agenda: 'dash_agenda',
-  pipeline: 'crm_pipeline',
-  automations: 'crm_automations',
-  campaigns: 'crm_campaigns',
   reactivation: 'crm_reactivation',
   whatsapp: 'crm_whatsapp',
   overview: 'financial_overview',
@@ -108,13 +105,10 @@ const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: Tab.CRM,
-    label: 'CRM',
-    icon: KanbanSquare,
+    label: 'Relacionamento',
+    icon: HeartHandshake,
     group: 'main',
     subItems: [
-      { id: 'pipeline', label: 'Funil comercial' },
-      { id: 'automations', label: 'Automações' },
-      { id: 'campaigns', label: 'Disparador em massa' },
       { id: 'reactivation', label: 'Reativação de orçamentos' },
       { id: 'whatsapp', label: 'WhatsApp Business' }
     ]
@@ -311,7 +305,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (tabId: Tab, hasSubItems: boolean) => {
     setActiveTab(tabId);
     if (tabId === Tab.CRM && hasSubItems && onSubTabSelect) {
-      onSubTabSelect('pipeline');
+      onSubTabSelect('reactivation');
     }
     if (isExpanded) {
       if (openAccordionTab === tabId) {
@@ -642,7 +636,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="mt-2 flex flex-col gap-1">
                 {[
                   { label: 'Agendar paciente', icon: CalendarPlus, tab: Tab.DASHBOARD, subTab: 'agenda', tone: 'blue' },
-                  { label: 'Novo orçamento', icon: FilePlus2, tab: Tab.CRM, subTab: 'pipeline', tone: 'green' },
+                  { label: 'Reativar orçamento', icon: FilePlus2, tab: Tab.CRM, subTab: 'reactivation', tone: 'green' },
                   { label: 'Registrar pagamento', icon: CreditCard, tab: Tab.FINANCIAL, subTab: 'transactions', tone: 'yellow' },
                   { label: 'Solicitar laboratório', icon: FlaskConical, tab: Tab.LABWORK, subTab: 'kanban', tone: 'purple' }
                 ].filter(shortcut => allowedTabs.includes(shortcut.tab)

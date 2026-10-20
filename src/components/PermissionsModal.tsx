@@ -43,9 +43,6 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
     { id: 'dash_agenda', label: 'Agenda Clínica Experts' },
   ],
   [Tab.CRM]: [
-    { id: 'crm_pipeline', label: 'Funil comercial' },
-    { id: 'crm_automations', label: 'Automações' },
-    { id: 'crm_campaigns', label: 'Disparador em massa' },
     { id: 'crm_reactivation', label: 'Reativação de orçamentos' },
     { id: 'crm_whatsapp', label: 'WhatsApp Business' },
   ],
@@ -96,7 +93,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
     tabs: [...Object.values(Tab)],
     subTabs: [
       'dash_financial', 'dash_agenda',
-      'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_reactivation', 'crm_whatsapp', 'settings_whatsapp',
+      'crm_reactivation', 'crm_whatsapp', 'settings_whatsapp',
       'financial_overview', 'financial_transactions', 'financial_pricing', 'financial_viability', 'financial_settings', 'financial_clinica_experts',
       'ortho_vision', 'ortho_calendar', 'ortho_grid', 'ortho_patients', 'ortho_settings',
       'lab_dashboard', 'lab_kanban', 'lab_settings', 'campaign_calendar', 'meeting_minutes', 'clinic_ideas', 'sales_playbook',
@@ -140,7 +137,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
       Tab.DASHBOARD, Tab.CRM, Tab.FINANCIAL, Tab.MEETINGS, Tab.TASKS
     ],
     subTabs: [
-      'dash_financial', 'crm_pipeline', 'crm_automations', 'crm_campaigns', 'crm_reactivation', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
+      'dash_financial', 'crm_reactivation', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
       'campaign_calendar', 'meeting_minutes', 'sales_playbook', 'clinic_ideas', 'tasks', 'reports'
     ]
   },
@@ -168,6 +165,8 @@ const ALL_AVAILABLE_TABS = [
   Tab.BIBLIOTECA,
   Tab.TASKS
 ];
+
+const getTabLabel = (tab: string) => tab === Tab.CRM ? 'Relacionamento' : tab;
 
 export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onClose, onlineUsers = [] }) => {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -880,7 +879,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                       }`}
                     >
                       <div className={`size-2 rounded-full ${isChecked ? 'bg-purple-400' : 'bg-slate-600'}`} />
-                      {tab}
+                      {getTabLabel(tab)}
                     </button>
                   );
                 })}
@@ -1169,7 +1168,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                   }`}
                                 >
                                   <div className={`size-2 rounded-full ${hasAccess ? 'bg-purple-400' : 'bg-slate-600'}`} />
-                                  {tab}
+                                  {getTabLabel(tab)}
                                 </button>
                               );
                             })}
@@ -1190,7 +1189,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                               return (
                                 <div key={mainTab} className="bg-slate-900 rounded-2xl p-3 border border-slate-800">
                                   <span className="text-[10px] font-bold text-slate-400 uppercase block border-b border-slate-800 pb-1.5 mb-2">
-                                    {mainTab}
+                                    {getTabLabel(mainTab)}
                                   </span>
                                   <div className="flex flex-wrap gap-1.5">
                                     {subTabs.map(sub => {

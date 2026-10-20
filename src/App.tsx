@@ -75,7 +75,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!session?.user?.id || lastAuditedTabRef.current === activeTab) return;
     lastAuditedTabRef.current = activeTab;
-    void recordAuditEvent('VIEW', activeTab, `Acessou o módulo ${activeTab}`);
+    const auditedModule = activeTab === Tab.CRM ? 'Relacionamento' : activeTab;
+    void recordAuditEvent('VIEW', auditedModule, `Acessou o módulo ${auditedModule}`);
   }, [activeTab, session?.user?.id]);
 
   // Real-time listener for remote financial entries across profiles
