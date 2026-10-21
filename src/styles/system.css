@@ -528,7 +528,7 @@ button:not(:disabled):active,
     transition: transform 220ms var(--ease-out), visibility 220ms ease !important;
   }
 
-  .ce-app .sidebar-shell.sidebar-mobile-open {
+.ce-app .sidebar-shell.sidebar-mobile-open {
     transform: translateX(0);
     visibility: visible;
   }
@@ -1422,4 +1422,55 @@ button:not(:disabled):active,
   .pricing-system .pricing-content[data-pricing-tab="precificacao"] .pricing-tab-panel > .grid {
     grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
   }
+}
+
+/* Keep the navigation identity above generic workspace styles.  This file is
+   loaded last, including after route changes and the collapsed-menu portal. */
+.ce-app .sidebar-shell.system-sidebar-theme {
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-brand,
+.ce-app .sidebar-shell.system-sidebar-theme > div {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme :is(button, span, p, h1, h2, h3, svg) {
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item {
+  min-height: 40px !important;
+  border-radius: 7px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active,
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active:hover {
+  background: #6250e8 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item:not(.sidebar-nav-item-active):hover,
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu {
+  background: #211c52 !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button[class*="bg-[var(--primary-dim)]"] {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
 }
