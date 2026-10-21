@@ -2538,8 +2538,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         onChange={(v) => { setCLaboratorio(v); updateServiceSetting('cLaboratorio', v); }} 
                                     />
                                     </>)}
+                                    <div className="col-span-2 mt-1 border-t border-border pt-4">
+                                        <span className="text-xs font-bold uppercase tracking-widest text-violet-300">Formação do preço</span>
+                                        <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Defina a rentabilidade desejada e os percentuais aplicados sobre a venda. Esses valores não fazem parte dos custos da ficha técnica.</p>
+                                    </div>
                                     <Input 
-                                        label="Meta de resultado (%)"
+                                        label="Meta de resultado desejada (%)"
                                         value={mLiquida} 
                                         onChange={(v) => { setMLiquida(v); updateServiceSetting('mLiquida', v); }} 
                                     />
