@@ -1177,7 +1177,6 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 cComissao: 0
             };
 
-            const clinicCostRate = settings.cHora === 150 || !settings.cHora ? suggestedCHora : settings.cHora;
             const cDiretoValue = (breakdown.cmv + breakdown.labor) > 0 ? (breakdown.cmv + breakdown.labor) : (settings.cDireto || 0);
             const cLaboratorioValue = breakdown.thirdParty > 0 ? breakdown.thirdParty : (settings.cLaboratorio || 0);
             const unitVariableCost = cDiretoValue + cLaboratorioValue;
@@ -1201,10 +1200,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
             // Calculate Suggested Price based on target Net Margin
             const targetNetMargin = settings.mLiquida || 30;
-            const clinicCost = clinicCostRate * (settings.time || 1);
-            const totalFixedCostImpact = unitVariableCost + clinicCost;
             const divisor = 1 - (taxesPct + cardFeePct + commissionPct + appFeePct + targetNetMargin) / 100;
-            const suggestedPrice = divisor > 0 ? totalFixedCostImpact / divisor : 0;
+            const suggestedPrice = divisor > 0 ? unitVariableCost / divisor : 0;
 
             return {
                 id: service.id,
@@ -1647,7 +1644,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     };
 
     const price = useMemo(() => {
-        const numerator = (cHora * time) + cDireto + cLaboratorio;
+        // The technical sheet is the source of truth for all procedure costs.
+        // Never add chair time or laboratory cost for a second time here.
+        const numerator = cDireto + cLaboratorio;
         const denominator = 1 - (mLiquida + tTributos + tFinanceira + cComissao) / 100;
         return denominator > 0 ? numerator / denominator : 0;
     }, [cHora, time, cDireto, cLaboratorio, mLiquida, tTributos, tFinanceira, cComissao]);
@@ -2503,6 +2502,12 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-xs text-slate-300">
+                                        <strong className="block text-blue-300">Custos definidos na Ficha Técnica</strong>
+                                        <span className="mt-1 block leading-relaxed">Materiais, mão de obra, tempo de cadeira e laboratório são considerados uma única vez a partir da ficha técnica deste procedimento.</span>
+                                        <span className="mt-2 block font-semibold text-white">Base de custo: R$ {(cDireto + cLaboratorio).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    {false && (<>
                                     <div className="space-y-1">
                                         <Input 
                                             label="Custo Hora Clínica (R$)" 
@@ -2532,6 +2537,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         value={cLaboratorio} 
                                         onChange={(v) => { setCLaboratorio(v); updateServiceSetting('cLaboratorio', v); }} 
                                     />
+                                    </>)}
                                     <Input 
                                         label="Meta de resultado (%)"
                                         value={mLiquida} 
@@ -2597,7 +2603,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                 {selectedServiceId && (() => {
                                     const currentPracticedPrice = getPracticedPrice(selectedServiceId);
                                     
-                                    const costNumerator = (cHora * time) + cDireto + cLaboratorio;
+                                    const costNumerator = cDireto + cLaboratorio;
                                     const variableRate = (tTributos + tFinanceira + cComissao) / 100;
                                     const practicedDeductions = currentPracticedPrice * variableRate;
                                     const practicedRealProfit = currentPracticedPrice - practicedDeductions - costNumerator;
@@ -2613,7 +2619,6 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     const currentBreakEvenRevenue = practicedRealMarginPercent > 0 ? totalFixedExpenses / (practicedRealMarginPercent / 100) : null;
                                     const suggestedBreakEvenRevenue = suggestedContributionPercent > 0 ? totalFixedExpenses / (suggestedContributionPercent / 100) : null;
                                     const contributionGap = suggestedContribution - practicedRealProfit;
-                                    const chairCost = cHora * time;
                                     const currentTaxes = currentPracticedPrice * (tTributos / 100);
                                     const currentFinancialFee = currentPracticedPrice * (tFinanceira / 100);
                                     const currentCommission = currentPracticedPrice * (cComissao / 100);
@@ -2702,10 +2707,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                         <h4>Preço praticado hoje</h4>
                                                         <dl>
                                                             <div className="is-revenue"><dt>Preço cobrado</dt><dd>{formatCurrency(currentPracticedPrice)}</dd></div>
-                                                            <div><dt>Hora clínica ({formatCurrency(cHora)} × {time.toFixed(2)}h)</dt><dd>- {formatCurrency(chairCost)}</dd></div>
+                                                            {false && (<>
+                                                            <div><dt>Hora clínica ({formatCurrency(cHora)} × {time.toFixed(2)}h)</dt><dd>- {formatCurrency(0)}</dd></div>
                                                             <div><dt>Insumos diretos</dt><dd>- {formatCurrency(cDireto)}</dd></div>
                                                             <div><dt>Laboratório</dt><dd>- {formatCurrency(cLaboratorio)}</dd></div>
                                                             <div className="is-subtotal"><dt>Custos diretos</dt><dd>- {formatCurrency(costNumerator)}</dd></div>
+                                                            </>)}
+                                                            <div><dt>Ficha técnica (insumos, mão de obra, tempo e laboratório)</dt><dd>- {formatCurrency(costNumerator)}</dd></div>
+                                                            <div className="is-subtotal"><dt>Custos da ficha técnica</dt><dd>- {formatCurrency(costNumerator)}</dd></div>
                                                             <div><dt>Tributos ({tTributos.toFixed(1)}%)</dt><dd>- {formatCurrency(currentTaxes)}</dd></div>
                                                             <div><dt>Taxas financeiras ({tFinanceira.toFixed(1)}%)</dt><dd>- {formatCurrency(currentFinancialFee)}</dd></div>
                                                             <div><dt>Comissão ({cComissao.toFixed(1)}%)</dt><dd>- {formatCurrency(currentCommission)}</dd></div>
