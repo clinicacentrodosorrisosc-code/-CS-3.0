@@ -44,6 +44,33 @@
   color: #c93632;
 }
 
+/* Pipedrive board type scale: 14px body, 12px supporting copy, 16px stages. */
+.crmws {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.crmws-stage h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.crmws-stage > header span,
+.crmws-card p,
+.crmws-card footer b {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.crmws-card {
+  min-height: 78px;
+}
+
+.crmws-card-title {
+  font-size: 14px;
+  line-height: 21px;
+}
+
 /* Pipeline stages: continuous columns with the same forward chevron used by the reference. */
 .crmws-board {
   gap: 8px;
