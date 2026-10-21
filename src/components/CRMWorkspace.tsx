@@ -161,7 +161,7 @@ const initialDeals: Deal[] = [
     stageId: "entrada",
     status: "open",
     createdAt: 10,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
   {
     id: 2,
@@ -185,7 +185,7 @@ const initialDeals: Deal[] = [
     stageId: "entrada",
     status: "open",
     createdAt: 8,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
   {
     id: 4,
@@ -197,7 +197,7 @@ const initialDeals: Deal[] = [
     stageId: "entrada",
     status: "open",
     createdAt: 7,
-    visibility: "Somente responsável",
+    visibility: "Proprietário do item",
   },
   {
     id: 5,
@@ -209,7 +209,7 @@ const initialDeals: Deal[] = [
     stageId: "contato",
     status: "open",
     createdAt: 6,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
   {
     id: 6,
@@ -233,7 +233,7 @@ const initialDeals: Deal[] = [
     stageId: "proposta",
     status: "open",
     createdAt: 4,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
   {
     id: 8,
@@ -245,7 +245,7 @@ const initialDeals: Deal[] = [
     stageId: "negociacao",
     status: "open",
     createdAt: 3,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
   {
     id: 9,
@@ -269,7 +269,7 @@ const initialDeals: Deal[] = [
     stageId: "negociacao",
     status: "open",
     createdAt: 1,
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   },
 ];
 const localDateKey = (date = new Date()) => {
@@ -2806,7 +2806,7 @@ const DealForm: React.FC<{
     owner: p.owners[0]?.name || "Camila Ribeiro",
     source: "",
     sourceId: "",
-    visibility: "Grupo do responsável",
+    visibility: "Grupo de visibilidade do responsável",
   });
   const [attempt, setAttempt] = useState(false);
   const organizations = Array.from(
@@ -3010,9 +3010,9 @@ const DealForm: React.FC<{
             value={form.visibility}
             onChange={(e) => setForm({ ...form, visibility: e.target.value })}
           >
-            <option>Somente responsável</option>
-            <option>Grupo do responsável</option>
-            <option>Grupo do responsável e subgrupos</option>
+            <option>Proprietário do item</option>
+            <option>Grupo de visibilidade do responsável</option>
+            <option>Grupo de visibilidade do responsável e subgrupos</option>
             <option>Todos os usuários</option>
           </select>
         </label>
