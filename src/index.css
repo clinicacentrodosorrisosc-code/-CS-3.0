@@ -3237,3 +3237,316 @@ body.dark,
     min-height: 44px !important;
   }
 }
+
+/* Product system: compact operational surfaces derived from the CRM pipeline
+   language. Kept at the application shell so every existing module inherits
+   the same hierarchy without changing its business rules. */
+/* Global Pipedrive pass intentionally disabled: the identity is CRM-only. */
+/*
+.ce-app {
+  --bg: #f5f5f6;
+  --background: #f5f5f6;
+  --bg-subtle: #f0f1f3;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --surface-hover: #f4f5f7;
+  --surface-high: #ebecef;
+  --surface-elevated: #e1e3e8;
+  --border: rgba(33, 35, 44, 0.14);
+  --border-subtle: rgba(33, 35, 44, 0.11);
+  --border-hover: rgba(33, 35, 44, 0.26);
+  --border-focus: rgba(13, 104, 197, 0.34);
+  --primary: #2d8647;
+  --primary-hover: #216f38;
+  --primary-dim: rgba(45, 134, 71, 0.1);
+  --primary-border: rgba(45, 134, 71, 0.3);
+  --secondary: #0d68c5;
+  --secondary-dim: rgba(13, 104, 197, 0.1);
+  --success: #2d8647;
+  --success-text: #216f38;
+  --success-bg: #eaf5ed;
+  --success-dim: rgba(45, 134, 71, 0.12);
+  --success-border: #c8e6d0;
+  --warning: #b99e00;
+  --warning-dim: rgba(209, 184, 0, 0.14);
+  --warning-border: #eadc86;
+  --danger: #d83c38;
+  --danger-text: #ba2e2b;
+  --danger-bg: #fff0ef;
+  --danger-dim: rgba(216, 60, 56, 0.12);
+  --danger-border: #f0c5c3;
+  --text: #21232c;
+  --text-secondary: #65686f;
+  --text-muted: #7d818b;
+  --text-dim: #a3a6ad;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  background: var(--background) !important;
+}
+
+.ce-app .app-window,
+.ce-app .workspace-column,
+.ce-app .workspace-shell,
+.ce-app .workspace-canvas,
+.ce-app .module-view {
+  background: var(--background) !important;
+}
+
+.ce-app .workspace-canvas {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.ce-app .app-header {
+  height: 48px !important;
+  min-height: 48px !important;
+  border-bottom-color: var(--border-subtle) !important;
+  background: var(--surface) !important;
+}
+
+.ce-app .sidebar-shell {
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e9e8f6 !important;
+}
+
+.ce-app .sidebar-shell .sidebar-brand,
+.ce-app .sidebar-shell > div {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ce-app .sidebar-shell :is(button, input, span, p, h1, h2, h3) {
+  color: inherit;
+}
+
+.ce-app .sidebar-shell button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ce-app .sidebar-shell button[class*="bg-[var(--primary-dim)]"] {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .glass-panel,
+.ce-app .metric-card,
+.ce-app .nexus-card,
+.ce-app .fintech-card,
+.ce-app .module-filter-panel,
+.ce-app .module-context-bar,
+.ce-app .financial-kpi-card,
+.ce-app .financial-donut-card {
+  border-color: var(--border-subtle) !important;
+  border-radius: 8px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 1px 2px rgba(42, 54, 71, 0.05) !important;
+}
+
+.ce-app .glass-panel:hover,
+.ce-app .metric-card:hover,
+.ce-app .financial-kpi-card:hover {
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 2px 7px rgba(42, 54, 71, 0.09) !important;
+}
+
+.ce-app :is(button, a, input, select, textarea) {
+  transition: background-color 100ms cubic-bezier(.5,0,.2,1), border-color 100ms cubic-bezier(.5,0,.2,1), box-shadow 100ms cubic-bezier(.5,0,.2,1), transform 100ms cubic-bezier(.5,0,.2,1);
+}
+
+.ce-app button:focus-visible,
+.ce-app a:focus-visible,
+.ce-app input:focus-visible,
+.ce-app select:focus-visible,
+.ce-app textarea:focus-visible {
+  outline: 2px solid var(--secondary) !important;
+  outline-offset: 2px;
+}
+
+.ce-app :is(input, select, textarea) {
+  min-height: 34px;
+  border-color: var(--border) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.ce-app :is(input, select, textarea):focus {
+  border-color: var(--secondary) !important;
+  box-shadow: 0 0 0 2px rgba(13, 104, 197, 0.14) !important;
+}
+
+.ce-app :is(.btn-primary, .bg-primary, button[class*="bg-[var(--primary)]"]) {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+.ce-app :is(.btn-primary, .bg-primary, button[class*="bg-[var(--primary)]"]):hover {
+  background-color: var(--primary-hover) !important;
+}
+
+.ce-app table {
+  border-color: var(--border-subtle) !important;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.ce-app table :is(thead, th) {
+  border-color: var(--border-subtle) !important;
+  background: #f8f8f9 !important;
+  color: var(--text-secondary) !important;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  text-transform: none;
+}
+
+.ce-app table :is(td, tr) {
+  border-color: var(--border-subtle) !important;
+}
+
+.ce-app table tbody tr:hover {
+  background: #f7f8fa !important;
+}
+
+.ce-app :is([role="dialog"] > div, .modal-panel, [role="menu"], [role="listbox"]) {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.05), 0 6px 30px 5px rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .ce-app {
+  --background: #171820;
+  --bg: #171820;
+  --bg-subtle: #20212b;
+  --surface: #23242f;
+  --panel: #23242f;
+  --surface-hover: #2b2d39;
+  --surface-high: #30323e;
+  --surface-elevated: #393b48;
+  --border: rgba(255, 255, 255, 0.13);
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --text: #f2f2f5;
+  --text-secondary: #b4b6bd;
+  --text-muted: #92959e;
+}
+
+.dark .ce-app .sidebar-shell { background: #17133f !important; }
+.dark .ce-app :is(input, select, textarea) { background: var(--surface-high) !important; }
+.dark .ce-app table :is(thead, th) { background: var(--bg-subtle) !important; }
+*/
+
+/* Pipedrive-inspired navigation shared by every application module. */
+.ce-app .sidebar-shell.system-sidebar-theme {
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-brand,
+.ce-app .sidebar-shell.system-sidebar-theme > div {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-brand {
+  background: transparent !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme :is(button, span, p, h1, h2, h3) {
+  color: #ffffff;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item {
+  min-height: 40px !important;
+  border-radius: 7px !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item > div:first-child {
+  gap: 8px !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item > div:first-child > div:first-child {
+  width: 25px !important;
+  height: 25px !important;
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item span {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active {
+  background: #6250e8 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active:hover {
+  background: #6250e8 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  font-weight: 500 !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu {
+  background: #211c52 !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu::before {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button:hover,
+.ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button[class*="bg-[var(--primary-dim)]"] {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-context-submenu {
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-context-submenu button,
+.ce-app .sidebar-context-submenu span,
+.ce-app .sidebar-context-submenu svg {
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-context-submenu button {
+  background: transparent !important;
+}
+
+.ce-app .sidebar-context-submenu button:hover,
+.ce-app .sidebar-context-submenu button[class*="bg-[var(--primary-dim)]"] {
+  background: #6250e8 !important;
+  color: #ffffff !important;
+}

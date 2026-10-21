@@ -75,7 +75,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!session?.user?.id || lastAuditedTabRef.current === activeTab) return;
     lastAuditedTabRef.current = activeTab;
-    const auditedModule = activeTab === Tab.CRM ? 'Relacionamento' : activeTab;
+    const auditedModule = activeTab === Tab.CRM ? 'CRM' : activeTab;
     void recordAuditEvent('VIEW', auditedModule, `Acessou o módulo ${auditedModule}`);
   }, [activeTab, session?.user?.id]);
 
@@ -133,6 +133,7 @@ const App: React.FC = () => {
 
 
   const [requestedSubTab, setRequestedSubTab] = useState<string | null>(null);
+  const subTabResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [requestedOrthoPatientId, setRequestedOrthoPatientId] = useState<string | null>(null);
 
   const openOrthoPatientProfile = useCallback((patientId: string) => {
@@ -527,9 +528,21 @@ const App: React.FC = () => {
   }, [session?.user?.id]);
 
   const handleSubTabSelect = (subTabId: string) => {
+      if (subTabResetTimer.current) {
+        clearTimeout(subTabResetTimer.current);
+        subTabResetTimer.current = null;
+      }
       setRequestedSubTab(subTabId);
 
-      setTimeout(() => setRequestedSubTab(null), 500);
+      // CRM sub-navigation represents a persistent screen selection. Clearing
+      // it after the former one-shot delay made CRM resolve back to "deals".
+      const crmSubTabs = new Set(['deals', 'leads', 'contacts', 'activities', 'reactivation', 'whatsapp']);
+      if (!crmSubTabs.has(subTabId)) {
+        subTabResetTimer.current = setTimeout(() => {
+          setRequestedSubTab(null);
+          subTabResetTimer.current = null;
+        }, 500);
+      }
   };
 
   if (loading) {

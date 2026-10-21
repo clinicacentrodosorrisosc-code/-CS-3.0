@@ -70,6 +70,10 @@ const sidebarContentTransition = {
 const SUB_TAB_PERMISSION_IDS: Record<string, string> = {
   commercial: 'dash_financial',
   agenda: 'dash_agenda',
+  deals: 'crm_deals',
+  leads: 'crm_leads',
+  contacts: 'crm_contacts',
+  activities: 'crm_activities',
   reactivation: 'crm_reactivation',
   whatsapp: 'crm_whatsapp',
   overview: 'financial_overview',
@@ -105,10 +109,14 @@ const MENU_STRUCTURE: MenuItem[] = [
   },
   {
     id: Tab.CRM,
-    label: 'Relacionamento',
+    label: 'CRM',
     icon: HeartHandshake,
     group: 'main',
     subItems: [
+      { id: 'deals', label: 'Negócios' },
+      { id: 'leads', label: 'Leads' },
+      { id: 'contacts', label: 'Contatos' },
+      { id: 'activities', label: 'Atividades' },
       { id: 'reactivation', label: 'Reativação de orçamentos' },
       { id: 'whatsapp', label: 'WhatsApp Business' }
     ]
@@ -283,10 +291,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [isMobileMenuOpen, onMobileOpenChange]);
   const [navQuery, setNavQuery] = useState('');
+  const [crmActivityCount, setCrmActivityCount] = useState(() => Number(localStorage.getItem('crm-activity-count') || 0));
   const [openAccordionTab, setOpenAccordionTab] = useState<Tab | null>(activeTab);
   const [flyoutTab, setFlyoutTab] = useState<Tab | null>(null);
   const [flyoutPosition, setFlyoutPosition] = useState({ top: 16, left: 76 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const updateActivityCount = (event: Event) => setCrmActivityCount(Number((event as CustomEvent<number>).detail || 0));
+    window.addEventListener('crm-activity-count', updateActivityCount);
+    return () => window.removeEventListener('crm-activity-count', updateActivityCount);
+  }, []);
 
   // Keep accordion tab synced with active tab
   useEffect(() => {
@@ -305,7 +320,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (tabId: Tab, hasSubItems: boolean) => {
     setActiveTab(tabId);
     if (tabId === Tab.CRM && hasSubItems && onSubTabSelect) {
-      onSubTabSelect('reactivation');
+      onSubTabSelect('deals');
     }
     if (isExpanded) {
       if (openAccordionTab === tabId) {
@@ -505,7 +520,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     `}
                   >
                     <span>{subItem.label}</span>
-                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />
+                    <span className="flex items-center gap-1.5">
+                      {subItem.id === 'activities' && crmActivityCount > 0 && <span className="min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[9px] font-bold text-white">{crmActivityCount}</span>}
+                      <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-400" />
+                    </span>
                   </button>
                 ))}
               </motion.div>
@@ -545,7 +563,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }}
         className={`
           flex flex-col shrink-0 h-full fixed lg:sticky top-0 z-40 lg:my-0 lg:me-0 lg:h-full lg:rounded-none
-          sidebar-shell bg-[var(--surface)] border-e border-[var(--border-subtle)]
+          sidebar-shell system-sidebar-theme bg-[var(--surface)] border-e border-[var(--border-subtle)]
           transition-colors duration-200
           ${isMobileMenuOpen ? 'sidebar-mobile-open shadow-2xl z-50' : 'sidebar-mobile-closed'}
         `}
@@ -709,8 +727,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             transition={{ duration: 0.15 }}
             onMouseEnter={keepFlyout}
             onMouseLeave={hideFlyout}
-            style={{ top: flyoutPosition.top, left: flyoutPosition.left }}
-            className="sidebar-context-submenu fixed w-52 rounded-xl bg-[var(--surface)] border border-[#E2E5EA] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/30 p-1.5 z-50 hidden lg:flex flex-col gap-1"
+            style={{
+              top: flyoutPosition.top,
+              left: flyoutPosition.left,
+              backgroundColor: '#211c52',
+              borderColor: 'rgba(255, 255, 255, 0.14)',
+              color: '#ffffff',
+            }}
+            className="sidebar-context-submenu fixed w-52 rounded-xl bg-[#211c52] text-white border border-white/15 shadow-xl shadow-slate-900/20 p-1.5 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
@@ -719,8 +743,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               return (
                 <>
-                  <div className="px-2 py-1.5 border-b border-[#E2E5EA] dark:border-white/[0.06] flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#172033] dark:text-slate-100">
+                  <div className="px-2 py-1.5 border-b border-white/15 flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">
                       {currentItem.label}
                     </span>
                   </div>
@@ -737,12 +761,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={`
                             text-start px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between
                             ${requestedSubTab === sub.id
-                            ? 'text-[var(--primary)] bg-[var(--primary-dim)] font-bold'
-                              : 'text-[#667085] hover:text-[#172033] hover:bg-[#F5F6F8] dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-white/[0.04]'}
+                            ? 'text-white bg-[#6250e8] font-bold'
+                              : 'text-white hover:text-white hover:bg-white/10'}
                           `}
                         >
                           <span>{sub.label}</span>
-                          <ChevronRight className="w-3 h-3 text-slate-400" />
+                          <ChevronRight className="w-3 h-3 text-white" />
                         </button>
                       ))}
                     </div>
@@ -753,7 +777,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setActiveTab(currentItem.id);
                         setFlyoutTab(null);
                       }}
-                      className="text-start px-2.5 py-1.5 rounded-lg text-xs text-[var(--primary)] hover:bg-[#F5F6F8] dark:hover:bg-white/[0.04]"
+                      className="text-start px-2.5 py-1.5 rounded-lg text-xs text-white hover:bg-white/10"
                     >
                       Acessar módulo
                     </button>

@@ -2848,7 +2848,7 @@ export const Financial: React.FC<FinancialProps> = ({
       }
     };
     const renderIncomeFilterPopover = () => (
-      <div className="absolute left-0 top-[calc(100%+8px)] z-50 flex w-[660px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-[#e4e7ec] bg-white shadow-2xl dark:border-white/[0.12] dark:bg-[var(--surface)] max-sm:flex-col">
+      <div className="absolute left-0 top-[calc(100%+8px)] z-50 flex max-h-[min(520px,calc(100dvh-11rem))] w-[660px] max-w-[calc(100vw-2rem)] overflow-auto rounded-2xl border border-[#e4e7ec] bg-white shadow-2xl dark:border-white/[0.12] dark:bg-[var(--surface)] max-sm:flex-col">
         <nav className="w-52 shrink-0 border-r border-[#edf0f4] bg-[#fbfcfe] p-2 dark:border-white/[0.08] dark:bg-white/[0.03] max-sm:flex max-sm:w-full max-sm:overflow-x-auto max-sm:border-b max-sm:border-r-0" aria-label="Tipos de filtro">
           {incomeFilterItems.map(([value, label]) => (
             <button key={value} type="button" onClick={() => setActiveIncomeFilter(value)} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold transition max-sm:w-auto max-sm:shrink-0 ${activeIncomeFilter === value ? "bg-[var(--primary)] text-white shadow-sm" : "text-[#667085] hover:bg-[#f0f2f5] dark:text-[var(--text-secondary)] dark:hover:bg-white/[0.07]"}`}>
@@ -2870,9 +2870,13 @@ export const Financial: React.FC<FinancialProps> = ({
       <div className="flex h-full flex-col gap-2 animate-in fade-in">
         <section className="rounded-xl border border-[#e8ebf0] bg-white px-3 py-2.5 shadow-sm dark:border-white/[0.09] dark:bg-[#141A29] sm:px-4">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="flex min-w-0 items-baseline gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="truncate text-base font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Lançamentos</h3>
               <span className="shrink-0 text-xs text-[#98a2b3]">{filtered.length} registros</span>
+              <div className="relative">
+                <button type="button" onClick={() => setIsIncomeFiltersOpen((value) => !value)} aria-expanded={isIncomeFiltersOpen} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-dim)]"><Plus className="size-3.5" /> Adicionar filtro</button>
+                {isIncomeFiltersOpen && renderIncomeFilterPopover()}
+              </div>
             </div>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1.5">
               {[
@@ -2883,10 +2887,6 @@ export const Financial: React.FC<FinancialProps> = ({
               ].map(([label, value, dot]) => <div key={label as string} className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs"><span className={`size-1.5 shrink-0 rounded-full ${dot}`} /><span className="text-[#667085] dark:text-[var(--text-secondary)]">{label}</span><strong className="font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">R$ {(value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>)}
             </div>
             <div className="ms-auto flex items-center gap-1">
-              <div className="relative">
-                <button type="button" onClick={() => setIsIncomeFiltersOpen((value) => !value)} aria-expanded={isIncomeFiltersOpen} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-dim)]"><Plus className="size-3.5" /> Adicionar filtro</button>
-                {isIncomeFiltersOpen && renderIncomeFilterPopover()}
-              </div>
               <button
                 type="button"
                 onClick={() => void syncClinicaExpertsPayments()}

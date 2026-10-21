@@ -43,6 +43,10 @@ const SUB_TABS_CONFIG: Record<string, { id: string; label: string; description?:
     { id: 'dash_agenda', label: 'Agenda Clínica Experts' },
   ],
   [Tab.CRM]: [
+    { id: 'crm_deals', label: 'Negócios' },
+    { id: 'crm_leads', label: 'Leads' },
+    { id: 'crm_contacts', label: 'Contatos' },
+    { id: 'crm_activities', label: 'Atividades' },
     { id: 'crm_reactivation', label: 'Reativação de orçamentos' },
     { id: 'crm_whatsapp', label: 'WhatsApp Business' },
   ],
@@ -93,7 +97,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
     tabs: [...Object.values(Tab)],
     subTabs: [
       'dash_financial', 'dash_agenda',
-      'crm_reactivation', 'crm_whatsapp', 'settings_whatsapp',
+      'crm_deals', 'crm_leads', 'crm_contacts', 'crm_activities', 'crm_reactivation', 'crm_whatsapp', 'settings_whatsapp',
       'financial_overview', 'financial_transactions', 'financial_pricing', 'financial_viability', 'financial_settings', 'financial_clinica_experts',
       'ortho_vision', 'ortho_calendar', 'ortho_grid', 'ortho_patients', 'ortho_settings',
       'lab_dashboard', 'lab_kanban', 'lab_settings', 'campaign_calendar', 'meeting_minutes', 'clinic_ideas', 'sales_playbook',
@@ -137,7 +141,7 @@ const PRESET_TEMPLATES: Record<string, { name: string; icon: string; description
       Tab.DASHBOARD, Tab.CRM, Tab.FINANCIAL, Tab.MEETINGS, Tab.TASKS
     ],
     subTabs: [
-      'dash_financial', 'crm_reactivation', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
+      'dash_financial', 'crm_deals', 'crm_leads', 'crm_contacts', 'crm_activities', 'crm_reactivation', 'crm_whatsapp', 'financial_overview', 'financial_transactions',
       'campaign_calendar', 'meeting_minutes', 'sales_playbook', 'clinic_ideas', 'tasks', 'reports'
     ]
   },
@@ -166,7 +170,7 @@ const ALL_AVAILABLE_TABS = [
   Tab.TASKS
 ];
 
-const getTabLabel = (tab: string) => tab === Tab.CRM ? 'Relacionamento' : tab;
+const getTabLabel = (tab: string) => tab === Tab.CRM ? 'CRM' : tab;
 
 export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onClose, onlineUsers = [] }) => {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);

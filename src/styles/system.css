@@ -1014,22 +1014,84 @@ button:not(:disabled):active,
 .pricing-system .pricing-result-price > strong {
   display: block;
   margin-top: 0.35rem;
-  color: var(--primary);
-  font-family: var(--font-data);
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  color: var(--text);
+  font-size: 1.05rem;
   font-weight: 750;
-  line-height: 1;
-  letter-spacing: -0.045em;
-  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.pricing-system .pricing-result-price > small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 650;
 }
 
 .pricing-system .pricing-result-price > p {
   max-width: 50ch;
   margin-top: 0.55rem;
   color: var(--text-secondary);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   line-height: 1.45;
 }
+
+.pricing-system .pricing-price-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.pricing-system .pricing-price-comparison article {
+  min-width: 0;
+  padding: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--surface-high);
+}
+
+.pricing-system .pricing-price-comparison__suggested {
+  border-color: var(--primary-border) !important;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface)) !important;
+}
+
+.pricing-system .pricing-price-comparison span,
+.pricing-system .pricing-price-comparison small {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pricing-system .pricing-price-comparison > article > strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-system .pricing-price-comparison__suggested > strong { color: var(--primary) !important; }
+.pricing-system .pricing-price-comparison article > div { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--border-subtle); }
+.pricing-system .pricing-price-comparison b { display: block; margin-top: 0.2rem; color: var(--success); font-family: var(--font-data); font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pricing-system .pricing-price-comparison__suggested b { color: var(--primary); }
+.pricing-system .pricing-price-comparison em { margin-left: 0.25rem; color: var(--text-secondary); font-family: inherit; font-size: 0.78rem; font-style: normal; font-weight: 700; }
+
+.pricing-system .pricing-price-gap {
+  margin: -0.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.pricing-system .pricing-price-gap strong { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.pricing-system .pricing-price-gap.is-positive strong { color: var(--success); }
+.pricing-system .pricing-price-gap.is-negative strong { color: var(--warning); }
 
 .pricing-system .pricing-result-summary {
   display: grid;
@@ -1110,6 +1172,196 @@ button:not(:disabled):active,
   color: var(--text-muted);
   font-size: 0.62rem;
   line-height: 1.45;
+}
+
+.pricing-system .pricing-health {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-high);
+}
+
+.pricing-system .pricing-health__icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 0.55rem;
+}
+
+.pricing-system .pricing-health strong,
+.pricing-system .pricing-break-even strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.pricing-system .pricing-health p,
+.pricing-system .pricing-break-even p {
+  margin: 0.18rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.pricing-system .pricing-health.is-healthy { border-color: color-mix(in srgb, var(--success) 38%, var(--border)); }
+.pricing-system .pricing-health.is-healthy .pricing-health__icon { color: var(--success); background: var(--success-dim); }
+.pricing-system .pricing-health.is-warning { border-color: color-mix(in srgb, var(--warning) 42%, var(--border)); }
+.pricing-system .pricing-health.is-warning .pricing-health__icon { color: var(--warning); background: var(--warning-dim); }
+.pricing-system .pricing-health.is-danger { border-color: color-mix(in srgb, var(--danger) 42%, var(--border)); }
+.pricing-system .pricing-health.is-danger .pricing-health__icon { color: var(--danger); background: var(--danger-dim); }
+
+.pricing-system .pricing-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.pricing-system .pricing-kpi-grid article {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-high);
+}
+
+.pricing-system .pricing-kpi-grid span,
+.pricing-system .pricing-break-even span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.pricing-system .pricing-kpi-grid strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.3rem;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pricing-system .pricing-kpi-grid small,
+.pricing-system .pricing-break-even small {
+  display: block;
+  margin-top: 0.22rem;
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  line-height: 1.35;
+}
+
+.pricing-system .pricing-kpi-grid article[data-tone="success"] strong { color: var(--success); }
+.pricing-system .pricing-kpi-grid article[data-tone="danger"] strong { color: var(--danger); }
+.pricing-system .pricing-kpi-grid article[data-tone="primary"] strong { color: var(--primary); }
+
+.pricing-system .pricing-break-even {
+  padding: 0.85rem;
+  border: 1px solid var(--primary-border);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+}
+
+.pricing-system .pricing-break-even__heading {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--primary);
+}
+
+.pricing-system .pricing-break-even__heading > div { min-width: 0; }
+.pricing-system .pricing-break-even__heading span { color: var(--text); font-size: 0.82rem; font-weight: 700; }
+
+.pricing-system .pricing-break-even__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.pricing-system .pricing-break-even__metrics > div + div { border-left: 1px solid var(--primary-border); padding-left: 0.75rem; }
+.pricing-system .pricing-break-even__metrics strong { margin-top: 0.25rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+
+.pricing-system .pricing-calculation-memory {
+  padding: 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--bg-subtle);
+}
+
+.pricing-system .pricing-calculation-memory__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.pricing-system .pricing-calculation-memory__intro {
+  margin: 0.4rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.pricing-system .pricing-calculation-memory__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.pricing-system .pricing-calculation-memory__columns article {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--surface);
+}
+
+.pricing-system .pricing-calculation-memory__columns article + article {
+  border-color: var(--primary-border);
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+
+.pricing-system .pricing-calculation-memory h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.pricing-system .pricing-calculation-memory dl { margin: 0.55rem 0 0; }
+.pricing-system .pricing-calculation-memory dl > div { display: flex; justify-content: space-between; gap: 0.65rem; padding: 0.31rem 0; border-bottom: 1px solid var(--border-subtle); }
+.pricing-system .pricing-calculation-memory dl > div:last-child { border-bottom: 0; }
+.pricing-system .pricing-calculation-memory dt { color: var(--text-secondary); font-size: 0.62rem; line-height: 1.3; }
+.pricing-system .pricing-calculation-memory dd { margin: 0; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.62rem; font-variant-numeric: tabular-nums; line-height: 1.3; text-align: right; white-space: nowrap; }
+.pricing-system .pricing-calculation-memory .is-revenue dt,
+.pricing-system .pricing-calculation-memory .is-revenue dd { color: var(--primary); font-weight: 750; }
+.pricing-system .pricing-calculation-memory .is-subtotal { border-top: 1px dashed var(--border) !important; margin-top: 0.15rem; padding-top: 0.46rem !important; }
+.pricing-system .pricing-calculation-memory .is-subtotal dd { color: var(--text); font-weight: 700; }
+.pricing-system .pricing-calculation-memory .is-formula dt,
+.pricing-system .pricing-calculation-memory .is-formula dd { color: var(--text-secondary); font-size: 0.59rem; }
+.pricing-system .pricing-calculation-memory .is-total { margin-top: 0.25rem; border-top: 1px solid var(--primary-border) !important; border-bottom: 0 !important; padding-top: 0.55rem !important; }
+.pricing-system .pricing-calculation-memory .is-total dt,
+.pricing-system .pricing-calculation-memory .is-total dd { color: var(--success); font-size: 0.68rem; font-weight: 800; }
+.pricing-system .pricing-calculation-memory__note { display: flex; gap: 0.35rem; margin-top: 0.75rem; color: var(--text-muted); font-size: 0.63rem; line-height: 1.45; }
+
+@media (max-width: 480px) {
+  .pricing-system .pricing-price-comparison,
+  .pricing-system .pricing-kpi-grid,
+  .pricing-system .pricing-break-even__metrics,
+  .pricing-system .pricing-calculation-memory__columns { grid-template-columns: 1fr; }
+  .pricing-system .pricing-break-even__metrics > div + div { border-top: 1px solid var(--primary-border); border-left: 0; padding-top: 0.7rem; padding-left: 0; }
 }
 
 .pricing-system .pricing-empty-guidance {
