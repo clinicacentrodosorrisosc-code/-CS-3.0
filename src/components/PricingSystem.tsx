@@ -477,6 +477,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                         setFichaTecnicas(repaired);
                     }
                     if (settings.service_pricing_settings) setServiceSettings(settings.service_pricing_settings);
+                    if (settings.scenario_quantities_list_v2) setScenarioQuantities(settings.scenario_quantities_list_v2);
+                    if (settings.scenario_custom_prices_v2) setCustomPracticedPrices(settings.scenario_custom_prices_v2);
                     if (settings.third_party_costs) setThirdPartyCosts(settings.third_party_costs);
                     if (settings.fixed_expenses_list) setFixedExpenses(settings.fixed_expenses_list);
                     if (settings.payroll_employees_list) setEmployees(settings.payroll_employees_list);
@@ -591,20 +593,26 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
     });
 
     useEffect(() => {
-        try {
-            localStorage.setItem('scenario_quantities_list_v2', JSON.stringify(scenarioQuantities));
-        } catch (e) {
-            console.warn(e);
+        if (!isLoadingSupabase) {
+            try {
+                localStorage.setItem('scenario_quantities_list_v2', JSON.stringify(scenarioQuantities));
+                saveToSupabase('scenario_quantities_list_v2', scenarioQuantities);
+            } catch (e) {
+                console.warn(e);
+            }
         }
-    }, [scenarioQuantities]);
+    }, [scenarioQuantities, isLoadingSupabase, saveToSupabase]);
 
     useEffect(() => {
-        try {
-            localStorage.setItem('scenario_custom_prices_v2', JSON.stringify(customPracticedPrices));
-        } catch (e) {
-            console.warn(e);
+        if (!isLoadingSupabase) {
+            try {
+                localStorage.setItem('scenario_custom_prices_v2', JSON.stringify(customPracticedPrices));
+                saveToSupabase('scenario_custom_prices_v2', customPracticedPrices);
+            } catch (e) {
+                console.warn(e);
+            }
         }
-    }, [customPracticedPrices]);
+    }, [customPracticedPrices, isLoadingSupabase, saveToSupabase]);
 
     // Ficha Técnica and per-service variables persistence
     const [desiredProfit, setDesiredProfit] = useState<number>(0);
@@ -1364,6 +1372,36 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
         });
     };
 
+    const handleSavePricingWorkspace = async () => {
+        const records = [
+            ['raw_materials_list', materials],
+            ['ficha_tecnicas', fichaTecnicas],
+            ['service_pricing_settings', serviceSettings],
+            ['third_party_costs', thirdPartyCosts],
+            ['fixed_expenses_list', fixedExpenses],
+            ['payroll_employees_list', employees],
+            ['scenario_quantities_list_v2', scenarioQuantities],
+            ['scenario_custom_prices_v2', customPracticedPrices],
+            ['payroll_config', { provFerias, prov13Salario, prov13Ferias, inss, satRat, salarioEducacao, incraSebrae, fgts, fgtsRescisao }],
+        ] as const;
+
+        setIsSavingSupabase(true);
+        try {
+            records.forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+            const results = await Promise.all(records.map(([key, value]) => saveToSupabase(key, value)));
+            const failed = results.find(result => !result.success);
+            if (failed) {
+                throw failed.error || new Error('Não foi possível salvar todos os dados.');
+            }
+            toast.success('Precificação salva com sucesso.');
+        } catch (error: any) {
+            console.error('Erro ao salvar a precificação:', error);
+            toast.error(`Não foi possível salvar a precificação: ${error?.message || 'verifique sua conexão.'}`);
+        } finally {
+            setIsSavingSupabase(false);
+        }
+    };
+
     const getPracticedPrice = useCallback((serviceId: string) => {
         const savedPrice = serviceSettings[serviceId]?.precoPraticado;
         if (typeof savedPrice === 'number' && Number.isFinite(savedPrice) && savedPrice > 0) {
@@ -1658,9 +1696,20 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 description="Cadastre custos, componha procedimentos e simule preços com os mesmos dados financeiros da clínica."
                 icon={DollarSign}
                 actions={(
-                    <div className="pricing-header-status" aria-label="Status da área de precificação">
-                        <span aria-hidden="true" />
-                        8 áreas integradas
+                    <div className="flex items-center gap-2">
+                        <div className="pricing-header-status" aria-label="Status da área de precificação">
+                            <span aria-hidden="true" />
+                            8 áreas integradas
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleSavePricingWorkspace}
+                            disabled={isSavingSupabase || isLoadingSupabase}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {isSavingSupabase ? <RefreshCw className="size-3.5 animate-spin" aria-hidden="true" /> : <Check className="size-3.5" aria-hidden="true" />}
+                            {isSavingSupabase ? 'Salvando...' : 'Salvar alterações'}
+                        </button>
                     </div>
                 )}
                 tabs={(
