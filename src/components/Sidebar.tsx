@@ -553,7 +553,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         data-sidebar-expanded={isExpanded}
         initial={false}
         animate={{
-          width: isExpanded ? 244 : 60
+          width: isExpanded ? 210 : 60
         }}
         transition={{
           type: 'spring',

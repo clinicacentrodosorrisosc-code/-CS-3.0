@@ -272,13 +272,27 @@ const initialDeals: Deal[] = [
     visibility: "Grupo do responsável",
   },
 ];
+const localDateKey = (date = new Date()) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+};
+const dateFromToday = (offset: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return localDateKey(date);
+};
+const localTimeKey = () =>
+  `${String(new Date().getHours()).padStart(2, "0")}:${String(
+    new Date().getMinutes(),
+  ).padStart(2, "0")}`;
+
 const initialActivities: DealActivity[] = [
   {
     id: 101,
     dealId: 1,
     subject: "Retornar ligação",
     type: "Ligação",
-    due: "2026-10-19",
+    due: dateFromToday(-1),
     time: "10:00",
     done: false,
     owner: "Camila Ribeiro",
@@ -289,7 +303,7 @@ const initialActivities: DealActivity[] = [
     dealId: 5,
     subject: "Enviar proposta atualizada",
     type: "Tarefa",
-    due: "2026-10-20",
+    due: dateFromToday(0),
     done: false,
     owner: "Camila Ribeiro",
     priority: "Normal",
@@ -299,7 +313,7 @@ const initialActivities: DealActivity[] = [
     dealId: 6,
     subject: "Confirmar condições",
     type: "Ligação",
-    due: "2026-10-20",
+    due: dateFromToday(0),
     time: "16:00",
     done: false,
     owner: "Mariana Alves",
@@ -310,7 +324,7 @@ const initialActivities: DealActivity[] = [
     dealId: 7,
     subject: "Reunião de apresentação",
     type: "Reunião",
-    due: "2026-10-24",
+    due: dateFromToday(4),
     time: "09:30",
     done: false,
     owner: "Rafael Mendes",
@@ -321,7 +335,7 @@ const initialActivities: DealActivity[] = [
     dealId: 8,
     subject: "Negociar parcelamento",
     type: "Ligação",
-    due: "2026-10-20",
+    due: dateFromToday(0),
     time: "11:30",
     done: false,
     owner: "Camila Ribeiro",
@@ -332,14 +346,14 @@ const initialActivities: DealActivity[] = [
     dealId: 9,
     subject: "Follow-up comercial",
     type: "Tarefa",
-    due: "2026-10-25",
+    due: dateFromToday(5),
     done: false,
     owner: "Rafael Mendes",
     priority: "Normal",
   },
 ];
 
-const TODAY = "2026-10-20";
+const TODAY = localDateKey();
 const DAY_MS = 86_400_000;
 const elapsedStageDays = (enteredAt?: string) =>
   enteredAt
@@ -382,7 +396,7 @@ const activityState = (
   if (!first) return "none";
   if (
     first.due < TODAY ||
-    (first.due === TODAY && first.time && first.time < "13:15")
+    (first.due === TODAY && first.time && first.time < localTimeKey())
   )
     return "overdue";
   if (first.due === TODAY) return "today";
