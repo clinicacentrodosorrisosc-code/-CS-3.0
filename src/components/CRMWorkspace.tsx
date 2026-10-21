@@ -285,6 +285,22 @@ const localTimeKey = () =>
   `${String(new Date().getHours()).padStart(2, "0")}:${String(
     new Date().getMinutes(),
   ).padStart(2, "0")}`;
+const nextQuarterHour = () => {
+  const next = new Date();
+  next.setSeconds(0, 0);
+  next.setMinutes((Math.floor(next.getMinutes() / 15) + 1) * 15);
+  return `${String(next.getHours()).padStart(2, "0")}:${String(
+    next.getMinutes(),
+  ).padStart(2, "0")}`;
+};
+const timePlusMinutes = (value: string, minutes: number) => {
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return "";
+  const total = Number(match[1]) * 60 + Number(match[2]) + minutes;
+  return `${String(Math.floor((total % 1440) / 60)).padStart(2, "0")}:${String(
+    total % 60,
+  ).padStart(2, "0")}`;
+};
 
 const initialActivities: DealActivity[] = [
   {
@@ -3048,6 +3064,12 @@ const ActivityForm: React.FC<{
   );
   const [time, setTime] = useState("");
   const busy = Boolean(time);
+  const todayDisplay = new Date(`${TODAY}T12:00:00`).toLocaleDateString("pt-BR");
+  const agendaDate = new Date(`${TODAY}T12:00:00`).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   return (
     <div className="crmws-overlay">
       <form
@@ -3108,13 +3130,13 @@ const ActivityForm: React.FC<{
             <div className="crmws-when">
               <label>
                 Data
-                <input defaultValue="20/10/2026" />
+                <input value={todayDisplay} readOnly />
               </label>
               <label>
                 Início
                 <input
                   value={time}
-                  onFocus={() => !time && setTime("13:30")}
+                  onFocus={() => !time && setTime(nextQuarterHour())}
                   onChange={(e) => setTime(e.target.value)}
                   placeholder="HH:mm"
                 />
@@ -3122,11 +3144,11 @@ const ActivityForm: React.FC<{
               <span>–</span>
               <label>
                 Fim
-                <input defaultValue={busy ? "13:45" : ""} placeholder="HH:mm" />
+                <input value={busy ? timePlusMinutes(time, 15) : ""} placeholder="HH:mm" readOnly />
               </label>
               <label>
                 Data final
-                <input defaultValue="20/10/2026" />
+                <input value={todayDisplay} readOnly />
               </label>
             </div>
             <label>
@@ -3179,7 +3201,7 @@ const ActivityForm: React.FC<{
           <aside>
             <header>
               <button type="button">‹</button>
-              <b>terça-feira, 20 de outubro</b>
+              <b>{agendaDate}</b>
               <button type="button">›</button>
             </header>
             <div className="crmws-agenda">
