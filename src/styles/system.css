@@ -1261,6 +1261,7 @@ button:not(:disabled):active,
 }
 
 .pricing-system .pricing-kpi-grid article[data-tone="success"] strong { color: var(--success); }
+.pricing-system .pricing-kpi-grid article[data-tone="warning"] strong { color: var(--warning); }
 .pricing-system .pricing-kpi-grid article[data-tone="danger"] strong { color: var(--danger); }
 .pricing-system .pricing-kpi-grid article[data-tone="primary"] strong { color: var(--primary); }
 

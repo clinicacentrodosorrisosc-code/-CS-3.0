@@ -2672,6 +2672,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     const currentBreakEvenRevenue = practicedRealMarginPercent > 0 ? totalFixedExpenses / (practicedRealMarginPercent / 100) : null;
                                     const suggestedBreakEvenRevenue = suggestedContributionPercent > 0 ? totalFixedExpenses / (suggestedContributionPercent / 100) : null;
                                     const contributionGap = suggestedContribution - practicedRealProfit;
+                                    const marginPercentGap = practicedRealMarginPercent - mLiquida;
                                     const currentTaxes = currentPracticedPrice * (tTributos / 100);
                                     const currentFinancialFee = currentPracticedPrice * (tFinanceira / 100);
                                     const currentCommission = currentPracticedPrice * (cComissao / 100);
@@ -2723,10 +2724,14 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                                     <strong>{formatCurrency(costNumerator + practicedDeductions)}</strong>
                                                     <small>{(100 - practicedRealMarginPercent).toFixed(1)}% do preço atual</small>
                                                 </article>
-                                                <article data-tone={contributionGap >= 0 ? 'primary' : 'danger'}>
-                                                    <span>Ganho de margem no preço sugerido</span>
-                                                    <strong>{contributionGap >= 0 ? '+' : '-'} {formatCurrency(Math.abs(contributionGap))}</strong>
-                                                    <small>Por procedimento, antes das despesas fixas</small>
+                                                <article data-tone={isOnTarget ? 'success' : 'warning'}>
+                                                    <span>{isOnTarget ? 'Margem acima da meta' : 'Margem a recuperar'}</span>
+                                                    <strong>{formatCurrency(Math.abs(contributionGap))}</strong>
+                                                    <small>
+                                                        {isOnTarget
+                                                            ? `+${Math.max(0, marginPercentGap).toFixed(1)} p.p. acima da meta de ${mLiquida.toFixed(1)}%`
+                                                            : `Faltam ${Math.abs(marginPercentGap).toFixed(1)} p.p. para atingir a meta de ${mLiquida.toFixed(1)}%`}
+                                                    </small>
                                                 </article>
                                             </div>
 
