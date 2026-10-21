@@ -473,6 +473,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
     dealId?: number;
   } | null>(null);
   const [quickAdd, setQuickAdd] = useState(false);
+  const [currentOwner, setCurrentOwner] = useState<string | null>(null);
 
   useEffect(
     () => localStorage.setItem("crm-demo-stages", JSON.stringify(stages)),
@@ -506,6 +507,9 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
   useEffect(() => {
     let active = true;
     const loadOwners = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       let result = await supabase.from("profiles").select("id,email,full_name").order("email");
       if (result.error) {
         result = await supabase.from("profiles").select("id,email").order("email") as typeof result;
@@ -519,6 +523,14 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
             name: profile.full_name?.trim() || profile.email?.split("@")[0] || "Usuário",
           })),
         );
+      const currentProfile = (data || []).find(
+        (profile: { id: string }) => profile.id === user?.id,
+      ) as { email?: string | null; full_name?: string | null } | undefined;
+      setCurrentOwner(
+        currentProfile?.full_name?.trim() ||
+          currentProfile?.email?.split("@")[0] ||
+          null,
+      );
     };
     void loadOwners();
     return () => {
@@ -527,13 +539,16 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
   }, []);
   useEffect(() => {
     const count = activities.filter(
-      (item) => !item.done && item.due <= TODAY,
+      (item) =>
+        !item.done &&
+        item.due <= TODAY &&
+        (!currentOwner || item.owner === currentOwner),
     ).length;
     localStorage.setItem("crm-activity-count", String(count));
     window.dispatchEvent(
       new CustomEvent("crm-activity-count", { detail: count }),
     );
-  }, [activities]);
+  }, [activities, currentOwner]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
