@@ -21,7 +21,11 @@ import {
     HelpCircle,
     Info,
     Zap,
-    Download
+    Download,
+    TrendingUp,
+    Target,
+    ReceiptText,
+    CircleDollarSign
 } from 'lucide-react';
 import { DonutChart } from './ui/donut-chart';
 import { PageHeader } from './ui/operational-ui';
@@ -440,7 +444,7 @@ const repairFichaTecnicas = (existing: Record<string, FichaTecnicaItem[]>, servi
 };
 
 export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) => {
-    const [activeTab, setActiveTab] = useState<PricingTab>('produtos');
+    const [activeTab, setActiveTab] = useState<PricingTab>('precificacao');
     const [isLoadingSupabase, setIsLoadingSupabase] = useState(true);
     const [selectedServiceId, setSelectedServiceId] = useState<string>('');
     
@@ -2480,8 +2484,8 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                 {activeTab === 'precificacao' && (
                     <div className="pricing-tab-panel space-y-6 animate-in fade-in duration-300">
                         <div className="pricing-section-heading">
-                            <h3 className="text-xl font-bold text-text">Calculadora de Precificação Odontológica</h3>
-                            <p className="text-xs text-slate-400 mt-1">Calculadora baseada em custos reais de hora clínica ativa, insumos diretos e margens operacionais</p>
+                            <h3 className="text-xl font-bold text-text">Calculadora de precificação</h3>
+                            <p className="text-xs text-slate-400 mt-1">Defina um preço sustentável e acompanhe contribuição, resultado e ponto de equilíbrio em um único lugar.</p>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2529,7 +2533,7 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                         onChange={(v) => { setCLaboratorio(v); updateServiceSetting('cLaboratorio', v); }} 
                                     />
                                     <Input 
-                                        label="Margem Líquida (%)" 
+                                        label="Meta de resultado (%)"
                                         value={mLiquida} 
                                         onChange={(v) => { setMLiquida(v); updateServiceSetting('mLiquida', v); }} 
                                     />
@@ -2575,9 +2579,9 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
 
                             <div className="pricing-result-panel bg-slate-800/80 p-8 rounded-2xl border border-border flex flex-col gap-5 relative overflow-hidden">
                                 <div className="pricing-result-price">
-                                    <span>Preço de venda sugerido</span>
-                                    <strong>R$ {price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                                    <p>Valor calculado diretamente pelos custos e percentuais informados nesta tela.</p>
+                                    <span>Análise comparativa</span>
+                                    <strong>Preço, margem e resultado por procedimento</strong>
+                                    <p>Veja de forma direta como o preço praticado se compara ao valor sugerido pela sua estrutura de custos.</p>
                                 </div>
 
                                 {!selectedServiceId && (
@@ -2601,44 +2605,129 @@ export const PricingSystem: React.FC<{ services: Service[] }> = ({ services }) =
                                     const suggestedProfit = price * (mLiquida / 100);
                                     const priceGap = currentPracticedPrice - price;
                                     const isOnTarget = practicedRealMarginPercent >= mLiquida;
+                                    const suggestedDeductions = price * variableRate;
+                                    const suggestedContribution = price - suggestedDeductions - costNumerator;
+                                    const suggestedContributionPercent = price > 0 ? (suggestedContribution / price) * 100 : 0;
+                                    const currentBreakEvenUnits = practicedRealProfit > 0 ? Math.ceil(totalFixedExpenses / practicedRealProfit) : null;
+                                    const suggestedBreakEvenUnits = suggestedContribution > 0 ? Math.ceil(totalFixedExpenses / suggestedContribution) : null;
+                                    const currentBreakEvenRevenue = practicedRealMarginPercent > 0 ? totalFixedExpenses / (practicedRealMarginPercent / 100) : null;
+                                    const suggestedBreakEvenRevenue = suggestedContributionPercent > 0 ? totalFixedExpenses / (suggestedContributionPercent / 100) : null;
+                                    const contributionGap = suggestedContribution - practicedRealProfit;
+                                    const chairCost = cHora * time;
+                                    const currentTaxes = currentPracticedPrice * (tTributos / 100);
+                                    const currentFinancialFee = currentPracticedPrice * (tFinanceira / 100);
+                                    const currentCommission = currentPracticedPrice * (cComissao / 100);
+                                    const suggestedTaxes = price * (tTributos / 100);
+                                    const suggestedFinancialFee = price * (tFinanceira / 100);
+                                    const suggestedCommission = price * (cComissao / 100);
+                                    const suggestedFormulaRate = mLiquida + tTributos + tFinanceira + cComissao;
+                                    const formatCurrency = (value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
                                     return (
                                         <div className="pricing-result-summary">
-                                            <div className="pricing-result-grid">
-                                                <article>
-                                                    <span>Margem desejada</span>
-                                                    <strong>{mLiquida.toFixed(1)}%</strong>
-                                                    <small>Aplicada ao preço sugerido</small>
+                                            <div className="pricing-price-comparison">
+                                                <article className="pricing-price-comparison__current">
+                                                    <span>Preço praticado hoje</span>
+                                                    <strong>{formatCurrency(currentPracticedPrice)}</strong>
+                                                    <div>
+                                                        <small>Margem de contribuição</small>
+                                                        <b>{formatCurrency(practicedRealProfit)} <em>{practicedRealMarginPercent.toFixed(1)}%</em></b>
+                                                    </div>
                                                 </article>
-                                                <article>
-                                                    <span>Lucro no preço sugerido</span>
-                                                    <strong>R$ {suggestedProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                                                    <small>Por procedimento</small>
-                                                </article>
-                                                <article data-tone={isOnTarget ? 'success' : 'warning'}>
-                                                    <span>Margem no preço atual</span>
-                                                    <strong>{practicedRealMarginPercent.toFixed(1)}%</strong>
-                                                    <small>{isOnTarget ? 'Dentro da margem desejada' : 'Abaixo da margem desejada'}</small>
-                                                </article>
-                                                <article data-tone={practicedRealProfit >= 0 ? 'success' : 'danger'}>
-                                                    <span>Lucro no preço atual</span>
-                                                    <strong>R$ {practicedRealProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                                                    <small>Por procedimento</small>
+                                                <article className="pricing-price-comparison__suggested">
+                                                    <span>Preço sugerido</span>
+                                                    <strong>{formatCurrency(price)}</strong>
+                                                    <div>
+                                                        <small>Margem de contribuição</small>
+                                                        <b>{formatCurrency(suggestedContribution)} <em>{suggestedContributionPercent.toFixed(1)}%</em></b>
+                                                    </div>
                                                 </article>
                                             </div>
 
-                                            <div className="pricing-result-current">
-                                                <div>
-                                                    <span>Preço praticado</span>
-                                                    <strong>R$ {currentPracticedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                            <p className={`pricing-price-gap ${priceGap >= 0 ? 'is-positive' : 'is-negative'}`}>
+                                                {priceGap >= 0 ? 'O preço atual está ' : 'Para atingir o sugerido, ajuste o preço em '}
+                                                <strong>{priceGap >= 0 ? `${formatCurrency(priceGap)} acima do sugerido` : formatCurrency(Math.abs(priceGap))}</strong>.
+                                            </p>
+
+                                            <div className={`pricing-health ${practicedRealProfit > 0 ? (isOnTarget ? 'is-healthy' : 'is-warning') : 'is-danger'}`}>
+                                                <div className="pricing-health__icon" aria-hidden="true">
+                                                    {practicedRealProfit > 0 ? <TrendingUp className="size-5" /> : <AlertCircle className="size-5" />}
                                                 </div>
                                                 <div>
-                                                    <span>Diferença para o sugerido</span>
-                                                    <strong className={priceGap >= 0 ? 'text-emerald-500' : 'text-amber-500'}>
-                                                        {priceGap >= 0 ? '+' : '-'} R$ {Math.abs(priceGap).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </strong>
+                                                    <strong>{practicedRealProfit <= 0 ? 'O preço atual não cobre os custos variáveis' : isOnTarget ? 'Preço atual dentro da meta definida' : 'Preço atual positivo, mas abaixo da meta'}</strong>
+                                                    <p>{practicedRealProfit <= 0 ? 'Cada venda reduz o resultado da clínica. Revise o preço, os custos ou os percentuais.' : `Cada venda contribui com ${formatCurrency(practicedRealProfit)} para pagar as despesas fixas e gerar resultado.`}</p>
                                                 </div>
                                             </div>
+
+                                            <div className="pricing-kpi-grid">
+                                                <article>
+                                                    <span>Custos e despesas variáveis</span>
+                                                    <strong>{formatCurrency(costNumerator + practicedDeductions)}</strong>
+                                                    <small>{(100 - practicedRealMarginPercent).toFixed(1)}% do preço atual</small>
+                                                </article>
+                                                <article data-tone={contributionGap >= 0 ? 'primary' : 'danger'}>
+                                                    <span>Ganho de margem no preço sugerido</span>
+                                                    <strong>{contributionGap >= 0 ? '+' : '-'} {formatCurrency(Math.abs(contributionGap))}</strong>
+                                                    <small>Por procedimento, antes das despesas fixas</small>
+                                                </article>
+                                            </div>
+
+                                            <section className="pricing-break-even" aria-label="Ponto de equilíbrio mensal">
+                                                <div className="pricing-break-even__heading">
+                                                    <Target className="size-4" aria-hidden="true" />
+                                                    <div>
+                                                        <span>Ponto de equilíbrio mensal</span>
+                                                        <p>Volume necessário se este procedimento cobrisse sozinho as despesas fixas da clínica.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="pricing-break-even__metrics">
+                                                    <div>
+                                                        <span>No preço atual</span>
+                                                        <strong>{currentBreakEvenUnits === null ? 'Não viável' : `${currentBreakEvenUnits.toLocaleString('pt-BR')} procedimentos`}</strong>
+                                                        <small>{currentBreakEvenRevenue === null ? 'Contribuição nula ou negativa' : `${formatCurrency(currentBreakEvenRevenue)} de faturamento`}</small>
+                                                    </div>
+                                                    <div>
+                                                        <span>No preço sugerido</span>
+                                                        <strong>{suggestedBreakEvenUnits === null ? 'Não viável' : `${suggestedBreakEvenUnits.toLocaleString('pt-BR')} procedimentos`}</strong>
+                                                        <small>{suggestedBreakEvenRevenue === null ? 'Contribuição nula ou negativa' : `${formatCurrency(suggestedBreakEvenRevenue)} de faturamento`}</small>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            <section className="pricing-calculation-memory" aria-label="Memória de cálculo">
+                                                <div className="pricing-calculation-memory__title"><ReceiptText className="size-4" aria-hidden="true" /> Como chegamos a este número</div>
+                                                <p className="pricing-calculation-memory__intro">A composição abaixo mostra cada valor usado no cálculo, sem ratear despesas fixas por procedimento.</p>
+                                                <div className="pricing-calculation-memory__columns">
+                                                    <article>
+                                                        <h4>Preço praticado hoje</h4>
+                                                        <dl>
+                                                            <div className="is-revenue"><dt>Preço cobrado</dt><dd>{formatCurrency(currentPracticedPrice)}</dd></div>
+                                                            <div><dt>Hora clínica ({formatCurrency(cHora)} × {time.toFixed(2)}h)</dt><dd>- {formatCurrency(chairCost)}</dd></div>
+                                                            <div><dt>Insumos diretos</dt><dd>- {formatCurrency(cDireto)}</dd></div>
+                                                            <div><dt>Laboratório</dt><dd>- {formatCurrency(cLaboratorio)}</dd></div>
+                                                            <div className="is-subtotal"><dt>Custos diretos</dt><dd>- {formatCurrency(costNumerator)}</dd></div>
+                                                            <div><dt>Tributos ({tTributos.toFixed(1)}%)</dt><dd>- {formatCurrency(currentTaxes)}</dd></div>
+                                                            <div><dt>Taxas financeiras ({tFinanceira.toFixed(1)}%)</dt><dd>- {formatCurrency(currentFinancialFee)}</dd></div>
+                                                            <div><dt>Comissão ({cComissao.toFixed(1)}%)</dt><dd>- {formatCurrency(currentCommission)}</dd></div>
+                                                            <div className="is-total"><dt>= Margem de contribuição</dt><dd>{formatCurrency(practicedRealProfit)} · {practicedRealMarginPercent.toFixed(1)}%</dd></div>
+                                                        </dl>
+                                                    </article>
+                                                    <article>
+                                                        <h4>Preço sugerido</h4>
+                                                        <dl>
+                                                            <div className="is-formula"><dt>Base de custos diretos</dt><dd>{formatCurrency(costNumerator)}</dd></div>
+                                                            <div className="is-formula"><dt>Percentuais aplicados</dt><dd>{suggestedFormulaRate.toFixed(1)}%</dd></div>
+                                                            <div className="is-formula"><dt>Fórmula do preço</dt><dd>Custos ÷ (1 − {suggestedFormulaRate.toFixed(1)}%)</dd></div>
+                                                            <div className="is-revenue"><dt>Preço sugerido</dt><dd>{formatCurrency(price)}</dd></div>
+                                                            <div><dt>Tributos ({tTributos.toFixed(1)}%)</dt><dd>- {formatCurrency(suggestedTaxes)}</dd></div>
+                                                            <div><dt>Taxas financeiras ({tFinanceira.toFixed(1)}%)</dt><dd>- {formatCurrency(suggestedFinancialFee)}</dd></div>
+                                                            <div><dt>Comissão ({cComissao.toFixed(1)}%)</dt><dd>- {formatCurrency(suggestedCommission)}</dd></div>
+                                                            <div className="is-total"><dt>= Margem de contribuição</dt><dd>{formatCurrency(suggestedContribution)} · {suggestedContributionPercent.toFixed(1)}%</dd></div>
+                                                        </dl>
+                                                    </article>
+                                                </div>
+                                                <div className="pricing-calculation-memory__note"><CircleDollarSign className="size-3.5" aria-hidden="true" /> A margem de contribuição paga as despesas fixas mensais de {formatCurrency(totalFixedExpenses)}. Depois de cobrir esse valor, o que sobra passa a formar lucro.</div>
+                                            </section>
 
                                             <p className="pricing-result-footnote">
                                                 Custo considerado: R$ {costNumerator.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Impostos, taxas e comissão: {(variableRate * 100).toFixed(1)}%
