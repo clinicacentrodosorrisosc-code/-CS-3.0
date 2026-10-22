@@ -1086,6 +1086,16 @@
   gap: 8px;
 }
 
+/* Keep data readable in the deal summary; only actions and linked records are blue. */
+.crmws-value-field > svg,
+.crmws-value-field .crmws-inline-trigger {
+  color: #21232c;
+}
+
+.crmws-value-field .crmws-inline-trigger {
+  font-weight: 600;
+}
+
 .crmws-inline-field {
   display: inline-flex;
   min-width: 0;
