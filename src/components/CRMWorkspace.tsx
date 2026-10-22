@@ -148,7 +148,7 @@ const initialLabels: DealLabel[] = [
   { id: 1, name: "Prioridade alta", color: "#d83c38" },
   { id: 2, name: "Retorno", color: "#f0a202" },
   { id: 3, name: "Indicação", color: "#2d8647" },
-  { id: 4, name: "Implante", color: "#6250e8" },
+  { id: 4, name: "Implante", color: "#6150e1" },
 ];
 const initialDeals: Deal[] = [
   {
@@ -1748,7 +1748,7 @@ const DealDetail: React.FC<{
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [newLabelOpen, setNewLabelOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
-  const [newLabelColor, setNewLabelColor] = useState("#6250e8");
+  const [newLabelColor, setNewLabelColor] = useState("#6150e1");
   const [dateOpen, setDateOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [followersOpen, setFollowersOpen] = useState(false);
@@ -2342,7 +2342,7 @@ const DealDetail: React.FC<{
             <fieldset>
               <legend>Cor</legend>
               <div>
-                {["#d83c38", "#f0a202", "#2d8647", "#0d68c5", "#6250e8", "#d64f9d"].map((color) => (
+                {["#d83c38", "#d1b800", "#2d8647", "#0d68c5", "#6150e1", "#d64f9d"].map((color) => (
                   <button key={color} type="button" className={newLabelColor === color ? "active" : ""} style={{ background: color }} onClick={() => setNewLabelColor(color)} aria-label={`Selecionar cor ${color}`} />
                 ))}
               </div>

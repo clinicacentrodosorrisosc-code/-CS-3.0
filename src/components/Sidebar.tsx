@@ -734,7 +734,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               borderColor: 'rgba(255, 255, 255, 0.14)',
               color: '#ffffff',
             }}
-            className="sidebar-context-submenu fixed w-52 rounded-xl bg-[#211c52] text-white border border-white/15 shadow-xl shadow-slate-900/20 p-1.5 z-50 hidden lg:flex flex-col gap-1"
+            className="sidebar-context-submenu fixed w-52 rounded-lg bg-[#211c52] text-white border border-white/15 shadow-xl shadow-slate-900/20 p-1.5 z-50 hidden lg:flex flex-col gap-1"
           >
             {(() => {
               const currentItem = MENU_STRUCTURE.find(m => m.id === flyoutTab);
@@ -761,7 +761,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={`
                             text-start px-2.5 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-between
                             ${requestedSubTab === sub.id
-                            ? 'text-white bg-[#6250e8] font-bold'
+                            ? 'text-white bg-[#6150e1] font-bold'
                               : 'text-white hover:text-white hover:bg-white/10'}
                           `}
                         >

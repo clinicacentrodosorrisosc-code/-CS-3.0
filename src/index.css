@@ -3492,7 +3492,7 @@ body.dark,
 }
 
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active {
-  background: #6250e8 !important;
+  background: #6150e1 !important;
   color: #ffffff !important;
   box-shadow: none !important;
 }
@@ -3503,7 +3503,7 @@ body.dark,
 }
 
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active:hover {
-  background: #6250e8 !important;
+  background: #6150e1 !important;
 }
 
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-submenu button {
@@ -3547,6 +3547,6 @@ body.dark,
 
 .ce-app .sidebar-context-submenu button:hover,
 .ce-app .sidebar-context-submenu button[class*="bg-[var(--primary-dim)]"] {
-  background: #6250e8 !important;
+  background: #6150e1 !important;
   color: #ffffff !important;
 }
