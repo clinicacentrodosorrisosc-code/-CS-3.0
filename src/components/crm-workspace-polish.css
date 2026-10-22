@@ -1581,3 +1581,85 @@
     display: none !important;
   }
 }
+
+/*
+ * App integration boundary
+ *
+ * CRMWorkspace is also rendered in the visual preview.  In the full product
+ * it lives below `.ce-app`, whose generic typography, table and input rules
+ * are intentionally meant for the other modules.  Keep those rules outside
+ * this measured operational canvas so the integrated CRM has the same
+ * geometry as the preview rather than a second, almost-equal presentation.
+ */
+.ce-app .crm-integrated-workspace {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: #f5f5f6;
+  color: #21232c;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+.ce-app .crm-integrated-workspace .crmws {
+  width: 100%;
+  min-height: 100%;
+  flex: 1;
+  background: #f5f5f6;
+  color: #21232c;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+.ce-app .crm-integrated-workspace .crmws :is(h1, h2, h3, h4) {
+  color: #21232c;
+  letter-spacing: normal;
+  text-wrap: wrap;
+}
+
+.ce-app .crm-integrated-workspace .crmws-detail-head > h1 {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  line-height: 28px !important;
+  letter-spacing: -0.02em !important;
+  text-wrap: nowrap;
+}
+
+.ce-app .crm-integrated-workspace .crmws-stage h2 {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 24px !important;
+}
+
+.ce-app .crm-integrated-workspace .crmws :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+.ce-app .crm-integrated-workspace .crmws :is(input, select, textarea) {
+  min-height: 0;
+  border-radius: 5px;
+  background-color: #fff;
+  box-shadow: none;
+}
+
+.ce-app .crm-integrated-workspace .crmws table {
+  border-color: initial;
+  font-variant-numeric: normal;
+}
+
+.ce-app .crm-integrated-workspace .crmws table :is(thead, th) {
+  background: #f7f7f8 !important;
+  color: #666a72;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+.ce-app .crm-integrated-workspace .crmws table td {
+  color: #21232c;
+  font-size: 11px;
+}
+
+.ce-app .crm-integrated-workspace .crmws table tbody > tr:hover {
+  background: transparent !important;
+}

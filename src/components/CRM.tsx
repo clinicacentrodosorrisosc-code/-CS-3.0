@@ -26,10 +26,18 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     setActiveView(resolveView(requestedSubTab));
   }, [requestedSubTab]);
 
-  if (activeView === 'whatsapp') return <WhatsAppSettings />;
-  if (activeView === 'reactivation') return <BudgetReactivation />;
-  // Render the exact same workspace used by the isolated CRM preview. Keeping
-  // this direct avoids a parallel presentation layer between the application
-  // CRM route and the verified pipeline/detail implementation.
-  return <CRMWorkspace key={activeView} section={activeView as CRMSection} />;
+  let content: React.ReactNode;
+
+  if (activeView === 'whatsapp') {
+    content = <WhatsAppSettings />;
+  } else if (activeView === 'reactivation') {
+    content = <BudgetReactivation />;
+  } else {
+    // This is the same workspace rendered by the isolated preview.  The
+    // integration boundary below only prevents the application shell's
+    // generic component styles from changing the CRM's measured layout.
+    content = <CRMWorkspace key={activeView} section={activeView as CRMSection} />;
+  }
+
+  return <section className="crm-integrated-workspace" aria-label="CRM">{content}</section>;
 };
