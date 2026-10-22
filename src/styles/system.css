@@ -72,8 +72,8 @@ button:not(:disabled):active,
 }
 
 .ce-app {
-  --header-height: 60px;
-  --sidebar-width-expanded: 244px;
+  --header-height: 48px;
+  --sidebar-width-expanded: 210px;
   --sidebar-width-collapsed: 60px;
   background: var(--background) !important;
   color: var(--text);
@@ -111,7 +111,8 @@ button:not(:disabled):active,
 }
 
 .ce-app .sidebar-brand {
-  min-height: 60px !important;
+  min-height: 48px !important;
+  height: 48px !important;
   background: transparent !important;
 }
 
