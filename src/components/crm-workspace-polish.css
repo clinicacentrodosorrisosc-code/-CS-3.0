@@ -71,6 +71,22 @@
   line-height: 21px;
 }
 
+/* Exact semantic colors from the Pipedrive reference tokens. */
+.crmws-status.overdue {
+  background: #d83c38;
+}
+.crmws-status.today {
+  background: #2d8647;
+}
+.crmws-status.none {
+  background: #d1b800;
+  color: #5d5200;
+}
+.crmws-stagebar > div button.passed,
+.crmws-formstage button.active {
+  background: #2d8647;
+}
+
 /* Pipeline stages: continuous columns with the same forward chevron used by the reference. */
 .crmws-board {
   gap: 8px;
