@@ -1508,3 +1508,27 @@ button:not(:disabled):active,
   background: rgba(255, 255, 255, 0.14) !important;
   color: #ffffff !important;
 }
+
+/* The collapsed navigation flyout is rendered beside the sidebar shell, so it
+   cannot inherit the shell selector above. Keep it in the same dark navigation
+   surface instead of letting the generic submenu surface turn it white. */
+.ce-app .sidebar-context-submenu {
+  width: 208px !important;
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-context-submenu :is(button, span, svg) {
+  color: #ffffff !important;
+}
+
+.ce-app .sidebar-context-submenu button {
+  background: transparent !important;
+}
+
+.ce-app .sidebar-context-submenu button:hover,
+.ce-app .sidebar-context-submenu button[class*="bg-[#6150e1]"] {
+  background: #6150e1 !important;
+  color: #ffffff !important;
+}
