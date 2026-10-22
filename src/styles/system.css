@@ -1532,3 +1532,17 @@ button:not(:disabled):active,
   background: #6150e1 !important;
   color: #ffffff !important;
 }
+
+/* The workspace can switch theme, but the navigation keeps one stable brand
+   surface in both modes.  Do not let dark-mode surface tokens turn it grey. */
+html.dark .ce-app .sidebar-shell,
+.dark .ce-app .sidebar-shell {
+  background: #211c52 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+html.dark .ce-app .sidebar-shell :is(button, span, p, h1, h2, h3, svg),
+.dark .ce-app .sidebar-shell :is(button, span, p, h1, h2, h3, svg) {
+  color: #ffffff !important;
+}
