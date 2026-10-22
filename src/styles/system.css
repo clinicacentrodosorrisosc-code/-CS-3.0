@@ -1453,7 +1453,7 @@ button:not(:disabled):active,
 
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active,
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item-active:hover {
-  background: #6250e8 !important;
+  background: #6150e1 !important;
 }
 
 .ce-app .sidebar-shell.system-sidebar-theme .sidebar-nav-item:not(.sidebar-nav-item-active):hover,
