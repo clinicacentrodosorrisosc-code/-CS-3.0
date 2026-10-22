@@ -165,6 +165,24 @@ button:not(:disabled):active,
   animation: none !important;
 }
 
+/* CRM subareas share the same light, compact Pipedrive-inspired workspace. */
+.ce-app .crm-suite {
+  background: #f5f5f6 !important;
+  color: #21232c;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+.ce-app .crm-suite :is(.btn, button[class*="btn-"]) {
+  min-height: 32px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ce-app .crm-suite [class*="rounded-2xl"] {
+  border-radius: 8px !important;
+}
+
 .ce-app :is(.module-command-bar, .dashboard-command-bar) {
   min-height: 60px !important;
   margin: 0 0 0.75rem !important;
