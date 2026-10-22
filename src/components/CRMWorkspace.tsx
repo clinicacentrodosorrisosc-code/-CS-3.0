@@ -831,6 +831,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
         <DealForm
           stages={stages}
           owners={ownerProfiles}
+          owner={currentOwner || "Camila Ribeiro"}
           deals={deals}
           pipelineName={pipelineName}
           onClose={() => setDealModal(false)}
@@ -2807,6 +2808,7 @@ const LeadsView: React.FC<{
 const DealForm: React.FC<{
   stages: Stage[];
   owners: OwnerProfile[];
+  owner: string;
   deals: Deal[];
   pipelineName: string;
   onClose: () => void;
@@ -2821,7 +2823,7 @@ const DealForm: React.FC<{
     probability: "",
     expectedClose: "",
     label: "",
-    owner: p.owners[0]?.name || "Camila Ribeiro",
+    owner: p.owner,
     source: "",
     sourceId: "",
     visibility: "Grupo de visibilidade do responsável",
