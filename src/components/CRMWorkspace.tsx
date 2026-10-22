@@ -622,7 +622,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
     setActivities((items) =>
       items.map((item) => (item.id === id ? { ...item, done: true } : item)),
     );
-    setNotice({ text: `Atividade concluída (${current.subject})` });
+    setNotice({ text: `Atividade marcada como concluída (${current.subject})` });
     if (!remaining.length)
       setActivityModal({ dealId: current.dealId, next: true });
   };
@@ -857,6 +857,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
         <ActivityForm
           deal={deals.find((item) => item.id === activityModal.dealId)}
           deals={deals}
+          owner={currentOwner || "Camila Ribeiro"}
           next={activityModal.next}
           won={activityModal.won}
           onClose={() => setActivityModal(null)}
@@ -1018,6 +1019,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
 const BoardView: React.FC<{
   stages: Stage[];
   deals: Deal[];
+  owner: string;
   activities: DealActivity[];
   pipelineName: string;
   onOpenDeal: (id: number) => void;
@@ -3082,7 +3084,7 @@ const ActivityForm: React.FC<{
             type: "Ligação",
             due: TODAY,
             time: time || undefined,
-            owner: "Camila Ribeiro",
+            owner: p.owner,
             priority: "Normal",
           });
         }}
@@ -3172,7 +3174,7 @@ const ActivityForm: React.FC<{
             <label>
               Responsável
               <select>
-                <option>Camila Ribeiro</option>
+                <option>{p.owner}</option>
               </select>
             </label>
             <label>
