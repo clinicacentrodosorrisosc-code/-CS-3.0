@@ -388,14 +388,16 @@
   background: #f6f7f8;
   color: #62666d;
   text-align: left;
-  font-size: 10px;
+  font-size: 11px;
+  line-height: 16px;
   font-weight: 650;
 }
 .crmws-deals-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #eceef0;
   color: #4e5259;
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 18px;
 }
 .crmws-deals-table tbody tr {
   cursor: pointer;
