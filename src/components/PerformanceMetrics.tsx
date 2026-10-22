@@ -199,9 +199,9 @@ export const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
 
   // Helper for color classification based on pacing deficit
   const getPointColor = (diff: number) => {
-    if (diff < -3000) return '#ef4444'; // Vermelho: atraso superior a R$ 3.000
-    if (diff < 0) return '#f59e0b'; // Amarelo: abaixo da meta, atraso até R$ 3.000
-    return '#10b981'; // Verde: em cima ou acima da trajetória
+    if (diff < -3000) return '#d83c38'; // Vermelho: atraso superior a R$ 3.000
+    if (diff < 0) return '#d1b800'; // Amarelo: abaixo da meta, atraso até R$ 3.000
+    return '#2d8647'; // Verde: em cima ou acima da trajetória
   };
 
   // Custom active dot on hover (clean & subtle)

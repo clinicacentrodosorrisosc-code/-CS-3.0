@@ -685,7 +685,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
               </div>
               <div className="mt-5 grid flex-1 grid-cols-[112px_minmax(0,1fr)] items-center gap-4">
                   <DonutChart
-                      data={[{ label: 'Meta alcançada', value: Math.min(Math.max(perc, 0), 100), color: '#3478f6' }]}
+                      data={[{ label: 'Meta alcançada', value: Math.min(Math.max(perc, 0), 100), color: '#0d68c5' }]}
                       totalValue={100}
                       size={112}
                       strokeWidth={12}

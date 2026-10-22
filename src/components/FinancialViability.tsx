@@ -1761,7 +1761,7 @@ export const FinancialViability: React.FC<FinancialViabilityProps> = ({ transact
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Cor do Cenário nos Gráficos</label>
                 <div className="flex gap-2">
-                  {['#3b82f6', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899', '#e11d48'].map(color => (
+                  {['#0d68c5', '#2d8647', '#d1b800', '#6150e1', '#d64f9d', '#d83c38'].map(color => (
                     <button
                       key={color}
                       type="button"
