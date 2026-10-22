@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BudgetReactivation } from './BudgetReactivation';
 import { WhatsAppSettings } from './WhatsAppSettings';
-import { PipedrivePipeline } from './PipedrivePipeline';
+import { CRMWorkspace, type CRMSection } from './CRMWorkspace';
 
 type CRMProps = {
   requestedSubTab?: string | null;
@@ -28,5 +28,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
   if (activeView === 'whatsapp') return <WhatsAppSettings />;
   if (activeView === 'reactivation') return <BudgetReactivation />;
-  return <PipedrivePipeline key={activeView} section={activeView} />;
+  // Render the exact same workspace used by the isolated CRM preview. Keeping
+  // this direct avoids a parallel presentation layer between the application
+  // CRM route and the verified pipeline/detail implementation.
+  return <CRMWorkspace key={activeView} section={activeView as CRMSection} />;
 };
