@@ -1,54 +1,54 @@
 :root {
   /* Calm, Apple-inspired operational palette. */
-  --bg: #f3f5f3;
-  --background: #f3f5f3;
-  --bg-subtle: #edf1ee;
+  --bg: #f5f5f6;
+  --background: #f5f5f6;
+  --bg-subtle: #f0f1f2;
   --surface: #ffffff;
   --panel: #ffffff;
-  --surface-hover: #f4f7f5;
-  --surface-high: #eef2ef;
-  --surface-elevated: #e5ebe7;
+  --surface-hover: #f5f5f6;
+  --surface-high: #f0f1f2;
+  --surface-elevated: #e8e9eb;
 
-  --border: rgba(31, 58, 48, 0.15);
-  --border-subtle: rgba(31, 58, 48, 0.09);
-  --border-hover: rgba(31, 58, 48, 0.24);
-  --border-focus: rgba(37, 111, 91, 0.22);
+  --border: rgba(33, 35, 44, 0.14);
+  --border-subtle: rgba(33, 35, 44, 0.08);
+  --border-hover: rgba(33, 35, 44, 0.22);
+  --border-focus: rgba(13, 104, 197, 0.22);
 
-  --primary: #3478f6;
-  --primary-hover: #2468df;
-  --primary-dim: rgba(52, 120, 246, 0.09);
-  --primary-border: rgba(52, 120, 246, 0.22);
+  --primary: #2d8647;
+  --primary-hover: #23763c;
+  --primary-dim: rgba(45, 134, 71, 0.1);
+  --primary-border: rgba(45, 134, 71, 0.3);
 
-  --secondary: #3478f6;
-  --secondary-dim: rgba(52, 120, 246, 0.09);
+  --secondary: #0d68c5;
+  --secondary-dim: rgba(13, 104, 197, 0.1);
 
   --accent-sky: #007aff;
   --accent-blue: #007aff;
   --accent-teal: #34c759;
   --accent-mint: #34c759;
 
-  --success: #16a34a;
-  --success-text: #0d9488;
-  --success-bg: #e8faf8;
-  --success-dim: rgba(22, 200, 199, 0.12);
-  --success-border: #ccf4f0;
+  --success: #2d8647;
+  --success-text: #216f38;
+  --success-bg: #eaf5ed;
+  --success-dim: rgba(45, 134, 71, 0.12);
+  --success-border: #c8e6d0;
 
-  --warning: #f59e0b;
-  --warning-dim: rgba(245, 158, 11, 0.12);
-  --warning-border: #fde68a;
+  --warning: #d1b800;
+  --warning-dim: rgba(209, 184, 0, 0.14);
+  --warning-border: #eadc86;
 
-  --danger: #f43f5e;
-  --danger-text: #e11d48;
-  --danger-bg: #feecef;
-  --danger-dim: rgba(244, 63, 94, 0.12);
-  --danger-border: #fcd4dc;
+  --danger: #d83c38;
+  --danger-text: #ba2e2b;
+  --danger-bg: #fff0ef;
+  --danger-dim: rgba(216, 60, 56, 0.12);
+  --danger-border: #f0c5c3;
 
-  --text: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-muted: #86868b;
-  --text-dim: #aeaeb2;
+  --text: #21232c;
+  --text-secondary: #65686f;
+  --text-muted: #7d818b;
+  --text-dim: #a3a6ad;
 
-  --sidebar-width-expanded: 244px;
+  --sidebar-width-expanded: 210px;
   --sidebar-width-collapsed: 60px;
   --header-height: 48px;
 }
@@ -1880,28 +1880,28 @@ select option {
 
 /* Screenshot-faithful Taskify-inspired composition. */
 :root {
-  --bg: #eef1f4;
-  --background: #eef1f4;
-  --bg-subtle: #f3f4f6;
+  --bg: #f5f5f6;
+  --background: #f5f5f6;
+  --bg-subtle: #f0f1f2;
   --surface: #ffffff;
   --panel: #ffffff;
-  --surface-hover: #f5f7fa;
-  --surface-high: #f1f3f6;
-  --surface-elevated: #e9edf2;
-  --border: #e3e6eb;
-  --border-subtle: #eceef2;
-  --border-hover: #d7dbe2;
-  --border-focus: rgba(52, 120, 246, 0.22);
-  --primary: #3478f6;
-  --primary-hover: #2468df;
-  --primary-dim: rgba(52, 120, 246, 0.09);
-  --primary-border: rgba(52, 120, 246, 0.18);
-  --secondary: #3478f6;
-  --secondary-dim: rgba(52, 120, 246, 0.09);
-  --text: #17191d;
-  --text-secondary: #69707d;
-  --text-muted: #9299a5;
-  --text-dim: #b8bdc6;
+  --surface-hover: #f5f5f6;
+  --surface-high: #f0f1f2;
+  --surface-elevated: #e8e9eb;
+  --border: rgba(33, 35, 44, 0.14);
+  --border-subtle: rgba(33, 35, 44, 0.08);
+  --border-hover: rgba(33, 35, 44, 0.22);
+  --border-focus: rgba(13, 104, 197, 0.22);
+  --primary: #2d8647;
+  --primary-hover: #23763c;
+  --primary-dim: rgba(45, 134, 71, 0.1);
+  --primary-border: rgba(45, 134, 71, 0.3);
+  --secondary: #0d68c5;
+  --secondary-dim: rgba(13, 104, 197, 0.1);
+  --text: #21232c;
+  --text-secondary: #65686f;
+  --text-muted: #7d818b;
+  --text-dim: #a3a6ad;
 }
 
 .app-stage {
