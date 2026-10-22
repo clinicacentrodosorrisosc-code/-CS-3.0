@@ -1928,7 +1928,7 @@ select option {
 }
 
 .brand-mark {
-  background: #3478f6 !important;
+  background: #2d8647 !important;
   box-shadow: none;
 }
 
@@ -1952,7 +1952,7 @@ select option {
 
 .sidebar-nav-icon-active {
   background: transparent;
-  color: #3478f6;
+  color: #0d68c5;
 }
 
 .workspace-shell,
@@ -2068,7 +2068,7 @@ select option {
 }
 
 .dashboard-kpi-icon--blue {
-  color: #3478f6;
+  color: #0d68c5;
   background: #edf5ff;
   border-color: #d8e8ff;
 }
@@ -2139,18 +2139,18 @@ select option {
 
 .ce-app table tbody > tr:hover {
   background: #f7f9fc !important;
-  box-shadow: inset 2px 0 0 #3478f6;
+  box-shadow: inset 2px 0 0 #0d68c5;
 }
 
 .btn-primary {
-  background: #3478f6;
-  border-color: #3478f6;
-  box-shadow: 0 3px 10px rgba(52, 120, 246, 0.18);
+  background: #2d8647;
+  border-color: #2d8647;
+  box-shadow: 0 3px 10px rgba(45, 134, 71, 0.18);
 }
 
 .btn-primary:hover {
-  background: #2468df;
-  border-color: #2468df;
+  background: #23763c;
+  border-color: #23763c;
 }
 
 @media (max-width: 1023px) {
@@ -2202,7 +2202,7 @@ select option {
 }
 
 .shortcut-icon-blue {
-  color: #3478f6;
+  color: #0d68c5;
   background: #e9f1ff;
 }
 .shortcut-icon-green {
@@ -2223,15 +2223,15 @@ select option {
 }
 
 .team-capacity-ring {
-  background: conic-gradient(#3478f6 var(--capacity), #e8ebf0 0deg);
-  box-shadow: inset 0 0 0 1px rgba(52, 120, 246, 0.04);
+  background: conic-gradient(#0d68c5 var(--capacity), #e8ebf0 0deg);
+  box-shadow: inset 0 0 0 1px rgba(13, 104, 197, 0.04);
 }
 
 .team-dot-0 {
   background: #2ecf91;
 }
 .team-dot-1 {
-  background: #3478f6;
+  background: #0d68c5;
 }
 .team-dot-2 {
   background: #f3b92d;
@@ -2460,9 +2460,9 @@ select option {
 }
 
 .financial-module .module-segmented-control button[data-active="true"] {
-  border-color: rgba(52, 120, 246, 0.2) !important;
+  border-color: rgba(45, 134, 71, 0.24) !important;
   background: #fff !important;
-  color: #3478f6 !important;
+  color: #2d8647 !important;
   box-shadow: 0 1px 3px rgba(31, 38, 48, 0.06) !important;
 }
 
@@ -2494,7 +2494,7 @@ select option {
 }
 
 .financial-kpi-icon--blue {
-  color: #3478f6;
+  color: #0d68c5;
   background: #edf5ff;
   border-color: #d8e8ff;
 }
@@ -2686,9 +2686,9 @@ select option {
 
 .ce-app .module-segmented-control button[data-active="true"],
 .ce-app [role="tab"][aria-selected="true"] {
-  border-color: rgba(52, 120, 246, 0.18) !important;
+  border-color: rgba(45, 134, 71, 0.24) !important;
   background: #fff !important;
-  color: #3478f6 !important;
+  color: #2d8647 !important;
   box-shadow: 0 1px 3px rgba(31, 38, 48, 0.06) !important;
 }
 
