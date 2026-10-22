@@ -1052,6 +1052,7 @@ const BoardView: React.FC<{
   const [sortOpen, setSortOpen] = useState(false);
   const [pipelineOpen, setPipelineOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [savedFilter, setSavedFilter] = useState<"all" | "mine" | "team">("all");
   const [showClosed, setShowClosed] = useState(false);
   const [dragId, setDragId] = useState<number | null>(null);
   const [dragStageId, setDragStageId] = useState<string | null>(null);
@@ -1061,12 +1062,26 @@ const BoardView: React.FC<{
     none: 2,
     future: 3,
   };
+  const matchesSearch = (deal: Deal) =>
+    `${deal.title} ${deal.person} ${deal.organization}`
+      .toLowerCase()
+      .includes(query.toLowerCase());
+  const matchesSavedFilter = (deal: Deal) =>
+    savedFilter === "all" ||
+    (savedFilter === "mine" && Boolean(props.owner) && deal.owner === props.owner) ||
+    (savedFilter === "team" && (!props.owner || deal.owner !== props.owner));
   const visible = props.deals.filter(
     (deal) =>
       (showClosed ? deal.status !== "deleted" : deal.status === "open") &&
-      `${deal.title} ${deal.person} ${deal.organization}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      matchesSavedFilter(deal) &&
+      matchesSearch(deal),
+  );
+  const forecastDeals = props.deals.filter(
+    (deal) =>
+      deal.status !== "deleted" &&
+      deal.status !== "lost" &&
+      matchesSavedFilter(deal) &&
+      matchesSearch(deal),
   );
   const sorted = (items: Deal[]) =>
     [...items].sort((a, b) => {
@@ -1254,9 +1269,22 @@ const BoardView: React.FC<{
             {filterOpen && (
               <div className="crmws-menu crmws-filter-menu">
                 <b>FILTROS SALVOS</b>
-                <button onClick={() => setFilterOpen(false)}><span>Todos os negócios</span><Check size={14} /></button>
-                <button onClick={() => setFilterOpen(false)}><span>Meus negócios</span></button>
-                <button onClick={() => setFilterOpen(false)}><span>Negócios da equipe</span></button>
+                {([
+                  ["all", "Todos os negócios"],
+                  ["mine", "Meus negócios"],
+                  ["team", "Negócios da equipe"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setSavedFilter(value);
+                      setFilterOpen(false);
+                    }}
+                  >
+                    <span>{label}</span>
+                    {savedFilter === value && <Check size={14} />}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -1391,7 +1419,7 @@ const BoardView: React.FC<{
       )}
       {view === "forecast" && (
         <ForecastView
-          deals={visible}
+          deals={sorted(forecastDeals)}
           activities={props.activities}
           onOpen={props.onOpenDeal}
           onActivity={props.onActivity}
