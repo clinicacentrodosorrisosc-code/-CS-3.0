@@ -369,7 +369,7 @@ const initialActivities: DealActivity[] = [
   },
 ];
 
-const TODAY = localDateKey();
+const todayKey = () => localDateKey();
 const DAY_MS = 86_400_000;
 const elapsedStageDays = (enteredAt?: string) =>
   enteredAt
@@ -409,13 +409,14 @@ const activityState = (
   activities: DealActivity[],
 ): ActivityState => {
   const first = nextOpenActivity(dealId, activities);
+  const today = todayKey();
   if (!first) return "none";
   if (
-    first.due < TODAY ||
-    (first.due === TODAY && first.time && first.time < localTimeKey())
+    first.due < today ||
+    (first.due === today && first.time && first.time < localTimeKey())
   )
     return "overdue";
-  if (first.due === TODAY) return "today";
+  if (first.due === today) return "today";
   return "future";
 };
 const statusCopy: Record<ActivityState, string> = {
@@ -490,6 +491,12 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
   } | null>(null);
   const [quickAdd, setQuickAdd] = useState(false);
   const [currentOwner, setCurrentOwner] = useState<string | null>(null);
+  const [clockTick, setClockTick] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setClockTick((tick) => tick + 1), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(
     () => localStorage.setItem("crm-demo-stages", JSON.stringify(stages)),
@@ -557,14 +564,14 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
     const count = activities.filter(
       (item) =>
         !item.done &&
-        item.due <= TODAY &&
+        item.due <= todayKey() &&
         (!currentOwner || item.owner === currentOwner),
     ).length;
     localStorage.setItem("crm-activity-count", String(count));
     window.dispatchEvent(
       new CustomEvent("crm-activity-count", { detail: count }),
     );
-  }, [activities, currentOwner]);
+  }, [activities, currentOwner, clockTick]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
@@ -1459,7 +1466,7 @@ const DealsTableView: React.FC<{
               <td>{deal.person}</td>
               <td>{deal.organization || "—"}</td>
               <td>{stages.find((stage) => stage.id === deal.stageId)?.name}</td>
-              <td className={next && next.due < TODAY ? "overdue" : ""}>
+              <td className={next && next.due < todayKey() ? "overdue" : ""}>
                 {next
                   ? `${next.due}${next.time ? ` · ${next.time}` : ""}`
                   : "Sem atividade"}
@@ -2188,7 +2195,7 @@ const DealDetail: React.FC<{
                 <div>
                   <b>{a.subject}</b>
                   <small>
-                    {a.due < TODAY && <em className="crmws-overdue-badge">ATRASADA</em>}
+                    {a.due < todayKey() && <em className="crmws-overdue-badge">ATRASADA</em>}
                     {a.due} {a.time || ""} · {a.owner}
                   </small>
                 </div>
@@ -2548,7 +2555,8 @@ const ActivitiesView: React.FC<{
   const [period, setPeriod] = useState("A fazer");
   const [type, setType] = useState("Todos");
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
-  const todayDate = new Date(`${TODAY}T12:00:00`);
+  const today = todayKey();
+  const todayDate = new Date(`${today}T12:00:00`);
   const tomorrow = new Date(todayDate.getTime() + DAY_MS).toISOString().slice(0, 10);
   const dayOfWeek = todayDate.getDay();
   const thisWeekEnd = new Date(todayDate.getTime() + (7 - dayOfWeek) * DAY_MS)
@@ -2563,13 +2571,13 @@ const ActivitiesView: React.FC<{
       period === "A fazer"
         ? !a.done
         : period === "Atrasadas"
-          ? a.due < TODAY && !a.done
+          ? a.due < today && !a.done
           : period === "Hoje"
-            ? a.due === TODAY && !a.done
+            ? a.due === today && !a.done
             : period === "Amanhã"
               ? a.due === tomorrow && !a.done
               : period === "Esta semana"
-                ? a.due >= TODAY && a.due <= thisWeekEnd && !a.done
+                ? a.due >= today && a.due <= thisWeekEnd && !a.done
                 : period === "Próxima semana"
                   ? a.due > thisWeekEnd && a.due <= nextWeekEnd && !a.done
                   : !a.done,
@@ -2664,7 +2672,7 @@ const ActivitiesView: React.FC<{
                       {a.done && <Check size={13} />}
                     </button>
                   </td>
-                  <td className={a.due < TODAY && !a.done ? "overdue" : ""}>
+                  <td className={a.due < todayKey() && !a.done ? "overdue" : ""}>
                     {a.subject}
                     <small>
                       {a.due} {a.time}
@@ -3057,6 +3065,7 @@ const DealForm: React.FC<{
 const ActivityForm: React.FC<{
   deal?: Deal;
   deals: Deal[];
+  owner: string;
   next?: boolean;
   won?: boolean;
   onClose: () => void;
@@ -3068,8 +3077,9 @@ const ActivityForm: React.FC<{
   );
   const [time, setTime] = useState("");
   const busy = Boolean(time);
-  const todayDisplay = new Date(`${TODAY}T12:00:00`).toLocaleDateString("pt-BR");
-  const agendaDate = new Date(`${TODAY}T12:00:00`).toLocaleDateString("pt-BR", {
+  const today = todayKey();
+  const todayDisplay = new Date(`${today}T12:00:00`).toLocaleDateString("pt-BR");
+  const agendaDate = new Date(`${today}T12:00:00`).toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -3084,7 +3094,7 @@ const ActivityForm: React.FC<{
             dealId,
             subject: subject || "Ligação",
             type: "Ligação",
-            due: TODAY,
+            due: today,
             time: time || undefined,
             owner: p.owner,
             priority: "Normal",
