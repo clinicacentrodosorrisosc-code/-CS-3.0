@@ -76,6 +76,24 @@ type ActionKey =
   | "no_show";
 
 const sellers: Seller[] = ["James", "Priscila"];
+
+const reactivationTemplateMapping = (template: MetaTemplate) => {
+  const parts = Array.isArray(template.components) ? template.components : [];
+  const body = parts.find((part: any) => String(part?.type || '').toUpperCase() === 'BODY') as any;
+  const header = parts.find((part: any) => String(part?.type || '').toUpperCase() === 'HEADER') as any;
+  const bodyPositions = [...new Set(Array.from(String(body?.text || '').matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))].sort((a, b) => a - b);
+  const headerPositions = String(header?.format || '').toUpperCase() === 'TEXT'
+    ? [...new Set(Array.from(String(header?.text || '').matchAll(/\{\{(\d+)\}\}/g), match => Number(match[1])))].sort((a, b) => a - b)
+    : [];
+  const bodyDefaults = ['patient_name', 'amount', 'patient_phone', 'seller_name', 'opportunity_title'];
+  const lines = bodyPositions.map((position, index) => `{{${position}}} = ${bodyDefaults[index] || 'patient_name'}`);
+  headerPositions.forEach(position => lines.push(`__header_text_${position} = patient_name`));
+  const headerFormat = String(header?.format || '').toUpperCase();
+  if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerFormat)) {
+    throw new Error('Este template possui mídia no cabeçalho. Selecione um template de texto ou configure a mídia antes do disparo.');
+  }
+  return lines.join('\n');
+};
 const actionDefinitions: Record<
   ActionKey,
   { channel: Interaction["channel"]; outcome: string; label: string }
@@ -576,7 +594,8 @@ export const BudgetReactivation: React.FC = () => {
     setCampaignSending(true); setCampaignNotice("");
     try {
       const headers = await authHeaders();
-      const response = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ source: "budget_reactivation", name: `Reativação · ${new Date().toLocaleDateString("pt-BR")}`, templateName: template.name, language: template.language, selectedLeadIds: Array.from(bulkSelectedIds), variableMapping: "{{1}} = patient_name\\n{{2}} = amount" }) });
+      const variableMapping = reactivationTemplateMapping(template);
+      const response = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ source: "budget_reactivation", name: `Reativação · ${new Date().toLocaleDateString("pt-BR")}`, templateName: template.name, language: template.language, selectedLeadIds: Array.from(bulkSelectedIds), variableMapping }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao criar a campanha.");
       let processBody: { sent?: number; failed?: number; pending?: number; error?: string } = {};
