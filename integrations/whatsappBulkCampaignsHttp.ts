@@ -7,6 +7,7 @@ type Response = { status: (code: number) => Response; json: (body: unknown) => v
 type Opportunity = { id: string; patient_phone: string | null; patient_name: string | null; patient_email?: string | null; seller_name: string | null; title: string; amount_cents: number; tags?: string[] };
 type OrthoPatient = { id: string; name: string; maintenance_value: number | null; attendance: Record<string, any> | null; status: string };
 type ImportedContact = { id: string; name: string; phone: string; normalized_phone: string; email: string | null; status: string; error_message: string | null; custom_fields?: Record<string, unknown> | null };
+type ReactivationLead = { id: string; patient_name: string; phone: string; budget_value_cents: number; assignee: string | null; status: string };
 type TagFilter = { mode: 'all' | 'include' | 'exclude'; tags: string[] };
 const url = process.env.VITE_SUPABASE_URL || 'https://dmslcvvjxfulsocksave.supabase.co';
 const anon = process.env.VITE_SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || fallbackSupabaseAnonKey;
@@ -19,6 +20,7 @@ const normalizeName = (value: string | null) => String(value || '').normalize('N
 const paymentRecorded = (patient: OrthoPatient, month: string) => Boolean(patient.attendance?.[`__monthly_payment_${month}`]?.paidAt || patient.attendance?.[`__post12_payment_${month}`]?.paidAt);
 const orthoAsOpportunity = (patient: OrthoPatient): Opportunity => ({ id: patient.id, patient_phone: String(patient.attendance?.__whatsapp_phone || '') || null, patient_name: patient.name, seller_name: null, title: 'Mensalidade de ortodontia', amount_cents: Math.round(Number(patient.maintenance_value || 0) * 100), tags: [] });
 const importedContactAsOpportunity = (contact: ImportedContact): Opportunity => ({ id: contact.id, patient_phone: contact.normalized_phone || contact.phone || null, patient_name: contact.name || 'Contato sem nome', patient_email: contact.email || null, seller_name: null, title: 'Lista importada', amount_cents: 0, tags: [] });
+const reactivationLeadAsOpportunity = (lead: ReactivationLead): Opportunity => ({ id: lead.id, patient_phone: lead.phone || null, patient_name: lead.patient_name || 'Paciente sem nome', seller_name: lead.assignee, title: 'Reativação de orçamento', amount_cents: Number(lead.budget_value_cents || 0), tags: [] });
 const normalizeTagValue = (value: unknown) => String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
 const tagFilterFrom = (source: Record<string, unknown>): TagFilter => {
   const serializedTags = typeof source.tagFilters === 'string' && source.tagFilters.trim().startsWith('[') ? (() => { try { const parsed = JSON.parse(source.tagFilters); return Array.isArray(parsed) ? parsed : []; } catch { return []; } })() : null;
@@ -169,19 +171,22 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
   if (campaignError) throw campaignError;
   const { data: config, error: configError } = await db.from('whatsapp_config').select('phone_number_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
   if (configError || !config || config.status !== 'connected' || !config.access_token_encrypted) throw new Error('WhatsApp Business nao conectado.');
-  const { data: rows, error: rowsError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,phone').eq('campaign_id', campaignId).eq('status', 'pending').order('created_at').limit(15);
+  const { data: rows, error: rowsError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone').eq('campaign_id', campaignId).eq('status', 'pending').order('created_at').limit(15);
   if (rowsError) throw rowsError;
   let sent = 0; let failed = 0;
   for (const row of rows || []) {
     await db.from('whatsapp_bulk_campaign_recipients').update({ status: 'sending', attempts: 1 }).eq('id', row.id).eq('status', 'pending');
     const isOrthodontics = campaign.source === 'orthodontics';
     const isContactList = campaign.source === 'contact_list';
+    const isReactivation = campaign.source === 'budget_reactivation';
     const { data: sourceItem } = isOrthodontics
       ? await db.from('ortho_patients').select('id,name,maintenance_value,attendance,status').eq('id', row.ortho_patient_id).single()
       : isContactList
         ? await db.from('whatsapp_contact_list_contacts').select('id,name,phone,normalized_phone,email,status,error_message,custom_fields').eq('id', row.contact_list_contact_id).eq('user_id', userId).single()
+        : isReactivation
+          ? await db.from('budget_reactivation_leads').select('id,patient_name,phone,budget_value_cents,assignee,status').eq('id', row.budget_reactivation_lead_id).single()
         : await db.from('clinic_experts_opportunities').select('id,patient_phone,patient_name,patient_email,seller_name,title,amount_cents,tags').eq('id', row.opportunity_id).single();
-    const item = isOrthodontics && sourceItem ? orthoAsOpportunity(sourceItem as OrthoPatient) : isContactList && sourceItem ? importedContactAsOpportunity(sourceItem as ImportedContact) : sourceItem as Opportunity | null;
+    const item = isOrthodontics && sourceItem ? orthoAsOpportunity(sourceItem as OrthoPatient) : isContactList && sourceItem ? importedContactAsOpportunity(sourceItem as ImportedContact) : isReactivation && sourceItem ? reactivationLeadAsOpportunity(sourceItem as ReactivationLead) : sourceItem as Opportunity | null;
     try {
       if (!item) throw new Error(isOrthodontics ? 'Paciente de ortodontia nao encontrado.' : 'Oportunidade nao encontrada.');
       const response = await fetch(`https://graph.facebook.com/${graphVersion}/${encodeURIComponent(config.phone_number_id)}/messages`, { method: 'POST', headers: { Authorization: `Bearer ${decryptWhatsAppAccessToken(config.access_token_encrypted)}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: row.phone, type: 'template', template: { name: campaign.template_name, language: { code: campaign.template_language }, components: components(campaign.variable_mapping, item as Opportunity) } }), signal: AbortSignal.timeout(15000) });
@@ -196,7 +201,7 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
         attendance.__whatsapp_phone = row.phone;
         attendance.__whatsapp_history = [historyEntry, ...history].slice(0, 100);
         await db.from('ortho_patients').update({ attendance }).eq('id', row.ortho_patient_id);
-      } else if (!isContactList && campaign.success_tag) {
+      } else if (!isContactList && !isReactivation && campaign.success_tag) {
         const currentTags = Array.isArray(item.tags) ? item.tags.map(String) : [];
         if (!currentTags.includes(campaign.success_tag)) await db.from('clinic_experts_opportunities').update({ tags: [...currentTags, campaign.success_tag] }).eq('id', item.id).eq('user_id', userId);
       }
@@ -261,6 +266,14 @@ async function previewCampaign(db: SupabaseClient, userId: string, params: Recor
       status: contact.status === 'valid' ? 'ready' : 'skipped',
       reason: contact.status === 'valid' ? '' : contact.error_message || 'Contato invalido na lista.',
     }));
+  } else if (source === 'budget_reactivation') {
+    const requestedIds = Array.isArray(params.leadIds) ? params.leadIds.map(String) : [];
+    let query = db.from('budget_reactivation_leads').select('id,patient_name,phone,budget_value_cents,assignee,status').eq('status', 'pending');
+    if (requestedIds.length) query = query.in('id', requestedIds);
+    const { data: leads, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    filteredOpportunities = (leads || []).map(lead => reactivationLeadAsOpportunity(lead as ReactivationLead));
+    resolved = (leads || []).map(lead => ({ ...reactivationLeadAsOpportunity(lead as ReactivationLead), phone: normalizePhone(lead.phone), status: normalizePhone(lead.phone).length >= 12 ? 'ready' : 'skipped', reason: normalizePhone(lead.phone).length >= 12 ? '' : 'Telefone ausente ou invalido.' }));
   } else {
     let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,patient_email,seller_name,title,amount_cents,tags').eq('user_id', userId).eq('pipeline_id', pipelineId);
     if (stageId) query = query.eq('stage_id', stageId);
@@ -290,7 +303,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       if (campaignId) {
         const { data: campaign, error: campaignError } = await db.from('whatsapp_bulk_campaigns').select('*').eq('id', campaignId).eq('user_id', userId).single(); if (campaignError) throw campaignError;
         if (campaign.source === 'crm') await registerSkippedRecipients(db, campaign);
-        const { data: recipients, error: recipientError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,phone,status,meta_message_id,error_message,created_at,sent_at').eq('campaign_id', campaign.id).order('created_at'); if (recipientError) throw recipientError;
+        const { data: recipients, error: recipientError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone,status,meta_message_id,error_message,created_at,sent_at').eq('campaign_id', campaign.id).order('created_at'); if (recipientError) throw recipientError;
         if (campaign.source === 'orthodontics') {
           const ids = (recipients || []).map(item => item.ortho_patient_id).filter(Boolean); const { data: patients, error: patientsError } = ids.length ? await db.from('ortho_patients').select('id,name').in('id', ids) : { data: [], error: null }; if (patientsError) throw patientsError;
           const names = new Map((patients || []).map(item => [item.id, item.name]));
@@ -302,6 +315,13 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
           if (contactsError) throw contactsError;
           const names = new Map((contacts || []).map(item => [item.id, item.name]));
           return res.status(200).json({ campaign, recipients: (recipients || []).map(item => ({ ...item, patient_name: names.get(item.contact_list_contact_id) || 'Contato sem nome', opportunity_title: 'Lista importada' })) });
+        }
+        if (campaign.source === 'budget_reactivation') {
+          const ids = (recipients || []).map(item => item.budget_reactivation_lead_id).filter(Boolean);
+          const { data: leads, error: leadsError } = ids.length ? await db.from('budget_reactivation_leads').select('id,patient_name').in('id', ids) : { data: [], error: null };
+          if (leadsError) throw leadsError;
+          const names = new Map((leads || []).map(item => [item.id, item.patient_name]));
+          return res.status(200).json({ campaign, recipients: (recipients || []).map(item => ({ ...item, patient_name: names.get(item.budget_reactivation_lead_id) || 'Paciente sem nome', opportunity_title: 'Reativação de orçamento' })) });
         }
         const ids = (recipients || []).map(item => item.opportunity_id).filter(Boolean); const { data: opportunities, error: opportunitiesError } = ids.length ? await db.from('clinic_experts_opportunities').select('id,patient_name,title').in('id', ids) : { data: [], error: null }; if (opportunitiesError) throw opportunitiesError;
         const names = new Map((opportunities || []).map(item => [item.id, item]));
@@ -356,6 +376,13 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
         status: contact.status === 'valid' ? 'ready' : 'skipped',
         reason: contact.status === 'valid' ? '' : contact.error_message || 'Contato invalido na lista.',
       }));
+    } else if (source === 'budget_reactivation') {
+      const requestedIds = Array.isArray(req.body?.selectedLeadIds) ? req.body.selectedLeadIds.map(String) : [];
+      if (!requestedIds.length) return res.status(400).json({ error: 'Selecione ao menos um orçamento.' });
+      const { data: leads, error } = await db.from('budget_reactivation_leads').select('id,patient_name,phone,budget_value_cents,assignee,status').in('id', requestedIds).eq('status', 'pending');
+      if (error) throw error;
+      filteredOpportunities = (leads || []).map(lead => reactivationLeadAsOpportunity(lead as ReactivationLead));
+      resolved = (leads || []).map(lead => ({ ...reactivationLeadAsOpportunity(lead as ReactivationLead), phone: normalizePhone(lead.phone), status: normalizePhone(lead.phone).length >= 12 ? 'ready' : 'skipped', reason: normalizePhone(lead.phone).length >= 12 ? '' : 'Telefone ausente ou invalido.' }));
     } else {
       let query = db.from('clinic_experts_opportunities').select('id,patient_external_id,patient_phone,patient_name,patient_email,seller_name,title,amount_cents,tags').eq('user_id', userId).eq('pipeline_id', pipelineId);
       if (stageId) query = query.eq('stage_id', stageId);
@@ -365,7 +392,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
     }
     const usedPhones = new Set<string>();
     const allowedIds = new Set(filteredOpportunities.map(item => item.id));
-    const rawSelectedIds = source === 'orthodontics' ? selectedPatientIds : source === 'contact_list' ? selectedContactIds : selectedOpportunityIds;
+    const rawSelectedIds = source === 'orthodontics' ? selectedPatientIds : source === 'contact_list' ? selectedContactIds : source === 'budget_reactivation' ? req.body?.selectedLeadIds : selectedOpportunityIds;
     const requestedIds = Array.isArray(rawSelectedIds) ? rawSelectedIds.map(String).filter(id => allowedIds.has(id)) : Array.from(allowedIds);
     const selectedIds = new Set(requestedIds);
     if (!selectedIds.size) return res.status(400).json({ error: 'Selecione ao menos um contato para o disparo.' });
@@ -373,7 +400,7 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       const selected = selectedIds.has(item.id);
       const duplicate = selected && item.status === 'ready' && usedPhones.has(item.phone);
       if (selected && item.status === 'ready' && !duplicate) usedPhones.add(item.phone);
-      return { opportunity_id: source === 'crm' ? item.id : null, ortho_patient_id: source === 'orthodontics' ? item.id : null, contact_list_contact_id: source === 'contact_list' ? item.id : null, phone: item.phone, status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' };
+      return { opportunity_id: source === 'crm' ? item.id : null, ortho_patient_id: source === 'orthodontics' ? item.id : null, contact_list_contact_id: source === 'contact_list' ? item.id : null, budget_reactivation_lead_id: source === 'budget_reactivation' ? item.id : null, phone: item.phone, status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' };
     });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
     const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;

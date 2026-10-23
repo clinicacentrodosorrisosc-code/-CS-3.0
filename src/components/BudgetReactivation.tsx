@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
   CheckCircle2,
+  Check,
   ChevronRight,
   MessageCircle,
   Phone,
   Plus,
   RefreshCw,
   Search,
+  Send,
   Target,
   UserRound,
   X,
@@ -59,6 +61,7 @@ type Interaction = {
   scheduled_for: string | null;
   created_at: string;
 };
+type MetaTemplate = { name: string; language: string; status: string; category?: string; components?: { type: string; text?: string }[] };
 type ActionKey =
   | "whatsapp_message"
   | "whatsapp_interested"
@@ -170,6 +173,7 @@ const whatsappHref = (phone: string) =>
   `https://wa.me/${phone.replace(/\D/g, "")}`;
 const localDayKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const whatsappRates: Record<string, number> = { MARKETING: 0.3217, UTILITY: 0.035, AUTHENTICATION: 0.035 };
 
 export const BudgetReactivation: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -203,6 +207,16 @@ export const BudgetReactivation: React.FC = () => {
     next_follow_up_at: "",
     scheduled_for: "",
     converted_value: "",
+  });
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set());
+  const [campaignOpen, setCampaignOpen] = useState(false);
+  const [campaignTemplates, setCampaignTemplates] = useState<MetaTemplate[]>([]);
+  const [campaignTemplateKey, setCampaignTemplateKey] = useState("");
+  const [campaignLoading, setCampaignLoading] = useState(false);
+  const [campaignSending, setCampaignSending] = useState(false);
+  const [campaignNotice, setCampaignNotice] = useState("");
+  const [campaignStatusByLead, setCampaignStatusByLead] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(window.localStorage.getItem("budget-reactivation-whatsapp-status") || "{}"); } catch { return {}; }
   });
 
   const load = useCallback(async () => {
@@ -537,6 +551,53 @@ export const BudgetReactivation: React.FC = () => {
     await load();
   };
 
+  const authHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Sessão expirada. Entre novamente para usar o disparador.");
+    return { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" };
+  };
+  const openCampaign = async () => {
+    if (!bulkSelectedIds.size) { setCampaignNotice("Selecione ao menos um orçamento com telefone."); return; }
+    setCampaignOpen(true); setCampaignLoading(true); setCampaignNotice("");
+    try {
+      const response = await fetch("/api/integrations/whatsapp/templates", { headers: await authHeaders() });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Não foi possível consultar os templates aprovados.");
+      const approved = (body.templates || []).filter((item: MetaTemplate) => item.status === "APPROVED") as MetaTemplate[];
+      setCampaignTemplates(approved);
+      setCampaignTemplateKey(current => current || (approved[0] ? `${approved[0].name}::${approved[0].language}` : ""));
+      if (!approved.length) setCampaignNotice("Nenhum template aprovado foi encontrado na conta Meta.");
+    } catch (error) { setCampaignNotice(error instanceof Error ? error.message : "Falha ao consultar templates."); }
+    finally { setCampaignLoading(false); }
+  };
+  const sendCampaign = async () => {
+    const template = campaignTemplates.find(item => `${item.name}::${item.language}` === campaignTemplateKey);
+    if (!template || !bulkSelectedIds.size) return;
+    setCampaignSending(true); setCampaignNotice("");
+    try {
+      const headers = await authHeaders();
+      const response = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ source: "budget_reactivation", name: `Reativação · ${new Date().toLocaleDateString("pt-BR")}`, templateName: template.name, language: template.language, selectedLeadIds: Array.from(bulkSelectedIds), variableMapping: "{{1}} = patient_name\\n{{2}} = amount" }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Falha ao criar a campanha.");
+      const processResponse = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ action: "process", campaignId: body.campaignId }) });
+      const processBody = await processResponse.json();
+      if (!processResponse.ok) throw new Error(processBody.error || "Campanha criada, mas não foi processada.");
+      const reportResponse = await fetch(`/api/integrations/whatsapp/bulk-campaigns?campaignId=${encodeURIComponent(body.campaignId)}`, { headers });
+      const reportBody = await reportResponse.json();
+      if (reportResponse.ok && Array.isArray(reportBody.recipients)) {
+        setCampaignStatusByLead(current => {
+          const next = { ...current };
+          reportBody.recipients.forEach((recipient: { budget_reactivation_lead_id?: string; status?: string }) => { if (recipient.budget_reactivation_lead_id) next[recipient.budget_reactivation_lead_id] = recipient.status || "pending"; });
+          window.localStorage.setItem("budget-reactivation-whatsapp-status", JSON.stringify(next));
+          return next;
+        });
+      }
+      setCampaignNotice(`Campanha processada: ${processBody.sent || 0} enviada(s), ${processBody.failed || 0} falha(s). O relatório mantém o status e o ID Meta quando disponível.`);
+      await load();
+    } catch (error) { setCampaignNotice(error instanceof Error ? error.message : "Falha ao disparar a campanha."); }
+    finally { setCampaignSending(false); }
+  };
+
   return (
     <div className="crm-suite flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
@@ -547,6 +608,16 @@ export const BudgetReactivation: React.FC = () => {
             description="Fila compartilhada de ligações e WhatsApp para James e Priscila."
             actions={(
               <>
+              <button
+                type="button"
+                onClick={() => void openCampaign()}
+                className="btn btn-primary"
+                disabled={!bulkSelectedIds.size}
+                title="Enviar template aprovado pela Meta para os orçamentos selecionados"
+              >
+                <Send className="h-4 w-4" />
+                Disparar WhatsApp {bulkSelectedIds.size ? `(${bulkSelectedIds.size})` : ""}
+              </button>
               <button
                 type="button"
                 onClick={() => void load()}
@@ -862,7 +933,8 @@ export const BudgetReactivation: React.FC = () => {
               ) : (
                 <div className="custom-scrollbar overflow-x-auto overflow-y-auto">
                   <div className="min-w-[840px]">
-                    <div className="grid grid-cols-[180px_110px_92px_92px_100px_80px_100px_28px] gap-1.5 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                    <div className="grid grid-cols-[30px_180px_110px_92px_92px_100px_80px_100px_110px_28px] gap-1.5 border-b border-[var(--border)] bg-[var(--bg-subtle)] px-2 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                      <label className="flex items-center justify-center" title="Selecionar todos os leads com telefone"><input type="checkbox" checked={filtered.filter(lead => lead.phone).length > 0 && filtered.filter(lead => lead.phone).every(lead => bulkSelectedIds.has(lead.id))} onChange={event => setBulkSelectedIds(event.target.checked ? new Set(filtered.filter(lead => lead.phone).map(lead => lead.id)) : new Set())} /></label>
                       <span>Lead</span>
                       <span>Telefone</span>
                       <span>Valor</span>
@@ -870,6 +942,7 @@ export const BudgetReactivation: React.FC = () => {
                       <span>Responsável</span>
                       <span>Status</span>
                       <span>Andamento</span>
+                      <span>WhatsApp</span>
                       <span />
                     </div>
                     {filtered.map((lead) => (
@@ -877,8 +950,9 @@ export const BudgetReactivation: React.FC = () => {
                         type="button"
                         key={lead.id}
                         onClick={() => setSelected(lead)}
-                        className={`grid w-full grid-cols-[180px_110px_92px_92px_100px_80px_100px_28px] gap-1.5 border-b border-[var(--border-subtle)] px-2 py-3 text-left transition hover:bg-[var(--surface-hover)] ${selected?.id === lead.id ? "bg-[var(--primary-dim)]/55" : ""}`}
+                        className={`grid w-full grid-cols-[30px_180px_110px_92px_92px_100px_80px_100px_110px_28px] gap-1.5 border-b border-[var(--border-subtle)] px-2 py-3 text-left transition hover:bg-[var(--surface-hover)] ${selected?.id === lead.id ? "bg-[var(--primary-dim)]/55" : ""}`}
                       >
+                        <span className="flex items-center justify-center" onClick={(event) => event.stopPropagation()}><input type="checkbox" disabled={!lead.phone} checked={bulkSelectedIds.has(lead.id)} onChange={(event) => setBulkSelectedIds(current => { const next = new Set(current); if (event.target.checked) next.add(lead.id); else next.delete(lead.id); return next; })} title={lead.phone ? "Selecionar para disparo" : "Sem telefone válido"} /></span>
                         <strong className="min-w-0 self-center whitespace-normal break-words text-xs leading-4">
                           {lead.patient_name}
                         </strong>
@@ -903,6 +977,9 @@ export const BudgetReactivation: React.FC = () => {
                           <span className="inline-flex rounded-full bg-[var(--bg-subtle)] px-2 py-1 text-[10px] font-semibold">
                             {statusLabel[lead.status]}
                           </span>
+                        </span>
+                        <span className={`self-center text-[10px] font-semibold ${campaignStatusByLead[lead.id] === "sent" ? "text-emerald-600" : campaignStatusByLead[lead.id] === "failed" ? "text-rose-600" : "text-[var(--text-muted)]"}`}>
+                          {campaignStatusByLead[lead.id] === "sent" ? "Enviada" : campaignStatusByLead[lead.id] === "failed" ? "Falhou" : campaignStatusByLead[lead.id] === "skipped" ? "Ignorada" : "Não disparada"}
                         </span>
                         <ChevronRight className="my-auto h-4 w-4 text-[var(--text-muted)]" />
                       </button>
@@ -1567,6 +1644,22 @@ export const BudgetReactivation: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+          {campaignOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+              <section className="w-full max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
+                <header className="flex items-start justify-between gap-3">
+                  <div><p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">WhatsApp oficial</p><h3 className="mt-1 text-base font-bold">Disparar reativação em massa</h3><p className="mt-1 text-xs text-[var(--text-secondary)]">{bulkSelectedIds.size} orçamento(s) selecionado(s). Só templates atualmente aprovados pela Meta podem ser usados.</p></div>
+                  <button type="button" onClick={() => setCampaignOpen(false)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"><X className="h-4 w-4" /></button>
+                </header>
+                {campaignLoading ? <LoadingPanel label="Consultando templates" description="Validando os templates aprovados na Meta." /> : <>
+                  <label className="mt-5 block text-xs font-semibold">Template aprovado<select value={campaignTemplateKey} onChange={event => setCampaignTemplateKey(event.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-sm outline-none"><option value="">Selecione um template</option>{campaignTemplates.map(template => <option key={`${template.name}-${template.language}`} value={`${template.name}::${template.language}`}>{template.name} · {template.category || "Meta"} · {template.language}</option>)}</select></label>
+                  {(() => { const template = campaignTemplates.find(item => `${item.name}::${item.language}` === campaignTemplateKey); const unit = whatsappRates[String(template?.category || "").toUpperCase()] || 0; return <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-3"><div className="flex items-center justify-between text-xs"><span className="text-[var(--text-secondary)]">Estimativa do lote</span><strong className="font-mono text-base">{unit ? money(Math.round(unit * bulkSelectedIds.size * 100)) : "--"}</strong></div><p className="mt-1 text-[10px] leading-4 text-[var(--text-muted)]">{unit ? `Base de ${money(Math.round(unit * 100))} por mensagem · tarifa Brasil para categoria ${template?.category}. O valor real depende da cobrança Meta, créditos e isenções.` : "A categoria deste template não possui tarifa estimável configurada; o custo real será informado pela Meta."}</p></div>; })()}
+                  {campaignNotice && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">{campaignNotice}</p>}
+                  <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setCampaignOpen(false)} className="rounded-xl px-4 py-2 text-xs font-bold text-[var(--text-secondary)]">Cancelar</button><button type="button" disabled={campaignSending || !campaignTemplateKey || !campaignTemplates.length} onClick={() => void sendCampaign()} className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-3.5 w-3.5" />{campaignSending ? "Processando..." : "Disparar agora"}</button></div>
+                </>}
+              </section>
             </div>
           )}
         </div>
