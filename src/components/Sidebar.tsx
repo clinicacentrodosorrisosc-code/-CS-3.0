@@ -75,6 +75,7 @@ const SUB_TAB_PERMISSION_IDS: Record<string, string> = {
   contacts: 'crm_contacts',
   activities: 'crm_activities',
   reactivation: 'crm_reactivation',
+  campaigns: 'crm_whatsapp',
   whatsapp: 'crm_whatsapp',
   overview: 'financial_overview',
   transactions: 'financial_transactions',
@@ -118,6 +119,7 @@ const MENU_STRUCTURE: MenuItem[] = [
       { id: 'contacts', label: 'Contatos' },
       { id: 'activities', label: 'Atividades' },
       { id: 'reactivation', label: 'Reativação de orçamentos' },
+      { id: 'campaigns', label: 'Disparos em massa' },
       { id: 'whatsapp', label: 'WhatsApp Business' }
     ]
   },

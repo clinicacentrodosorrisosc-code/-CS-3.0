@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { BudgetReactivation } from './BudgetReactivation';
 import { WhatsAppSettings } from './WhatsAppSettings';
+import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
 import { CRMWorkspace, type CRMSection } from './CRMWorkspace';
 
 type CRMProps = {
   requestedSubTab?: string | null;
 };
 
-type CRMView = 'deals' | 'leads' | 'contacts' | 'activities' | 'reactivation' | 'whatsapp';
+type CRMView = 'deals' | 'leads' | 'contacts' | 'activities' | 'reactivation' | 'whatsapp' | 'campaigns';
 
 const resolveView = (requestedSubTab?: string | null): CRMView => (
-  requestedSubTab === 'whatsapp'
+  requestedSubTab === 'campaigns'
+    ? 'campaigns'
+    : requestedSubTab === 'whatsapp'
     ? 'whatsapp'
     : requestedSubTab === 'reactivation'
       ? 'reactivation'
@@ -30,6 +33,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
 
   if (activeView === 'whatsapp') {
     content = <WhatsAppSettings />;
+  } else if (activeView === 'campaigns') {
+    content = <WhatsAppBulkCampaigns />;
   } else if (activeView === 'reactivation') {
     content = <BudgetReactivation />;
   } else {
