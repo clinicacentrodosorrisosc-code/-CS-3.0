@@ -1569,3 +1569,63 @@ html.dark .ce-app .sidebar-shell :is(button, span, p, h1, h2, h3, svg),
 .dark .ce-app :is([role="dialog"] > div, .modal-panel, [role="menu"], [role="listbox"]) {
   box-shadow: var(--shadow-overlay) !important;
 }
+
+/* A route failure should remain a visible, calm recovery state instead of an
+   empty canvas. This also works in dark mode through the shared tokens. */
+.module-error-state {
+  display: grid;
+  min-height: 100%;
+  place-content: center;
+  grid-template-columns: auto minmax(0, 32rem);
+  gap: 12px;
+  padding: 24px;
+  background: var(--background);
+  color: var(--text);
+}
+
+.module-error-state__icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.module-error-state h2,
+.module-error-state p {
+  margin: 0;
+}
+
+.module-error-state h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.module-error-state p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.module-error-state button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.module-error-state button:hover {
+  background: var(--surface-hover);
+}

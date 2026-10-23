@@ -10,6 +10,7 @@ import { AppHeader } from './components/Layout/AppHeader';
 import { useRealtimeSubscription } from './lib/realtime';
 import { playCashRegisterSound } from './lib/sound';
 import { LoadingPanel } from './components/ui/loading-panel';
+import { ModuleErrorBoundary } from './components/ui/module-error-boundary';
 import { recordAuditEvent } from './lib/audit';
 
 const Dashboard = lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -31,12 +32,14 @@ const AuditLog = lazy(() => import('./components/AuditLog'));
 
 const TabContainer = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div
-      className="module-view absolute inset-0 flex flex-col"
-      style={{ zIndex: 10 }}
-    >
-      {children}
-    </div>
+    <ModuleErrorBoundary>
+      <div
+        className="module-view absolute inset-0 flex flex-col"
+        style={{ zIndex: 10 }}
+      >
+        {children}
+      </div>
+    </ModuleErrorBoundary>
   );
 };
 
