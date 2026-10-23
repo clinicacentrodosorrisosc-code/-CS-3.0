@@ -3507,6 +3507,7 @@ body.dark,
 
 .dark .ce-app .sidebar-shell { background: #17133f !important; }
 .dark .ce-app :is(input, select, textarea) { background: var(--surface-high) !important; }
+
 .dark .ce-app table :is(thead, th) { background: var(--bg-subtle) !important; }
 */
 
@@ -3622,4 +3623,26 @@ body.dark,
 .ce-app .sidebar-context-submenu button[class*="bg-[var(--primary-dim)]"] {
   background: #6150e1 !important;
   color: #ffffff !important;
+}
+
+/* Keep selection controls square after the global form-control rules above. */
+.ce-app input.clean-checkbox {
+  width: 15px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  padding: 0 !important;
+  border-radius: 3px !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+.ce-app input.clean-checkbox:checked {
+  border-color: var(--primary) !important;
+  background-color: var(--primary) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m3 8 3 3 7-7'/%3E%3C/svg%3E") !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 11px !important;
 }
