@@ -2973,27 +2973,15 @@ html.dark #root {
 .dark
   .ce-app
   :is(
-    [class*="bg-white"],
-    [class*="bg-gray-"],
-    [class*="bg-slate-"],
-    [class*="bg-zinc-"],
-    [class*="bg-neutral-"]
-  ):not([class*="bg-slate-950"]):not([class*="bg-slate-900"]):not(
-    [class*="bg-zinc-950"]
-  ):not([class*="bg-neutral-950"]) {
-  background-color: var(--surface) !important;
-  background-image: none !important;
-}
-
-.dark
-  .ce-app
-  :is(
-    [class*="bg-[#D"],
-    [class*="bg-[#E"],
-    [class*="bg-[#F"],
-    [class*="bg-[#d"],
-    [class*="bg-[#e"],
-    [class*="bg-[#f"]
+    [class~="bg-white"],
+    [class~="bg-gray-50"],
+    [class~="bg-gray-100"],
+    [class~="bg-slate-50"],
+    [class~="bg-slate-100"],
+    [class~="bg-zinc-50"],
+    [class~="bg-zinc-100"],
+    [class~="bg-neutral-50"],
+    [class~="bg-neutral-100"]
   ) {
   background-color: var(--surface) !important;
   background-image: none !important;

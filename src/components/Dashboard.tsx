@@ -574,7 +574,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ requestedSubTab }) => {
 
           <div className="dashboard-insights-grid hidden grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
           {insightView === 'trend' ? (
-          <section className="bg-white dark:bg-[#19231F] p-5 rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
+          <section className="bg-white dark:bg-[var(--surface)] p-5 rounded-2xl border border-[#DFE6E2] dark:border-white/[0.08] shadow-sm">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                   <div>
                       <h3 className="text-sm font-bold text-[#17211D] dark:text-white">Tendência de Vendas</h3>

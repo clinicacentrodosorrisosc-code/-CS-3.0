@@ -1546,3 +1546,26 @@ html.dark .ce-app .sidebar-shell :is(button, span, p, h1, h2, h3, svg),
 .dark .ce-app .sidebar-shell :is(button, span, p, h1, h2, h3, svg) {
   color: #ffffff !important;
 }
+
+/* Keep dark-mode depth deliberate. Large, shared work surfaces use the
+   compact panel shadow; only transient overlays retain the stronger lift. */
+.dark .ce-app :is(
+  .app-header,
+  .dashboard-command-bar,
+  .module-command-bar,
+  .module-filter-panel,
+  .module-context-bar,
+  .financial-filter-bar,
+  .financial-kpi-card,
+  .financial-donut-card,
+  .glass-panel,
+  .nexus-card,
+  .fintech-card,
+  .metric-card
+) {
+  box-shadow: var(--shadow-panel) !important;
+}
+
+.dark .ce-app :is([role="dialog"] > div, .modal-panel, [role="menu"], [role="listbox"]) {
+  box-shadow: var(--shadow-overlay) !important;
+}

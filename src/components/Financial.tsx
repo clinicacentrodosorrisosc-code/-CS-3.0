@@ -2868,7 +2868,7 @@ export const Financial: React.FC<FinancialProps> = ({
     );
     return (
       <div className="flex h-full flex-col gap-2 animate-in fade-in">
-        <section className="rounded-xl border border-[#e8ebf0] bg-white px-3 py-2.5 shadow-sm dark:border-white/[0.09] dark:bg-[#141A29] sm:px-4">
+        <section className="rounded-xl border border-[#e8ebf0] bg-white px-3 py-2.5 shadow-sm dark:border-white/[0.09] dark:bg-[var(--surface)] sm:px-4">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="truncate text-base font-bold tracking-tight text-[#283449] dark:text-[var(--text)]">Lançamentos</h3>
@@ -5278,7 +5278,7 @@ export const Financial: React.FC<FinancialProps> = ({
             <div className="flex-1 w-full pb-10">
               {activeSubTab === "overview" && (
                 <div className="financial-overview flex flex-col gap-3.5 animate-in fade-in duration-300">
-                  <div className="financial-filter-bar bg-white dark:bg-[#141A29] p-3 rounded-xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
+                  <div className="financial-filter-bar bg-white dark:bg-[var(--surface)] p-3 rounded-xl border border-[#EAEFF6] dark:border-white/[0.08] flex flex-wrap gap-3 items-center justify-between relative z-20 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-[#64748B] dark:text-slate-400 uppercase font-bold">
                         Período:
