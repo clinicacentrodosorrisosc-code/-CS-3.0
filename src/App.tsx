@@ -99,16 +99,18 @@ const App: React.FC = () => {
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // O modo escuro é o padrão do sistema; uma preferência clara salva pelo
+  // usuário continua sendo respeitada até que ele altere o tema novamente.
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
     if (!session?.user?.id) return;
     try {
       const saved = localStorage.getItem(`theme:${session.user.id}`);
-      setTheme(saved === 'dark' ? 'dark' : 'light');
+      setTheme(saved === 'light' ? 'light' : 'dark');
     } catch (e) {
       console.warn("Could not read the user theme from localStorage:", e);
-      setTheme('light');
+      setTheme('dark');
     }
   }, [session?.user?.id]);
 
