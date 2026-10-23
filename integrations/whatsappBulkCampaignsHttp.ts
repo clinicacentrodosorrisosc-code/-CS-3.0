@@ -200,6 +200,20 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
       const sentAt = new Date().toISOString();
       const metaMessageId = String(body?.messages?.[0]?.id || '');
       sent += 1; await db.from('whatsapp_bulk_campaign_recipients').update({ status: 'sent', meta_message_id: metaMessageId, sent_at: sentAt }).eq('id', row.id);
+      if (isReactivation && sourceItem) {
+        const reactivationLead = sourceItem as ReactivationLead;
+        const historyNote = `Disparo em massa · campanha ${campaignId} · template ${campaign.template_name}${metaMessageId ? ` · Meta ${metaMessageId}` : ''}`;
+        const { error: historyError } = await db.from('budget_reactivation_interactions').insert({
+          lead_id: reactivationLead.id,
+          channel: 'whatsapp',
+          outcome: 'message_sent',
+          note: historyNote.slice(0, 1000),
+          seller: reactivationLead.assignee || 'James',
+        });
+        if (historyError) console.error('Falha ao registrar histórico de reativação:', historyError.message);
+        const { error: leadUpdateError } = await db.from('budget_reactivation_leads').update({ status: 'contacted', last_contact_at: sentAt }).eq('id', reactivationLead.id);
+        if (leadUpdateError) console.error('Falha ao atualizar carteira de reativação:', leadUpdateError.message);
+      }
       if (isOrthodontics && sourceItem) {
         const attendance = { ...((sourceItem as OrthoPatient).attendance || {}) };
         const history = Array.isArray(attendance.__whatsapp_history) ? attendance.__whatsapp_history : [];

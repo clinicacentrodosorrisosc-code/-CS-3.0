@@ -298,10 +298,12 @@ export const BudgetReactivation: React.FC = () => {
     const effectiveCalls = callAttempts.filter(
       (item) => item.outcome === "answered",
     );
-    const portfolioValue = leads.reduce(
-      (total, item) => total + Number(item.budget_value_cents || 0),
-      0,
-    );
+    const portfolioValue = leads
+      .filter((item) => !['converted', 'closed'].includes(item.status))
+      .reduce(
+        (total, item) => total + Number(item.budget_value_cents || 0),
+        0,
+      );
     const soldValue = leads
       .filter((item) => item.status === "converted")
       .reduce(
@@ -311,6 +313,11 @@ export const BudgetReactivation: React.FC = () => {
         0,
       );
     return [
+      [
+        "Mensagens enviadas",
+        interactions.filter((item) => item.channel === "whatsapp" && item.outcome === "message_sent").length,
+        "Disparos confirmados pela Meta",
+      ],
       [
         "Tentativas de ligação",
         callAttempts.length,
