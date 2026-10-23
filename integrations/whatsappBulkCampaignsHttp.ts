@@ -411,7 +411,15 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       const selected = selectedIds.has(item.id);
       const duplicate = selected && item.status === 'ready' && usedPhones.has(item.phone);
       if (selected && item.status === 'ready' && !duplicate) usedPhones.add(item.phone);
-      return { opportunity_id: source === 'crm' ? item.id : null, ortho_patient_id: source === 'orthodontics' ? item.id : null, contact_list_contact_id: source === 'contact_list' ? item.id : null, budget_reactivation_lead_id: source === 'budget_reactivation' ? item.id : null, phone: item.phone, status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped', error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.' };
+      return {
+        opportunity_id: source === 'crm' ? item.id : null,
+        ortho_patient_id: source === 'orthodontics' ? item.id : null,
+        contact_list_contact_id: source === 'contact_list' ? item.id : null,
+        ...(source === 'budget_reactivation' ? { budget_reactivation_lead_id: item.id } : {}),
+        phone: item.phone,
+        status: selected && item.status === 'ready' && !duplicate ? 'pending' : 'skipped',
+        error_message: !selected ? 'Contato nao selecionado antes do disparo.' : duplicate ? 'Telefone duplicado na campanha; nao foi reenviado.' : item.reason || 'Telefone ausente ou invalido.'
+      };
     });
     if (!recipients.some(item => item.status === 'pending')) return res.status(400).json({ error: 'Nenhum contato com telefone valido e unico foi encontrado neste filtro.' });
     const normalizedSuccessTag = String(successTag || '').trim().replace(/\s+/g, ' ').slice(0, 40) || null;
