@@ -172,6 +172,50 @@ button:not(:disabled):active,
   font-family: Inter, "Segoe UI", system-ui, sans-serif;
 }
 
+/* Carteira de reativação: barra compacta inspirada na densidade operacional do CRM. */
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-toolbar {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(31, 35, 41, .05);
+}
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-view-switch {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-view-switch button {
+  display: grid;
+  width: 31px;
+  height: 29px;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+}
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-view-switch button:last-child { border-right: 0; }
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-view-switch button.active {
+  background: #edf4ff;
+  color: #2366ad;
+  box-shadow: inset 0 0 0 1px #8eb6e1;
+}
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-count,
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-context {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 650;
+}
+.ce-app .crm-reactivation-pipedrive .crm-reactivation-toolbar-spacer { flex: 1; }
+.dark .ce-app .crm-reactivation-pipedrive .crm-reactivation-view-switch button.active { background: rgba(59, 130, 246, .16); color: #9bc7ff; box-shadow: inset 0 0 0 1px rgba(121, 174, 239, .6); }
+
 .ce-app .crm-suite :is(.btn, button[class*="btn-"]) {
   min-height: 32px;
   border-radius: 6px;

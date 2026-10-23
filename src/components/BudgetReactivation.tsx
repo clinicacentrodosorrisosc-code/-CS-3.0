@@ -579,9 +579,17 @@ export const BudgetReactivation: React.FC = () => {
       const response = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ source: "budget_reactivation", name: `Reativação · ${new Date().toLocaleDateString("pt-BR")}`, templateName: template.name, language: template.language, selectedLeadIds: Array.from(bulkSelectedIds), variableMapping: "{{1}} = patient_name\\n{{2}} = amount" }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao criar a campanha.");
-      const processResponse = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ action: "process", campaignId: body.campaignId }) });
-      const processBody = await processResponse.json();
-      if (!processResponse.ok) throw new Error(processBody.error || "Campanha criada, mas não foi processada.");
+      let processBody: { sent?: number; failed?: number; pending?: number } = {};
+      let totalSent = 0;
+      let totalFailed = 0;
+      for (let batch = 0; batch < 100; batch += 1) {
+        const processResponse = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ action: "process", campaignId: body.campaignId }) });
+        processBody = await processResponse.json();
+        if (!processResponse.ok) throw new Error(processBody.error || "Campanha criada, mas não foi processada.");
+        totalSent += Number(processBody.sent || 0);
+        totalFailed += Number(processBody.failed || 0);
+        if (!processBody.pending) break;
+      }
       const reportResponse = await fetch(`/api/integrations/whatsapp/bulk-campaigns?campaignId=${encodeURIComponent(body.campaignId)}`, { headers });
       const reportBody = await reportResponse.json();
       if (reportResponse.ok && Array.isArray(reportBody.recipients)) {
@@ -592,16 +600,25 @@ export const BudgetReactivation: React.FC = () => {
           return next;
         });
       }
-      setCampaignNotice(`Campanha processada: ${processBody.sent || 0} enviada(s), ${processBody.failed || 0} falha(s). O relatório mantém o status e o ID Meta quando disponível.`);
+      setCampaignNotice(`Campanha processada: ${totalSent} enviada(s), ${totalFailed} falha(s). O relatório mantém o status e o ID Meta quando disponível.`);
       await load();
     } catch (error) { setCampaignNotice(error instanceof Error ? error.message : "Falha ao disparar a campanha."); }
     finally { setCampaignSending(false); }
   };
 
   return (
-    <div className="crm-suite flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
+    <div className="crm-suite crm-reactivation-pipedrive flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-transparent text-[var(--text)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
         <div className="flex w-full flex-col gap-5">
+          <div className="crm-reactivation-toolbar" aria-label="Ferramentas da carteira">
+            <div className="crm-reactivation-view-switch" role="group" aria-label="Visualização">
+              <button type="button" className="active" title="Lista de reativação"><span aria-hidden="true">☷</span></button>
+              <button type="button" title="Histórico de mensagens"><MessageCircle className="h-3.5 w-3.5" /></button>
+            </div>
+            <span className="crm-reactivation-count">{filtered.length} contatos</span>
+            <span className="crm-reactivation-toolbar-spacer" />
+            <span className="crm-reactivation-context">Reativação de orçamento</span>
+          </div>
           <PageHeader
             icon={Target}
             title="Orçamentos perdidos e vencidos"
