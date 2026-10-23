@@ -376,26 +376,29 @@
   background: #fff;
 }
 .crmws-deals-table {
+  min-width: 1240px;
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 .crmws-deals-table th {
   position: sticky;
   z-index: 2;
   top: 0;
-  padding: 9px 12px;
-  border-bottom: 1px solid #d9dce0;
-  background: #f6f7f8;
-  color: #62666d;
+  padding: 7px 8px;
+  border: 1px solid #dfe1e4;
+  background: #f8f9fa;
+  color: #52565e;
   text-align: left;
   font-size: 11px;
   line-height: 16px;
   font-weight: 650;
 }
 .crmws-deals-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #eceef0;
-  color: #4e5259;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid #e2e4e7;
+  color: #454950;
   font-size: 12px;
   line-height: 18px;
 }
@@ -403,15 +406,83 @@
   cursor: pointer;
 }
 .crmws-deals-table tbody tr:hover {
-  background: #f7f9fb;
+  background: #f7f8fa;
 }
-.crmws-deals-table td:first-child button {
+.crmws-deals-table th:nth-child(1), .crmws-deals-table td:nth-child(1) { width: 26px; }
+.crmws-deals-table th:nth-child(2), .crmws-deals-table td:nth-child(2) { width: 210px; }
+.crmws-deals-table th:nth-child(3), .crmws-deals-table td:nth-child(3) { width: 150px; }
+.crmws-deals-table th:nth-child(4), .crmws-deals-table td:nth-child(4) { width: 210px; }
+.crmws-deals-table th:nth-child(5), .crmws-deals-table td:nth-child(5) { width: 210px; }
+.crmws-deals-table th:nth-child(6), .crmws-deals-table td:nth-child(6) { width: 220px; }
+.crmws-deals-table th:nth-child(7), .crmws-deals-table td:nth-child(7) { width: 205px; }
+.crmws-deals-table th:nth-child(8), .crmws-deals-table td:nth-child(8) { width: 160px; }
+.crmws-deals-table th:nth-child(9), .crmws-deals-table td:nth-child(9) { width: 50px; }
+.crmws-table-check {
+  padding: 0 !important;
+  text-align: center !important;
+}
+.crmws-table-check input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #0d68c5;
+}
+.crmws-table-actions {
+  color: #777b83 !important;
+  font-size: 10px !important;
+  text-align: right !important;
+}
+.crmws-table-actions button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  place-items: center;
   border: 0;
+  border-radius: 4px;
   background: transparent;
-  color: #20242a;
-  font-weight: 650;
+  color: #72767d;
+}
+.crmws-table-actions button:hover { background: #eef0f3; color: #25282e; }
+.crmws-editable-cell { position: relative; padding: 0 !important; }
+.crmws-editable-cell > button {
+  display: flex;
+  width: 100%;
+  height: 37px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
   text-align: left;
 }
+.crmws-editable-cell > button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crmws-editable-cell > button svg { flex: 0 0 auto; opacity: 0; color: #0d68c5; }
+.crmws-editable-cell:hover > button { border-color: #0d68c5; background: #fff; }
+.crmws-editable-cell:hover > button svg { opacity: 1; }
+.crmws-editable-cell > input {
+  width: 100%;
+  height: 37px;
+  padding: 0 7px;
+  border: 2px solid #0d68c5;
+  border-radius: 0;
+  outline: 0;
+  background: #fff;
+  color: #21232c;
+  font: inherit;
+}
+.crmws-editable-cell.disabled > button { cursor: default; color: #7c8088; }
+.crmws-editable-cell.disabled:hover > button { border-color: transparent; background: transparent; }
+.crmws-table-title > button { color: #24272d; font-weight: 650; }
+.crmws-table-value > button { justify-content: flex-end; color: #53575e; font-weight: 600; }
+.crmws-deals-table td.overdue > button { color: #c84742; }
 .crmws-deals-table td.overdue {
   color: #d83c38;
 }

@@ -602,6 +602,10 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
     setDeals((current) =>
       current.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
+  const updateActivity = (id: number, patch: Partial<DealActivity>) =>
+    setActivities((current) =>
+      current.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    );
   const moveDeal = (id: number, nextStageId: string) =>
     setDeals((current) =>
       current.map((deal) => {
@@ -679,6 +683,8 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
             setScreen("editor");
           }}
           onMove={moveDeal}
+          onUpdateDeal={updateDeal}
+          onUpdateActivity={updateActivity}
           onDropAction={(id, action) =>
             action === "won"
               ? markWon(id)
@@ -1040,6 +1046,8 @@ const BoardView: React.FC<{
   onEditPipeline: () => void;
   onCreatePipeline: () => void;
   onMove: (id: number, stage: string) => void;
+  onUpdateDeal: (id: number, patch: Partial<Deal>) => void;
+  onUpdateActivity: (id: number, patch: Partial<DealActivity>) => void;
   onDropAction: (id: number, action: string) => void;
   quickAdd: boolean;
   setQuickAdd: (v: boolean) => void;
@@ -1415,6 +1423,8 @@ const BoardView: React.FC<{
           stages={props.stages}
           activities={props.activities}
           onOpen={props.onOpenDeal}
+          onUpdateDeal={props.onUpdateDeal}
+          onUpdateActivity={props.onUpdateActivity}
         />
       )}
       {view === "forecast" && (
@@ -1467,18 +1477,22 @@ const DealsTableView: React.FC<{
   stages: Stage[];
   activities: DealActivity[];
   onOpen: (id: number) => void;
-}> = ({ deals, stages, activities, onOpen }) => (
+  onUpdateDeal: (id: number, patch: Partial<Deal>) => void;
+  onUpdateActivity: (id: number, patch: Partial<DealActivity>) => void;
+}> = ({ deals, stages, activities, onOpen, onUpdateDeal, onUpdateActivity }) => (
   <div className="crmws-deals-tablewrap">
     <table className="crmws-deals-table">
       <thead>
         <tr>
-          <th>Negócio</th>
-          <th>Pessoa</th>
-          <th>Organização</th>
-          <th>Etapa</th>
-          <th>Próxima atividade</th>
-          <th>Responsável</th>
+          <th className="crmws-table-check"><input type="checkbox" aria-label="Selecionar todos os negócios" /></th>
+          <th>Título</th>
           <th>Valor</th>
+          <th>Organização</th>
+          <th>Pessoa de contato</th>
+          <th>Data de fechamento esperada</th>
+          <th>Próxima atividade em</th>
+          <th>Proprietário</th>
+          <th className="crmws-table-actions">Personalizar</th>
         </tr>
       </thead>
       <tbody>
@@ -1488,32 +1502,15 @@ const DealsTableView: React.FC<{
           );
           return (
             <tr key={deal.id} onClick={() => onOpen(deal.id)}>
-              <td>
-                <button>{deal.title}</button>
-              </td>
-              <td>{deal.person}</td>
-              <td>{deal.organization || "—"}</td>
-              <td>{stages.find((stage) => stage.id === deal.stageId)?.name}</td>
-              <td className={next && next.due < todayKey() ? "overdue" : ""}>
-                {next
-                  ? `${next.due}${next.time ? ` · ${next.time}` : ""}`
-                  : "Sem atividade"}
-              </td>
-              <td>
-                <span className="crmws-list-owner">
-                  <span className="crmws-avatar">
-                    {deal.owner
-                      .split(" ")
-                      .map((part) => part[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </span>
-                  {deal.owner}
-                </span>
-              </td>
-              <td>
-                <b>{money(deal.value)}</b>
-              </td>
+              <td className="crmws-table-check" onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={`Selecionar ${deal.title}`} /></td>
+              <InlineTableCell value={deal.title} onSave={(title) => onUpdateDeal(deal.id, { title })} className="crmws-table-title" />
+              <InlineTableCell value={String(deal.value)} displayValue={money(deal.value)} inputMode="decimal" onSave={(value) => onUpdateDeal(deal.id, { value: Number(value.replace(/[^0-9,.-]/g, "").replace(",", ".")) || 0 })} className="crmws-table-value" />
+              <InlineTableCell value={deal.organization} emptyLabel="—" onSave={(organization) => onUpdateDeal(deal.id, { organization })} />
+              <InlineTableCell value={deal.person} onSave={(person) => onUpdateDeal(deal.id, { person })} />
+              <InlineTableCell value={deal.expectedClose || ""} displayValue={deal.expectedClose ? new Date(`${deal.expectedClose}T00:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }) : "—"} type="date" emptyLabel="—" onSave={(expectedClose) => onUpdateDeal(deal.id, { expectedClose: expectedClose || undefined })} />
+              <InlineTableCell value={next?.due || ""} displayValue={next ? new Date(`${next.due}T00:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }) : "Sem atividade"} type="date" emptyLabel="Sem atividade" className={next && next.due < todayKey() ? "overdue" : ""} onSave={(due) => { if (next) onUpdateActivity(next.id, { due }); }} disabled={!next} />
+              <InlineTableCell value={deal.owner} onSave={(owner) => onUpdateDeal(deal.id, { owner })} />
+              <td className="crmws-table-actions" onClick={(event) => event.stopPropagation()}><button aria-label={`Mais ações para ${deal.title}`}><MoreHorizontal size={16} /></button></td>
             </tr>
           );
         })}
@@ -1528,6 +1525,40 @@ const DealsTableView: React.FC<{
     )}
   </div>
 );
+
+const InlineTableCell: React.FC<{
+  value: string;
+  displayValue?: string;
+  emptyLabel?: string;
+  type?: "text" | "date";
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  className?: string;
+  disabled?: boolean;
+  onSave: (value: string) => void;
+}> = ({ value, displayValue, emptyLabel = "", type = "text", inputMode, className = "", disabled = false, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => setDraft(value), [value]);
+
+  const save = () => {
+    setEditing(false);
+    if (draft !== value) onSave(draft.trim());
+  };
+
+  return (
+    <td className={`crmws-editable-cell ${className}${disabled ? " disabled" : ""}`} onClick={(event) => event.stopPropagation()}>
+      {editing ? (
+        <input autoFocus type={type} inputMode={inputMode} value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={save} onKeyDown={(event) => { if (event.key === "Enter") save(); if (event.key === "Escape") { setDraft(value); setEditing(false); } }} />
+      ) : (
+        <button type="button" disabled={disabled} onClick={() => setEditing(true)} title={disabled ? "Sem atividade para editar" : "Editar campo"}>
+          <span>{displayValue ?? (value || emptyLabel)}</span>
+          {!disabled && <Pencil size={13} aria-hidden="true" />}
+        </button>
+      )}
+    </td>
+  );
+};
 
 const ForecastView: React.FC<{
   deals: Deal[];
