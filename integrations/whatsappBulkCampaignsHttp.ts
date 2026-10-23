@@ -171,7 +171,13 @@ async function sendBatch(db: SupabaseClient, userId: string, campaignId: string)
   if (campaignError) throw campaignError;
   const { data: config, error: configError } = await db.from('whatsapp_config').select('phone_number_id,access_token_encrypted,status').eq('user_id', userId).maybeSingle();
   if (configError || !config || config.status !== 'connected' || !config.access_token_encrypted) throw new Error('WhatsApp Business nao conectado.');
-  const { data: rows, error: rowsError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone').eq('campaign_id', campaignId).eq('status', 'pending').order('created_at').limit(15);
+  // Keep campaigns for existing sources operational even when the optional
+  // budget-reactivation migration has not reached the database yet.
+  const recipientColumns = campaign.source === 'budget_reactivation'
+    ? 'id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone'
+    : 'id,opportunity_id,ortho_patient_id,contact_list_contact_id,phone';
+  const recipientTable = db.from('whatsapp_bulk_campaign_recipients') as any;
+  const { data: rows, error: rowsError } = await recipientTable.select(recipientColumns).eq('campaign_id', campaignId).eq('status', 'pending').order('created_at').limit(15);
   if (rowsError) throw rowsError;
   let sent = 0; let failed = 0;
   for (const row of rows || []) {
@@ -303,7 +309,12 @@ export async function handleWhatsAppBulkCampaigns(req: Request, res: Response) {
       if (campaignId) {
         const { data: campaign, error: campaignError } = await db.from('whatsapp_bulk_campaigns').select('*').eq('id', campaignId).eq('user_id', userId).single(); if (campaignError) throw campaignError;
         if (campaign.source === 'crm') await registerSkippedRecipients(db, campaign);
-        const { data: recipients, error: recipientError } = await db.from('whatsapp_bulk_campaign_recipients').select('id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone,status,meta_message_id,error_message,created_at,sent_at').eq('campaign_id', campaign.id).order('created_at'); if (recipientError) throw recipientError;
+        const recipientColumns = campaign.source === 'budget_reactivation'
+          ? 'id,opportunity_id,ortho_patient_id,contact_list_contact_id,budget_reactivation_lead_id,phone,status,meta_message_id,error_message,created_at,sent_at'
+          : 'id,opportunity_id,ortho_patient_id,contact_list_contact_id,phone,status,meta_message_id,error_message,created_at,sent_at';
+        const recipientTable = db.from('whatsapp_bulk_campaign_recipients') as any;
+        const { data: rawRecipients, error: recipientError } = await recipientTable.select(recipientColumns).eq('campaign_id', campaign.id).order('created_at'); if (recipientError) throw recipientError;
+        const recipients: any[] = rawRecipients || [];
         if (campaign.source === 'orthodontics') {
           const ids = (recipients || []).map(item => item.ortho_patient_id).filter(Boolean); const { data: patients, error: patientsError } = ids.length ? await db.from('ortho_patients').select('id,name').in('id', ids) : { data: [], error: null }; if (patientsError) throw patientsError;
           const names = new Map((patients || []).map(item => [item.id, item.name]));
