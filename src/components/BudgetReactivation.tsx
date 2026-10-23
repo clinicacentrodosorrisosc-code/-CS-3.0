@@ -579,7 +579,7 @@ export const BudgetReactivation: React.FC = () => {
       const response = await fetch("/api/integrations/whatsapp/bulk-campaigns", { method: "POST", headers, body: JSON.stringify({ source: "budget_reactivation", name: `Reativação · ${new Date().toLocaleDateString("pt-BR")}`, templateName: template.name, language: template.language, selectedLeadIds: Array.from(bulkSelectedIds), variableMapping: "{{1}} = patient_name\\n{{2}} = amount" }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Falha ao criar a campanha.");
-      let processBody: { sent?: number; failed?: number; pending?: number } = {};
+      let processBody: { sent?: number; failed?: number; pending?: number; error?: string } = {};
       let totalSent = 0;
       let totalFailed = 0;
       for (let batch = 0; batch < 100; batch += 1) {
