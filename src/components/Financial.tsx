@@ -6404,7 +6404,7 @@ export const Financial: React.FC<FinancialProps> = ({
         {/* MODAL LANÇAMENTO INDIVIDUAL */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur-2xl p-4 animate-in fade-in duration-200">
-            <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-5xl h-[min(46rem,calc(100dvh-2rem))] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
+            <div className="financial-entry-modal bg-white/75 dark:bg-slate-900/75 backdrop-blur-2xl border border-white/70 dark:border-white/10 w-full max-w-5xl h-[min(46rem,calc(100dvh-2rem))] rounded-3xl shadow-3xl overflow-hidden flex flex-col relative">
               <div className="p-6 border-b border-border bg-surface flex justify-between items-center">
                 <h3 className="text-xl font-bold text-text font-display">
                   {formData.id
