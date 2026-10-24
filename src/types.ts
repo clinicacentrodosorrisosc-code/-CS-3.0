@@ -18,6 +18,7 @@ export enum Tab {
 export interface UserProfile {
   id: string;
   email: string;
+  full_name?: string | null;
   role: 'admin' | 'user' | 'reception';
   allowed_tabs: string[];
   allowed_sub_tabs?: string[];

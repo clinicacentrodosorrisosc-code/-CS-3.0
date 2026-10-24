@@ -1011,12 +1011,15 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                               ? 'bg-gradient-to-tr from-blue-600 to-cyan-600 shadow-blue-900/30'
                               : 'bg-gradient-to-tr from-slate-700 to-slate-600'
                         }`}>
-                          {user.email ? user.email.slice(0, 2) : 'US'}
+                          {(user.full_name || user.email || 'US').slice(0, 2)}
                         </div>
 
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white font-bold text-sm">{user.email}</span>
+                            <div>
+                              <span className="block text-white font-bold text-sm">{user.full_name || user.email}</span>
+                              {user.full_name && <span className="block mt-0.5 text-[11px] text-slate-400">{user.email}</span>}
+                            </div>
                             
                             {isCurrent && (
                               <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">
