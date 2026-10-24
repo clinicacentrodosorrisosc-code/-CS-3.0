@@ -119,12 +119,18 @@ export async function handleClinicaExpertsCrmReconciliation(req: ApiRequest, res
     if (stagesError) throw stagesError;
     if (localError) throw localError;
     const stageByExternal = new Map((stages || []).map(stage => [stage.external_id, stage]));
+    // The upstream endpoint does not reliably apply pipeline_uuid. Mirror the
+    // importer validation so this report compares only the requested funnel.
+    const scopedExternalRows = externalRows.filter(row => (
+      row.pipeline?.uuid === pipelineExternalId
+      && stageByExternal.has(row.stage?.uuid || '')
+    ));
     const localByStage = new Map<string, typeof localRows>();
     for (const row of localRows || []) localByStage.set(row.stage_id, [...(localByStage.get(row.stage_id) || []), row]);
-    const externalIds = new Set(externalRows.map(row => row.uuid));
+    const externalIds = new Set(scopedExternalRows.map(row => row.uuid));
     const localIds = new Set((localRows || []).map(row => row.external_id));
     const stagesReport = (stages || []).map(stage => {
-      const remote = externalRows.filter(row => row.stage?.uuid === stage.external_id);
+      const remote = scopedExternalRows.filter(row => row.stage?.uuid === stage.external_id);
       const local = localByStage.get(stage.id) || [];
       const statuses = Object.entries(remote.reduce<Record<string, number>>((counts, row) => {
         const key = String(row.status || row.stage?.status || 'sem status');
@@ -134,8 +140,8 @@ export async function handleClinicaExpertsCrmReconciliation(req: ApiRequest, res
       return { stageId: stage.id, stage: stage.name, externalCount: remote.length, localCount: local.length, difference: local.length - remote.length, externalStatuses: statuses };
     });
     const onlyLocal = (localRows || []).filter(row => !externalIds.has(row.external_id)).slice(0, 100);
-    const onlyExternal = externalRows.filter(row => !localIds.has(row.uuid)).slice(0, 100).map(row => ({ external_id: row.uuid, title: row.title || row.patient?.name || 'Oportunidade', patient_name: row.patient?.name || null, status: row.status || row.stage?.status || null, stage: stageByExternal.get(row.stage?.uuid || '')?.name || row.stage?.name || 'Etapa não mapeada' }));
-    res.status(200).json({ data: { externalTotal: externalRows.length, localTotal: (localRows || []).length, stages: stagesReport, onlyLocal, onlyExternal } });
+    const onlyExternal = scopedExternalRows.filter(row => !localIds.has(row.uuid)).slice(0, 100).map(row => ({ external_id: row.uuid, title: row.title || row.patient?.name || 'Oportunidade', patient_name: row.patient?.name || null, status: row.status || row.stage?.status || null, stage: stageByExternal.get(row.stage?.uuid || '')?.name || row.stage?.name || 'Etapa não mapeada' }));
+    res.status(200).json({ data: { externalTotal: scopedExternalRows.length, localTotal: (localRows || []).length, stages: stagesReport, onlyLocal, onlyExternal } });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Falha ao reconciliar o CRM.';
     res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });

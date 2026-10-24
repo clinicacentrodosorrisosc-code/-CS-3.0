@@ -748,10 +748,11 @@ export async function syncClinicaExperts(
 
     const { data: localStages, error: stageReadError } = await db
       .from('clinic_experts_stages')
-      .select('id, external_id')
+      .select('id, external_id, pipeline_id')
       .eq('user_id', userId);
     throwIfError(stageReadError, 'Erro ao reler etapas');
     const stageIds = new Map((localStages || []).map(row => [row.external_id, row.id]));
+    const stagePipelineIds = new Map((localStages || []).map(row => [row.external_id, row.pipeline_id]));
     const [{ data: previousOpportunities, error: previousOpportunitiesError }, { data: importedRows, error: importedRowsError }] = await Promise.all([
       db.from('clinic_experts_opportunities').select('id,external_id,patient_external_id,stage_id,patient_phone,patient_email,observations,local_overrides').eq('user_id', userId),
       db.from('clinic_experts_imported_data').select('opportunity_external_id,patient_external_id,data').eq('user_id', userId),
@@ -783,12 +784,27 @@ export async function syncClinicaExperts(
       });
     }
 
-    const opportunityRows = opportunities.flatMap(opportunity => {
+    // A Clinica Experts pode devolver oportunidades de outros funis mesmo quando
+    // pipeline_uuid e enviado. Nunca confie apenas nesse filtro remoto: cada
+    // oportunidade precisa confirmar o funil e uma etapa pertencente a ele.
+    const scopedOpportunities = opportunities.filter(opportunity => {
+      const externalPipelineId = opportunity.pipeline?.uuid;
+      const externalStageId = opportunity.stage?.uuid;
+      const pipelineId = externalPipelineId ? pipelineIds.get(externalPipelineId) : undefined;
+      const stagePipelineId = externalStageId ? stagePipelineIds.get(externalStageId) : undefined;
+      return Boolean(
+        pipelineId
+        && stagePipelineId === pipelineId
+        && (!pipelineExternalId || externalPipelineId === pipelineExternalId),
+      );
+    });
+
+    const opportunityRows = scopedOpportunities.flatMap(opportunity => {
       const externalPipelineId = opportunity.pipeline?.uuid;
       const externalStageId = opportunity.stage?.uuid;
       const pipelineId = externalPipelineId ? pipelineIds.get(externalPipelineId) : undefined;
       const stageId = externalStageId ? stageIds.get(externalStageId) : undefined;
-      if (!pipelineId || !stageId) return [];
+      if (!pipelineId || !stageId || stagePipelineIds.get(externalStageId || '') !== pipelineId) return [];
       const contact = opportunityContact(opportunity);
       const patientId = contact.externalId || undefined;
       const previous = previousByExternalId.get(opportunity.uuid);
