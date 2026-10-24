@@ -2182,6 +2182,15 @@ const DealDetail: React.FC<{
                 <Plus size={14} /> Participantes
               </button>
             </div>
+            <div className="crmws-summary-row crmws-phone-summary">
+              {p.deal.personPhone ? (
+                <a href={`tel:${p.deal.personPhone}`} title={`Ligar para ${displayPhone(p.deal.personPhone)}`}>
+                  <Phone size={14} /> {displayPhone(p.deal.personPhone)}
+                </a>
+              ) : (
+                <span><Phone size={14} /> Telefone não informado</span>
+              )}
+            </div>
             <div className="crmws-summary-row crmws-popover-anchor">
               <button onClick={() => setLabelsOpen((open) => !open)}>
                 <Tag size={14} />
