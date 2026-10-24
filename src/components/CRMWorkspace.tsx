@@ -1842,6 +1842,17 @@ const DealCard: React.FC<{
         {deal.isNew && <em>NOVO</em>}
       </button>
       <p>{deal.organization || deal.person}</p>
+      {deal.personPhone && (
+        <a
+          className="crmws-card-phone"
+          href={`tel:${deal.personPhone}`}
+          onClick={(event) => event.stopPropagation()}
+          title={`Ligar para ${deal.personPhone}`}
+        >
+          <Phone size={11} aria-hidden="true" />
+          {deal.personPhone}
+        </a>
+      )}
       <footer>
         <span className="crmws-avatar">
           {deal.owner
