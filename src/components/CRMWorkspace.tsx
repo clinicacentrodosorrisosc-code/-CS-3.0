@@ -3175,6 +3175,8 @@ const DealActivityComposer: React.FC<{
   const [type, setType] = useState("Chamada");
   const [due, setDue] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
+  const [activityDateOpen, setActivityDateOpen] = useState(false);
+  const [activityCalendarMonth, setActivityCalendarMonth] = useState(() => new Date());
   const [priority, setPriority] = useState<DealActivity["priority"]>("Média");
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [availability, setAvailability] = useState("Livre");
@@ -3193,6 +3195,16 @@ const DealActivityComposer: React.FC<{
     { label: "Almoço", icon: Activity },
   ];
   const timeOptions = Array.from({ length: 48 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`);
+  const activityCalendarYear = activityCalendarMonth.getFullYear();
+  const activityCalendarMonthIndex = activityCalendarMonth.getMonth();
+  const activityCalendarDays = Array.from({ length: new Date(activityCalendarYear, activityCalendarMonthIndex + 1, 0).getDate() }, (_, index) => index + 1);
+  const activityCalendarLeadingDays = new Date(activityCalendarYear, activityCalendarMonthIndex, 1).getDay();
+  const dueDisplay = new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR");
+  const shiftDue = (amount: number) => {
+    const next = new Date(`${due}T12:00:00`);
+    next.setDate(next.getDate() + amount);
+    setDue(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`);
+  };
   return (
     <section className="crmws-deal-activity-editor" aria-label="Adicionar atividade">
       <div className="crmws-deal-activity-fields">
@@ -3202,11 +3214,11 @@ const DealActivityComposer: React.FC<{
         </div>
         <div className="crmws-deal-activity-row crmws-deal-activity-date-row">
           <CalendarDays size={17} />
-          <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data da atividade" />
+          <div className="crmws-activity-date-picker"><button type="button" onClick={() => { setActivityCalendarMonth(new Date(`${due}T12:00:00`)); setActivityDateOpen((open) => !open); }} aria-label="Data da atividade">{dueDisplay}</button>{activityDateOpen && <div className="crmws-activity-calendar"><nav><button type="button" aria-label="Mês anterior" onClick={() => setActivityCalendarMonth(new Date(activityCalendarYear, activityCalendarMonthIndex - 1, 1))}>‹</button><b>{activityCalendarMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</b><button type="button" aria-label="Próximo mês" onClick={() => setActivityCalendarMonth(new Date(activityCalendarYear, activityCalendarMonthIndex + 1, 1))}>›</button></nav><div className="crmws-activity-calendar-weekdays">{"DSTQQSS".split("").map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}</div><div className="crmws-activity-calendar-grid">{Array.from({ length: activityCalendarLeadingDays }, (_, index) => <i key={`blank-${index}`} />)}{activityCalendarDays.map((day) => { const value = `${activityCalendarYear}-${String(activityCalendarMonthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`; return <button type="button" key={value} className={value === due ? "selected" : ""} onClick={() => { setDue(value); setActivityDateOpen(false); }}>{day}</button>; })}</div><button type="button" className="crmws-calendar-today" onClick={() => { setDue(todayKey()); setActivityCalendarMonth(new Date()); setActivityDateOpen(false); }}>Hoje</button></div>}</div>
           <select value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="Hora inicial"><option value="">HH:mm</option>{timeOptions.map((time) => <option key={time}>{time}</option>)}</select>
           <span>–</span>
           <select value={startTime ? timePlusMinutes(startTime, 15) : ""} disabled aria-label="Hora final"><option value="">HH:mm</option>{timeOptions.map((time) => <option key={time}>{time}</option>)}</select>
-          <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data final" />
+          <button type="button" className="crmws-deal-activity-enddate" onClick={() => { setActivityCalendarMonth(new Date(`${due}T12:00:00`)); setActivityDateOpen((open) => !open); }} aria-label="Data final">{dueDisplay}</button>
         </div>
         <div className="crmws-deal-activity-row crmws-priority-wrap">
           <FlagIcon size={17} />
@@ -3225,7 +3237,7 @@ const DealActivityComposer: React.FC<{
         </div>
       </div>
       <aside className="crmws-deal-activity-agenda" aria-label="Agenda do dia">
-        <header><b>{new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</b><span><button type="button">‹</button><button type="button">›</button></span></header>
+        <header><b>{new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</b><span><button type="button" aria-label="Dia anterior" onClick={() => shiftDue(-1)}>‹</button><button type="button" aria-label="Próximo dia" onClick={() => shiftDue(1)}>›</button></span></header>
         <div className="crmws-deal-activity-timeline">
           {["12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"].map((hour) => <span key={hour}>{hour}</span>)}
           <div className="crmws-deal-activity-current">{startTime || "21:30"} · {type}</div>
