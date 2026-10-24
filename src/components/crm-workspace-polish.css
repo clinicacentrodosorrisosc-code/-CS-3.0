@@ -1543,11 +1543,6 @@
 .crmws-deal-activity-date-row { display: grid; grid-template-columns: 18px minmax(120px, 1.25fr) minmax(72px, .65fr) auto minmax(72px, .65fr) minmax(120px, 1.25fr); gap: 7px; }
 .crmws-deal-activity-date-row input { min-width: 0; height: 27px; padding: 0 7px; border: 1px solid #d8dade; border-radius: 5px; background: #fff; color: #30353d; font-size: 11px; }
 .crmws-deal-activity-date-row span { color: #696d74; }
-.crmws-deal-activity-links { gap: 7px; }
-.crmws-deal-activity-links button { padding: 0; border: 0; background: transparent; color: #0868c6; font-size: 11px; font-weight: 600; }
-.crmws-deal-activity-links button + button::before { margin-right: 7px; color: #a0a4aa; content: "·"; }
-.crmws-deal-activity-description { align-items: start; }
-.crmws-deal-activity-description textarea { width: 100%; min-height: 73px; resize: vertical; border: 1px solid #e7d799; border-radius: 5px; background: #fff5d1; outline: none; }
 .crmws-deal-activity-records { display: grid; gap: 5px; margin-left: 27px; }
 .crmws-deal-activity-records > div { display: flex; min-height: 25px; align-items: center; gap: 7px; padding: 0 7px; border: 1px solid #d8dade; border-radius: 5px; font-size: 11px; }
 .crmws-deal-activity-records span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1795,5 +1790,4 @@
   .crmws-deal-activity-date-row { grid-template-columns: 18px 1fr 1fr; }
   .crmws-deal-activity-date-row span,
   .crmws-deal-activity-date-row input:last-child { display: none; }
-  .crmws-deal-activity-links { flex-wrap: wrap; }
 }

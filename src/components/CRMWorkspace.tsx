@@ -3158,11 +3158,9 @@ const DealActivityComposer: React.FC<{
   const [done, setDone] = useState(false);
   const types = [
     { label: "Chamada", icon: Phone },
-    { label: "Reunião", icon: Users },
     { label: "Tarefa", icon: CalendarClock },
     { label: "Prazo", icon: FlagIcon },
-    { label: "E-mail", icon: Mail },
-    { label: "Almoço", icon: Activity },
+    { label: "WhatsApp", icon: MessageSquareText },
   ];
   const dateLabel = new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
   return (
@@ -3184,9 +3182,7 @@ const DealActivityComposer: React.FC<{
           <FlagIcon size={17} />
           <select value={priority} onChange={(event) => setPriority(event.target.value as "Normal" | "Alta")} aria-label="Prioridade"><option value="Normal">Prioridade</option><option value="Alta">Prioridade alta</option></select>
         </div>
-        <div className="crmws-deal-activity-row crmws-deal-activity-links"><MoreHorizontal size={17} /><button type="button">Adicionar Localização</button><button type="button">Chamada de vídeo</button><button type="button">Descrição</button></div>
         <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select value={availability} onChange={(event) => setAvailability(event.target.value)} aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
-        <div className="crmws-deal-activity-row crmws-deal-activity-description"><MessageSquareText size={17} /><textarea aria-label="Descrição da atividade" /></div>
         <div className="crmws-deal-activity-row"><UserRound size={17} /><select aria-label="Responsável"><option>{owner} (Você)</option></select></div>
         <div className="crmws-deal-activity-records">
           <div><GitBranch size={15} /><span>{deal.title}</span><button type="button" aria-label="Remover negócio"><X size={15} /></button></div>
