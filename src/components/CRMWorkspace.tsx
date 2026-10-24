@@ -3155,6 +3155,12 @@ const DealActivityComposer: React.FC<{
   const [startTime, setStartTime] = useState("");
   const [priority, setPriority] = useState<DealActivity["priority"]>("Média");
   const [priorityOpen, setPriorityOpen] = useState(false);
+  const [availability, setAvailability] = useState("Livre");
+  const [extraField, setExtraField] = useState<"location" | "video" | "description" | null>(null);
+  const [dealPreviewOpen, setDealPreviewOpen] = useState(false);
+  const [location, setLocation] = useState("");
+  const [videoLink, setVideoLink] = useState("");
+  const [description, setDescription] = useState("");
   const [done, setDone] = useState(false);
   const types = [
     { label: "Chamada", icon: Phone },
@@ -3164,7 +3170,7 @@ const DealActivityComposer: React.FC<{
     { label: "E-mail", icon: Mail },
     { label: "Almoço", icon: Activity },
   ];
-  const dateLabel = new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  const timeOptions = Array.from({ length: 48 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`);
   return (
     <section className="crmws-deal-activity-editor" aria-label="Adicionar atividade">
       <div className="crmws-deal-activity-fields">
@@ -3175,9 +3181,9 @@ const DealActivityComposer: React.FC<{
         <div className="crmws-deal-activity-row crmws-deal-activity-date-row">
           <CalendarDays size={17} />
           <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data da atividade" />
-          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="Hora inicial" />
+          <select value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="Hora inicial"><option value="">HH:mm</option>{timeOptions.map((time) => <option key={time}>{time}</option>)}</select>
           <span>–</span>
-          <input type="time" value={startTime ? timePlusMinutes(startTime, 15) : ""} readOnly aria-label="Hora final" />
+          <select value={startTime ? timePlusMinutes(startTime, 15) : ""} disabled aria-label="Hora final"><option value="">HH:mm</option>{timeOptions.map((time) => <option key={time}>{time}</option>)}</select>
           <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data final" />
         </div>
         <div className="crmws-deal-activity-row crmws-priority-wrap">
@@ -3185,12 +3191,14 @@ const DealActivityComposer: React.FC<{
           <button type="button" className={`crmws-deal-activity-priority ${priority.toLocaleLowerCase("pt-BR")}`} onClick={() => setPriorityOpen((open) => !open)} aria-expanded={priorityOpen}><span>{priority === "Média" ? "MÉDIO" : priority.toLocaleUpperCase("pt-BR")}</span><ChevronDown size={13} /></button>
           {priorityOpen && <div className="crmws-priority-menu">{(["Baixa", "Média", "Normal", "Alta"] as DealActivity["priority"][]).map((item) => <button key={item} type="button" className={item.toLocaleLowerCase("pt-BR")} onClick={() => { setPriority(item); setPriorityOpen(false); }}><i />{item === "Média" ? "Médio" : item}</button>)}</div>}
         </div>
-        <div className="crmws-deal-activity-row crmws-deal-activity-links"><MoreHorizontal size={17} /><button type="button">Adicionar Localização</button><button type="button">Chamada de vídeo</button><button type="button">Descrição</button></div>
-        <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
-        <div className="crmws-deal-activity-row crmws-deal-activity-description"><MessageSquareText size={17} /><textarea aria-label="Descrição da atividade" /></div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-links"><MoreHorizontal size={17} /><button type="button" onClick={() => setExtraField("location")}>Adicionar Localização</button><button type="button" onClick={() => setExtraField("video")}>Chamada de vídeo</button><button type="button" onClick={() => setExtraField("description")}>Descrição</button></div>
+        {extraField === "location" && <label className="crmws-deal-activity-extra"><span>Localização</span><input autoFocus value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Digite o local" /></label>}
+        {extraField === "video" && <label className="crmws-deal-activity-extra"><span>Chamada de vídeo</span><input autoFocus value={videoLink} onChange={(event) => setVideoLink(event.target.value)} placeholder="Cole o link da chamada" /></label>}
+        <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select value={availability} onChange={(event) => setAvailability(event.target.value)} aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-description"><MessageSquareText size={17} /><textarea value={description} onFocus={() => setExtraField("description")} onChange={(event) => setDescription(event.target.value)} aria-label="Descrição da atividade" /></div>
         <div className="crmws-deal-activity-row"><UserRound size={17} /><select aria-label="Responsável"><option>{owner} (Você)</option></select></div>
         <div className="crmws-deal-activity-records">
-          <div><GitBranch size={15} /><span>{deal.title}</span><button type="button" aria-label="Remover negócio"><X size={15} /></button></div>
+          <div className="crmws-deal-activity-deal-link"><button type="button" className="crmws-deal-activity-record-main" onClick={() => setDealPreviewOpen((open) => !open)}><GitBranch size={15} /><span>{deal.title}</span></button><button type="button" aria-label="Remover negócio"><X size={15} /></button>{dealPreviewOpen && <div className="crmws-deal-activity-deal-preview"><b>{deal.title}</b><strong>{money(deal.value)}</strong><span>{deal.person}</span><small>{deal.expectedClose ? `Fechamento previsto: ${new Date(`${deal.expectedClose}T12:00:00`).toLocaleDateString("pt-BR")}` : "Sem data de fechamento"}</small><i><em /><em /><em /><em /></i></div>}</div>
           <div><UserRound size={15} /><span>{deal.person}</span><button type="button" aria-label="Remover pessoa"><X size={15} /></button></div>
         </div>
       </div>
