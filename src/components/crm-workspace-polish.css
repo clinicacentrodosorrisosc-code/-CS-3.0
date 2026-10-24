@@ -1624,7 +1624,7 @@
 .crmws-stage:first-child > header {
   overflow: hidden;
   border-radius: 0;
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 10px 50%);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
 }
 
 .crmws-stage:first-child > header {
@@ -1632,7 +1632,7 @@
 }
 
 .crmws-stage:last-child > header {
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10px 50%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .crmws-stage > header::before,
