@@ -240,14 +240,6 @@ export class ClinicaExpertsClient {
     return 'data' in response && response.data ? response.data : response as ExternalPatient;
   }
 
-  async updateOpportunity(opportunity: ExternalOpportunity, observations: string) {
-    if (!opportunity.patient?.uuid || !opportunity.seller?.uuid || !opportunity.pipeline?.uuid || !opportunity.stage?.uuid) throw new Error('O card nao possui todos os identificadores obrigatorios para atualizacao.');
-    const response = await fetch(`${API_BASE_URL}/crm/opportunity/${encodeURIComponent(opportunity.uuid)}`, {
-      method: 'PUT', headers: { Authorization: `Bearer ${this.token}`, Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patient_uuid: opportunity.patient.uuid, seller_uuid: opportunity.seller.uuid, pipeline_uuid: opportunity.pipeline.uuid, stage_uuid: opportunity.stage.uuid, title: opportunity.title || opportunity.patient.name || 'Oportunidade', priority: String(opportunity.priority || 1), amount: Number(opportunity.amount || 0), origin: opportunity.origin || null, observations }), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-    if (!response.ok) throw new Error(`Clinica Experts nao atualizou observacoes: HTTP ${response.status} ${ (await response.text()).slice(0, 300) }`);
-  }
 }
 
 function normalizedPatientPhone(value?: string | null) {
@@ -829,21 +821,6 @@ export async function syncClinicaExperts(
         .from('clinic_experts_opportunities')
         .upsert(opportunityRows.slice(index, index + 500), { onConflict: 'user_id,external_id' });
       throwIfError(error, 'Erro ao salvar oportunidades');
-    }
-
-    const { data: pendingObservationSync, error: pendingObservationSyncError } = await db.from('clinic_experts_observation_sync_queue').select('id,opportunity_id').eq('user_id', userId).eq('status', 'pending').limit(0);
-    throwIfError(pendingObservationSyncError, 'Erro ao consultar fila de observacoes');
-    const previousById = new Map((previousOpportunities || []).map(row => [row.id, row]));
-    const externalById = new Map(opportunities.map(opportunity => [opportunity.uuid, opportunity]));
-    for (const queued of pendingObservationSync || []) {
-      const local = previousById.get(queued.opportunity_id); const external = local ? externalById.get(local.external_id) : undefined;
-      try {
-        if (!local || !external) throw new Error('Card nao retornou na sincronizacao atual.');
-        await client.updateOpportunity(external, localObservations(local) || external.observations || '');
-        await db.from('clinic_experts_observation_sync_queue').update({ status: 'synced', attempts: 1, error_message: null, synced_at: now, updated_at: now }).eq('id', queued.id);
-      } catch (error) {
-        await db.from('clinic_experts_observation_sync_queue').update({ status: 'failed', attempts: 1, error_message: String(error instanceof Error ? error.message : error).slice(0, 1000), updated_at: now }).eq('id', queued.id);
-      }
     }
 
     for (const opportunity of opportunityRows) {
