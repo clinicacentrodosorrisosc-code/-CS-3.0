@@ -747,6 +747,9 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
               ...items,
             ])
           }
+          onAddActivity={(activity) =>
+            setActivities((items) => [{ ...activity, id: Date.now(), done: false }, ...items])
+          }
         />
       )}
       {screen === "editor" && (
@@ -1771,6 +1774,7 @@ const DealDetail: React.FC<{
   onDeleteActivity: (id: number) => void;
   onDeleteNote: (id: number) => void;
   onAddNote: (text: string) => void;
+  onAddActivity: (activity: Omit<DealActivity, "id" | "done">) => void;
 }> = (p) => {
   const [tab, setTab] = useState<"activity" | "note" | "meeting" | "call" | "whatsapp" | "email" | "files" | "documents" | "invoice">("activity");
   const [note, setNote] = useState("");
@@ -1789,6 +1793,7 @@ const DealDetail: React.FC<{
   const [noteMenuId, setNoteMenuId] = useState<number | null>(null);
   const [historyFilter, setHistoryFilter] = useState<"all" | "activities" | "notes" | "whatsapp" | "emails" | "files" | "documents" | "invoices" | "changes">("all");
   const [expandFocus, setExpandFocus] = useState(false);
+  const [activityEditor, setActivityEditor] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(["Resumo"]));
   const open = p.activities.filter((a) => !a.done);
   const selectedLabel = p.labels.find((label) => label.name === p.deal.label);
@@ -2212,7 +2217,7 @@ const DealDetail: React.FC<{
             <nav>
               <button
                 className={tab === "activity" ? "active" : ""}
-                onClick={() => setTab("activity")}
+                onClick={() => { setTab("activity"); setActivityEditor(true); }}
               >
                 <CalendarDays size={14} /> Atividade
               </button>
@@ -2249,6 +2254,13 @@ const DealDetail: React.FC<{
                 Não é possível adicionar atividades a um negócio excluído.
                 Restaure o negócio para continuar.
               </p>
+            ) : tab === "activity" && activityEditor ? (
+              <DealActivityComposer
+                deal={p.deal}
+                owner={p.deal.owner}
+                onCancel={() => setActivityEditor(false)}
+                onSave={(activity) => { p.onAddActivity(activity); setActivityEditor(false); }}
+              />
             ) : tab === "activity" ? (
               <button className="crmws-compose-action" onClick={p.onSchedule}>
                 Clique aqui para adicionar uma atividade...
@@ -3130,6 +3142,79 @@ const DealForm: React.FC<{
     </div>
   );
 };
+
+const DealActivityComposer: React.FC<{
+  deal: Deal;
+  owner: string;
+  onCancel: () => void;
+  onSave: (activity: Omit<DealActivity, "id" | "done">) => void;
+}> = ({ deal, owner, onCancel, onSave }) => {
+  const [subject, setSubject] = useState("Tarefa");
+  const [type, setType] = useState("Tarefa");
+  const [due, setDue] = useState(todayKey());
+  const [startTime, setStartTime] = useState("");
+  const [priority, setPriority] = useState<"Normal" | "Alta">("Normal");
+  const [availability, setAvailability] = useState("Livre");
+  const [done, setDone] = useState(false);
+  const types = [
+    { label: "Chamada", icon: Phone },
+    { label: "Reunião", icon: Users },
+    { label: "Tarefa", icon: CalendarClock },
+    { label: "Prazo", icon: FlagIcon },
+    { label: "E-mail", icon: Mail },
+    { label: "Almoço", icon: Activity },
+  ];
+  const dateLabel = new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return (
+    <section className="crmws-deal-activity-editor" aria-label="Adicionar atividade">
+      <div className="crmws-deal-activity-fields">
+        <input className="crmws-deal-activity-subject" value={subject} onChange={(event) => setSubject(event.target.value)} aria-label="Assunto da atividade" autoFocus />
+        <div className="crmws-deal-activity-types" role="tablist" aria-label="Tipo de atividade">
+          {types.map(({ label, icon: Icon }) => <button key={label} type="button" className={type === label ? "active" : ""} onClick={() => setType(label)}><Icon size={13} /> {label}</button>)}
+        </div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-date-row">
+          <CalendarDays size={17} />
+          <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data da atividade" />
+          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="Hora inicial" />
+          <span>–</span>
+          <input type="time" value={startTime ? timePlusMinutes(startTime, 15) : ""} readOnly aria-label="Hora final" />
+          <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data final" />
+        </div>
+        <div className="crmws-deal-activity-row">
+          <FlagIcon size={17} />
+          <select value={priority} onChange={(event) => setPriority(event.target.value as "Normal" | "Alta")} aria-label="Prioridade"><option value="Normal">Prioridade</option><option value="Alta">Prioridade alta</option></select>
+        </div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-links"><MoreHorizontal size={17} /><button type="button">Adicionar Localização</button><button type="button">Chamada de vídeo</button><button type="button">Descrição</button></div>
+        <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select value={availability} onChange={(event) => setAvailability(event.target.value)} aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-description"><MessageSquareText size={17} /><textarea aria-label="Descrição da atividade" /></div>
+        <div className="crmws-deal-activity-row"><UserRound size={17} /><select aria-label="Responsável"><option>{owner} (Você)</option></select></div>
+        <div className="crmws-deal-activity-records">
+          <div><GitBranch size={15} /><span>{deal.title}</span><button type="button" aria-label="Remover negócio"><X size={15} /></button></div>
+          <div><UserRound size={15} /><span>{deal.person}</span><button type="button" aria-label="Remover pessoa"><X size={15} /></button></div>
+          <div><Building2 size={15} /><span>{deal.organization || "Organização"}</span></div>
+        </div>
+      </div>
+      <aside className="crmws-deal-activity-agenda" aria-label="Agenda do dia">
+        <header><b>{new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</b><span><button type="button">‹</button><button type="button">›</button></span></header>
+        <div className="crmws-deal-activity-timeline">
+          {["12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"].map((hour) => <span key={hour}>{hour}</span>)}
+          <div className="crmws-deal-activity-current">{startTime || "21:30"} · {type}</div>
+        </div>
+      </aside>
+      <footer>
+        <button type="button" aria-label="Mais opções"><MoreHorizontal size={16} /></button>
+        <label><input type="checkbox" checked={done} onChange={(event) => setDone(event.target.checked)} /> Marcar como feito</label>
+        <span />
+        <button type="button" onClick={onCancel}>Cancelar</button>
+        <button type="button" onClick={() => onSave({ dealId: deal.id, subject: subject.trim() || type, type, due, time: startTime || undefined, owner, priority })}>Salvar</button>
+      </footer>
+    </section>
+  );
+};
+
+const FlagIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <FlagShape width={size} height={size} />;
+const BriefcaseIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <Archive width={size} height={size} />;
+const FlagShape: React.FC<{ width: number; height: number }> = ({ width, height }) => <svg width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2v12M4 3h7l-1.4 2L11 7H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 const ActivityForm: React.FC<{
   deal?: Deal;
