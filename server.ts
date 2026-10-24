@@ -7,7 +7,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import cors from "cors";
 import crypto from "crypto";
-import { ClinicaExpertsClient, createUserScopedSupabase, processClinicaExpertsOpportunityWebhook, syncClinicaExperts, syncClinicaExpertsPayments } from "./integrations/clinicaExperts";
+import { ClinicaExpertsClient, createUserScopedSupabase, enrichClinicaExpertsPhonesFromBookingWebhook, processClinicaExpertsOpportunityWebhook, syncClinicaExperts, syncClinicaExpertsPayments } from "./integrations/clinicaExperts";
 import { handleWhatsAppCallingEligibility, handleWhatsAppConfig, handleWhatsAppTemplates } from "./integrations/whatsappHttp";
 import { handleWhatsAppBulkCampaigns } from "./integrations/whatsappBulkCampaignsHttp";
 import { handleWahaConfig, handleWahaWebhook } from "./integrations/wahaHttp";
@@ -594,13 +594,15 @@ async function startServer() {
       if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
 
       const isFinancialEvent = /(^|\.)(bill|parcel|payment|financial)(\.|$)/i.test(eventName);
-      if (!eventName.startsWith('crm_opportunity.') && !isFinancialEvent) {
+      const isBookingEvent = /^booking\./i.test(eventName);
+      if (!eventName.startsWith('crm_opportunity.') && !isFinancialEvent && !isBookingEvent) {
         await db.from('clinic_experts_webhook_events').update({ status: 'ignored', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
         return res.status(200).json({ received: true, ignored: true });
       }
 
       try {
         if (isFinancialEvent) await syncClinicaExpertsPayments(db, clinicaExpertsToken);
+        else if (isBookingEvent) await enrichClinicaExpertsPhonesFromBookingWebhook(db, clinicaExpertsOwnerUserId, payload);
         else await processClinicaExpertsOpportunityWebhook(db, clinicaExpertsOwnerUserId, payload, clinicaExpertsToken);
         await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
         return res.status(200).json({ received: true, processed: true });

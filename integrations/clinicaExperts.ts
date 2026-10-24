@@ -83,6 +83,12 @@ export type DirectPhoneEnrichmentResult = {
   finished: boolean;
 };
 
+export type WebhookPhoneEnrichmentResult = {
+  eventsRead: number;
+  contactsWithPhone: number;
+  updatedOpportunities: number;
+};
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class ClinicaExpertsClient {
@@ -397,6 +403,64 @@ export async function enrichClinicaExpertsOpportunityPhonesDirect(
   }
   const nextCursor = rows[rows.length - 1]?.id || null;
   return { processedPatients: rows.length, patientsWithPhone, updatedOpportunities, nextCursor, finished: rows.length < limit };
+}
+
+/**
+ * Booking webhooks include the complete contact profile, even when the CRM
+ * opportunity references a Lead that cannot be read through /patients/{uuid}.
+ * UUID equality is required, so a phone is never inferred from a name.
+ */
+export async function enrichClinicaExpertsPhonesFromBookingWebhook(
+  db: SupabaseClient,
+  userId: string,
+  payload: unknown,
+): Promise<number> {
+  const root = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const resource = root.resource && typeof root.resource === 'object' ? root.resource as Record<string, unknown> : root;
+  const patient = resource.patient && typeof resource.patient === 'object' ? resource.patient as Record<string, unknown> : null;
+  const contactId = String(patient?.uuid || patient?.id || '').trim();
+  const phone = normalizedPatientPhone(String(patient?.phone || patient?.cellphone || patient?.mobile || patient?.whatsapp || ''));
+  if (!contactId || !phone) return 0;
+
+  const { data, error } = await db
+    .from('clinic_experts_opportunities')
+    .update({ patient_phone: phone, synced_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .eq('patient_external_id', contactId)
+    .is('patient_phone', null)
+    .select('id');
+  throwIfError(error, 'Nao foi possivel salvar o telefone recebido no agendamento');
+  return data?.length || 0;
+}
+
+export async function enrichClinicaExpertsPhonesFromBookingHistory(
+  db: SupabaseClient,
+  userId: string,
+): Promise<WebhookPhoneEnrichmentResult> {
+  const { data: events, error } = await db
+    .from('clinic_experts_webhook_events')
+    .select('source_payload')
+    .eq('user_id', userId)
+    .in('event_name', ['booking.created', 'booking.updated', 'booking.confirmed', 'booking.cancelled'])
+    .order('received_at', { ascending: false })
+    .limit(5000);
+  throwIfError(error, 'Nao foi possivel ler o historico de agendamentos');
+
+  const knownContacts = new Set<string>();
+  let contactsWithPhone = 0;
+  let updatedOpportunities = 0;
+  for (const event of events || []) {
+    const root = event.source_payload && typeof event.source_payload === 'object' ? event.source_payload as Record<string, unknown> : {};
+    const resource = root.resource && typeof root.resource === 'object' ? root.resource as Record<string, unknown> : root;
+    const patient = resource.patient && typeof resource.patient === 'object' ? resource.patient as Record<string, unknown> : null;
+    const contactId = String(patient?.uuid || patient?.id || '').trim();
+    const phone = normalizedPatientPhone(String(patient?.phone || patient?.cellphone || patient?.mobile || patient?.whatsapp || ''));
+    if (!contactId || !phone || knownContacts.has(contactId)) continue;
+    knownContacts.add(contactId);
+    contactsWithPhone += 1;
+    updatedOpportunities += await enrichClinicaExpertsPhonesFromBookingWebhook(db, userId, event.source_payload);
+  }
+  return { eventsRead: events?.length || 0, contactsWithPhone, updatedOpportunities };
 }
 
 async function updatePatientPhones(
@@ -1015,9 +1079,16 @@ export async function processClinicaExpertsOpportunityWebhook(
   }
 
   if (!patientPhone && patientExternalId && apiToken) {
-    const patient = await new ClinicaExpertsClient(apiToken).getPatient(patientExternalId);
-    patientPhone = patient.phone || null;
-    patientEmail = patientEmail || patient.email || null;
+    try {
+      const patient = await new ClinicaExpertsClient(apiToken).getPatient(patientExternalId);
+      patientPhone = normalizedPatientPhone(patient.phone || patient.cellphone || patient.mobile || patient.whatsapp || null);
+      patientEmail = patientEmail || patient.email || null;
+    } catch (error) {
+      // Leads share the opportunity contact field but do not exist under /patients.
+      // Keep the webhook successful so the card can later be enriched by a lead export
+      // or by an authoritative booking webhook with the same UUID.
+      if (!(error instanceof Error) || !/HTTP 404/.test(error.message)) throw error;
+    }
   }
 
   const { data: savedOpportunity, error: opportunityError } = await db.from('clinic_experts_opportunities').upsert({
