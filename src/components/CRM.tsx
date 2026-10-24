@@ -3,16 +3,19 @@ import { BudgetReactivation } from './BudgetReactivation';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { WhatsAppBulkCampaigns } from './WhatsAppBulkCampaigns';
 import { CRMWorkspace, type CRMSection } from './CRMWorkspace';
+import { CRMIntegrations } from './CRMIntegrations';
 
 type CRMProps = {
   requestedSubTab?: string | null;
 };
 
-type CRMView = 'deals' | 'leads' | 'contacts' | 'activities' | 'reactivation' | 'whatsapp' | 'campaigns';
+type CRMView = 'deals' | 'leads' | 'contacts' | 'activities' | 'reactivation' | 'whatsapp' | 'campaigns' | 'settings';
 
 const resolveView = (requestedSubTab?: string | null): CRMView => (
   requestedSubTab === 'campaigns'
     ? 'campaigns'
+    : requestedSubTab === 'settings'
+    ? 'settings'
     : requestedSubTab === 'whatsapp'
     ? 'whatsapp'
     : requestedSubTab === 'reactivation'
@@ -37,6 +40,8 @@ export const CRM: React.FC<CRMProps> = ({ requestedSubTab }) => {
     content = <WhatsAppBulkCampaigns />;
   } else if (activeView === 'reactivation') {
     content = <BudgetReactivation />;
+  } else if (activeView === 'settings') {
+    content = <CRMIntegrations />;
   } else {
     // This is the same workspace rendered by the isolated preview.  The
     // integration boundary below only prevents the application shell's
