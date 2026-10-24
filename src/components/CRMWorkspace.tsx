@@ -748,7 +748,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
             ])
           }
           onAddActivity={(activity) =>
-            setActivities((items) => [{ ...activity, id: Date.now(), done: false }, ...items])
+            setActivities((items) => [{ ...activity, id: Date.now(), done: Boolean(activity.done) }, ...items])
           }
         />
       )}
@@ -1774,7 +1774,7 @@ const DealDetail: React.FC<{
   onDeleteActivity: (id: number) => void;
   onDeleteNote: (id: number) => void;
   onAddNote: (text: string) => void;
-  onAddActivity: (activity: Omit<DealActivity, "id" | "done">) => void;
+  onAddActivity: (activity: Omit<DealActivity, "id">) => void;
 }> = (p) => {
   const [tab, setTab] = useState<"activity" | "note" | "meeting" | "call" | "whatsapp" | "email" | "files" | "documents" | "invoice">("activity");
   const [note, setNote] = useState("");
@@ -3169,7 +3169,7 @@ const DealActivityComposer: React.FC<{
   deal: Deal;
   owner: string;
   onCancel: () => void;
-  onSave: (activity: Omit<DealActivity, "id" | "done">) => void;
+  onSave: (activity: Omit<DealActivity, "id">) => void;
 }> = ({ deal, owner, onCancel, onSave }) => {
   const [subject, setSubject] = useState("Chamada");
   const [type, setType] = useState("Chamada");
@@ -3248,7 +3248,7 @@ const DealActivityComposer: React.FC<{
         <label><input type="checkbox" checked={done} onChange={(event) => setDone(event.target.checked)} /> Marcar como feito</label>
         <span />
         <button type="button" onClick={onCancel}>Cancelar</button>
-        <button type="button" onClick={() => onSave({ dealId: deal.id, subject: subject.trim() || type, type, due, time: startTime || undefined, owner, priority })}>Salvar</button>
+        <button type="button" onClick={() => onSave({ dealId: deal.id, subject: subject.trim() || type, type, due, time: startTime || undefined, owner, priority, done })}>Salvar</button>
       </footer>
     </section>
   );
