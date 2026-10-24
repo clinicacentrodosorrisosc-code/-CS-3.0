@@ -541,7 +541,7 @@ const App: React.FC = () => {
 
       // CRM sub-navigation represents a persistent screen selection. Clearing
       // it after the former one-shot delay made CRM resolve back to "deals".
-      const crmSubTabs = new Set(['deals', 'leads', 'contacts', 'activities', 'reactivation', 'campaigns', 'whatsapp']);
+      const crmSubTabs = new Set(['deals', 'leads', 'contacts', 'activities', 'reactivation', 'campaigns', 'whatsapp', 'settings']);
       if (!crmSubTabs.has(subTabId)) {
         subTabResetTimer.current = setTimeout(() => {
           setRequestedSubTab(null);
