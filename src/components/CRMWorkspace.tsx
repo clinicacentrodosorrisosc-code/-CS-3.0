@@ -1778,7 +1778,7 @@ const DealDetail: React.FC<{
   onAddNote: (text: string) => void;
   onAddActivity: (activity: Omit<DealActivity, "id">) => void;
 }> = (p) => {
-  const [tab, setTab] = useState<"activity" | "note" | "meeting" | "call" | "whatsapp" | "email" | "files" | "documents" | "invoice">("activity");
+  const [tab, setTab] = useState<"activity" | "note" | "whatsapp">("activity");
   const [note, setNote] = useState("");
   const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const [editingValue, setEditingValue] = useState(false);
@@ -1827,13 +1827,7 @@ const DealDetail: React.FC<{
   const composerCopy: Record<typeof tab, { prompt: string; action?: string }> = {
     activity: { prompt: "Clique aqui para adicionar uma atividade..." },
     note: { prompt: "Escreva uma nota" },
-    meeting: { prompt: "Escolha um horário para compartilhar com o contato.", action: "Abrir agendador" },
-    call: { prompt: "Registre ou inicie uma chamada para este negócio.", action: "Registrar chamada" },
     whatsapp: { prompt: "Envie uma mensagem do WhatsApp para o contato.", action: "Abrir WhatsApp" },
-    email: { prompt: "Escreva um e-mail para o contato deste negócio.", action: "Escrever e-mail" },
-    files: { prompt: "Arraste arquivos aqui ou selecione do seu computador.", action: "Adicionar arquivo" },
-    documents: { prompt: "Crie ou vincule documentos deste negócio.", action: "Adicionar documento" },
-    invoice: { prompt: "Crie uma fatura vinculada a este negócio.", action: "Criar fatura" },
   };
   const historyRows = [
     ...done.map((activity) => ({ key: `activity-${activity.id}`, type: "activities" as const, icon: <Check size={15} />, title: activity.subject, detail: "Atividade concluída" })),
@@ -2236,26 +2230,8 @@ const DealDetail: React.FC<{
               >
                 <MessageSquareText size={14} /> Anotações
               </button>
-              <button className={tab === "meeting" ? "active" : ""} onClick={() => setTab("meeting")}>
-                <CalendarClock size={14} /> Agendador de reuniões
-              </button>
-              <button className={tab === "call" ? "active" : ""} onClick={() => setTab("call")}>
-                <Phone size={14} /> Chamada
-              </button>
               <button className={`whatsapp${tab === "whatsapp" ? " active" : ""}`} onClick={() => setTab("whatsapp")}>
-                <MessageSquareText size={14} /> WhatsApp
-              </button>
-              <button className={tab === "email" ? "active" : ""} onClick={() => setTab("email")}>
-                <Mail size={14} /> E-mail
-              </button>
-              <button className={tab === "files" ? "active" : ""} onClick={() => setTab("files")}>
-                <FolderOpen size={14} /> Arquivos
-              </button>
-              <button className={tab === "documents" ? "active" : ""} onClick={() => setTab("documents")}>
-                <FileText size={14} /> Documentos
-              </button>
-              <button className={tab === "invoice" ? "active" : ""} onClick={() => setTab("invoice")}>
-                <Trophy size={14} /> Fatura
+                <WhatsAppLogo size={14} /> WhatsApp
               </button>
             </nav>
             {p.deal.status === "deleted" ? (
@@ -2310,7 +2286,7 @@ const DealDetail: React.FC<{
             ) : (
               <div className="crmws-composer-placeholder">
                 <p>{composerCopy[tab].prompt}</p>
-                <button onClick={() => { if (tab === "meeting" || tab === "call") p.onSchedule(); }}>{composerCopy[tab].action}</button>
+                <button onClick={() => { if (tab === "whatsapp" && p.deal.personPhone) window.open(`https://wa.me/${p.deal.personPhone.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer"); }}>{composerCopy[tab].action}</button>
               </div>
             )}
           </section>
@@ -3257,6 +3233,7 @@ const DealActivityComposer: React.FC<{
 };
 
 const FlagIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <FlagShape width={size} height={size} />;
+const WhatsAppLogo: React.FC<{ size?: number }> = ({ size = 16 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.5 11.55a8.4 8.4 0 0 1-12.38 7.4L3.5 20.5l1.48-4.35A8.4 8.4 0 1 1 20.5 11.55Z" fill="#25D366"/><path d="M9.18 7.47c-.23-.5-.47-.5-.69-.51h-.59c-.2 0-.52.08-.8.38-.28.3-1.05 1.03-1.05 2.51 0 1.48 1.08 2.91 1.23 3.11.15.2 2.1 3.2 5.08 4.49.71.31 1.27.49 1.7.62.72.23 1.38.2 1.9.12.58-.09 1.78-.73 2.04-1.43.25-.7.25-1.3.18-1.42-.08-.13-.28-.2-.58-.35-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.96 1.18-.18.2-.35.22-.65.08-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.7-1.68-.96-2.3Z" fill="#fff"/></svg>;
 const BriefcaseIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <Archive width={size} height={size} />;
 const FlagShape: React.FC<{ width: number; height: number }> = ({ width, height }) => <svg width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2v12M4 3h7l-1.4 2L11 7H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
