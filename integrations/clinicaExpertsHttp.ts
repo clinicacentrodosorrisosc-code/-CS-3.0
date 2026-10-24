@@ -112,9 +112,25 @@ export async function handleClinicaExpertsCrmReconciliation(req: ApiRequest, res
     ]);
     if (pipelineError) throw pipelineError;
     if (!pipeline) throw new Error('Funil local nao encontrado. Sincronize o CRM antes de reconciliar.');
+    const loadLocalRows = async () => {
+      const rows: Array<{ external_id: string; stage_id: string; title: string; patient_name: string | null; status: string | null; synced_at: string }> = [];
+      const pageSize = 1000;
+      for (let page = 0; ; page += 1) {
+        const { data, error } = await context.db
+          .from('clinic_experts_opportunities')
+          .select('external_id,stage_id,title,patient_name,status,synced_at')
+          .eq('user_id', context.userId)
+          .eq('pipeline_id', pipeline.id)
+          .range(page * pageSize, ((page + 1) * pageSize) - 1);
+        if (error) return { data: rows, error };
+        const batch = data || [];
+        rows.push(...batch);
+        if (batch.length < pageSize) return { data: rows, error: null };
+      }
+    };
     const [{ data: stages, error: stagesError }, { data: localRows, error: localError }] = await Promise.all([
       context.db.from('clinic_experts_stages').select('id,external_id,name').eq('user_id', context.userId).eq('pipeline_id', pipeline.id),
-      context.db.from('clinic_experts_opportunities').select('external_id,stage_id,title,patient_name,status,synced_at').eq('user_id', context.userId).eq('pipeline_id', pipeline.id),
+      loadLocalRows(),
     ]);
     if (stagesError) throw stagesError;
     if (localError) throw localError;

@@ -17,6 +17,22 @@ const dateTime = (value?: string | null) => value ? new Intl.DateTimeFormat('pt-
 const objectEntries = (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? Object.entries(value as Record<string, unknown>) : [];
 const displayValue = (value: unknown) => value === null || value === undefined || value === '' ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
 
+async function loadAllOpportunities() {
+  const rows: Opportunity[] = [];
+  const pageSize = 1000;
+  for (let page = 0; ; page += 1) {
+    const { data, error } = await supabase
+      .from('clinic_experts_opportunities')
+      .select('id,external_id,pipeline_id,stage_id,title,patient_name,patient_phone,patient_email,seller_name,priority,amount_cents,origin,observations,status,synced_at,source_payload')
+      .order('synced_at', { ascending: false })
+      .range(page * pageSize, ((page + 1) * pageSize) - 1);
+    if (error) return { data: rows, error };
+    const batch = (data || []) as Opportunity[];
+    rows.push(...batch);
+    if (batch.length < pageSize) return { data: rows, error: null };
+  }
+}
+
 export const CRMIntegrations: React.FC = () => {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [stages, setStages] = useState<Stage[]>([]);
@@ -37,7 +53,7 @@ export const CRMIntegrations: React.FC = () => {
     const [pipelineResult, stageResult, opportunityResult, statusResult] = await Promise.all([
       supabase.from('clinic_experts_pipelines').select('id,external_id,name,synced_at').order('name'),
       supabase.from('clinic_experts_stages').select('id,pipeline_id,external_id,name,stage_type,position').order('position'),
-      supabase.from('clinic_experts_opportunities').select('id,external_id,pipeline_id,stage_id,title,patient_name,patient_phone,patient_email,seller_name,priority,amount_cents,origin,observations,status,synced_at,source_payload').order('synced_at', { ascending: false }),
+      loadAllOpportunities(),
       fetch('/api/integrations/clinica-experts/status', { headers: authorization }).then(async response => ({ ok: response.ok, body: await response.json().catch(() => ({})) })).catch(() => ({ ok: false, body: {} })),
     ]);
     const dbError = pipelineResult.error || stageResult.error || opportunityResult.error;
