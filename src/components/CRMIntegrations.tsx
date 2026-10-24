@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, ChevronDown, Database, ExternalLink, Loader2, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Database, ExternalLink, FileSpreadsheet, Loader2, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { CRMPhoneImport } from './CRMPhoneImport';
 import './crm-integrations.css';
 import './crm-integrations-stage-visibility.css';
 
@@ -46,6 +47,7 @@ export const CRMIntegrations: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [phoneImportOpen, setPhoneImportOpen] = useState(false);
 
   const loadMirror = useCallback(async () => {
     setLoading(true); setError(null);
@@ -96,9 +98,14 @@ export const CRMIntegrations: React.FC = () => {
   return <div className="crm-integrations" aria-label="Configurações do CRM e integrações">
     <header className="crm-integrations-head">
       <div><p>CRM / Configurações</p><h1>Integrações</h1><span>Conexões que alimentam o CRM com dados operacionais.</span></div>
-      <button className="crm-integration-sync" onClick={() => void syncNow()} disabled={syncing}>
-        {syncing ? <Loader2 className="spin" /> : <RefreshCw />} {syncing ? 'Sincronizando...' : 'Atualizar dados'}
-      </button>
+      <div className="crm-integration-actions">
+        <button className="crm-integration-import" onClick={() => setPhoneImportOpen(true)} disabled={loading || !opportunities.length}>
+          <FileSpreadsheet /> Importar telefones de leads
+        </button>
+        <button className="crm-integration-sync" onClick={() => void syncNow()} disabled={syncing}>
+          {syncing ? <Loader2 className="spin" /> : <RefreshCw />} {syncing ? 'Sincronizando...' : 'Atualizar dados'}
+        </button>
+      </div>
     </header>
 
     <nav className="crm-integration-tabs" aria-label="Seções de configurações"><button className="active">Integrações</button><button disabled>Campos e dados</button></nav>
@@ -118,5 +125,6 @@ export const CRMIntegrations: React.FC = () => {
     </section>
 
     {selectedOpportunity && <div className="crm-integration-modal-backdrop" role="presentation" onMouseDown={() => setSelectedOpportunity(null)}><section className="crm-integration-modal" role="dialog" aria-modal="true" aria-label="Dados importados do lead" onMouseDown={event => event.stopPropagation()}><header><div><p>Clínica Experts · dados importados</p><h2>{selectedOpportunity.title}</h2></div><button onClick={() => setSelectedOpportunity(null)} aria-label="Fechar"><X size={18}/></button></header><div className="crm-lead-data"><dl>{[['Contato', selectedOpportunity.patient_name], ['Telefone', selectedOpportunity.patient_phone], ['E-mail', selectedOpportunity.patient_email], ['Responsável', selectedOpportunity.seller_name], ['Valor', money(selectedOpportunity.amount_cents)], ['Origem', selectedOpportunity.origin], ['Status', selectedOpportunity.status], ['Prioridade', selectedOpportunity.priority], ['Observações', selectedOpportunity.observations], ['Sincronizado em', dateTime(selectedOpportunity.synced_at)]].map(([label, value]) => <React.Fragment key={String(label)}><dt>{label}</dt><dd>{displayValue(value)}</dd></React.Fragment>)}</dl><details><summary>Dados completos recebidos da Clínica Experts <ExternalLink size={14}/></summary><pre>{JSON.stringify(selectedOpportunity.source_payload, null, 2)}</pre></details></div></section></div>}
+    {phoneImportOpen && <CRMPhoneImport opportunities={opportunities} onClose={() => setPhoneImportOpen(false)} onImported={() => { void loadMirror(); }} />}
   </div>;
 };
