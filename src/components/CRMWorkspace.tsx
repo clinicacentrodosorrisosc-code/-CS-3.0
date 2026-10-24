@@ -61,7 +61,7 @@ type DealActivity = {
   time?: string;
   done: boolean;
   owner: string;
-  priority: "Normal" | "Alta";
+  priority: "Baixa" | "Média" | "Normal" | "Alta";
 };
 type Note = {
   id: number;
@@ -3149,17 +3149,20 @@ const DealActivityComposer: React.FC<{
   onCancel: () => void;
   onSave: (activity: Omit<DealActivity, "id" | "done">) => void;
 }> = ({ deal, owner, onCancel, onSave }) => {
-  const [subject, setSubject] = useState("Tarefa");
-  const [type, setType] = useState("Tarefa");
+  const [subject, setSubject] = useState("Chamada");
+  const [type, setType] = useState("Chamada");
   const [due, setDue] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
-  const [priority, setPriority] = useState<"Normal" | "Alta">("Normal");
+  const [priority, setPriority] = useState<DealActivity["priority"]>("Média");
+  const [priorityOpen, setPriorityOpen] = useState(false);
   const [done, setDone] = useState(false);
   const types = [
     { label: "Chamada", icon: Phone },
+    { label: "Reunião", icon: Users },
     { label: "Tarefa", icon: CalendarClock },
     { label: "Prazo", icon: FlagIcon },
-    { label: "WhatsApp", icon: MessageSquareText },
+    { label: "E-mail", icon: Mail },
+    { label: "Almoço", icon: Activity },
   ];
   const dateLabel = new Date(`${due}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
   return (
@@ -3167,7 +3170,7 @@ const DealActivityComposer: React.FC<{
       <div className="crmws-deal-activity-fields">
         <input className="crmws-deal-activity-subject" value={subject} onChange={(event) => setSubject(event.target.value)} aria-label="Assunto da atividade" autoFocus />
         <div className="crmws-deal-activity-types" role="tablist" aria-label="Tipo de atividade">
-          {types.map(({ label, icon: Icon }) => <button key={label} type="button" className={type === label ? "active" : ""} onClick={() => setType(label)}><Icon size={13} /> {label}</button>)}
+          {types.map(({ label, icon: Icon }) => <button key={label} type="button" title={label} aria-label={label} className={type === label ? "active" : ""} onClick={() => { setType(label); if (!subject || subject === type) setSubject(label); }}><Icon size={14} /></button>)}
         </div>
         <div className="crmws-deal-activity-row crmws-deal-activity-date-row">
           <CalendarDays size={17} />
@@ -3177,15 +3180,18 @@ const DealActivityComposer: React.FC<{
           <input type="time" value={startTime ? timePlusMinutes(startTime, 15) : ""} readOnly aria-label="Hora final" />
           <input type="date" value={due} onChange={(event) => setDue(event.target.value)} aria-label="Data final" />
         </div>
-        <div className="crmws-deal-activity-row">
+        <div className="crmws-deal-activity-row crmws-priority-wrap">
           <FlagIcon size={17} />
-          <select className="crmws-deal-activity-priority" value={priority} onChange={(event) => setPriority(event.target.value as "Normal" | "Alta")} aria-label="Prioridade"><option value="Normal">Prioridade</option><option value="Alta">Prioridade alta</option></select>
+          <button type="button" className={`crmws-deal-activity-priority ${priority.toLocaleLowerCase("pt-BR")}`} onClick={() => setPriorityOpen((open) => !open)} aria-expanded={priorityOpen}><span>{priority === "Média" ? "MÉDIO" : priority.toLocaleUpperCase("pt-BR")}</span><ChevronDown size={13} /></button>
+          {priorityOpen && <div className="crmws-priority-menu">{(["Baixa", "Média", "Normal", "Alta"] as DealActivity["priority"][]).map((item) => <button key={item} type="button" className={item.toLocaleLowerCase("pt-BR")} onClick={() => { setPriority(item); setPriorityOpen(false); }}><i />{item === "Média" ? "Médio" : item}</button>)}</div>}
         </div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-links"><MoreHorizontal size={17} /><button type="button">Adicionar Localização</button><button type="button">Chamada de vídeo</button><button type="button">Descrição</button></div>
+        <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
+        <div className="crmws-deal-activity-row crmws-deal-activity-description"><MessageSquareText size={17} /><textarea aria-label="Descrição da atividade" /></div>
         <div className="crmws-deal-activity-row"><UserRound size={17} /><select aria-label="Responsável"><option>{owner} (Você)</option></select></div>
         <div className="crmws-deal-activity-records">
           <div><GitBranch size={15} /><span>{deal.title}</span><button type="button" aria-label="Remover negócio"><X size={15} /></button></div>
           <div><UserRound size={15} /><span>{deal.person}</span><button type="button" aria-label="Remover pessoa"><X size={15} /></button></div>
-          <div><Building2 size={15} /><span>{deal.organization || "Organização"}</span></div>
         </div>
       </div>
       <aside className="crmws-deal-activity-agenda" aria-label="Agenda do dia">
@@ -3207,6 +3213,7 @@ const DealActivityComposer: React.FC<{
 };
 
 const FlagIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <FlagShape width={size} height={size} />;
+const BriefcaseIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <Archive width={size} height={size} />;
 const FlagShape: React.FC<{ width: number; height: number }> = ({ width, height }) => <svg width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2v12M4 3h7l-1.4 2L11 7H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 const ActivityForm: React.FC<{
