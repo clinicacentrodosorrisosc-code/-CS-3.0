@@ -1317,6 +1317,10 @@
 .crmws-date-popover { width: 280px; padding-bottom: 9px; }
 .crmws-date-popover input { display: block; width: calc(100% - 20px); height: 36px; margin: 10px; padding: 0 8px; border: 1px solid #cfd2d6; border-radius: 5px; }
 .crmws-date-popover .crmws-clear-date { margin: 0 10px; color: #d83c38; }
+.crmws-date-calendar { padding: 8px 10px 4px; }
+.crmws-date-calendar > nav { display: grid; min-height: 30px; grid-template-columns: 26px 1fr 26px; align-items: center; text-align: center; }
+.crmws-date-calendar > nav b { font-size: 11px; text-transform: capitalize; }.crmws-date-calendar > nav button { display: grid; width: 26px; height: 26px; place-items: center; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #30353d; font-size: 19px; }.crmws-date-calendar > nav button:hover { background: #f0f2f4; }
+.crmws-date-calendar-weekdays,.crmws-date-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }.crmws-date-calendar-weekdays { margin-top: 4px; color: #7b7f86; font-size: 9px; font-weight: 650; }.crmws-date-calendar-grid { gap: 2px; margin-top: 4px; }.crmws-date-calendar-grid > :is(button, i) { display: grid; height: 26px; place-items: center; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #333840; font-size: 10px; font-style: normal; }.crmws-date-calendar-grid button:hover { background: #edf4ff; color: #0d68c5; }.crmws-date-calendar-grid button.selected { background: #176db7; color: #fff; font-weight: 700; }
 .crmws-probability-popover { width: 280px; }
 .crmws-probability-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 11px; }
 .crmws-probability-options button { min-height: 31px; border: 1px solid #d5d8dc; border-radius: 5px; background: #fff; color: #363a40; font-size: 11px; font-weight: 650; }

@@ -1785,6 +1785,7 @@ const DealDetail: React.FC<{
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#6150e1");
   const [dateOpen, setDateOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [probabilityOpen, setProbabilityOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [followersOpen, setFollowersOpen] = useState(false);
@@ -1816,6 +1817,10 @@ const DealDetail: React.FC<{
     });
   };
   const done = p.activities.filter((a) => a.done);
+  const calendarYear = calendarMonth.getFullYear();
+  const calendarMonthIndex = calendarMonth.getMonth();
+  const calendarDays = Array.from({ length: new Date(calendarYear, calendarMonthIndex + 1, 0).getDate() }, (_, index) => index + 1);
+  const calendarLeadingDays = new Date(calendarYear, calendarMonthIndex, 1).getDay();
   const composerCopy: Record<typeof tab, { prompt: string; action?: string }> = {
     activity: { prompt: "Clique aqui para adicionar uma atividade..." },
     note: { prompt: "Escreva uma nota" },
@@ -2072,7 +2077,7 @@ const DealDetail: React.FC<{
               )}
             </div>
             <div className="crmws-summary-row crmws-popover-anchor">
-              <button onClick={() => setDateOpen((open) => !open)}>
+              <button onClick={() => { setCalendarMonth(p.deal.expectedClose ? new Date(`${p.deal.expectedClose}T12:00:00`) : new Date()); setDateOpen((open) => !open); }}>
                 <CalendarDays size={14} />{" "}
                 {p.deal.expectedClose
                   ? new Date(
@@ -2087,10 +2092,11 @@ const DealDetail: React.FC<{
               {dateOpen && (
                 <div className="crmws-field-popover crmws-date-popover">
                   <header><b>Data prevista de fechamento</b><button onClick={() => setDateOpen(false)}><X size={14} /></button></header>
-                  <input autoFocus type="date" value={p.deal.expectedClose || ""} onChange={(event) => {
-                    p.onUpdate({ expectedClose: event.target.value || undefined });
-                    if (event.target.value) setDateOpen(false);
-                  }} />
+                  <div className="crmws-date-calendar">
+                    <nav><button aria-label="Mês anterior" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex - 1, 1))}>‹</button><b>{calendarMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</b><button aria-label="Próximo mês" onClick={() => setCalendarMonth(new Date(calendarYear, calendarMonthIndex + 1, 1))}>›</button></nav>
+                    <div className="crmws-date-calendar-weekdays">{"DSTQQSS".split("").map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}</div>
+                    <div className="crmws-date-calendar-grid">{Array.from({ length: calendarLeadingDays }, (_, index) => <i key={`blank-${index}`} />)}{calendarDays.map((day) => { const value = `${calendarYear}-${String(calendarMonthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`; const isSelected = value === p.deal.expectedClose; return <button key={value} className={isSelected ? "selected" : ""} onClick={() => { p.onUpdate({ expectedClose: value }); setDateOpen(false); }}>{day}</button>; })}</div>
+                  </div>
                   {p.deal.expectedClose && <button className="crmws-clear-date" onClick={() => { p.onUpdate({ expectedClose: undefined }); setDateOpen(false); }}>Limpar data</button>}
                 </div>
               )}
