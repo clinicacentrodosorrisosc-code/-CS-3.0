@@ -789,16 +789,30 @@ export async function syncClinicaExperts(
 
     // A Clinica Experts pode devolver oportunidades de outros funis mesmo quando
     // pipeline_uuid e enviado. Nunca confie apenas nesse filtro remoto: cada
-    // oportunidade precisa confirmar o funil e uma etapa pertencente a ele.
+    // oportunidade precisa confirmar o funil, uma etapa pertencente a ele e
+    // nao pode estar marcada como excluida pela origem.
     const scopedOpportunities = opportunities.filter(opportunity => {
       const externalPipelineId = opportunity.pipeline?.uuid;
       const externalStageId = opportunity.stage?.uuid;
       const pipelineId = externalPipelineId ? pipelineIds.get(externalPipelineId) : undefined;
       const stagePipelineId = externalStageId ? stagePipelineIds.get(externalStageId) : undefined;
+      const rawOpportunity = opportunity as Record<string, unknown>;
+      const lifecycle = [
+        opportunity.status,
+        opportunity.stage?.status,
+        rawOpportunity.deleted,
+        rawOpportunity.is_deleted,
+        rawOpportunity.deleted_at,
+        rawOpportunity.archived,
+        rawOpportunity.is_archived,
+        rawOpportunity.inactive,
+      ].map(value => String(value ?? '')).join(' ').toLocaleLowerCase('pt-BR');
+      const excludedBySource = /\b(deleted|delete|excluded|exclu[ií]d[oa]|archived|archiv|inactive|inativ[oa])\b/.test(lifecycle);
       return Boolean(
         pipelineId
         && stagePipelineId === pipelineId
-        && externalPipelineId === focusedPipeline.uuid,
+        && externalPipelineId === focusedPipeline.uuid
+        && !excludedBySource,
       );
     });
 
