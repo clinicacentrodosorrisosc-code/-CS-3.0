@@ -119,6 +119,7 @@
   overflow: visible;
   clip-path: none;
   background: #f0f1f2;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
 }
 
 .crmws-stage > header::before,
