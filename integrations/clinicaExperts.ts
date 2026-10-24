@@ -446,21 +446,44 @@ export async function enrichClinicaExpertsPhonesFromBookingHistory(
     .limit(5000);
   throwIfError(error, 'Nao foi possivel ler o historico de agendamentos');
 
-  const knownContacts = new Set<string>();
-  let contactsWithPhone = 0;
-  let updatedOpportunities = 0;
+  const phonesByContact = new Map<string, string>();
   for (const event of events || []) {
     const root = event.source_payload && typeof event.source_payload === 'object' ? event.source_payload as Record<string, unknown> : {};
     const resource = root.resource && typeof root.resource === 'object' ? root.resource as Record<string, unknown> : root;
     const patient = resource.patient && typeof resource.patient === 'object' ? resource.patient as Record<string, unknown> : null;
     const contactId = String(patient?.uuid || patient?.id || '').trim();
     const phone = normalizedPatientPhone(String(patient?.phone || patient?.cellphone || patient?.mobile || patient?.whatsapp || ''));
-    if (!contactId || !phone || knownContacts.has(contactId)) continue;
-    knownContacts.add(contactId);
-    contactsWithPhone += 1;
-    updatedOpportunities += await enrichClinicaExpertsPhonesFromBookingWebhook(db, userId, event.source_payload);
+    if (!contactId || !phone || phonesByContact.has(contactId)) continue;
+    phonesByContact.set(contactId, phone);
   }
-  return { eventsRead: events?.length || 0, contactsWithPhone, updatedOpportunities };
+  if (!phonesByContact.size) return { eventsRead: events?.length || 0, contactsWithPhone: 0, updatedOpportunities: 0 };
+
+  const { data: missingRows, error: missingError } = await db
+    .from('clinic_experts_opportunities')
+    .select('patient_external_id')
+    .eq('user_id', userId)
+    .is('patient_phone', null)
+    .in('patient_external_id', [...phonesByContact.keys()]);
+  throwIfError(missingError, 'Nao foi possivel localizar os cards sem telefone');
+
+  const matchingContactIds = [...new Set((missingRows || [])
+    .map(row => String(row.patient_external_id || ''))
+    .filter(contactId => phonesByContact.has(contactId)))];
+  let updatedOpportunities = 0;
+  for (const contactId of matchingContactIds) {
+    const phone = phonesByContact.get(contactId);
+    if (!phone) continue;
+    const { data, error: updateError } = await db
+      .from('clinic_experts_opportunities')
+      .update({ patient_phone: phone, synced_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('patient_external_id', contactId)
+      .is('patient_phone', null)
+      .select('id');
+    throwIfError(updateError, 'Nao foi possivel aplicar o telefone do agendamento');
+    updatedOpportunities += data?.length || 0;
+  }
+  return { eventsRead: events?.length || 0, contactsWithPhone: phonesByContact.size, updatedOpportunities };
 }
 
 async function updatePatientPhones(
