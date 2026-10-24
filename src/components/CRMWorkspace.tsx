@@ -1778,6 +1778,7 @@ const DealDetail: React.FC<{
 }> = (p) => {
   const [tab, setTab] = useState<"activity" | "note" | "meeting" | "call" | "whatsapp" | "email" | "files" | "documents" | "invoice">("activity");
   const [note, setNote] = useState("");
+  const [noteEditorOpen, setNoteEditorOpen] = useState(false);
   const [editingValue, setEditingValue] = useState(false);
   const [valueDraft, setValueDraft] = useState(String(p.deal.value));
   const [labelsOpen, setLabelsOpen] = useState(false);
@@ -2272,22 +2273,37 @@ const DealDetail: React.FC<{
                 Clique aqui para adicionar uma atividade...
               </button>
             ) : tab === "note" ? (
-              <div className="crmws-noteform">
+              <div className={`crmws-noteform ${noteEditorOpen ? "is-editing" : ""}`}>
                 <textarea
+                  autoFocus={noteEditorOpen}
                   value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Escreva uma nota"
+                  onFocus={() => setNoteEditorOpen(true)}
+                  onChange={(e) => { setNote(e.target.value); setNoteEditorOpen(true); }}
+                  placeholder="Escreva uma anotação, @nome..."
                 />
-                <button
-                  onClick={() => {
-                    if (note.trim()) {
-                      p.onAddNote(note);
-                      setNote("");
-                    }
-                  }}
-                >
-                  Adicionar nota
-                </button>
+                {noteEditorOpen && (
+                  <>
+                    <div className="crmws-noteformat" aria-label="Ferramentas de formatação">
+                      <button type="button" aria-label="Negrito"><b>B</b></button><button type="button" aria-label="Itálico"><i>I</i></button><button type="button" aria-label="Sublinhado"><u>U</u></button><button type="button" aria-label="Inserir link">↗</button><button type="button" aria-label="Lista">☷</button><button type="button" aria-label="Lista numerada">≣</button>
+                    </div>
+                    <footer>
+                      <span>{note.length}/100 notas</span>
+                      <button type="button" className="crmws-note-cancel" onClick={() => { setNote(""); setNoteEditorOpen(false); }}>Cancelar</button>
+                      <button
+                        type="button"
+                        className="crmws-note-save"
+                        disabled={!note.trim()}
+                        onClick={() => {
+                          if (note.trim()) {
+                            p.onAddNote(note.trim());
+                            setNote("");
+                            setNoteEditorOpen(false);
+                          }
+                        }}
+                      >Salvar</button>
+                    </footer>
+                  </>
+                )}
               </div>
             ) : (
               <div className="crmws-composer-placeholder">
