@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import "./crm-workspace.css";
 import "./crm-workspace-polish.css";
+import "./crm-workspace-clinica-experts.css";
 
 export type CRMSection = "deals" | "leads" | "contacts" | "activities";
 type DealStatus = "open" | "won" | "lost" | "deleted";
@@ -97,6 +98,8 @@ type Deal = {
   label?: string;
   source?: string;
   sourceId?: string;
+  externalPriority?: number;
+  externalObservations?: string;
   personPhone?: string;
   personEmail?: string;
   visibility: string;
@@ -107,6 +110,36 @@ type Deal = {
   deletedAt?: string;
   stageEnteredAt?: string;
   stageDurations?: Record<string, number>;
+};
+type MirroredPipeline = { id: string; name: string };
+type MirroredStage = { id: string; pipeline_id: string; name: string; stage_type: string | null; position: number };
+type MirroredOpportunity = {
+  id: string;
+  pipeline_id: string;
+  stage_id: string;
+  title: string;
+  patient_name: string | null;
+  patient_phone: string | null;
+  patient_email: string | null;
+  seller_name: string | null;
+  priority: number;
+  amount_cents: number;
+  origin: string | null;
+  observations: string | null;
+  status: string | null;
+  synced_at: string;
+};
+
+const externalDealId = (value: string) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) hash = ((hash * 31) + value.charCodeAt(index)) >>> 0;
+  return 1_000_000 + (hash % 900_000_000);
+};
+const externalDealStatus = (stage: MirroredStage | undefined): DealStatus => {
+  const name = String(stage?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+  if (name === 'ganho' || name === 'won') return 'won';
+  if (name === 'perdido' || name === 'lost') return 'lost';
+  return 'open';
 };
 
 const initialStages: Stage[] = [
@@ -453,6 +486,8 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
   const [pipelineName, setPipelineName] = useState(() =>
     load("crm-demo-pipeline-name", "Funil comercial"),
   );
+  const [mirrorLoading, setMirrorLoading] = useState(true);
+  const [mirrorError, setMirrorError] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<"edit" | "new">("edit");
   const [ownerProfiles, setOwnerProfiles] = useState<OwnerProfile[]>([]);
   const [screen, setScreen] = useState<
@@ -529,6 +564,91 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
       ),
     [pipelineName],
   );
+  useEffect(() => {
+    let active = true;
+    const loadClinicaExpertsMirror = async () => {
+      setMirrorLoading(true);
+      setMirrorError(null);
+      const [pipelineResult, stageResult] = await Promise.all([
+        supabase.from('clinic_experts_pipelines').select('id,name').order('name'),
+        supabase.from('clinic_experts_stages').select('id,pipeline_id,name,stage_type,position').order('position'),
+      ]);
+      if (!active) return;
+      if (pipelineResult.error || stageResult.error) {
+        setMirrorError('Não foi possível carregar o funil da Clínica Experts.');
+        setMirrorLoading(false);
+        return;
+      }
+      const pipeline = ((pipelineResult.data || []) as MirroredPipeline[]).find((item) => item.name.trim().toLocaleLowerCase('pt-BR') === 'comercial');
+      if (!pipeline) {
+        setMirrorError('O funil Comercial ainda não foi sincronizado.');
+        setMirrorLoading(false);
+        return;
+      }
+      const mirroredStages = ((stageResult.data || []) as MirroredStage[])
+        .filter((item) => item.pipeline_id === pipeline.id)
+        .sort((a, b) => a.position - b.position);
+      const mirroredRows: MirroredOpportunity[] = [];
+      const pageSize = 1000;
+      for (let page = 0; ; page += 1) {
+        const { data, error } = await supabase
+          .from('clinic_experts_opportunities')
+          .select('id,pipeline_id,stage_id,title,patient_name,patient_phone,patient_email,seller_name,priority,amount_cents,origin,observations,status,synced_at')
+          .eq('pipeline_id', pipeline.id)
+          .order('id')
+          .range(page * pageSize, ((page + 1) * pageSize) - 1);
+        if (error) {
+          if (active) setMirrorError('Não foi possível carregar os leads da Clínica Experts.');
+          break;
+        }
+        const batch = (data || []) as MirroredOpportunity[];
+        mirroredRows.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+      if (!active) return;
+      const stageById = new Map(mirroredStages.map((stage) => [stage.id, stage]));
+      const usedIds = new Set<number>();
+      const mirroredDeals = mirroredRows.map((item, index) => {
+        let id = externalDealId(item.id);
+        while (usedIds.has(id)) id = 1_000_000 + index;
+        usedIds.add(id);
+        const stage = stageById.get(item.stage_id);
+        return {
+          id,
+          title: item.title || item.patient_name || 'Oportunidade',
+          person: item.patient_name || 'Sem contato informado',
+          organization: '',
+          value: (Number(item.amount_cents) || 0) / 100,
+          owner: item.seller_name || 'Sem responsável',
+          stageId: item.stage_id,
+          status: externalDealStatus(stage),
+          createdAt: 0,
+          probability: stage?.name === 'Ganho' ? 100 : 0,
+          source: item.origin || 'Clínica Experts',
+          sourceId: item.id,
+          externalPriority: item.priority,
+          externalObservations: item.observations,
+          personPhone: item.patient_phone,
+          personEmail: item.patient_email,
+          visibility: 'Todos os usuários',
+          stageEnteredAt: item.synced_at || new Date().toISOString(),
+          stageDurations: {},
+        } satisfies Deal;
+      });
+      setStages(mirroredStages.map((stage, index) => ({
+        id: stage.id,
+        name: stage.name,
+        probability: stage.name === 'Ganho' ? 100 : stage.name === 'Perdido' ? 0 : Math.max(10, Math.round(((index + 1) / Math.max(mirroredStages.length - 2, 1)) * 100)),
+        rotting: false,
+        rottingDays: 0,
+      })));
+      setDeals(mirroredDeals);
+      setPipelineName(pipeline.name);
+      setMirrorLoading(false);
+    };
+    void loadClinicaExpertsMirror();
+    return () => { active = false; };
+  }, []);
   useEffect(() => {
     let active = true;
     const loadOwners = async () => {
@@ -663,6 +783,8 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
         <BoardView
           stages={stages}
           deals={deals}
+          mirrorLoading={mirrorLoading}
+          mirrorError={mirrorError}
           activities={activities}
           pipelineName={pipelineName}
           onOpenDeal={openDeal}
@@ -1038,6 +1160,8 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
 const BoardView: React.FC<{
   stages: Stage[];
   deals: Deal[];
+  mirrorLoading: boolean;
+  mirrorError: string | null;
   owner: string;
   activities: DealActivity[];
   pipelineName: string;
@@ -2216,6 +2340,12 @@ const DealDetail: React.FC<{
           })}
         </aside>
         <div className="crmws-detail-main">
+          {(p.deal.externalObservations || p.deal.externalPriority != null) && (
+            <section className="crmws-imported-data" aria-label="Dados da Clínica Experts">
+              <header><b>Dados da Clínica Experts</b><span>Prioridade {p.deal.externalPriority ?? '—'}</span></header>
+              {p.deal.externalObservations && <p>{p.deal.externalObservations}</p>}
+            </section>
+          )}
           <section className="crmws-composer">
             <nav>
               <button
