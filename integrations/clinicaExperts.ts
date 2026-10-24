@@ -694,9 +694,17 @@ export async function syncClinicaExperts(
   if (!run) throw new Error('A sincronizacao nao recebeu um identificador de execucao.');
 
   try {
-    const pipelines = await client.listPipelines();
+    const allPipelines = await client.listPipelines();
+    const focusedPipeline = allPipelines.find(pipeline => pipeline.name.trim().toLocaleLowerCase('pt-BR') === 'comercial');
+    if (!focusedPipeline) {
+      throw new Error('O funil Comercial nao foi encontrado na Clinica Experts.');
+    }
+    if (pipelineExternalId && pipelineExternalId !== focusedPipeline.uuid) {
+      throw new Error('A integracao esta configurada exclusivamente para o funil Comercial.');
+    }
+    const pipelines = [focusedPipeline];
     await delay(REQUEST_GAP_MS);
-    const opportunities = await client.listOpportunities(pipelineExternalId);
+    const opportunities = await client.listOpportunities(focusedPipeline.uuid);
     const now = new Date().toISOString();
 
     const pipelineRows = pipelines.map(pipeline => ({
@@ -719,12 +727,7 @@ export async function syncClinicaExperts(
     throwIfError(pipelineReadError, 'Erro ao reler funis');
     const pipelineIds = new Map((localPipelines || []).map(row => [row.external_id, row.id]));
 
-    const synchronizedPipelines = pipelineExternalId
-      ? pipelines.filter(pipeline => pipeline.uuid === pipelineExternalId)
-      : pipelines;
-    if (pipelineExternalId && synchronizedPipelines.length === 0) {
-      throw new Error('O funil selecionado nao foi encontrado na Clinica Experts. Atualize a tela e tente novamente.');
-    }
+    const synchronizedPipelines = pipelines;
 
     const stageRows = synchronizedPipelines.flatMap(pipeline => {
       const pipelineId = pipelineIds.get(pipeline.uuid);
@@ -795,7 +798,7 @@ export async function syncClinicaExperts(
       return Boolean(
         pipelineId
         && stagePipelineId === pipelineId
-        && (!pipelineExternalId || externalPipelineId === pipelineExternalId),
+        && externalPipelineId === focusedPipeline.uuid,
       );
     });
 
@@ -852,28 +855,22 @@ export async function syncClinicaExperts(
       .delete()
       .eq('user_id', userId)
       .lt('synced_at', now);
-    if (pipelineExternalId) {
-      const selectedPipelineId = pipelineIds.get(pipelineExternalId);
-      if (selectedPipelineId) staleOpportunitiesQuery = staleOpportunitiesQuery.eq('pipeline_id', selectedPipelineId);
-    }
     const { error: staleOpportunitiesError } = await staleOpportunitiesQuery;
     throwIfError(staleOpportunitiesError, 'Erro ao remover oportunidades antigas');
 
-    if (!pipelineExternalId) {
-      const { error: staleStagesError } = await db
-        .from('clinic_experts_stages')
-        .delete()
-        .eq('user_id', userId)
-        .lt('synced_at', now);
-      throwIfError(staleStagesError, 'Erro ao remover etapas antigas');
+    const { error: staleStagesError } = await db
+      .from('clinic_experts_stages')
+      .delete()
+      .eq('user_id', userId)
+      .lt('synced_at', now);
+    throwIfError(staleStagesError, 'Erro ao remover etapas antigas');
 
-      const { error: stalePipelinesError } = await db
-        .from('clinic_experts_pipelines')
-        .delete()
-        .eq('user_id', userId)
-        .lt('synced_at', now);
-      throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
-    }
+    const { error: stalePipelinesError } = await db
+      .from('clinic_experts_pipelines')
+      .delete()
+      .eq('user_id', userId)
+      .lt('synced_at', now);
+    throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
 
     const result: SyncResult = {
       pipelines: pipelineRows.length,
