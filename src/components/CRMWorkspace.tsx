@@ -3154,7 +3154,6 @@ const DealActivityComposer: React.FC<{
   const [due, setDue] = useState(todayKey());
   const [startTime, setStartTime] = useState("");
   const [priority, setPriority] = useState<"Normal" | "Alta">("Normal");
-  const [availability, setAvailability] = useState("Livre");
   const [done, setDone] = useState(false);
   const types = [
     { label: "Chamada", icon: Phone },
@@ -3180,9 +3179,8 @@ const DealActivityComposer: React.FC<{
         </div>
         <div className="crmws-deal-activity-row">
           <FlagIcon size={17} />
-          <select value={priority} onChange={(event) => setPriority(event.target.value as "Normal" | "Alta")} aria-label="Prioridade"><option value="Normal">Prioridade</option><option value="Alta">Prioridade alta</option></select>
+          <select className="crmws-deal-activity-priority" value={priority} onChange={(event) => setPriority(event.target.value as "Normal" | "Alta")} aria-label="Prioridade"><option value="Normal">Prioridade</option><option value="Alta">Prioridade alta</option></select>
         </div>
-        <div className="crmws-deal-activity-row"><BriefcaseIcon size={17} /><select value={availability} onChange={(event) => setAvailability(event.target.value)} aria-label="Disponibilidade"><option>Livre</option><option>Ocupado</option></select><CircleHelp size={15} /></div>
         <div className="crmws-deal-activity-row"><UserRound size={17} /><select aria-label="Responsável"><option>{owner} (Você)</option></select></div>
         <div className="crmws-deal-activity-records">
           <div><GitBranch size={15} /><span>{deal.title}</span><button type="button" aria-label="Remover negócio"><X size={15} /></button></div>
@@ -3209,7 +3207,6 @@ const DealActivityComposer: React.FC<{
 };
 
 const FlagIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <FlagShape width={size} height={size} />;
-const BriefcaseIcon: React.FC<{ size?: number }> = ({ size = 16 }) => <Archive width={size} height={size} />;
 const FlagShape: React.FC<{ width: number; height: number }> = ({ width, height }) => <svg width={width} height={height} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2v12M4 3h7l-1.4 2L11 7H4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 const ActivityForm: React.FC<{
