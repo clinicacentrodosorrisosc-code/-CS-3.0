@@ -273,9 +273,6 @@ export const Financial: React.FC<FinancialProps> = ({
   };
 
   const [loading, setLoading] = useState(true);
-  const externalSyncEnabled =
-    import.meta.env.VITE_EXTERNAL_SYNC_ENABLED === "true";
-  const [syncingClinicPayments, setSyncingClinicPayments] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [transactions, setTransactions] = useState<LocalTransaction[]>([]);
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
@@ -1197,51 +1194,6 @@ export const Financial: React.FC<FinancialProps> = ({
       console.error(error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const syncClinicaExpertsPayments = async () => {
-    if (!externalSyncEnabled) {
-      toast.error(
-        "A extracao de lancamentos externos esta desativada para testes locais.",
-      );
-      return;
-    }
-    setSyncingClinicPayments(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token)
-        throw new Error("Sua sessao expirou. Entre novamente.");
-      const response = await fetch(
-        "/api/integrations/clinica-experts/payments",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        },
-      );
-      const payload = (await response.json()) as {
-        data?: { imported?: number; deleted?: number };
-        error?: string;
-      };
-      if (!response.ok)
-        throw new Error(
-          payload.error || "Nao foi possivel sincronizar os pagamentos.",
-        );
-      await fetchAllData();
-      notifyDataChange("transactions");
-      toast.success(
-        `${payload.data?.imported || 0} pagamento(s) sincronizado(s). ${payload.data?.deleted || 0} lancamento(s) antigo(s) removido(s).`,
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Falha ao sincronizar pagamentos.",
-      );
-    } finally {
-      setSyncingClinicPayments(false);
     }
   };
 
@@ -2887,16 +2839,6 @@ export const Financial: React.FC<FinancialProps> = ({
               ].map(([label, value, dot]) => <div key={label as string} className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-xs"><span className={`size-1.5 shrink-0 rounded-full ${dot}`} /><span className="text-[#667085] dark:text-[var(--text-secondary)]">{label}</span><strong className="font-bold tabular-nums text-[#283449] dark:text-[var(--text)]">R$ {(value as number).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></div>)}
             </div>
             <div className="ms-auto flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => void syncClinicaExpertsPayments()}
-                disabled={!externalSyncEnabled || syncingClinicPayments}
-                className="grid size-8 place-items-center rounded-lg text-blue-500 transition hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-                title={externalSyncEnabled ? "Sincronizar Clínica Experts" : "Extração desativada para testes locais"}
-                aria-label={externalSyncEnabled ? "Sincronizar Clínica Experts" : "Extração desativada para testes locais"}
-              >
-                <RefreshCw className={`size-3.5 ${syncingClinicPayments ? "animate-spin" : ""}`} />
-              </button>
               <button onClick={() => handleExport(filtered)} className="grid size-8 place-items-center rounded-lg text-[#596274] transition hover:bg-[#f3f4f6] dark:text-slate-300 dark:hover:bg-white/[0.08]" title="Exportar lançamentos" aria-label="Exportar lançamentos"><Download className="size-4" /></button>
             </div>
           </div>

@@ -875,19 +875,11 @@ export async function syncClinicaExperts(
       throwIfError(stalePipelinesError, 'Erro ao remover funis antigos');
     }
 
-    let payments = 0;
-    try {
-      payments = (await syncClinicaExpertsPayments(db, apiToken)).imported;
-    } catch (paymentError) {
-      console.error('[CLINICA EXPERTS] Payment sync failed:', paymentError instanceof Error ? paymentError.message : paymentError);
-    }
-
     const result: SyncResult = {
       pipelines: pipelineRows.length,
       stages: stageRows.length,
       opportunities: opportunityRows.length,
       patients: new Set(opportunityRows.map(opportunity => opportunity.patient_external_id).filter(Boolean)).size,
-      payments,
       finishedAt: now,
     };
 

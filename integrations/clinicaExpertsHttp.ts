@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { CLINICA_EXPERTS_PAYMENT_SOURCE, ClinicaExpertsClient, createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts, syncClinicaExpertsPayments } from './clinicaExperts.js';
+import { ClinicaExpertsClient, createUserScopedSupabase, enrichClinicaExpertsOpportunityPhones, enrichClinicaExpertsOpportunityPhonesDirect, processClinicaExpertsOpportunityWebhook, syncClinicaExperts } from './clinicaExperts.js';
 import crypto from 'crypto';
 
 export type ApiRequest = {
@@ -332,35 +332,7 @@ export async function handleClinicaExpertsPaymentSync(req: ApiRequest, res: ApiR
     res.status(405).json({ error: 'Metodo nao permitido.' });
     return;
   }
-  if (!externalSyncEnabled) {
-    res.status(423).json({ error: externalSyncDisabledMessage });
-    return;
-  }
-  const apiToken = process.env.CLINICA_EXPERTS_API_TOKEN || '';
-  if (!apiToken) {
-    res.status(503).json({ error: 'CLINICA_EXPERTS_API_TOKEN ainda nao foi configurado no servidor.' });
-    return;
-  }
-  try {
-    const context = await resolveContext(req);
-    const { data: deletedRows, error: cleanupError } = await context.db
-      .from('transactions')
-      .delete()
-      .in('source', ['CLINICA_EXPERTS', 'SISTEMA_EXTERNO'])
-      .select('id');
-    if (cleanupError) throw cleanupError;
-    const result = await syncClinicaExpertsPayments(context.db, apiToken);
-    res.status(200).json({
-      data: {
-        ...result,
-        deleted: (deletedRows?.length || 0) + result.deleted,
-        source: CLINICA_EXPERTS_PAYMENT_SOURCE,
-      },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Falha ao sincronizar pagamentos da Clinica Experts.';
-    res.status(/Sessao/i.test(message) ? 401 : 500).json({ error: message });
-  }
+  res.status(410).json({ error: 'A integracao com a Clinica Experts agora sincroniza somente dados de CRM.' });
 }
 
 export async function handleClinicaExpertsSync(req: ApiRequest, res: ApiResponse) {
@@ -508,16 +480,14 @@ export async function handleClinicaExpertsWebhook(req: ApiRequest & { params?: R
     }
     if (insertError || !eventRow) throw insertError || new Error('Nao foi possivel registrar o webhook.');
 
-    const isFinancialEvent = /(^|\.)(bill|parcel|payment|financial)(\.|$)/i.test(eventName);
-    if (!eventName.startsWith('crm_opportunity.') && !isFinancialEvent) {
+    if (!eventName.startsWith('crm_opportunity.')) {
       await db.from('clinic_experts_webhook_events').update({ status: 'ignored', processed_at: new Date().toISOString() }).eq('id', eventRow.id);
       res.status(200).json({ received: true, ignored: true });
       return;
     }
 
     try {
-      if (isFinancialEvent) await syncClinicaExpertsPayments(db, apiToken);
-      else await processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload, apiToken);
+      await processClinicaExpertsOpportunityWebhook(db, ownerUserId, payload, apiToken);
       await db.from('clinic_experts_webhook_events').update({ status: 'processed', processed_at: new Date().toISOString(), error_message: null }).eq('id', eventRow.id);
       res.status(200).json({ received: true, processed: true });
     } catch (error) {
