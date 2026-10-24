@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, ChevronDown, Database, ExternalLink, Loader2, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import './crm-integrations.css';
+import './crm-integrations-stage-visibility.css';
 
 type Pipeline = { id: string; external_id: string; name: string; synced_at: string };
 type Stage = { id: string; pipeline_id: string; external_id: string; name: string; stage_type: string | null; position: number };

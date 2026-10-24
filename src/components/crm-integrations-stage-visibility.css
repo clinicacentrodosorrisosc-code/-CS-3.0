@@ -1,0 +1,32 @@
+/* Keep every source stage in the same left-to-right funnel sequence. */
+.crm-mirror-board {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 270px);
+  grid-template-rows: minmax(450px, 1fr);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+
+.crm-mirror-board::-webkit-scrollbar {
+  height: 10px;
+}
+
+.crm-mirror-board::-webkit-scrollbar-thumb {
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: #b8c3bc;
+}
+
+.crm-mirror-stage {
+  scroll-snap-align: start;
+}
+
+@media (max-width: 900px) {
+  .crm-mirror-board {
+    grid-template-columns: none;
+    grid-auto-columns: 250px;
+  }
+}
