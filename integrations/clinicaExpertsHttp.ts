@@ -25,7 +25,10 @@ const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
 const activeSyncs = new Map<string, Promise<unknown>>();
 const patientSearchCache = new Map<string, { expiresAt: number; patients: Array<{ id: string; name: string; phone: string | null; email: string | null }> }>();
 const patientSearchBlockedUntil = new Map<string, number>();
-const externalSyncEnabled = process.env.EXTERNAL_SYNC_ENABLED === 'true';
+// A integração é de leitura no sistema de origem e só funciona quando já há
+// uma chave de API configurada. Mantemos a chave de desligamento explícita
+// para manutenção, mas não exigimos uma segunda variável para ativá-la.
+const externalSyncEnabled = process.env.EXTERNAL_SYNC_ENABLED !== 'false';
 const externalSyncDisabledMessage = 'Sincronizacoes externas estao desativadas temporariamente.';
 
 function headerValue(value: string | string[] | undefined) {
