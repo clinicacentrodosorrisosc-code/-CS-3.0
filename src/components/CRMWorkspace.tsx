@@ -6,6 +6,7 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
+  CalendarCheck,
   CalendarClock,
   CalendarDays,
   Check,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   CircleHelp,
   Columns3,
+  ClipboardCheck,
   Filter,
   FileText,
   FolderOpen,
@@ -645,7 +647,7 @@ export const CRMWorkspace: React.FC<{ section?: CRMSection }> = ({
       lostReason: undefined,
     });
     setNotice({ text: "Negócio marcado como ganho" });
-    window.setTimeout(() => setWonDealId(id), 4000);
+    if (localStorage.getItem("crm-hide-won-dialog") !== "true") setWonDealId(id);
   };
   const reopen = (id: number) =>
     updateDeal(id, {
@@ -3556,55 +3558,43 @@ const WonDialog: React.FC<{
   activitiesDone: number;
   onClose: () => void;
   onFollowUp: () => void;
-}> = (p) => (
-  <div className="crmws-overlay">
-    <section className="crmws-wondialog">
-      <header>
-        <button onClick={p.onClose}>
-          <X size={17} />
-        </button>
-        <Trophy size={40} />
-        <h2>Negócio ganho</h2>
-      </header>
-      <div className="crmws-woncard">
-        <b>{p.deal.title}</b>
-        <span>{p.deal.organization}</span>
-        <strong>{money(p.deal.value)}</strong>
-      </div>
-      <div className="crmws-wonstats">
-        <span>
-          <b>0 dias</b>Tempo para fechar
-        </span>
-        <span>
-          <b>{p.activitiesDone}</b>Atividades concluídas
-        </span>
-      </div>
-      <h3>Qual é o próximo passo?</h3>
-      <button className="crmws-nextchoice" onClick={p.onFollowUp}>
-        <CalendarDays size={20} />
-        <span>
-          <b>Agendar atividade de acompanhamento</b>
-          <small>Planeje o próximo contato com o cliente</small>
-        </span>
-        <ChevronRight size={16} />
-      </button>
-      <button className="crmws-nextchoice">
-        <Building2 size={20} />
-        <span>
-          <b>Criar um projeto</b>
-          <small>Planeje a entrega do negócio</small>
-        </span>
-        <ChevronRight size={16} />
-      </button>
-      <footer>
-        <label>
-          <input type="checkbox" /> Não mostrar novamente
-        </label>
-        <button onClick={p.onClose}>Fechar</button>
-      </footer>
-    </section>
-  </div>
-);
+}> = (p) => {
+  const [hideAgain, setHideAgain] = useState(false);
+  const close = () => {
+    if (hideAgain) localStorage.setItem("crm-hide-won-dialog", "true");
+    p.onClose();
+  };
+  const closingDays = Math.max(1, p.deal.createdAt || 1);
+  return (
+    <div className="crmws-overlay crmws-won-overlay">
+      <section className="crmws-wondialog" role="dialog" aria-modal="true" aria-label="Negócio ganho">
+        <div className="crmws-won-hero" aria-hidden="true">
+          <svg viewBox="0 0 560 256" preserveAspectRatio="xMidYMid slice">
+            <rect width="560" height="256" fill="#007d38" />
+            <g transform="translate(130 128)">
+              <circle r="126" fill="#00552a" /><circle r="108" fill="#fff" /><circle r="88" fill="#00552a" /><circle r="68" fill="#fff" /><circle r="49" fill="#00552a" /><circle r="30" fill="#fff" /><circle r="16" fill="#00552a" />
+              <path d="M-108 0H108M0-108V108M-76-76L76 76M76-76L-76 76" stroke="#00552a" strokeWidth="1.1" opacity=".84" />
+            </g>
+            <g transform="rotate(-12 330 83)"><path d="M158 93L459 93" stroke="#c4f0d0" strokeWidth="5" /><path d="M158 93l29-14v28z" fill="#8774ee" /><path d="M403 68l42 0-13 25-42 0z" fill="#ffb513" /><path d="M420 68l-13 25M433 68l-13 25" stroke="#fff" strokeWidth="4" opacity=".74" /></g>
+            <g transform="rotate(10 360 162)"><path d="M164 152L515 152" stroke="#c4f0d0" strokeWidth="5" /><path d="M164 152l29-14v28z" fill="#a6b1bc" /><path d="M440 127l51 0-16 25-51 0z" fill="#fff" /><path d="M446 127l-15 25M463 127l-15 25M480 127l-15 25" stroke="#007d38" strokeWidth="5" /></g>
+          </svg>
+          <button type="button" onClick={close} aria-label="Fechar"><X size={17} /></button>
+        </div>
+        <div className="crmws-won-summary">
+          <article className="crmws-won-deal-card"><i /><b>{p.deal.title}</b><strong><em>GANHO</em>{money(p.deal.value)}</strong><span><u /><u /><u /><u /></span></article>
+          <article><small><History size={14} /> Data de fechamento</small><b>{closingDays} {closingDays === 1 ? "dia" : "dias"}</b><p>{closingDays === 1 ? "Dentro da média" : `${Math.max(1, closingDays - 1)} dias acima da média`}</p></article>
+          <article><small><CalendarCheck size={14} /> Atividades concluídas</small><b>{p.activitiesDone}</b><p>{p.activitiesDone ? "Atividades registradas no negócio" : "Nenhuma atividade concluída"}</p></article>
+        </div>
+        <div className="crmws-won-next">
+          <h3>Qual é o próximo passo para este negócio ganho?</h3>
+          <button className="crmws-nextchoice" onClick={p.onFollowUp}><span className="crmws-next-icon"><CalendarDays size={19} /></span><span><b>Agendar atividade de follow-up</b><small>Planejar próximo ponto de contato</small></span><ChevronRight size={18} /></button>
+          <button className="crmws-nextchoice" onClick={() => window.dispatchEvent(new CustomEvent("crm-create-project", { detail: { deal: p.deal } }))}><span className="crmws-next-icon"><ClipboardCheck size={19} /></span><span><b>Criar um projeto</b><small>Planejar a entrega do negócio</small></span><ChevronRight size={18} /></button>
+        </div>
+        <footer><label><input type="checkbox" checked={hideAgain} onChange={(event) => setHideAgain(event.target.checked)} /> Não mostrar de novo</label><button onClick={close}>Fechar</button></footer>
+      </section>
+    </div>
+  );
+};
 const ConfirmDialog: React.FC<{
   title: string;
   text: string;
