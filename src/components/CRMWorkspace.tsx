@@ -141,6 +141,13 @@ const externalDealStatus = (stage: MirroredStage | undefined): DealStatus => {
   if (name === 'perdido' || name === 'lost') return 'lost';
   return 'open';
 };
+const displayPhone = (value?: string) => {
+  const digits = String(value || "").replace(/\D/g, "");
+  const national = digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
+  if (national.length === 11) return `(${national.slice(0, 2)}) ${national.slice(2, 7)}-${national.slice(7)}`;
+  if (national.length === 10) return `(${national.slice(0, 2)}) ${national.slice(2, 6)}-${national.slice(6)}`;
+  return value || "";
+};
 
 const initialStages: Stage[] = [
   {
@@ -1618,6 +1625,7 @@ const DealsTableView: React.FC<{
           <th>Valor</th>
           <th>Organização</th>
           <th>Pessoa de contato</th>
+          <th>Telefone</th>
           <th>Data de fechamento esperada</th>
           <th>Próxima atividade em</th>
           <th>Proprietário</th>
@@ -1636,6 +1644,7 @@ const DealsTableView: React.FC<{
               <InlineTableCell value={String(deal.value)} displayValue={money(deal.value)} inputMode="decimal" onSave={(value) => onUpdateDeal(deal.id, { value: Number(value.replace(/[^0-9,.-]/g, "").replace(",", ".")) || 0 })} className="crmws-table-value" />
               <InlineTableCell value={deal.organization} emptyLabel="—" onSave={(organization) => onUpdateDeal(deal.id, { organization })} />
               <InlineTableCell value={deal.person} onSave={(person) => onUpdateDeal(deal.id, { person })} />
+              <InlineTableCell value={deal.personPhone || ""} displayValue={displayPhone(deal.personPhone) || "—"} emptyLabel="—" inputMode="tel" onSave={(personPhone) => onUpdateDeal(deal.id, { personPhone: personPhone || undefined })} />
               <InlineTableCell value={deal.expectedClose || ""} displayValue={deal.expectedClose ? new Date(`${deal.expectedClose}T00:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }) : "—"} type="date" emptyLabel="—" onSave={(expectedClose) => onUpdateDeal(deal.id, { expectedClose: expectedClose || undefined })} />
               <InlineTableCell value={next?.due || ""} displayValue={next ? new Date(`${next.due}T00:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }) : "Sem atividade"} type="date" emptyLabel="Sem atividade" className={next && next.due < todayKey() ? "overdue" : ""} onSave={(due) => { if (next) onUpdateActivity(next.id, { due }); }} disabled={!next} />
               <InlineTableCell value={deal.owner} onSave={(owner) => onUpdateDeal(deal.id, { owner })} />
@@ -1850,7 +1859,7 @@ const DealCard: React.FC<{
           title={`Ligar para ${deal.personPhone}`}
         >
           <Phone size={11} aria-hidden="true" />
-          {deal.personPhone}
+          {displayPhone(deal.personPhone)}
         </a>
       )}
       <footer>
@@ -1933,7 +1942,7 @@ const DealDetail: React.FC<{
   const [historyFilter, setHistoryFilter] = useState<"all" | "activities" | "notes" | "whatsapp" | "emails" | "files" | "documents" | "invoices" | "changes">("all");
   const [expandFocus, setExpandFocus] = useState(false);
   const [activityEditor, setActivityEditor] = useState(false);
-  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(["Resumo"]));
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(["Resumo", "Pessoa"]));
   const open = p.activities.filter((a) => !a.done);
   const selectedLabel = p.labels.find((label) => label.name === p.deal.label);
   const personNameParts = p.deal.person.trim().split(/\s+/).filter(Boolean);
@@ -2335,7 +2344,7 @@ const DealDetail: React.FC<{
                             <dt>Etiquetas</dt>
                             <dd>{selectedLabel ? <span className="crmws-mini-label" style={{ color: selectedLabel.color }}><i style={{ background: selectedLabel.color }} />{selectedLabel.name}</span> : "–"}</dd>
                           </div>
-                          <div><dt>Telefone</dt><dd>{p.deal.personPhone ? <a href={`tel:${p.deal.personPhone}`}>{p.deal.personPhone}</a> : "–"}</dd></div>
+                          <div><dt>Telefone</dt><dd>{p.deal.personPhone ? <a href={`tel:${p.deal.personPhone}`}>{displayPhone(p.deal.personPhone)}</a> : "–"}</dd></div>
                           <div><dt>E-mail</dt><dd>{p.deal.personEmail ? <a href={`mailto:${p.deal.personEmail}`}>{p.deal.personEmail}</a> : "–"}</dd></div>
                           <div><dt>Primeiro nome</dt><dd>{personFirstName}</dd></div>
                           <div><dt>Sobrenome</dt><dd>{personLastName}</dd></div>
