@@ -1317,6 +1317,11 @@
 .crmws-date-popover { width: 280px; padding-bottom: 9px; }
 .crmws-date-popover input { display: block; width: calc(100% - 20px); height: 36px; margin: 10px; padding: 0 8px; border: 1px solid #cfd2d6; border-radius: 5px; }
 .crmws-date-popover .crmws-clear-date { margin: 0 10px; color: #d83c38; }
+.crmws-probability-popover { width: 280px; }
+.crmws-probability-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 11px; }
+.crmws-probability-options button { min-height: 31px; border: 1px solid #d5d8dc; border-radius: 5px; background: #fff; color: #363a40; font-size: 11px; font-weight: 650; }
+.crmws-probability-options button:hover, .crmws-probability-options button.selected { border-color: #2d8647; background: #ebf7ed; color: #216f38; text-decoration: none; }
+.crmws-probability-options small { display: block; margin-top: 1px; font-size: 8px; font-weight: 550; }
 
 .crmws-label-overlay { z-index: 130; }
 .crmws-label-dialog { width: min(390px, calc(100vw - 32px)); border-radius: 8px; background: #fff; box-shadow: 0 18px 44px rgba(19, 23, 30, .28); }
@@ -1519,6 +1524,10 @@
 .crmws-composer nav button.whatsapp svg {
   color: #20a75a;
 }
+.crmws-composer-placeholder { display: flex; min-height: 74px; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 15px; color: #747880; font-size: 12px; }
+.crmws-composer-placeholder p { margin: 0; }
+.crmws-composer-placeholder button { min-height: 30px; padding: 0 10px; border: 1px solid #cdd1d6; border-radius: 5px; background: #fff; color: #0d68c5; font-size: 11px; font-weight: 650; }
+.crmws-composer-placeholder button:hover { border-color: #7aa9d6; background: #f1f7fd; }
 .crmws-compose-action {
   width: 100%;
   min-height: 54px;
@@ -1597,6 +1606,7 @@
   background: #fff;
   box-sizing: content-box;
 }
+.crmws-focus-item > div.expanded small { display: block; margin-top: 4px; color: #5d6168; }
 .crmws-history > header {
   align-items: flex-start;
   gap: 12px;
@@ -1625,6 +1635,7 @@
   border: 0;
   border-left: 1px solid #d8dbe0;
 }
+.crmws-history-empty { color: #747880; font-size: 12px; font-style: italic; }
 
 @media (max-width: 1050px) {
   .crmws-detail-grid {

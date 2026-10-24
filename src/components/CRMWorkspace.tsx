@@ -1772,7 +1772,7 @@ const DealDetail: React.FC<{
   onDeleteNote: (id: number) => void;
   onAddNote: (text: string) => void;
 }> = (p) => {
-  const [tab, setTab] = useState<"activity" | "note">("activity");
+  const [tab, setTab] = useState<"activity" | "note" | "meeting" | "call" | "whatsapp" | "email" | "files" | "documents" | "invoice">("activity");
   const [note, setNote] = useState("");
   const [editingValue, setEditingValue] = useState(false);
   const [valueDraft, setValueDraft] = useState(String(p.deal.value));
@@ -1781,11 +1781,14 @@ const DealDetail: React.FC<{
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#6150e1");
   const [dateOpen, setDateOpen] = useState(false);
+  const [probabilityOpen, setProbabilityOpen] = useState(false);
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [followersOpen, setFollowersOpen] = useState(false);
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const [activityMenuId, setActivityMenuId] = useState<number | null>(null);
   const [noteMenuId, setNoteMenuId] = useState<number | null>(null);
+  const [historyFilter, setHistoryFilter] = useState<"all" | "activities" | "notes" | "whatsapp" | "emails" | "files" | "documents" | "invoices" | "changes">("all");
+  const [expandFocus, setExpandFocus] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(["Resumo"]));
   const open = p.activities.filter((a) => !a.done);
   const selectedLabel = p.labels.find((label) => label.name === p.deal.label);
@@ -1808,6 +1811,23 @@ const DealDetail: React.FC<{
     });
   };
   const done = p.activities.filter((a) => a.done);
+  const composerCopy: Record<typeof tab, { prompt: string; action?: string }> = {
+    activity: { prompt: "Clique aqui para adicionar uma atividade..." },
+    note: { prompt: "Escreva uma nota" },
+    meeting: { prompt: "Escolha um horário para compartilhar com o contato.", action: "Abrir agendador" },
+    call: { prompt: "Registre ou inicie uma chamada para este negócio.", action: "Registrar chamada" },
+    whatsapp: { prompt: "Envie uma mensagem do WhatsApp para o contato.", action: "Abrir WhatsApp" },
+    email: { prompt: "Escreva um e-mail para o contato deste negócio.", action: "Escrever e-mail" },
+    files: { prompt: "Arraste arquivos aqui ou selecione do seu computador.", action: "Adicionar arquivo" },
+    documents: { prompt: "Crie ou vincule documentos deste negócio.", action: "Adicionar documento" },
+    invoice: { prompt: "Crie uma fatura vinculada a este negócio.", action: "Criar fatura" },
+  };
+  const historyRows = [
+    ...done.map((activity) => ({ key: `activity-${activity.id}`, type: "activities" as const, icon: <Check size={15} />, title: activity.subject, detail: "Atividade concluída" })),
+    ...p.notes.map((item) => ({ key: `note-${item.id}`, type: "notes" as const, icon: <MessageSquareText size={15} />, title: "Nota adicionada", detail: item.text })),
+    ...(p.deal.status === "won" || p.deal.status === "lost" ? [{ key: "outcome", type: "changes" as const, icon: p.deal.status === "won" ? <Trophy size={15} /> : <X size={15} />, title: `Negócio marcado como ${p.deal.status === "won" ? "ganho" : "perdido"}`, detail: p.deal.status === "lost" ? `Motivo: ${p.deal.lostReason || "Não informado"}` : "Status atualizado" }] : []),
+    { key: "created", type: "changes" as const, icon: <History size={15} />, title: "Negócio criado", detail: "Registro inicial" },
+  ].filter((row) => historyFilter === "all" || row.type === historyFilter);
   return (
     <section className="crmws-detail">
       <header className="crmws-detail-head">
@@ -2080,6 +2100,23 @@ const DealDetail: React.FC<{
                 <Plus size={14} /> Projeto
               </button>
             </div>
+            <div className="crmws-summary-row crmws-popover-anchor">
+              <button onClick={() => setProbabilityOpen((open) => !open)}>
+                <Target size={14} /> {p.deal.probability == null ? "Definir probabilidade" : `Probabilidade: ${p.deal.probability}%`}
+              </button>
+              {probabilityOpen && (
+                <div className="crmws-field-popover crmws-probability-popover">
+                  <header><b>Probabilidade de ganho</b><button onClick={() => setProbabilityOpen(false)}><X size={14} /></button></header>
+                  <div className="crmws-probability-options">
+                    {[10, 25, 50, 75, 100].map((probability) => (
+                      <button key={probability} className={p.deal.probability === probability ? "selected" : ""} onClick={() => { p.onUpdate({ probability }); setProbabilityOpen(false); }}>
+                        {probability}% {probability === p.stages.find((stage) => stage.id === p.deal.stageId)?.probability && <small>da etapa</small>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             {(p.deal.status === "won" || p.deal.status === "lost") && (
               <div className="crmws-summary-state">
                 {p.deal.status === "won" && (
@@ -2138,6 +2175,12 @@ const DealDetail: React.FC<{
                         <div><dt>Canal de origem</dt><dd>–</dd></div>
                         <div><dt>ID do canal de origem</dt><dd>{p.deal.sourceId || "–"}</dd></div>
                       </dl>
+                    ) : label === "Detalhes" ? (
+                      <dl className="crmws-side-data">
+                        <div><dt>Probabilidade</dt><dd>{p.deal.probability ?? p.stages.find((stage) => stage.id === p.deal.stageId)?.probability ?? 0}%</dd></div>
+                        <div><dt>Visibilidade</dt><dd>{p.deal.visibility}</dd></div>
+                        <div><dt>Data de criação</dt><dd>{new Date(Date.now() - p.deal.createdAt * DAY_MS).toLocaleDateString("pt-BR")}</dd></div>
+                      </dl>
                     ) : label === "Pessoa" ? (
                       <div className="crmws-person-details">
                         <button className="crmws-person-link" onClick={p.onOpenContact}>
@@ -2179,25 +2222,25 @@ const DealDetail: React.FC<{
               >
                 <MessageSquareText size={14} /> Anotações
               </button>
-              <button>
+              <button className={tab === "meeting" ? "active" : ""} onClick={() => setTab("meeting")}>
                 <CalendarClock size={14} /> Agendador de reuniões
               </button>
-              <button>
+              <button className={tab === "call" ? "active" : ""} onClick={() => setTab("call")}>
                 <Phone size={14} /> Chamada
               </button>
-              <button className="whatsapp">
+              <button className={`whatsapp${tab === "whatsapp" ? " active" : ""}`} onClick={() => setTab("whatsapp")}>
                 <MessageSquareText size={14} /> WhatsApp
               </button>
-              <button>
+              <button className={tab === "email" ? "active" : ""} onClick={() => setTab("email")}>
                 <Mail size={14} /> E-mail
               </button>
-              <button>
+              <button className={tab === "files" ? "active" : ""} onClick={() => setTab("files")}>
                 <FolderOpen size={14} /> Arquivos
               </button>
-              <button>
+              <button className={tab === "documents" ? "active" : ""} onClick={() => setTab("documents")}>
                 <FileText size={14} /> Documentos
               </button>
-              <button>
+              <button className={tab === "invoice" ? "active" : ""} onClick={() => setTab("invoice")}>
                 <Trophy size={14} /> Fatura
               </button>
             </nav>
@@ -2210,7 +2253,7 @@ const DealDetail: React.FC<{
               <button className="crmws-compose-action" onClick={p.onSchedule}>
                 Clique aqui para adicionar uma atividade...
               </button>
-            ) : (
+            ) : tab === "note" ? (
               <div className="crmws-noteform">
                 <textarea
                   value={note}
@@ -2228,6 +2271,11 @@ const DealDetail: React.FC<{
                   Adicionar nota
                 </button>
               </div>
+            ) : (
+              <div className="crmws-composer-placeholder">
+                <p>{composerCopy[tab].prompt}</p>
+                <button onClick={() => { if (tab === "meeting" || tab === "call") p.onSchedule(); }}>{composerCopy[tab].action}</button>
+              </div>
             )}
           </section>
           <section className="crmws-focus">
@@ -2236,7 +2284,7 @@ const DealDetail: React.FC<{
                 Foco <ChevronDown size={15} />
               </h2>
               <label className="crmws-focus-toggle">
-                <input type="checkbox" /> <span /> Expandir todos os itens
+                <input type="checkbox" checked={expandFocus} onChange={(event) => setExpandFocus(event.target.checked)} /> <span /> Expandir todos os itens
               </label>
             </header>
             {open.map((a) => (
@@ -2251,7 +2299,7 @@ const DealDetail: React.FC<{
                   <span />
                 </button>
                 <Phone size={16} />
-                <div>
+                <div className={expandFocus ? "expanded" : ""}>
                   <b>{a.subject}</b>
                   <small>
                     {a.due < todayKey() && <em className="crmws-overdue-badge">ATRASADA</em>}
@@ -2311,51 +2359,13 @@ const DealDetail: React.FC<{
                 Histórico <ChevronDown size={15} />
               </h2>
               <nav>
-                <button className="active">Tudo</button>
-                <button>Atividades ({done.length})</button>
-                <button>Anotações ({p.notes.length})</button>
-                <button>WhatsApp</button>
-                <button>E-mails</button>
-                <button>Arquivos</button>
-                <button>Documentos</button>
-                <button>Faturas</button>
-                <button>Registro de alterações</button>
+                {[
+                  ["all", "Tudo"], ["activities", `Atividades (${done.length})`], ["notes", `Anotações (${p.notes.length})`], ["whatsapp", "WhatsApp"], ["emails", "E-mails"], ["files", "Arquivos"], ["documents", "Documentos"], ["invoices", "Faturas"], ["changes", "Registro de alterações"],
+                ].map(([key, label]) => <button key={key} className={historyFilter === key ? "active" : ""} onClick={() => setHistoryFilter(key as typeof historyFilter)}>{label}</button>)}
               </nav>
             </header>
-            {done.map((a) => (
-              <div key={a.id}>
-                <Check size={15} />
-                <span>
-                  <b>{a.subject}</b>
-                  <small>Atividade concluída</small>
-                </span>
-              </div>
-            ))}
-            {p.notes.map((n) => (
-              <div key={`history-note-${n.id}`}>
-                <MessageSquareText size={15} />
-                <span>
-                  <b>Nota adicionada</b>
-                  <small>{n.text}</small>
-                </span>
-              </div>
-            ))}
-            {(p.deal.status === "won" || p.deal.status === "lost") && (
-              <div>
-                {p.deal.status === "won" ? <Trophy size={15} /> : <X size={15} />}
-                <span>
-                  <b>Negócio marcado como {p.deal.status === "won" ? "ganho" : "perdido"}</b>
-                  <small>{p.deal.status === "lost" ? `Motivo: ${p.deal.lostReason}` : "Status atualizado"}</small>
-                </span>
-              </div>
-            )}
-            <div>
-              <History size={15} />
-              <span>
-                <b>Negócio criado</b>
-                <small>Registro inicial</small>
-              </span>
-            </div>
+            {historyRows.map((row) => <div key={row.key}>{row.icon}<span><b>{row.title}</b><small>{row.detail}</small></span></div>)}
+            {!historyRows.length && <div className="crmws-history-empty">Nenhum registro nesta categoria.</div>}
           </section>
         </div>
       </div>
